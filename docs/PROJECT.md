@@ -17,6 +17,15 @@ Canonical project facts. Later setup prompts read this file instead of re-asking
 | Staging API base URL  | `api.sundaybest.com`            |
 | Code owners           | `@wwhitakerv`                   |
 
+## Settled decisions
+
+- **The app ships as SundayBest.** Design files for a "Sermon Drop" concept exist
+  outside this repo; the name, slug, scheme, and bundle ID above are final and
+  were confirmed on 2026-09-15. Do not reconcile the two — this is decided.
+- **This repo is in setup, not product build-out.** Prompts 1-13 establish
+  tooling, architecture, testing, CI, and release plumbing. Do not import screen
+  designs, invent features, or add product surface until the setup series is done.
+
 ## Product constraints
 
 - iOS only for now — no Android, no web.
