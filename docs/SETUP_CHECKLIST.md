@@ -14,10 +14,8 @@ never perform these — they stop and add the step here instead.
 - [ ] **Enable 2FA on the Expo account** (`walt.whitakerv@gmail.com`).
 - [ ] **Enable 2FA on GitHub** (`@wwhitakerv`), and prefer a hardware key or TOTP
       over SMS.
-- [ ] **Register the bundle IDs** in the Apple Developer portal:
-      - [ ] `com.walterwhitaker.sundaybest` (production)
-      - [ ] staging/preview variant, once prompt-defined (e.g.
-            `com.walterwhitaker.sundaybest.staging`)
+- [ ] **Register the bundle IDs** in the Apple Developer portal: - [ ] `com.walterwhitaker.sundaybest` (production) - [ ] staging/preview variant, once prompt-defined (e.g.
+      `com.walterwhitaker.sundaybest.staging`)
 - [ ] **App icon and splash artwork.** The Expo-branded template assets were
       removed, so `app.json` currently sets no `icon`. Real artwork is needed before
       any TestFlight or App Store submission.
