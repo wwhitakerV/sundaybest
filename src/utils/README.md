@@ -4,9 +4,9 @@ Deterministic helpers. Same input, same output, no observable side effects.
 
 ## Rules
 
-- **One exported function per file**, and the file is named after it
-  (`format-reference.ts` exports `formatReference`).
-- Test beside it (`format-reference.test.ts`).
+- **One exported function per file**, and the file is named after it, matching
+  its casing (`redaction/redactSensitive.ts` exports `redactSensitive`).
+- Test beside it (`redaction/redactSensitive.test.ts`).
 - **No barrel files.** Import the exact path so dead code stays visible to Knip
   and bundles stay honest.
 

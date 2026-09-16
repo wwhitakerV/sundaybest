@@ -17,8 +17,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip:check": "knip",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --ci --coverage --runInBand",
+    "test:related": "jest --findRelatedTests",
     "doctor": "expo-doctor",
-    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run knip:check && npm run doctor",
+    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run knip:check && npm run test && npm run doctor",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -36,7 +40,11 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
+    "@testing-library/react-native": "13.3.0",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "babel-jest": "29.7.0",
+    "babel-preset-expo": "~57.0.0",
     "eslint": "9.39.5",
     "eslint-config-expo": "~57.0.2",
     "eslint-config-prettier": "10.1.8",
@@ -47,9 +55,13 @@
     "eslint-plugin-testing-library": "7.16.2",
     "expo-doctor": "1.20.4",
     "globals": "17.12.0",
+    "jest": "29.7.0",
+    "jest-expo": "~57.0.5",
     "knip": "6.35.1",
+    "msw": "2.15.0",
     "patch-package": "8.0.1",
     "prettier": "3.9.6",
+    "react-test-renderer": "19.2.3",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.70.0"
   },

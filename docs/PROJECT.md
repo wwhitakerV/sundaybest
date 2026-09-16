@@ -148,6 +148,35 @@ utils -> types
 After changing any boundary rule, re-prove it with a deliberately illegal import
 rather than trusting a clean lint run.
 
+### Test harness constraints — see [ADR 0002](./adr/0002-testing-strategy.md)
+
+- **`@testing-library/react-native` stays on 13.3.0.** RNTL 14 made `render`
+  async; expo-router's `renderRouter` calls it synchronously and `Object.assign`s
+  onto the result, so under 14 every assertion fails with "`render` function has
+  not been called". expo-router devDepends on `^13.3.0`.
+- **`react-test-renderer` is pinned to 19.2.3**, matching `react@19.2.3` exactly.
+  19.2.8 requires `react@^19.2.8` and fails install.
+- **`babel.config.js` exists for Jest, not Metro.** Without it, React Native's
+  jest setup file fails to parse — it still ships Flow annotations.
+  `babel-preset-expo` and `babel-jest` are direct devDependencies because the
+  config names them.
+- **MSW is imported from `msw/native`.** msw's exports set
+  `"./node": { "react-native": null }`, and jest-expo resolves with the
+  react-native condition, so `msw/node` is unreachable here.
+- **`jest.config.js` widens jest-expo's transform to `.mjs`/`.cjs`** and appends
+  to its `transformIgnorePatterns` allowlist. Do not replace either — clobbering
+  the allowlist stops React Native itself being transformed.
+- **`tsconfig.json` sets `types: ["jest"]`.** Without it TypeScript does not pick
+  up `@types/jest`, and every test file fails with `Cannot find name 'describe'`
+  plus a wall of `no-unsafe-call` from the type-aware lint rules.
+- **Per-path coverage thresholds are computed at config load** and attach only to
+  folders that contain a source file, because Jest fails a threshold whose path
+  has no coverage data. `./src/utils/` is live now; `./src/core/security/`
+  activates by itself on its first file.
+- **`renderRouter` calls `jest.useFakeTimers()` itself**, so route tests run on
+  fake timers whether they asked or not. `test/setup.ts` restores real timers
+  after every test.
+
 ### Knip ignores
 
 `src/features/_template/**` is a scaffold and unreferenced by design.

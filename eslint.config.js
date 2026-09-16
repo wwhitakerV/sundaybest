@@ -362,7 +362,15 @@ module.exports = defineConfig([
       sourceType: "commonjs",
       globals: { ...globals.node },
     },
-    rules: { "import/no-default-export": "off" },
+    rules: {
+      "import/no-default-export": "off",
+      // Build config runs at install/test time on paths it derives from
+      // __dirname, and indexes its own literal objects. These two rules exist
+      // to catch attacker-controlled paths and keys reaching app code, which is
+      // not what a jest config does. They stay on everywhere else.
+      "security/detect-non-literal-fs-filename": "off",
+      "security/detect-object-injection": "off",
+    },
   },
 
   // 9. Test files only: Jest and Testing Library.
