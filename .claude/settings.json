@@ -1,5 +1,126 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "enabledPlugins": {
     "expo@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    }
+  },
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(**/.env)",
+      "Read(.env.*)",
+      "Read(**/.env.*)",
+      "Read(!.env.example)",
+      "Read(!**/.env.example)",
+      "Read(keys/**)",
+      "Read(**/keys/**)"
+    ],
+    "ask": [
+      "Bash(eas build)",
+      "Bash(eas build *)",
+      "Bash(eas submit)",
+      "Bash(eas submit *)",
+      "Bash(eas update)",
+      "Bash(eas update *)",
+      "Bash(eas credentials)",
+      "Bash(eas credentials *)",
+      "Bash(npx eas build)",
+      "Bash(npx eas build *)",
+      "Bash(npx eas submit)",
+      "Bash(npx eas submit *)",
+      "Bash(npx eas update)",
+      "Bash(npx eas update *)",
+      "Bash(npx eas credentials)",
+      "Bash(npx eas credentials *)",
+      "Bash(git push)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh pr edit *)",
+      "Bash(gh pr close *)",
+      "Bash(gh pr comment *)",
+      "Bash(gh pr review *)",
+      "Bash(gh issue create *)",
+      "Bash(gh issue edit *)",
+      "Bash(gh issue close *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh release create *)",
+      "Bash(gh release edit *)",
+      "Bash(gh release delete *)",
+      "Bash(gh repo create *)",
+      "Bash(gh repo edit *)",
+      "Bash(gh repo delete *)",
+      "Bash(gh secret set *)",
+      "Bash(gh secret delete *)",
+      "Bash(gh variable set *)",
+      "Bash(gh workflow run *)",
+      "Bash(gh workflow enable *)",
+      "Bash(gh workflow disable *)",
+      "Bash(gh label create *)",
+      "Bash(gh cache delete *)",
+      "Bash(gh api -X *)",
+      "Bash(gh api --method *)"
+    ],
+    "allow": [
+      "Bash(npm run typecheck)",
+      "Bash(npm run lint)",
+      "Bash(npm run lint:fix)",
+      "Bash(npm run format)",
+      "Bash(npm run format:check)",
+      "Bash(npm run knip:check)",
+      "Bash(npm run test)",
+      "Bash(npm run test *)",
+      "Bash(npm run test:ci)",
+      "Bash(npm run test:related *)",
+      "Bash(npm run validate)",
+      "Bash(npm run doctor)",
+      "Bash(./scripts/hooks/hooks.test.sh)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff)",
+      "Bash(git diff *)",
+      "Bash(git log)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git blame *)",
+      "Bash(git ls-files)",
+      "Bash(git ls-files *)",
+      "Bash(git rev-parse *)",
+      "Bash(git describe *)",
+      "Bash(git shortlog *)",
+      "Bash(git remote -v)",
+      "Bash(git branch)",
+      "Bash(git branch --list *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/format-edited-file.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/scripts/hooks/verify-turn.sh"
+          }
+        ]
+      }
+    ]
   }
 }

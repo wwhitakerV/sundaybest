@@ -192,6 +192,10 @@ rather than trusting a clean lint run.
 `src/features/home/store.ts` and `types.ts` are placeholder seams kept so `home`
 mirrors `_template`; delete the ignores when the slice puts them to work.
 
+`expo-mcp` is ignored because nothing imports it: the Expo CLI resolves the
+installed package when the dev server runs with `EXPO_UNSTABLE_MCP_SERVER=1`
+(`npm run dev:mcp`). It is a real dependency with no import site.
+
 ## Layout
 
 - `src/app/` — expo-router routes only (screens and layouts).
