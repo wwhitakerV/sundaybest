@@ -20,6 +20,52 @@ const TEST_FILES = [
   "test/**/*.{ts,tsx}",
 ];
 
+/** A slice's internals are private; only its index.ts is public. */
+const FEATURE_ENTRY_POINT_ONLY = {
+  group: ["@/features/*/*", "@/features/*/**"],
+  message:
+    "Import a feature only through its public entry point, e.g. @/features/home. Deep imports couple you to another slice's internals.",
+};
+
+/**
+ * SDKs that touch the keychain, the network, device integrity, or a telemetry
+ * backend. Importable inside src/core only. Listed ahead of installing them so a
+ * later prompt cannot quietly wire one into a screen.
+ */
+const SIDE_EFFECT_SDKS_CORE_ONLY = {
+  group: [
+    // secure storage
+    "expo-secure-store",
+    "react-native-keychain",
+    "react-native-encrypted-storage",
+    "@react-native-async-storage/*",
+    "expo-sqlite",
+    // app integrity / attestation
+    "expo-app-integrity",
+    "react-native-device-info",
+    "jail-monkey",
+    "react-native-root-detection",
+    // networking
+    "axios",
+    "ky",
+    "superagent",
+    "node-fetch",
+    "@tanstack/react-query",
+    // crash reporting
+    "@sentry/*",
+    "@bugsnag/*",
+    "@react-native-firebase/*",
+    // analytics (the product ships none; the rule keeps it that way)
+    "posthog-react-native",
+    "@amplitude/*",
+    "@segment/*",
+    "expo-insights",
+    "expo-tracking-transparency",
+  ],
+  message:
+    "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",
+};
+
 /** Config files legitimately use default exports and run in Node. */
 const CONFIG_FILES = [
   "eslint.config.js",
@@ -44,6 +90,30 @@ module.exports = defineConfig([
   //    and @typescript-eslint).
   expoConfig,
 
+  // 1b. Teach the import graph about the @/* path alias.
+  //
+  //     Expo's config registers only the node resolver, while
+  //     eslint-plugin-import's TypeScript config asks for a `typescript`
+  //     resolver that ships nested inside eslint-config-expo and is not
+  //     resolvable from the project root — which surfaces as
+  //     "typescript with invalid interface loaded as resolver" and leaves every
+  //     @/* import unresolved. That would silently disable boundaries/element-types,
+  //     so the resolver is installed at the root and pointed at our tsconfig.
+  {
+    files: ["**/*.{ts,tsx}"],
+    settings: {
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+          project: "./tsconfig.json",
+        },
+        node: {
+          extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
+        },
+      },
+    },
+  },
+
   // 2. Security rules.
   security.configs.recommended,
 
@@ -60,22 +130,137 @@ module.exports = defineConfig([
     },
   },
 
-  // 4. eslint-plugin-boundaries: registered and given its element map now so the
-  //    architecture is described in one place. Prompt 3 turns on the rules.
+  // 4. Architecture boundaries. See docs/adr/0001-feature-sliced-architecture.md.
+  //
+  //    app -> features -> ui, core, hooks, utils, theme, types
+  //    ui / hooks / utils never reach back into features, core, or app
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: { boundaries },
     settings: {
       "boundaries/include": ["src/**/*"],
+      // First match wins, so the feature pattern is listed before the rest.
+      // Folder descriptors with the default (partial) matching: the pattern is
+      // matched against the folder containing the file, and partial matching lets
+      // it cover nested folders too.
+      //
+      // Do NOT write file-path patterns like "src/ui/**/*" here. Those match the
+      // *folder*, which needs an extra segment, so nothing matches, every file
+      // falls through as an unrecognised element, and the rule goes silently
+      // inert while still reporting zero errors. `mode: "full"` fixes that but is
+      // deprecated in v7, and `partialMatch: false` is NOT its replacement
+      // (Settings.js treats it as effective folder mode). Verified with
+      // deliberate violations - see docs/adr/0001.
       "boundaries/elements": [
-        { type: "app", pattern: "src/app/**/*" },
-        { type: "core", pattern: "src/core/*/**/*", capture: ["module"] },
-        { type: "features", pattern: "src/features/*/**/*", capture: ["feature"] },
-        { type: "shared", pattern: "src/shared/*/**/*", capture: ["module"] },
+        { type: "app", pattern: "src/app" },
+        { type: "feature", pattern: "src/features/*", capture: ["feature"] },
+        { type: "core", pattern: "src/core" },
+        { type: "ui", pattern: "src/ui" },
+        { type: "hooks", pattern: "src/hooks" },
+        { type: "utils", pattern: "src/utils" },
+        { type: "theme", pattern: "src/theme" },
+        { type: "types", pattern: "src/types" },
       ],
     },
-    // No boundaries/* rules yet — prompt 3 adds them.
-    rules: {},
+    rules: {
+      "boundaries/no-unknown-files": "off",
+      // v7 rule name; "element-types" is the deprecated alias.
+      "boundaries/dependencies": [
+        "error",
+        {
+          default: "disallow",
+          message:
+            "{{ from.element.type }} is not allowed to import {{ to.element.type }}. See src/{{ from.element.type }}/README.md.",
+          policies: [
+            // Routes are the composition root and may reach anything.
+            {
+              from: { element: { type: "app" } },
+              allow: {
+                to: [
+                  { element: { type: "app" } },
+                  { element: { type: "feature" } },
+                  { element: { type: "core" } },
+                  { element: { type: "ui" } },
+                  { element: { type: "hooks" } },
+                  { element: { type: "utils" } },
+                  { element: { type: "theme" } },
+                  { element: { type: "types" } },
+                ],
+              },
+            },
+            // A slice leans on the shared layers. Cross-feature imports are
+            // narrowed to each slice's index.ts by no-restricted-imports below.
+            {
+              from: { element: { type: "feature" } },
+              allow: {
+                to: [
+                  { element: { type: "feature" } },
+                  { element: { type: "core" } },
+                  { element: { type: "ui" } },
+                  { element: { type: "hooks" } },
+                  { element: { type: "utils" } },
+                  { element: { type: "theme" } },
+                  { element: { type: "types" } },
+                ],
+              },
+            },
+            // Core is the side-effect leaf: it must not know about the product.
+            {
+              from: { element: { type: "core" } },
+              allow: {
+                to: [
+                  { element: { type: "core" } },
+                  { element: { type: "utils" } },
+                  { element: { type: "theme" } },
+                  { element: { type: "types" } },
+                ],
+              },
+            },
+            // Presentation primitives stay generic.
+            {
+              from: { element: { type: "ui" } },
+              allow: {
+                to: [
+                  { element: { type: "ui" } },
+                  { element: { type: "hooks" } },
+                  { element: { type: "utils" } },
+                  { element: { type: "theme" } },
+                  { element: { type: "types" } },
+                ],
+              },
+            },
+            {
+              from: { element: { type: "hooks" } },
+              allow: {
+                to: [
+                  { element: { type: "hooks" } },
+                  { element: { type: "utils" } },
+                  { element: { type: "theme" } },
+                  { element: { type: "types" } },
+                ],
+              },
+            },
+            // Pure helpers depend on nothing but types.
+            {
+              from: { element: { type: "utils" } },
+              allow: {
+                to: [{ element: { type: "utils" } }, { element: { type: "types" } }],
+              },
+            },
+            {
+              from: { element: { type: "theme" } },
+              allow: {
+                to: [{ element: { type: "theme" } }, { element: { type: "types" } }],
+              },
+            },
+            {
+              from: { element: { type: "types" } },
+              allow: { to: [{ element: { type: "types" } }] },
+            },
+          ],
+        },
+      ],
+    },
   },
 
   // 5. This project's rules.
@@ -91,6 +276,70 @@ module.exports = defineConfig([
       ],
       // Named exports keep imports greppable and renames honest.
       "import/no-default-export": "error",
+    },
+  },
+
+  // 5b. Feature slices are reachable only through their public entry point.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [FEATURE_ENTRY_POINT_ONLY] }],
+    },
+  },
+
+  // 5c. SDKs with side effects are confined to src/core, which wraps them in a
+  //     narrow typed API. This keeps the audited surface small: one folder to
+  //     review when asking "what can this app actually reach?".
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/core/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { patterns: [FEATURE_ENTRY_POINT_ONLY, SIDE_EFFECT_SDKS_CORE_ONLY] },
+      ],
+    },
+  },
+
+  // 5d. src/utils stays pure: no React, no I/O, no reaching into the app.
+  {
+    files: ["src/utils/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            FEATURE_ENTRY_POINT_ONLY,
+            SIDE_EFFECT_SDKS_CORE_ONLY,
+            {
+              group: [
+                "react",
+                "react/*",
+                "react-dom",
+                "react-native",
+                "react-native/*",
+                "react-native-*",
+                "expo",
+                "expo-*",
+                "@expo/*",
+                "@react-native*",
+                "@react-native*/*",
+                "node:*",
+                "fs",
+                "fs/*",
+                "path",
+                "os",
+                "crypto",
+                "http",
+                "https",
+                "child_process",
+              ],
+              message:
+                "src/utils must stay pure: no React, no I/O. Move anything with a side effect to src/core and keep the helper deterministic.",
+            },
+          ],
+        },
+      ],
     },
   },
 

@@ -2,5 +2,10 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["src/app/**/*.{ts,tsx}"],
   "project": ["src/**/*.{ts,tsx}"],
+  "ignore": [
+    "src/features/_template/**",
+    "src/features/home/store.ts",
+    "src/features/home/types.ts"
+  ],
   "ignoreDependencies": ["expo-updates"]
 }

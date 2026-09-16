@@ -107,6 +107,53 @@ and every navigation with params throws.
   (nothing imports them, nothing depends on them, and `expo export` plus
   expo-doctor both still pass). Re-add with `npx expo install` when first needed.
 
+## Architecture
+
+Feature-sliced, with the dependency direction enforced in ESLint. Full rationale
+in [ADR 0001](./adr/0001-feature-sliced-architecture.md); each folder under `src/`
+has a README stating what belongs there and what must never go there.
+
+```
+app -> features -> ui, core, hooks, utils, theme, types
+core -> utils, theme, types
+ui / hooks -> utils, theme, types
+utils -> types
+```
+
+- A slice is reachable only through its `index.ts`.
+- Side-effect SDKs (secure storage, app integrity, networking, crash reporting,
+  analytics) may be imported only inside `src/core`.
+- `src/utils` is pure: no React, no I/O.
+- `src/app` is the only place default exports are allowed (Expo Router needs them).
+
+### Two lint-config traps — read before touching eslint.config.js
+
+- **`boundaries/elements` must use folder patterns** (`"src/ui"`), never
+  file-path patterns (`"src/ui/**/*"`). The pattern is matched against the
+  _containing folder_, so a file-path pattern needs an extra segment, matches
+  nothing, and every file falls through as an unrecognised element. The rule then
+  reports **zero errors while enforcing nothing**. This actually happened while
+  building the skeleton and was caught only by committing deliberate violations.
+  `mode: "full"` also works but is deprecated in v7, and `partialMatch: false` is
+  **not** its replacement despite what the deprecation notice says —
+  `Settings.js` treats `partialMatch: false` as effective _folder_ mode.
+- **`eslint-import-resolver-typescript` must stay a root devDependency.** Expo's
+  flat config registers only the `node` resolver, while eslint-plugin-import's
+  TypeScript config asks for a `typescript` resolver that ships nested inside
+  `eslint-config-expo` and is not resolvable from the project root. Without the
+  root copy every `@/*` import is unresolved, which silently disables
+  `boundaries/dependencies` as well. Pinned to 3.10.1 to match Expo's nested copy
+  (interface version 2; 4.x switched to the new resolver API).
+
+After changing any boundary rule, re-prove it with a deliberately illegal import
+rather than trusting a clean lint run.
+
+### Knip ignores
+
+`src/features/_template/**` is a scaffold and unreferenced by design.
+`src/features/home/store.ts` and `types.ts` are placeholder seams kept so `home`
+mirrors `_template`; delete the ignores when the slice puts them to work.
+
 ## Layout
 
 - `src/app/` — expo-router routes only (screens and layouts).
