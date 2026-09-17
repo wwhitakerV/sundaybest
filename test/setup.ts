@@ -1,6 +1,22 @@
 import { server } from "./mocks/server";
 
 // ---------------------------------------------------------------------------
+// Environment
+// ---------------------------------------------------------------------------
+// `src/core/config/env.ts` parses process.env at module scope and throws if the
+// environment is invalid, exactly as it would on a device. Tests therefore need
+// an environment, the same way a build does — without one, importing anything
+// that reaches config would fail for reasons unrelated to the test.
+//
+// These are the development defaults from .env.example. `??=` means a real value
+// from the shell or a .env file still wins, and a test that cares about a
+// specific value sets it explicitly (see src/core/config/env.test.ts).
+process.env.EXPO_PUBLIC_APP_VARIANT ??= "development";
+process.env.EXPO_PUBLIC_API_URL ??= "https://api.sundaybest.com";
+process.env.EXPO_PUBLIC_ATTESTATION_ENABLED ??= "false";
+process.env.EXPO_PUBLIC_SENTRY_DSN ??= "";
+
+// ---------------------------------------------------------------------------
 // MSW lifecycle
 // ---------------------------------------------------------------------------
 // `onUnhandledRequest: "error"` is deliberate: an un-mocked request fails the

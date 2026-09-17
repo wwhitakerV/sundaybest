@@ -66,14 +66,34 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",
 };
 
-/** Config files legitimately use default exports and run in Node. */
-const CONFIG_FILES = [
+/**
+ * Config files and build scripts: default exports are the convention there, and
+ * they run in Node rather than on a device.
+ *
+ * Split by module system, because `sourceType` is not a per-file guess. A `.ts`
+ * or `.mjs` config uses real `import`/`export`, and parsing it as CommonJS fails
+ * outright with "'import' and 'export' may appear only with sourceType: module"
+ * — which is what happens to app.config.ts if it is lumped in with the rest.
+ */
+const CJS_CONFIG_FILES = [
   "eslint.config.js",
-  "*.config.{js,cjs,mjs,ts}",
-  "*.config.*.{js,cjs,mjs,ts}",
+  "*.config.{js,cjs}",
+  "*.config.*.{js,cjs}",
   "metro.config.js",
   "babel.config.js",
 ];
+
+const ESM_CONFIG_FILES = ["*.config.{mjs,ts}", "*.config.*.{mjs,ts}", "scripts/**/*.{mjs,js}"];
+
+const CONFIG_FILE_RULES = {
+  "import/no-default-export": "off",
+  // Build config runs at install/test time on paths it derives from __dirname,
+  // and indexes its own literal objects. These two rules exist to catch
+  // attacker-controlled paths and keys reaching app code, which is not what a
+  // jest config does. They stay on everywhere else.
+  "security/detect-non-literal-fs-filename": "off",
+  "security/detect-object-injection": "off",
+};
 
 module.exports = defineConfig([
   globalIgnores([
@@ -355,22 +375,22 @@ module.exports = defineConfig([
     rules: { "import/no-default-export": "off" },
   },
 
-  // 8. Config files: default exports are the convention, and they run in Node.
+  // 8. Config files and build scripts, in Node.
   {
-    files: CONFIG_FILES,
+    files: CJS_CONFIG_FILES,
     languageOptions: {
       sourceType: "commonjs",
       globals: { ...globals.node },
     },
-    rules: {
-      "import/no-default-export": "off",
-      // Build config runs at install/test time on paths it derives from
-      // __dirname, and indexes its own literal objects. These two rules exist
-      // to catch attacker-controlled paths and keys reaching app code, which is
-      // not what a jest config does. They stay on everywhere else.
-      "security/detect-non-literal-fs-filename": "off",
-      "security/detect-object-injection": "off",
+    rules: CONFIG_FILE_RULES,
+  },
+  {
+    files: ESM_CONFIG_FILES,
+    languageOptions: {
+      sourceType: "module",
+      globals: { ...globals.node },
     },
+    rules: CONFIG_FILE_RULES,
   },
 
   // 9. Test files only: Jest and Testing Library.

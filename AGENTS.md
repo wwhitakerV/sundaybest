@@ -27,8 +27,10 @@ before writing any code. Assume anything you remember about Expo is out of date.
 | `npm run test` / `test:watch` / `test:ci` | Jest; `test:ci` enforces coverage                            |
 | `npm run test:related <files>`            | Tests related to specific files                              |
 | `npm run knip:check`                      | Unused files, exports, dependencies                          |
-| `npm run ios` / `npm run start`           | Dev server                                                   |
+| `npm run check:env`                       | `.env*` files against the app's own schema                   |
+| `npm run ios` / `npm run start`           | Dev server (both set `APP_VARIANT=development`)              |
 | `npm run dev:mcp`                         | Dev server with Expo MCP local capabilities                  |
+| `npm run icons`                           | Regenerates the placeholder variant icons                    |
 
 Install Expo SDK packages with `npx expo install`. Pin exact versions (no `^`,
 no `~`) for everything else. Use npm, and `npx` where another runner would be used.
@@ -56,6 +58,24 @@ utils -> types
 
 ESLint enforces all of this. Do not "fix" the boundaries config without reading
 the traps recorded in [docs/PROJECT.md](docs/PROJECT.md).
+
+## Configuration
+
+`app.config.ts` is the app config; there is no `app.json`. `APP_VARIANT`
+(`development` | `preview` | `production`) picks the name, bundle ID, and icon,
+defaulting to `development`. Read
+[ADR 0004](docs/adr/0004-configuration-and-environments.md) and the config traps
+in [docs/PROJECT.md](docs/PROJECT.md) before touching it.
+
+- **Runtime config is `@/core/config/env`**, parsed with Zod and frozen. Never
+  read `process.env` elsewhere, and never dynamically — only literal
+  `process.env.EXPO_PUBLIC_X` survives Expo's Babel transform.
+- **A new variable** means: the schema, a test, a row in `.env.example`, and a
+  name in `src/types/expo-public-env.d.ts`.
+- **Flags go through `@/core/config/flags`**, derived from `Env`, and only when
+  something reads them.
+- `EXPO_PUBLIC_` values ship inside the app and anyone can read them. They are
+  configuration, never secrets.
 
 ## TDD rules
 
@@ -116,7 +136,8 @@ A change is done when all of these hold:
 - [ ] Anything a human must do is in `docs/SETUP_CHECKLIST.md`.
 - [ ] Docs updated when behavior changed: the folder README, `docs/PROJECT.md`,
       or a new ADR for a decision.
-- [ ] A Conventional Commit, scoped to one logical change.
+- [ ] Work is **left uncommitted**, with a summary of what changed. Committing
+      is the user's call — see the working agreement.
 
 ## Working agreement
 
@@ -128,7 +149,12 @@ A change is done when all of these hold:
 - **Use npm** for installs and scripts, and `npx` wherever another package
   runner would be used.
 - **Never read, print, or create real secrets** (see above).
-- **Finish every task by running its verification steps**, then make a
-  [Conventional Commit](https://www.conventionalcommits.org/).
+- **Finish every task by running its verification steps**, then stop and report.
+- **Never commit, stage, or push on your own initiative.** Leave the work in the
+  working tree and say what changed. Commit only when asked in that same turn,
+  and a standing instruction in a prompt template does not count as asking — the
+  user reviews the diff first. When asked, use a
+  [Conventional Commit](https://www.conventionalcommits.org/) scoped to one
+  logical change.
 - **Report honestly.** If a step was skipped or a check failed, say so with the
   output. Do not claim a verification you did not run.

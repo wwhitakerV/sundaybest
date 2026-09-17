@@ -39,14 +39,15 @@ describe("redactSensitive", () => {
     });
 
     it("is case-insensitive about the scheme", () => {
-      expect(redactSensitive("bearer sk_live_0123456789abcdef")).toBe("bearer [redacted:token]");
+      expect(redactSensitive("bearer 0123456789abcdefFAKE")).toBe("bearer [redacted:token]");
     });
   });
 
   describe("JWTs", () => {
     it("masks a three-segment JWT anywhere in the string", () => {
-      const jwt =
-        "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dBjftJeZ4CVPmB92K27uhbUJU1p1r_wW1gFWFOEjXk";
+      // Three base64url segments, which is all the rule matches — deliberately
+      // not a decodable JWT, so nothing here can trip a secret scanner.
+      const jwt = "FAKE-HEADER-SEGMENT.FAKE-PAYLOAD-SEGMENT.FAKE-SIGNATURE-SEGMENT";
       expect(redactSensitive(`token=${jwt}&x=1`)).toBe("token=[redacted:jwt]&x=1");
     });
   });

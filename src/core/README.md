@@ -19,6 +19,14 @@ monitoring/   logging, crash and error reporting
 providers/    app-wide React providers (AppProviders)
 ```
 
+## `config/`
+
+The only place `process.env` is read. `env-schema.ts` holds the Zod schema and
+`parseEnv` (pure, so `scripts/check-env.mjs` imports it too); `env.ts` parses the
+`EXPO_PUBLIC_*` variables at module scope and exports a frozen `env`;
+`flags.ts` derives the feature flags from it behind `FlagSource`. See
+[ADR 0004](../../docs/adr/0004-configuration-and-environments.md).
+
 ## Belongs here
 
 - Any import of an SDK with side effects — secure storage, app integrity,
