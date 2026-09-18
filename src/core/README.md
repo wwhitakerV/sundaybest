@@ -13,11 +13,22 @@ security/
   secure-storage/ keychain-backed storage
   integrity/      jailbreak and tamper checks
   session/        session lifecycle
-storage/      non-secret persistence
+storage/      local persistence, incl. the encrypted database
 config/       environment and runtime config
 monitoring/   logging, crash and error reporting
 providers/    app-wide React providers (AppProviders)
 ```
+
+## `storage/`
+
+`storage/database/` is the SQLCipher-encrypted local database: a narrow
+`Database` port, the `expo-sqlite` adapter that keys it, and a forward-only
+migration runner (no tables yet). Its key is provisioned by
+`security/database-key`, so the adapter is handed a key and never learns where it
+came from.
+
+Not "non-secret persistence" any more — the database is encrypted precisely
+because it will hold things worth encrypting.
 
 ## `config/`
 

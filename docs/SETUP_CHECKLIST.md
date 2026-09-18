@@ -43,6 +43,52 @@ never perform these — they stop and add the step here instead.
   - [ ] a decision on whether universal links are wanted at all; if not, delete
         the entry rather than shipping a dead entitlement
 
+## Backend — attestation and sessions
+
+**None of the client-side attestation work is worth anything until a server
+verifies it.** An assertion nobody checks is theatre. The contract is
+[docs/api/attestation.md](./api/attestation.md); these are the obligations it
+places on whoever builds the server.
+
+- [ ] **Verify attestations per Apple's guide**, in full — not the easy parts:
+  - [ ] the certificate chain up to Apple's App Attest root
+  - [ ] the nonce: SHA-256 of the authenticator data concatenated with the
+        SHA-256 of the challenge
+  - [ ] the App ID hash against the correct team ID and bundle ID
+  - [ ] the signature counter is `0` on attestation
+  - [ ] the `aaguid` (`appattestdevelop` in the sandbox, `appattest` plus zero
+        padding in production)
+  - [ ] store the receipt, which is what later lets you assess risk per key
+- [ ] **Verify assertions on every request**, and store each key's public key at
+      registration so there is something to verify against.
+- [ ] **Never act on a `keyId` alone.** A `keyId` is public. Acting on one
+      without a verifying assertion lets anyone burn another install's rate limit
+      — abuse case U5 in the threat model.
+- [ ] **Replay protection**, both halves:
+  - [ ] challenges are single-use, stored, deleted on first use, and expire after
+        120 seconds
+  - [ ] the assertion counter must **strictly increase** per key, and the write
+        must be transactional with issuing the token — a non-atomic update is a
+        replay window. This is the half that gets forgotten.
+- [ ] **Issue tokens**: short-lived access token (900s default), refresh token
+      rotated on every use. A refresh token presented twice means it leaked —
+      revoke that key's session family and force re-attestation.
+- [ ] **Rate-limit per attested key**: 10/min on `/attest/challenge`, 5/hour on
+      `/attest/verify`, 30/hour on `/session/refresh`, plus a separate global
+      limit for challenge requests that carry no `keyId`.
+- [ ] **Accept both App Attest environments.** Apple ignores the
+      `appattest-environment` entitlement once a build ships through TestFlight
+      or the App Store, so a **preview build installed from TestFlight produces
+      production attestations**. Decide per environment; do not infer it from the
+      bundle ID.
+- [ ] **Accept only the three known bundle IDs**, and keep production data to the
+      production bundle ID.
+- [ ] **Enable the App Attest capability** on all three bundle IDs in the Apple
+      Developer portal. The entitlement is already in `app.config.ts`; the
+      capability is a portal action.
+- [ ] **Decide what revokes a key** — manual only, or automated on a risk signal
+      from the attestation receipt.
+
 ## Per developer
 
 Each person working on the repo does these once on their machine. Nothing here

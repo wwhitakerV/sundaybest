@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Before You Start</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+    <style>
+      /* Light palette. Neutrals are biased toward the accent indigo rather than
+         being pure grey, and the semantic colours are separate from it. */
+      :root {
+        --ground: #f6f6f9;
+        --surface: #ffffff;
+        --surface-sunk: #f0f0f5;
+        --ink: #1a1d28;
+        --ink-soft: #4b5063;
+        --ink-faint: #767c92;
+        --rule: #e0e1ea;
+        --rule-soft: #ebecf2;
+        --accent: #2e3a72;
+        --accent-soft: #e7e9f4;
+
+        --critical: #a52318;
+        --critical-soft: #fbe9e7;
+        --warn: #7d5200;
+        --warn-soft: #fbf0d9;
+        --info: #1b5570;
+        --info-soft: #e4f0f6;
+        --settled: #2c6349;
+        --settled-soft: #e4f1ea;
+
+        --measure: 68ch;
+        --radius: 4px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --ground: #12141b;
+          --surface: #1b1e27;
+          --surface-sunk: #171a22;
+          --ink: #e7e9f0;
+          --ink-soft: #b0b5c6;
+          --ink-faint: #838a9e;
+          --rule: #2c3040;
+          --rule-soft: #242834;
+          --accent: #9aa8e8;
+          --accent-soft: #232842;
+
+          --critical: #f4907d;
+          --critical-soft: #35211f;
+          --warn: #e0ac52;
+          --warn-soft: #2e2617;
+          --info: #7fbcd9;
+          --info-soft: #17272f;
+          --settled: #74c39a;
+          --settled-soft: #17281f;
+        }
+      }
+
+      :root[data-theme="dark"] {
+        --ground: #12141b;
+        --surface: #1b1e27;
+        --surface-sunk: #171a22;
+        --ink: #e7e9f0;
+        --ink-soft: #b0b5c6;
+        --ink-faint: #838a9e;
+        --rule: #2c3040;
+        --rule-soft: #242834;
+        --accent: #9aa8e8;
+        --accent-soft: #232842;
+
+        --critical: #f4907d;
+        --critical-soft: #35211f;
+        --warn: #e0ac52;
+        --warn-soft: #2e2617;
+        --info: #7fbcd9;
+        --info-soft: #17272f;
+        --settled: #74c39a;
+        --settled-soft: #17281f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        padding-inline: 20px;
+        padding-block: 40px 88px;
+        background: var(--ground);
+        color: var(--ink);
+        font:
+          400 16px/1.6 "IBM Plex Sans",
+          ui-sans-serif,
+          system-ui,
+          sans-serif;
+      }
+
+      main {
+        max-width: 860px;
+        margin-inline: auto;
+      }
+
+      /* ---- masthead ---- */
+
+      .eyebrow {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin: 0 0 12px;
+      }
+
+      h1 {
+        font-family: Newsreader, Georgia, serif;
+        font-size: clamp(34px, 7vw, 52px);
+        font-weight: 600;
+        line-height: 1.08;
+        letter-spacing: -0.015em;
+        margin: 0 0 16px;
+        text-wrap: balance;
+      }
+
+      .standfirst {
+        font-size: 18px;
+        line-height: 1.55;
+        color: var(--ink-soft);
+        max-width: var(--measure);
+        margin: 0 0 28px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--ink-faint);
+        padding-block: 16px;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+      }
+
+      /* ---- progress ---- */
+
+      .tally {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-block: 28px 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .tally li {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        padding: 8px 14px;
+        border: 1px solid var(--rule);
+        border-radius: var(--radius);
+        background: var(--surface);
+        font-size: 13px;
+        color: var(--ink-soft);
+      }
+
+      .tally b {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 15px;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink);
+      }
+
+      .tally .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        align-self: center;
+      }
+
+      .dot.p0 {
+        background: var(--critical);
+      }
+      .dot.p1 {
+        background: var(--warn);
+      }
+      .dot.p2 {
+        background: var(--info);
+      }
+      .dot.p3 {
+        background: var(--accent);
+      }
+
+      /* ---- sections ---- */
+
+      section {
+        margin-block-start: 52px;
+      }
+
+      .band {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        padding-block-end: 10px;
+        border-bottom: 2px solid currentColor;
+      }
+
+      .band h2 {
+        font-family: Newsreader, Georgia, serif;
+        font-weight: 600;
+        font-size: 26px;
+        line-height: 1.2;
+        margin: 0;
+        color: var(--ink);
+      }
+
+      .band .tag {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 3px 7px;
+        border-radius: 3px;
+      }
+
+      .band .count {
+        margin-inline-start: auto;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--ink-faint);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .sec-p0 {
+        color: var(--critical);
+      }
+      .sec-p0 .tag {
+        background: var(--critical-soft);
+        color: var(--critical);
+      }
+      .sec-p1 {
+        color: var(--warn);
+      }
+      .sec-p1 .tag {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+      .sec-p2 {
+        color: var(--info);
+      }
+      .sec-p2 .tag {
+        background: var(--info-soft);
+        color: var(--info);
+      }
+      .sec-p3 {
+        color: var(--accent);
+      }
+      .sec-p3 .tag {
+        background: var(--accent-soft);
+        color: var(--accent);
+      }
+      .sec-settled {
+        color: var(--settled);
+      }
+      .sec-settled .tag {
+        background: var(--settled-soft);
+        color: var(--settled);
+      }
+
+      .why {
+        max-width: var(--measure);
+        color: var(--ink-soft);
+        margin-block: 16px 0;
+      }
+
+      /* ---- items ---- */
+
+      ul.items {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 0;
+      }
+
+      ul.items > li {
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        gap: 4px 12px;
+        padding-block: 18px;
+        border-bottom: 1px solid var(--rule-soft);
+      }
+
+      ul.items > li:last-child {
+        border-bottom: 0;
+      }
+
+      input[type="checkbox"] {
+        appearance: none;
+        width: 17px;
+        height: 17px;
+        margin: 4px 0 0;
+        border: 1.5px solid var(--ink-faint);
+        border-radius: 3px;
+        background: var(--surface);
+        cursor: pointer;
+        display: grid;
+        place-content: center;
+      }
+
+      input[type="checkbox"]::after {
+        content: "";
+        width: 9px;
+        height: 5px;
+        border-left: 2px solid var(--surface);
+        border-bottom: 2px solid var(--surface);
+        transform: rotate(-45deg) translateY(-1px);
+        opacity: 0;
+      }
+
+      input[type="checkbox"]:checked {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      input[type="checkbox"]:checked::after {
+        opacity: 1;
+      }
+
+      input[type="checkbox"]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .head {
+        font-weight: 600;
+        line-height: 1.45;
+        cursor: pointer;
+      }
+
+      li.is-done .head,
+      li.is-done .note {
+        color: var(--ink-faint);
+      }
+
+      li.is-done .head {
+        text-decoration: line-through;
+        text-decoration-thickness: 1px;
+      }
+
+      .note {
+        grid-column: 2;
+        color: var(--ink-soft);
+        font-size: 15px;
+        line-height: 1.55;
+        max-width: var(--measure);
+        margin: 2px 0 0;
+      }
+
+      .ref {
+        grid-column: 2;
+        margin-top: 8px;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--ink-faint);
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+
+      .ref b {
+        font-weight: 500;
+        color: var(--ink-soft);
+      }
+
+      code {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.88em;
+        background: var(--surface-sunk);
+        border: 1px solid var(--rule-soft);
+        border-radius: 3px;
+        padding: 1px 5px;
+        overflow-wrap: anywhere;
+      }
+
+      .why code,
+      .note code,
+      .ref code {
+        background: var(--surface-sunk);
+      }
+
+      .sev {
+        display: inline-block;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 3px;
+        vertical-align: 2px;
+        margin-inline-start: 8px;
+        white-space: nowrap;
+      }
+
+      .sev-now {
+        background: var(--critical-soft);
+        color: var(--critical);
+      }
+      .sev-legal {
+        background: var(--warn-soft);
+        color: var(--warn);
+      }
+      .sev-lead {
+        background: var(--info-soft);
+        color: var(--info);
+      }
+
+      /* ---- settled list ---- */
+
+      ul.settled {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 0;
+      }
+
+      ul.settled > li {
+        padding-block: 14px;
+        border-bottom: 1px solid var(--rule-soft);
+        max-width: var(--measure);
+      }
+
+      ul.settled > li:last-child {
+        border-bottom: 0;
+      }
+
+      ul.settled b {
+        font-weight: 600;
+      }
+
+      ul.settled span {
+        color: var(--ink-soft);
+      }
+
+      /* ---- upcoming ---- */
+
+      .queue {
+        display: grid;
+        gap: 1px;
+        margin-top: 16px;
+        background: var(--rule-soft);
+        border: 1px solid var(--rule-soft);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .queue div {
+        display: grid;
+        grid-template-columns: 62px 1fr;
+        gap: 14px;
+        padding: 12px 14px;
+        background: var(--surface);
+        font-size: 15px;
+      }
+
+      .queue span:first-child {
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 12px;
+        color: var(--ink-faint);
+        padding-top: 3px;
+      }
+
+      footer {
+        margin-block-start: 56px;
+        padding-block-start: 20px;
+        border-top: 1px solid var(--rule);
+        font-size: 14px;
+        color: var(--ink-faint);
+        max-width: var(--measure);
+      }
+
+      .reset {
+        font: inherit;
+        font-size: 13px;
+        color: var(--ink-soft);
+        background: none;
+        border: 1px solid var(--rule);
+        border-radius: 3px;
+        padding: 5px 10px;
+        cursor: pointer;
+        margin-top: 12px;
+      }
+
+      .reset:hover {
+        border-color: var(--ink-faint);
+      }
+
+      @media (max-width: 460px) {
+        .queue div {
+          grid-template-columns: 1fr;
+          gap: 2px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">SundayBest · setup audit</p>
+      <h1>Before You Start</h1>
+      <p class="standfirst">
+        Everything from prompts 1&ndash;7 that is missing, unverified, or waiting on a human. The
+        code is in good shape; this is the list of what the code cannot tell you.
+      </p>
+
+      <div class="meta">
+        <span>Covers prompts 1&ndash;7</span>
+        <span>Updated 2026-09-18</span>
+        <span>Living document &mdash; grows with each prompt</span>
+      </div>
+
+      <ul class="tally">
+        <li><span class="dot p0"></span><b id="n-p0">6</b> wrong right now</li>
+        <li><span class="dot p1"></span><b id="n-p1">6</b> unverified</li>
+        <li><span class="dot p2"></span><b id="n-p2">3</b> before a device build</li>
+        <li><span class="dot p3"></span><b id="n-p3">18</b> before shipping</li>
+      </ul>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-p0">
+          <span class="tag">P0</span>
+          <h2>Wrong right now</h2>
+          <span class="count">6 items</span>
+        </div>
+        <p class="why">
+          These are not future work. Each one is either actively broken, or will bite the next time
+          you run a routine command.
+        </p>
+
+        <ul class="items" data-group="p0">
+          <li>
+            <input type="checkbox" id="p0-1" />
+            <label class="head" for="p0-1"
+              >This shell is running Node 14<span class="sev sev-now">breaks builds</span></label
+            >
+            <p class="note">
+              <code>node -v</code> reports <code>v14.17.6</code>. The project pins 24.21.0 and
+              <code>engines</code> requires <code>&gt;=24.3.0</code>. npm will not warn loudly, but
+              Expo, Jest, and the native TypeScript stripping that <code>check:env</code> depends on
+              all need 24. Run <code>nvm use</code> in every new terminal, or set a default.
+            </p>
+            <p class="ref">
+              <b>Fix</b> nvm use &nbsp;·&nbsp; <b>Check</b> node -v &amp;&amp; cat .nvmrc
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p0-2" />
+            <label class="head" for="p0-2"
+              >The <code>social-media</code> folder is not actually ignored<span class="sev sev-now"
+                >will commit 80+ files</span
+              ></label
+            >
+            <p class="note">
+              <code>.gitignore</code> was given an entry for <code>social_media</code> with an
+              underscore, but the folder on disk is <code>social-media</code> with a hyphen. Git
+              never matches it, so the PNGs and <code>caption-generator.html</code> are sitting
+              untracked and unignored &mdash; the next <code>git add .</code> takes all of them.
+            </p>
+            <p class="ref">
+              <b>Fix</b> change the entry to <code>social-media/</code>, or rename the folder
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p0-3" />
+            <label class="head" for="p0-3"
+              >There is no <code>.env</code>, so the app cannot launch</label
+            >
+            <p class="note">
+              <code>src/core/config/env.ts</code> parses the <code>EXPO_PUBLIC_*</code> variables at
+              startup and throws if any is missing. That is deliberate &mdash; but it means a fresh
+              checkout will not boot until you copy the example.
+            </p>
+            <p class="ref">
+              <b>Fix</b> cp .env.example .env &nbsp;·&nbsp; <b>Check</b> npm run check:env
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p0-4" />
+            <label class="head" for="p0-4"
+              >Secret-shaped strings are in pushed history<span class="sev sev-now"
+                >already public</span
+              ></label
+            >
+            <p class="note">
+              The working tree is clean, but commit <code>638037f</code> still contains
+              <code>sk_live_0123456789abcdef</code> and the jwt.io sample JWT in a test fixture.
+              Both are fake, and both will trip a secret scanner on any fresh clone or ruleset scan.
+              Either rewrite that commit, or record it as an accepted exception so the next person
+              does not re-investigate it.
+            </p>
+            <p class="ref">
+              <b>Where</b> src/utils/redaction/redactSensitive.test.ts at 638037f &nbsp;·&nbsp;
+              <b>Note</b> current files are clean
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p0-5" />
+            <label class="head" for="p0-5">Prompt 7&rsquo;s work is uncommitted</label>
+            <p class="note">
+              All of the security foundation, plus a modified <code>.gitignore</code>, is sitting in
+              the working tree. Nothing is lost, but nothing is backed up either.
+            </p>
+            <p class="ref"><b>Check</b> git status --short</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p0-6" />
+            <label class="head" for="p0-6"
+              >Two stray <code>.git</code> directories on this machine</label
+            >
+            <p class="note">
+              <code>~/Software/.git</code> (empty, from 2022) hijacks the VS Code source-control
+              panel whenever the workspace root is <code>Software/</code> &mdash; this already
+              confused a session. <code>~/Software/sundaybest-v2/.git</code> holds superseded copies
+              of the prompt-1 commits. Deleting either is your call; I have not touched them.
+            </p>
+            <p class="ref"><b>Decision</b> delete, or leave and remember why</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-p1">
+          <span class="tag">P1</span>
+          <h2>Built but never proven</h2>
+          <span class="count">6 items</span>
+        </div>
+        <p class="why">
+          These exist and pass their tests. Nothing has confirmed they work outside a test runner.
+          Worth knowing before you trust any of it.
+        </p>
+
+        <ul class="items" data-group="p1">
+          <li>
+            <input type="checkbox" id="p1-1" />
+            <label class="head" for="p1-1"
+              >The app has never run &mdash; not once, on anything<span class="sev sev-lead"
+                >biggest unknown</span
+              ></label
+            >
+            <p class="note">
+              There is no <code>ios/</code> directory: the project has never been prebuilt, never
+              opened in a simulator, never installed on a phone. Everything to date is verified by
+              Jest and <code>expo export</code>, which bundles JavaScript without executing it. The
+              first real launch is where icons, the splash screen, the entitlement, SQLCipher, and
+              the keychain all get tested for the first time at once.
+            </p>
+            <p class="ref">
+              <b>Next</b> npx expo run:ios (needs Xcode), or an EAS development build
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-2" />
+            <label class="head" for="p1-2">SQLCipher has never encrypted anything</label>
+            <p class="note">
+              <code>useSQLCipher</code> is a native build flag, so it does not exist in Expo Go and
+              cannot run under Jest &mdash; the adapter&rsquo;s tests mock
+              <code>expo-sqlite</code> entirely. The <code>PRAGMA key</code> path and the key-verify
+              probe have never executed against a real encrypted file.
+            </p>
+            <p class="ref"><b>Needs</b> a development build on a device or simulator</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-3" />
+            <label class="head" for="p1-3">Nothing in the app calls the security modules</label>
+            <p class="note">
+              <code>src/core/security/**</code> and <code>src/core/config/flags.ts</code> are
+              reachable from their tests only. That was deliberate &mdash; a bug there cannot break
+              a running app &mdash; but it also means startup wiring is still to come, and until it
+              does, attestation never actually runs.
+            </p>
+            <p class="ref"><b>Note</b> env.ts <em>is</em> wired, via AppProviders</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-4" />
+            <label class="head" for="p1-4"
+              >The Claude Code config from prompt 5 was never verified</label
+            >
+            <p class="note">
+              The hooks were proven to fire, but the rest has never been confirmed to load in a
+              fresh session: rules, memory, subagents, skills, the Expo plugin, and the MCP server.
+            </p>
+            <p class="ref">
+              <b>Run</b> /context &nbsp;· /hooks &nbsp;· /permissions &nbsp;· /plugin &nbsp;· /mcp
+              &nbsp;· /doctor
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-6" />
+            <label class="head" for="p1-6"
+              >The toolchain drifts under you, and the gate notices</label
+            >
+            <p class="note">
+              Expo publishes patch releases inside SDK 57, and
+              <code>expo-doctor</code> compares against the latest ones &mdash; so
+              <code>npm run validate</code> starts failing on its own with no change from you. It
+              happened on 2026-09-18 (<code>expo</code>, <code>expo-constants</code>,
+              <code>expo-router</code>) and was fixed with <code>npx expo install --fix</code>. Do
+              that rather than pinning around it. Check the patch still applies afterwards: a future
+              <code>expo-router</code> bump can invalidate
+              <code>patches/expo-router++query-string+7.1.3.patch</code>, and the security override
+              it exists for goes with it.
+            </p>
+            <p class="ref">
+              <b>Fix</b> npx expo install --fix &nbsp;·&nbsp; <b>Then</b> npx patch-package
+              &amp;&amp; npm audit
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-5" />
+            <label class="head" for="p1-5">
+              <code>validate</code> has only ever run on this machine
+            </label>
+            <p class="note">
+              No CI. The gate is green here, on this Node version, with this lockfile &mdash; which
+              is exactly the setup least likely to catch a problem. Also means the
+              <code>npm audit</code> guarantee in MASVS CODE-3 is a habit, not an enforced rule.
+            </p>
+            <p class="ref"><b>Expected</b> a later prompt in the series</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-p2">
+          <span class="tag">P2</span>
+          <h2>Before the first device build</h2>
+          <span class="count">3 items</span>
+        </div>
+
+        <ul class="items" data-group="p2">
+          <li>
+            <input type="checkbox" id="p2-1" />
+            <label class="head" for="p2-1">There is no <code>eas.json</code></label>
+            <p class="note">
+              So no build profile sets <code>APP_VARIANT</code>. Every EAS build would silently fall
+              back to the <code>development</code> default and produce a dev-identity app. The npm
+              scripts set it for local work; builds have nothing.
+            </p>
+            <p class="ref"><b>Needs</b> profiles for development, preview, production</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p2-2" />
+            <label class="head" for="p2-2">The minimum iOS version is inherited, not chosen</label>
+            <p class="note">
+              <code>app.config.ts</code> sets no <code>ios.deploymentTarget</code>, so it takes
+              whatever Expo SDK 57 defaults to. App Attest needs iOS 14 or later, so this should be
+              a decision rather than a side effect. This is MASVS CODE-1.
+            </p>
+            <p class="ref"><b>Where</b> app.config.ts &rarr; ios.deploymentTarget</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p2-3" />
+            <label class="head" for="p2-3">
+              <code>APP_VARIANT</code> and <code>EXPO_PUBLIC_APP_VARIANT</code> can disagree
+            </label>
+            <p class="note">
+              One decides the app&rsquo;s identity at build time; the other decides what the running
+              app believes it is. Nothing enforces the match. A production build that forgets the
+              second one reports itself as development at runtime &mdash; which turns verbose
+              logging on in a shipped app.
+            </p>
+            <p class="ref"><b>Fix</b> set both from one place in the EAS build profile</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-p3">
+          <span class="tag">P3</span>
+          <h2>Before TestFlight or the App Store</h2>
+          <span class="count">9 items</span>
+        </div>
+        <p class="why">
+          Account actions and artwork. The enrollment item has a multi-day lead time and blocks
+          everything else in this section, so start it first even though it is not urgent.
+        </p>
+
+        <ul class="items" data-group="p3a">
+          <li>
+            <input type="checkbox" id="p3-1" />
+            <label class="head" for="p3-1"
+              >Apple Developer Program &mdash; organization enrollment<span class="sev sev-lead"
+                >~5 business days</span
+              ></label
+            >
+            <p class="note">
+              Needs a D-U-N-S number for the legal entity first, which is free but slow. Individual
+              enrollment does not need one, but only organization enrollment gets a company name on
+              the listing. Nothing else in this section can finish until this does.
+            </p>
+            <p class="ref"><b>Order</b> request D-U-N-S &rarr; wait &rarr; enroll</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-2" />
+            <label class="head" for="p3-2">Two-factor authentication on all three accounts</label>
+            <p class="note">
+              Apple ID (required for App Store Connect and EAS credential automation), the Expo
+              account, and GitHub. Prefer a hardware key or TOTP over SMS.
+            </p>
+            <p class="ref"><b>Accounts</b> walt.whitakerv@gmail.com &nbsp;·&nbsp; @wwhitakerv</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-3" />
+            <label class="head" for="p3-3">Register the three bundle IDs</label>
+            <p class="note">
+              All three already exist in <code>app.config.ts</code> and none exists in Apple&rsquo;s
+              portal yet.
+            </p>
+            <p class="ref">
+              com.walterwhitaker.sundaybest &nbsp;·&nbsp; .preview &nbsp;·&nbsp; .dev
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-4" />
+            <label class="head" for="p3-4"
+              >Enable the App Attest capability on each bundle ID</label
+            >
+            <p class="note">
+              The entitlement is already declared in the config, but the capability is a separate
+              action in the developer portal. Without it, the native attestation calls fail at
+              runtime.
+            </p>
+            <p class="ref"><b>Where</b> Apple Developer portal &rarr; Identifiers</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-5" />
+            <label class="head" for="p3-5"
+              >Confirm the export-compliance answer<span class="sev sev-legal"
+                >legal, not config</span
+              ></label
+            >
+            <p class="note">
+              <code>usesNonExemptEncryption</code> is set to <code>false</code>, which was accurate
+              when it was written. Prompt 7 then added SQLCipher &mdash; encryption at rest via a
+              third-party library &mdash; which can change the answer. Re-read Apple&rsquo;s
+              guidance and confirm; an incorrect declaration is a compliance problem, not a bug.
+            </p>
+            <p class="ref">
+              <b>Verify with</b> npx expo config --type prebuild &mdash;
+              <code>--type public</code> strips <code>ios.config</code> and shows nothing
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-6" />
+            <label class="head" for="p3-6">Replace the three placeholder icons</label>
+            <p class="note">
+              <code>assets/icon.png</code> and its dev and preview siblings are generated
+              block-letter placeholders from <code>npm run icons</code>. Real artwork must have no
+              alpha channel &mdash; Apple rejects icons that do.
+            </p>
+            <p class="ref">
+              <b>Also</b> splash artwork is unset; only a background colour is configured
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-7" />
+            <label class="head" for="p3-7"
+              >Universal links: finish them, or delete the placeholder</label
+            >
+            <p class="note">
+              <code>associatedDomains: ["applinks:sundaybest.com"]</code> currently does nothing on
+              its own. It needs the domain registered and served over https, an
+              <code>apple-app-site-association</code> file at <code>/.well-known/</code> listing the
+              team ID and each bundle ID, and the capability enabled per bundle ID. If you do not
+              want universal links, delete the entry rather than shipping a dead entitlement.
+            </p>
+            <p class="ref"><b>Decision first</b> do you want them at all?</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-8" />
+            <label class="head" for="p3-8">Answer the App Store privacy questionnaire</label>
+            <p class="note">
+              <code>docs/privacy/data-inventory.md</code> is current and says the app collects
+              nothing, which makes this easy &mdash; but it still has to be answered, and it has to
+              agree with the privacy manifest. This is MASVS PRIVACY-3.
+            </p>
+            <p class="ref"><b>Source</b> docs/privacy/data-inventory.md</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-9" />
+            <label class="head" for="p3-9"
+              >Tell users there is no account, so there is no recovery</label
+            >
+            <p class="note">
+              With no sign-in there is no way to prove who someone is, so any recovery mechanism
+              would double as an impersonation route. That is the right call &mdash; but it means
+              losing the device loses the data, and the UI has to say so plainly rather than let
+              someone discover it.
+            </p>
+            <p class="ref"><b>Source</b> threat model, abuse case U7</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-p3">
+          <span class="tag">P3</span>
+          <h2>The backend, which does not exist</h2>
+          <span class="count">9 items</span>
+        </div>
+        <p class="why">
+          Everything the attestation work does is client-side evidence. Until a server checks it,
+          none of it stops anybody &mdash; an assertion nobody verifies is theatre. Two MASVS
+          controls stay open purely on this.
+        </p>
+
+        <ul class="items" data-group="p3b">
+          <li>
+            <input type="checkbox" id="be-1" />
+            <label class="head" for="be-1"
+              >Verify attestations per Apple&rsquo;s guide, fully</label
+            >
+            <p class="note">
+              The certificate chain to Apple&rsquo;s App Attest root, the nonce (SHA-256 of the
+              authenticator data plus the SHA-256 of the challenge), the App ID hash against the
+              right team and bundle ID, a counter of 0, and the <code>aaguid</code>. Store the
+              receipt &mdash; it is what later lets you assess risk per key.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-2" />
+            <label class="head" for="be-2">Verify an assertion on every request</label>
+            <p class="note">
+              Which means storing each key&rsquo;s public key at registration, so there is something
+              to verify against.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-3" />
+            <label class="head" for="be-3"
+              >Never act on a <code>keyId</code> alone<span class="sev sev-now"
+                >easy total failure</span
+              ></label
+            >
+            <p class="note">
+              A <code>keyId</code> is public. Acting on one without a verifying assertion lets
+              anyone burn someone else&rsquo;s rate limit by submitting their key.
+            </p>
+            <p class="ref"><b>Source</b> threat model, abuse case U5</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-4" />
+            <label class="head" for="be-4">Replay protection &mdash; both halves</label>
+            <p class="note">
+              Challenges single-use, stored, deleted on first use, expiring after 120 seconds. And
+              the assertion counter must <em>strictly increase</em> per key, with the write
+              transactional against issuing the token &mdash; a non-atomic update is a replay
+              window. The counter is the half that gets forgotten.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-5" />
+            <label class="head" for="be-5">Issue and rotate tokens</label>
+            <p class="note">
+              Short-lived access token, 900s by default. Refresh token rotated on every use &mdash;
+              and a refresh token presented twice means it leaked, so revoke that key&rsquo;s
+              session family and force re-attestation.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-6" />
+            <label class="head" for="be-6">Rate-limit per attested key</label>
+            <p class="note">
+              10/min on <code>/attest/challenge</code>, 5/hour on <code>/attest/verify</code>,
+              30/hour on <code>/session/refresh</code>, plus a separate global limit for challenge
+              requests that carry no key at all.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-7" />
+            <label class="head" for="be-7">Accept both App Attest environments</label>
+            <p class="note">
+              Apple ignores the <code>appattest-environment</code> entitlement once a build ships
+              through TestFlight, so a <em>preview</em> build installed from TestFlight produces
+              <em>production</em> attestations. Decide per environment; never infer it from the
+              variant or the bundle ID.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-8" />
+            <label class="head" for="be-8">Accept only the three known bundle IDs</label>
+            <p class="note">And keep production data to the production bundle ID only.</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="be-9" />
+            <label class="head" for="be-9">Decide what revokes a key</label>
+            <p class="note">
+              Manual only, or automated on a risk signal from the attestation receipt. Also settle
+              whether <code>keyId</code> becomes a data-retention subject once it is logged
+              server-side &mdash; it is an install identifier.
+            </p>
+          </li>
+        </ul>
+        <p class="ref" style="margin-top: 18px">
+          <b>Full contract</b> docs/api/attestation.md &nbsp;·&nbsp; <b>Fake server</b>
+          test/mocks/attestation-handlers.ts
+        </p>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-p2">
+          <span class="tag">Open</span>
+          <h2>Security controls still open</h2>
+          <span class="count">10 of 24</span>
+        </div>
+        <p class="why">
+          OWASP MASVS v2, as tracked in <code>docs/security/masvs-checklist.md</code>: 8 done, 10
+          planned, 6 genuinely not applicable. The ten below are real gaps, and they cluster in
+          three honest places &mdash; no server, no product surface, no release plumbing.
+        </p>
+
+        <ul class="items" data-group="masvs">
+          <li>
+            <input type="checkbox" id="m-1" />
+            <label class="head" for="m-1"
+              >STORAGE-2 &mdash; prevent leakage of sensitive data</label
+            >
+            <p class="note">
+              Redaction, the console ban, and value-free error messages are in place. Missing:
+              screenshot and app-snapshot protection, a pasteboard policy, and a backup-exclusion
+              review once there is data to exclude.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-2" />
+            <label class="head" for="m-2">NETWORK-2 &mdash; certificate pinning</label>
+            <p class="note">
+              Deliberately deferred rather than skipped: it is bypassable by the device owner, who
+              is the party most able to intercept, and it brings a bricking risk on rotation.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-3" />
+            <label class="head" for="m-3">PLATFORM-1 &mdash; deep links parsed per route</label>
+            <p class="note">
+              The rule exists and the ReDoS in link parsing is patched, but there are no
+              parameterised routes yet, so there is nothing parsing anything.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-4" />
+            <label class="head" for="m-4">PLATFORM-3 &mdash; use the UI securely</label>
+            <p class="note">
+              Snapshot protection on backgrounding, pasteboard policy, and keyboard-cache review.
+              Nothing sensitive is on screen yet, which is the only reason this is not urgent.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-5" />
+            <label class="head" for="m-5"
+              >CODE-1 &mdash; require an up-to-date platform version</label
+            >
+            <p class="note">Same item as pinning the minimum iOS version above.</p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-6" />
+            <label class="head" for="m-6">CODE-2 &mdash; a way to force an update</label>
+            <p class="note">
+              No forced-update path and no EAS Update, so a vulnerable build cannot be retired
+              except by a release users choose to install.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-7" />
+            <label class="head" for="m-7">RESILIENCE-1 &mdash; validate platform integrity</label>
+            <p class="note">
+              Jailbreak and tamper detection is still an empty folder, and the server half of
+              attestation does not exist.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-8" />
+            <label class="head" for="m-8">RESILIENCE-2 &mdash; anti-tampering</label>
+            <p class="note">
+              App Attest is the mechanism and <code>session.clear()</code> is the response. Blocked
+              on the same server work.
+            </p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-9" />
+            <label class="head" for="m-9">PRIVACY-3 &mdash; be transparent about data</label>
+            <p class="note">The questionnaire and the in-app disclosure, both listed above.</p>
+          </li>
+          <li>
+            <input type="checkbox" id="m-10" />
+            <label class="head" for="m-10"
+              >PRIVACY-4 &mdash; give users control over their data</label
+            >
+            <p class="note">
+              Nothing is stored yet, so there is nothing to delete or export. Needed with the first
+              tables: a delete that actually removes rather than hides.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-settled">
+          <span class="tag">Settled</span>
+          <h2>Decided, not forgotten</h2>
+          <span class="count">8 items</span>
+        </div>
+        <p class="why">
+          These look like gaps and are not. Each was considered and decided against, with the
+          reasoning recorded. Do not &ldquo;fix&rdquo; them without reading the ADR first.
+        </p>
+
+        <ul class="settled">
+          <li>
+            <b>No simulator-specific attestation result.</b>
+            <span
+              >App Attest reports itself unavailable on the Simulator before any API can say more,
+              and no bundled module exposes a simulator flag. Distinguishing it would mean adding
+              <code>expo-device</code> to change a log label.</span
+            >
+          </li>
+          <li>
+            <b>No anti-obfuscation or anti-debugging</b> (MASVS RESILIENCE-3, RESILIENCE-4).
+            <span
+              >There is no secret in the bundle for it to protect, and on a device the attacker owns
+              it is a speed bump. The defence is server-side verification.</span
+            >
+          </li>
+          <li>
+            <b>The whole AUTH category is not applicable.</b>
+            <span
+              >No accounts, no sign-in, no authorization model. Revisit only if that changes.</span
+            >
+          </li>
+          <li>
+            <b>The variant list is duplicated</b> in <code>app.config.ts</code> and
+            <code>env-schema.ts</code>.
+            <span
+              >Sharing it was tried and reverted: it works under
+              <code>expo config --type public</code> and breaks under <code>--full</code>, which is
+              the path expo-doctor takes.</span
+            >
+          </li>
+          <li>
+            <b>SQLCipher uses the passphrase form, not a raw key.</b>
+            <span
+              >The raw form skips PBKDF2 and is attractive for material that is already 256 bits,
+              but it is outside the documented path and cannot be verified without a device.</span
+            >
+          </li>
+          <li>
+            <b>There are no down migrations.</b>
+            <span
+              >A rollback on a user&rsquo;s phone is a data-loss event with no operator watching. If
+              a migration is wrong, the fix is another migration.</span
+            >
+          </li>
+          <li>
+            <b>The env schema has no defaults</b>, which is why <code>.env</code> is required.
+            <span
+              >Defaulting the variant would let a production build that forgot it report itself as
+              development &mdash; turning verbose logging on in a shipped app.</span
+            >
+          </li>
+          <li>
+            <b>Node stays on 24 and ESLint stays on 9.</b>
+            <span
+              >ESLint 10 breaks <code>eslint-plugin-react</code>, which Expo&rsquo;s config depends
+              on. Three dependency pins and one patch keep <code>npm audit</code> at zero without
+              leaving SDK 57.</span
+            >
+          </li>
+        </ul>
+      </section>
+
+      <!-- ================================================================ -->
+      <section>
+        <div class="band sec-settled">
+          <span class="tag">Queue</span>
+          <h2>Prompts still to come</h2>
+          <span class="count">8&ndash;13</span>
+        </div>
+        <p class="why">
+          Several gaps above are expected to close here rather than needing separate work. What is
+          known from the series so far:
+        </p>
+        <div class="queue">
+          <div><span>8</span><span>Not yet specified.</span></div>
+          <div>
+            <span>9</span
+            ><span>Diagnostics &mdash; must update the data inventory when it lands.</span>
+          </div>
+          <div>
+            <span>10</span><span>Expected to bring CI, which closes the unverified-gate gap.</span>
+          </div>
+          <div>
+            <span>11</span
+            ><span
+              >Release: fills in the <code>release</code> skill, and likely
+              <code>eas.json</code>.</span
+            >
+          </div>
+          <div><span>12</span><span>Maestro end-to-end tests.</span></div>
+          <div><span>13</span><span>Not yet specified.</span></div>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Sources: <code>docs/SETUP_CHECKLIST.md</code>,
+          <code>docs/security/masvs-checklist.md</code>, <code>docs/security/threat-model.md</code>,
+          <code>docs/api/attestation.md</code>, <code>docs/PROJECT.md</code>, and ADRs
+          0001&ndash;0005. Where this page and those files disagree, they are right and this is
+          stale.
+        </p>
+        <p>
+          Tick boxes are remembered in this browser only. They are not shared and not committed.
+        </p>
+        <button class="reset" type="button" id="reset">Clear all ticks</button>
+      </footer>
+    </main>
+
+    <script>
+      (function () {
+        var KEY = "sundaybest.before-you-start.v1";
+        var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"]'));
+
+        function read() {
+          try {
+            return JSON.parse(localStorage.getItem(KEY) || "{}") || {};
+          } catch (e) {
+            return {};
+          }
+        }
+
+        function write(state) {
+          try {
+            localStorage.setItem(KEY, JSON.stringify(state));
+          } catch (e) {
+            /* private window, blocked storage — the page still works */
+          }
+        }
+
+        function paint(box) {
+          var li = box.closest("li");
+          if (li) li.classList.toggle("is-done", box.checked);
+        }
+
+        function counts() {
+          [
+            ["p0", "n-p0"],
+            ["p1", "n-p1"],
+            ["p2", "n-p2"],
+          ].forEach(function (pair) {
+            var list = document.querySelector('[data-group="' + pair[0] + '"]');
+            if (!list) return;
+            var items = list.querySelectorAll('input[type="checkbox"]');
+            var left = 0;
+            items.forEach(function (i) {
+              if (!i.checked) left += 1;
+            });
+            var out = document.getElementById(pair[1]);
+            if (out) out.textContent = String(left);
+          });
+
+          var shipping = document.querySelectorAll(
+            '[data-group="p3a"] input, [data-group="p3b"] input',
+          );
+          var left = 0;
+          shipping.forEach(function (i) {
+            if (!i.checked) left += 1;
+          });
+          var out = document.getElementById("n-p3");
+          if (out) out.textContent = String(left);
+        }
+
+        var state = read();
+
+        boxes.forEach(function (box) {
+          if (state[box.id]) box.checked = true;
+          paint(box);
+
+          box.addEventListener("change", function () {
+            var next = read();
+            if (box.checked) next[box.id] = true;
+            else delete next[box.id];
+            write(next);
+            paint(box);
+            counts();
+          });
+        });
+
+        counts();
+
+        var reset = document.getElementById("reset");
+        if (reset) {
+          reset.addEventListener("click", function () {
+            write({});
+            boxes.forEach(function (box) {
+              box.checked = false;
+              paint(box);
+            });
+            counts();
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

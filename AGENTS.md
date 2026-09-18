@@ -31,6 +31,7 @@ before writing any code. Assume anything you remember about Expo is out of date.
 | `npm run ios` / `npm run start`           | Dev server (both set `APP_VARIANT=development`)              |
 | `npm run dev:mcp`                         | Dev server with Expo MCP local capabilities                  |
 | `npm run icons`                           | Regenerates the placeholder variant icons                    |
+| `/update-report`                          | Re-audits the setup series into `Before-You-Start.html`      |
 
 Install Expo SDK packages with `npx expo install`. Pin exact versions (no `^`,
 no `~`) for everything else. Use npm, and `npx` where another runner would be used.

@@ -192,6 +192,61 @@ Full rationale in [ADR 0004](./adr/0004-configuration-and-environments.md).
   executes the module. A build with no `.env` exports cleanly and fails on
   launch. `npm run check:env` is the build-time guard.
 
+## Security foundation
+
+Full rationale in [ADR 0005](./adr/0005-app-attest-and-encrypted-storage.md);
+threats in [docs/security/threat-model.md](./security/threat-model.md); control
+coverage in [docs/security/masvs-checklist.md](./security/masvs-checklist.md).
+
+The app has no accounts, so the backend authenticates the **install** with Apple
+App Attest rather than a user. The backend does not exist yet — it is specified
+in [docs/api/attestation.md](./api/attestation.md), with matching Zod schemas in
+`src/core/api/contracts/` and a fake server in `test/mocks/`.
+
+| Module                             | Does                                         |
+| ---------------------------------- | -------------------------------------------- |
+| `src/core/security/secure-storage` | Keychain, typed keys, Zod-validated reads    |
+| `src/core/security/attestation`    | App Attest flow, typed results, never throws |
+| `src/core/security/session`        | Short-lived tokens, single-flight refresh    |
+| `src/core/security/database-key`   | Generates and keeps the SQLCipher key        |
+| `src/core/storage/database`        | SQLCipher adapter and the migration runner   |
+
+`@expo/app-integrity` is pinned to an **exact** version (`57.0.2`): it is a young
+library on the path that decides whether the backend trusts a request.
+
+### Security traps found while building this — do not "fix" these blindly
+
+- **`expo-sqlite` cannot be imported at the top of a Jest test file.** Its entry
+  point pulls in `hooks.tsx`, which requires `expo-asset` — installed only at
+  `node_modules/expo/node_modules/expo-asset`. Metro resolves that nested copy;
+  Jest's resolver does not, so the suite dies with
+  `Cannot find module 'expo-asset'` before a single test runs. Use
+  `jest.mock("expo-sqlite", factory)` so the real module never executes. Do not
+  "fix" it by installing `expo-asset` at the root just to satisfy Jest.
+- **`AppIntegrity.isSupported` is `undefined` under Jest**, and is a module-scope
+  **const** in the library, evaluated at import time. Read it inside the call,
+  never captured at our own module scope, and compare against `true` rather than
+  coercing — otherwise an absent constant reads as available.
+- **`@expo/app-integrity` reports `isSupported === true` on non-iOS.** The
+  library computes `Platform.OS === "ios" ? native.isSupported : true`, meaning
+  "the Android path is available". Check the platform **first**, or a non-Apple
+  platform looks like it has App Attest.
+- **SQLCipher does not work in Expo Go.** `useSQLCipher` is a native build flag,
+  so the encrypted database needs a development build.
+- **`PRAGMA key` has no parameterised form**, so the key is concatenated into
+  SQL. `sqlcipher-database.ts` re-validates the key against
+  `/^[0-9a-f]{64}$/` before interpolating even though `database-key.ts` generates
+  exactly that format. Do not remove the second check as redundant — it is the
+  one standing between a malformed key and SQL injection.
+- **A wrong SQLCipher key fails silently at `PRAGMA key`** and only errors on the
+  first read. The adapter runs a `SELECT count(*) FROM sqlite_master` probe at
+  open so that failure surfaces where its cause is obvious.
+- **Jest mock factories may only reference `mock`-prefixed variables.** A
+  factory that closes over `supported` fails with "not allowed to reference any
+  out-of-scope variables"; `mockSupported` is fine.
+- **Nothing calls the security modules yet.** They are reachable from their tests
+  only. Wiring them into startup is a later prompt, deliberately.
+
 ## Architecture
 
 Feature-sliced, with the dependency direction enforced in ESLint. Full rationale

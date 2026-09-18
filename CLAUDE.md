@@ -22,7 +22,14 @@ Present the plan and wait for approval before editing them.
 
 Both reviewers are read-only: they report, you fix.
 
-**Skills:** `/new-feature`, `/tdd-cycle`, `/add-dependency`, `/release`.
+**Skills:** `/new-feature`, `/tdd-cycle`, `/add-dependency`, `/release`,
+`/update-report`.
+
+`/update-report` also runs on the phrase **"update my report"** (or "update the
+report", "refresh my checklist"). It re-audits the whole setup series and brings
+`Before-You-Start.html` current — the operator's list of what is missing,
+unverified, or waiting on a human. Re-derive every item from the repo, never
+from memory or from the previous version of the page.
 
 **Rules** in `.claude/rules/` load automatically — `architecture.md` every
 session, the rest only when you touch matching paths.

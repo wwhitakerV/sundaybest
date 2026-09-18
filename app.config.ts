@@ -1,6 +1,8 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 import expoRouterPlugin from "expo-router/plugin";
+import secureStorePlugin from "expo-secure-store/plugin";
 import splashScreenPlugin from "expo-splash-screen/plugin";
+import sqlitePlugin from "expo-sqlite/plugin";
 
 /**
  * Expo app config. Replaces app.json so the three build variants can share one
@@ -34,6 +36,17 @@ interface VariantIdentity {
   readonly name: string;
   readonly bundleIdentifier: string;
   readonly icon: string;
+  /**
+   * Which App Attest environment this build talks to.
+   *
+   * Apple ignores this entitlement once a build is distributed through
+   * TestFlight, the App Store, or the Enterprise programme — such a build always
+   * uses production. So `preview` says `development` here and will nonetheless
+   * produce **production** attestations when installed from TestFlight. The
+   * backend therefore decides per environment rather than assuming the variant
+   * implies it; that requirement is written into docs/api/attestation.md.
+   */
+  readonly appAttestEnvironment: "development" | "production";
 }
 
 /**
@@ -45,16 +58,19 @@ const VARIANTS: Readonly<Record<AppVariant, VariantIdentity>> = {
     name: "SundayBest (Dev)",
     bundleIdentifier: "com.walterwhitaker.sundaybest.dev",
     icon: "./assets/icon-development.png",
+    appAttestEnvironment: "development",
   },
   preview: {
     name: "SundayBest (Preview)",
     bundleIdentifier: "com.walterwhitaker.sundaybest.preview",
     icon: "./assets/icon-preview.png",
+    appAttestEnvironment: "development",
   },
   production: {
     name: "SundayBest",
     bundleIdentifier: "com.walterwhitaker.sundaybest",
     icon: "./assets/icon.png",
+    appAttestEnvironment: "production",
   },
 };
 
@@ -170,6 +186,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
       privacyManifests,
 
+      // App Attest. `@expo/app-integrity` ships no config plugin, so the
+      // capability's entitlement is declared here; without it the native
+      // DCAppAttestService calls fail at runtime. Confirmed against Apple's
+      // entitlement reference — a String, "development" or "production".
+      entitlements: {
+        "com.apple.developer.devicecheck.appattest-environment": identity.appAttestEnvironment,
+      },
+
       // Export compliance. `false` is accurate for the app as it stands: it
       // implements no cryptography of its own and relies only on the platform's
       // TLS, which is exempt. This sets ITSAppUsesNonExemptEncryption in
@@ -189,6 +213,22 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       expoRouterPlugin(),
       splashScreenPlugin({
         backgroundColor: "#FFFFFF",
+      }),
+
+      // SQLCipher is a native build flag, so the encrypted database needs a real
+      // build — it does not work in Expo Go. The key is provisioned on-device by
+      // src/core/security/database-key and applied with PRAGMA key at open.
+      sqlitePlugin({
+        useSQLCipher: true,
+      }),
+
+      // `faceIDPermission: false` on purpose. The app never passes
+      // `requireAuthentication` to expo-secure-store, so it has no use for Face
+      // ID, and declaring NSFaceIDUsageDescription would claim a capability the
+      // app does not use — which is both an App Review question to answer and a
+      // permission string to justify.
+      secureStorePlugin({
+        faceIDPermission: false,
       }),
     ],
 
