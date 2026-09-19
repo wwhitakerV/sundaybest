@@ -1,0 +1,29 @@
+# gitleaks config. Extends the tool's own default rule set rather than
+# replacing it, so this file only has to say what SundayBest allows on top
+# of everything gitleaks already knows how to detect.
+#
+# The allowlist is scoped to exactly two things, on purpose:
+#   1. .env.example — placeholders only by design (see that file's own
+#      header comment), but a placeholder can still look credential-shaped
+#      to gitleaks' generic high-entropy rules.
+#   2. Test fixtures — mocks, factories, and *.test.ts(x) files
+#      intentionally contain fake credential-shaped strings (planted bearer
+#      tokens, JWTs, hex digests) to exercise
+#      src/utils/redaction/redactSensitive.ts and the crash-reporter
+#      scrubbing tests. See src/utils/redaction/redactSensitive.test.ts and
+#      src/core/monitoring/crash-reporter.test.ts.
+#
+# Nothing else is allowlisted. A real secret anywhere outside these paths
+# still fails the scan.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders and test fixtures only"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)test/mocks/.*''',
+  '''(^|/)test/factories/.*''',
+  '''.*\.test\.tsx?$''',
+]

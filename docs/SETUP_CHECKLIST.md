@@ -101,6 +101,89 @@ openssl s_client -connect api.sundaybest.com:443 -servername api.sundaybest.com 
       A simulator cannot exercise it: development deliberately turns monitoring
       off, because a simulator trips `simulator`, `debug`, and `devMode` by design.
 
+## Crash reporting (Sentry)
+
+`src/core/monitoring/crash-reporter.ts` and `metro.config.js` are ready;
+nothing is provisioned. **A build with no DSN sends nothing** — that is
+deliberate, and it is this section that turns reporting on.
+
+- [ ] **Create the Sentry project** and obtain its DSN, then set
+      `EXPO_PUBLIC_SENTRY_DSN` for the preview and production EAS build
+      profiles. This is **not a secret** — like the API URL, it is compiled into
+      the bundle and readable by anyone with the app — but it is per-project, so
+      it cannot be invented here. Leave it empty in development.
+- [ ] **Generate a Sentry auth token** (Sentry → Developer Settings → Auth
+      Tokens) and store it as an **EAS environment variable named
+      `SENTRY_AUTH_TOKEN` with secret visibility**. This one genuinely is a
+      secret: it authorizes uploading source maps and must never be
+      `EXPO_PUBLIC_*`, never in `.env`, never committed. With no `organization`
+      or `project` passed in `app.config.ts`'s plugin entry, the Sentry Expo
+      config plugin falls back to `SENTRY_ORG` / `SENTRY_PROJECT` /
+      `SENTRY_AUTH_TOKEN` environment variables at build time — set those three
+      as EAS environment variables too (org and project are not secrets;
+      `SENTRY_AUTH_TOKEN` is).
+- [ ] **Confirm source maps upload from EAS Build** on the first real preview
+      build — check the Sentry project's Releases view for the build's
+      release/dist. No extra step should be needed; the plugin handles it once
+      the environment variables above are set.
+- [ ] **Confirm source maps upload from EAS Update separately**, if and when
+      this app adopts `expo-updates` — it does not yet
+      (`docs/PROJECT.md`'s "expo-updates" note). EAS Update's source-map upload
+      is `npx sentry-expo-upload-sourcemaps dist`, a distinct step from the
+      Build-time upload, chained after `eas update` or run as its own CI step.
+- [ ] **Revisit `metro.config.js`'s decision to skip `withSentryConfig`.**
+      `@sentry/react-native/metro`'s `withSentryConfig` (Debug IDs, better
+      source-map correlation) currently breaks `npx expo export -p ios` with
+      `TypeError: Cannot read properties of undefined (reading 'match')`,
+      thrown from inside Sentry's Metro serializer once it processes the real
+      module graph. Source maps still work without it via the release/dist tag.
+      Re-test with whatever `@sentry/react-native` version is installed at the
+      time — check its changelog for a Metro/serializer fix first.
+- [ ] **Add crash data to the App Store privacy questionnaire** before the
+      first submission: category **Diagnostics → Crash Data**, not linked to
+      the user, not used for tracking. See
+      [docs/privacy/data-inventory.md](./privacy/data-inventory.md) for what is
+      actually sent.
+
+## Repository guardrails and CI
+
+`lefthook.yml`, `.github/workflows/ci.yml`, `renovate.json`, and the
+GitHub-side governance files (`.github/CODEOWNERS`,
+`.github/pull_request_template.md`, issue templates, `SECURITY.md`) are all
+in place. These account-level and settings-level actions are not:
+
+- [ ] **Run `scripts/setup-branch-protection.sh`.** Needs the `gh` CLI
+      installed and authenticated (`gh auth login`) as an account with admin
+      on the repo. Sets, on `main`: pull requests required, 1 approval
+      minimum, Code Owner review required, the CI job required and
+      up-to-date, signed commits required, linear history required, force
+      pushes blocked. Re-run it if the CI job name in
+      `.github/workflows/ci.yml` ever changes — the script matches by name,
+      not by workflow file.
+- [ ] **Install the Renovate GitHub App** on the repo
+      (<https://github.com/apps/renovate>) so `renovate.json` actually takes
+      effect. The config file alone does nothing without the app installed.
+- [ ] **Turn on GitHub secret scanning with push protection.** Repo Settings
+      → Code security → Secret scanning. Push protection rejects a commit
+      containing a detected secret _before_ it reaches the remote — a second,
+      GitHub-native layer alongside the local gitleaks pre-commit hook and
+      the gitleaks CI job, not a replacement for either.
+- [ ] **Turn on Dependabot alerts.** Repo Settings → Code security →
+      Dependabot alerts. Distinct from Renovate: this is GitHub's own
+      vulnerability _detection_, Renovate is the _update_ automation: keep
+      both on.
+- [ ] **Set up commit signing for each developer**, before running the
+      branch-protection script above — once `required_signatures` is on,
+      an unsigned commit cannot be pushed at all. GPG or SSH signing key,
+      registered with GitHub
+      (<https://docs.github.com/en/authentication/managing-commit-signature-verification>),
+      and `git config commit.gpgsign true` (or the SSH equivalent) locally.
+- [ ] **Install the `gitleaks` binary** for the pre-commit hook to find on
+      `PATH` — Homebrew (`brew install gitleaks`) or a binary download from
+      <https://github.com/gitleaks/gitleaks/releases>. **Not**
+      `npm install gitleaks`: the npm package of that name is an unrelated
+      tool by a different author, not the real gitleaks.
+
 ## Backend — attestation and sessions
 
 **None of the client-side attestation work is worth anything until a server

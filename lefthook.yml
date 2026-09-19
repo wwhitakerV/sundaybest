@@ -1,0 +1,37 @@
+# Git hooks, managed by lefthook. Installed automatically on `npm install`
+# via lefthook's own postinstall script — no extra `prepare` script needed.
+# See docs/adr/0008-repository-guardrails-and-ci.md.
+
+pre-commit:
+  parallel: true
+  commands:
+    eslint:
+      glob: "*.{js,jsx,ts,tsx}"
+      run: npx eslint --fix {staged_files}
+      stage_fixed: true
+    prettier:
+      glob: "*.{js,jsx,ts,tsx,json,md,yml,yaml}"
+      run: npx prettier --write {staged_files}
+      stage_fixed: true
+    gitleaks:
+      # Scans staged changes only, not the whole history — a full scan of
+      # history happens in CI. `git --pre-commit --staged` is gitleaks'
+      # current (v8.19+) command for this; `protect --staged` is the same
+      # thing under the older, now-deprecated command name. Needs the
+      # gitleaks binary on PATH; see docs/SETUP_CHECKLIST.md, "Per
+      # developer". Not `npm install gitleaks` — that npm package is an
+      # unrelated tool.
+      run: gitleaks git --pre-commit --staged --redact --config .gitleaks.toml
+    related-tests:
+      glob: "*.{ts,tsx}"
+      run: npm run test:related -- {staged_files}
+
+commit-msg:
+  commands:
+    commitlint:
+      run: npx commitlint --edit {1}
+
+pre-push:
+  commands:
+    validate:
+      run: npm run validate

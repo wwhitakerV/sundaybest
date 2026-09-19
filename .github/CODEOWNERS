@@ -1,0 +1,15 @@
+# Code owners. See docs/adr/0008-repository-guardrails-and-ci.md.
+#
+# Last match wins, so the catch-all is listed first and the narrower,
+# security-sensitive paths after it — even though every one of them already
+# resolves to the same owner today, listing them explicitly keeps the
+# audit-sensitive surface visible in this file rather than only implied by
+# the wildcard.
+
+* @wwhitakerv
+
+src/core/security/ @wwhitakerv
+app.config.ts @wwhitakerv
+eas.json @wwhitakerv
+.eas/ @wwhitakerv
+.github/ @wwhitakerv

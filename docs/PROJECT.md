@@ -373,6 +373,53 @@ undefined (reading 'match')`, thrown from inside Sentry's own Metro
   `@sentry/react-native` module must be re-`require`'d alongside
   `crash-reporter` in the same call — see `freshReporter()` in that file.
 
+## Repository guardrails and CI
+
+Full rationale in [ADR 0008](./adr/0008-repository-guardrails-and-ci.md).
+
+| File                                 | Does                                                                                                |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `lefthook.yml`                       | pre-commit (eslint/prettier/gitleaks/related tests), commit-msg (commitlint), pre-push (`validate`) |
+| `commitlint.config.js`               | Conventional Commits, via `@commitlint/config-conventional`                                         |
+| `.gitleaks.toml`                     | extends gitleaks' defaults; allowlists `.env.example` and test fixtures only                        |
+| `.github/workflows/ci.yml`           | mirrors `validate` step-by-step, plus audit/OSV-Scanner/gitleaks/SBOM                               |
+| `renovate.json`                      | weekly schedule; Expo SDK grouped and never auto-merged                                             |
+| `scripts/setup-branch-protection.sh` | `gh api` calls for `main`'s protection rules — written, not run                                     |
+
+### Traps found while building this — do not "fix" these blindly
+
+- **The `gitleaks` package on npm is not the real tool.** It's an unrelated
+  wrapper by a different author (v1.0.0). Real gitleaks is a Go binary,
+  downloaded from `github.com/gitleaks/gitleaks/releases` — both locally
+  (per-developer install, see `docs/SETUP_CHECKLIST.md`) and in CI (pinned
+  version, checksum-verified download). Never `npm install gitleaks`.
+- **`gitleaks detect`/`protect` are deprecated (v8.19+)** in favor of `git`/
+  `dir`/`stdin` subcommands. Still functional, but `lefthook.yml` and
+  `ci.yml` both use the current names (`gitleaks git ...`) since this is new
+  configuration, not a migration.
+- **gitleaks' own default allowlist suppresses obviously-fake secrets** —
+  an alphabet-sequence stopword filter, among others. A test value like
+  `AKIAIOSFODNN7EXAMPLE` or `ghp_...abcdefghijklmnopqrstuvwxyz` will match a
+  rule and then get silently allowlisted by gitleaks itself, not by
+  `.gitleaks.toml`. Use a value that doesn't contain a recognizable
+  alphabet run when hand-testing detection.
+- **`actions/checkout`, `actions/setup-node`, `actions/cache`, and
+  `actions/upload-artifact` have all moved well past v4.** Resolve each
+  action's actual current release and its SHA before pinning — a
+  memory-based "v4 is probably still current" guess would have pinned a
+  stale major version.
+- **`gitleaks/gitleaks-action` needs a paid license for organization
+  repositories.** CI downloads and runs the binary directly instead.
+- **`config:base` was renamed to `config:recommended`** as Renovate's
+  current base preset. Verify against Renovate's own docs before writing a
+  config from memory.
+- **knip already understands `lefthook.yml` and `commitlint.config.js`
+  natively.** Adding `lefthook`/`@commitlint/*` to `knip.json`'s
+  `ignoreDependencies` produces a "remove from ignoreDependencies"
+  configuration hint rather than silence — only `@cyclonedx/cyclonedx-npm`
+  (invoked from `ci.yml`, which knip doesn't parse) actually needs the
+  ignore entry.
+
 ## Architecture
 
 Feature-sliced, with the dependency direction enforced in ESLint. Full rationale

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["before 6am on monday"],
+  "packageRules": [
+    {
+      "groupName": "Expo SDK",
+      "matchPackageNames": [
+        "/^expo$/",
+        "/^expo-/",
+        "/^@expo//",
+        "react-native",
+        "react",
+        "react-dom",
+        "react-native-reanimated",
+        "react-native-worklets",
+        "react-native-gesture-handler",
+        "react-native-safe-area-context",
+        "react-native-screens"
+      ],
+      "automerge": false,
+      "description": "SDK upgrades are deliberate: use Expo's upgrade guide and `npx expo install --fix`, never let these bump on their own or individually. React and the react-native-* peers listed here are all pinned to versions the Expo SDK itself dictates."
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "pinDigests": true,
+      "description": "Every action in .github/workflows/ci.yml is pinned to a commit SHA; keep it that way as Renovate bumps them."
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "description": "Only dev-dependency patch updates automerge, and only once CI has passed on the PR — branch protection (scripts/setup-branch-protection.sh) is what actually enforces the 'after CI passes' half of this."
+    }
+  ],
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"],
+    "description": "Vulnerability fixes are raised immediately regardless of the weekly schedule above."
+  }
+}

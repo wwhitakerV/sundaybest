@@ -1,0 +1,113 @@
+name: CI
+
+# Runs the same gate as `npm run validate` locally, plus supply-chain
+# scanning: a dependency audit, OSV-Scanner, gitleaks, and a CycloneDX SBOM.
+# See docs/adr/0008-repository-guardrails-and-ci.md.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least privilege by default; nothing in this workflow needs to write to the
+# repo, open issues, or touch anything beyond reading the checkout.
+permissions:
+  contents: read
+
+# A new push or PR update cancels whatever CI run was already in flight for
+# the same ref, so a chain of pushes doesn't queue up redundant runs.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITLEAKS_VERSION: "8.30.1"
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history, not the default shallow clone — gitleaks scans
+          # `git log -p`, so a shallow checkout would only ever see the
+          # single most recent commit.
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check env schema
+        run: npm run check:env
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Knip
+        run: npm run knip:check
+
+      - name: Test (with coverage)
+        run: npm run test:ci
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+      - name: Expo doctor
+        run: npm run doctor
+
+      - name: Dependency audit
+        # docs/PROJECT.md: "npm audit must stay at zero" — no --audit-level
+        # threshold to hide behind, any advisory at any severity fails this.
+        run: npm audit --omit=dev
+
+      - name: OSV-Scanner
+        uses: google/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc # v2.6.0
+        with:
+          scan-args: |-
+            --recursive
+            ./
+
+      - name: Download gitleaks
+        run: |
+          set -euo pipefail
+          curl -sSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          sha256sum --ignore-missing -c "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          tar -xzf "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" gitleaks
+          chmod +x gitleaks
+
+      - name: gitleaks
+        # The binary directly, not gitleaks/gitleaks-action — that Action
+        # requires a paid license for organization-owned repositories.
+        # `git` is the current (v8.19+) subcommand for scanning a repo's
+        # history; `detect` still works but is deprecated.
+        run: ./gitleaks git --config .gitleaks.toml --redact --no-banner .
+
+      - name: Generate SBOM
+        run: npx --yes @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.json
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom
+          path: sbom.json
+          retention-days: 90
