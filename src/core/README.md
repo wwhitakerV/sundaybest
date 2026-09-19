@@ -38,6 +38,23 @@ The only place `process.env` is read. `env-schema.ts` holds the Zod schema and
 `flags.ts` derives the feature flags from it behind `FlagSource`. See
 [ADR 0004](../../docs/adr/0004-configuration-and-environments.md).
 
+## `monitoring/`
+
+`logger.ts` is a leveled logger (`debug`/`info`/`warn`/`error`) that redacts
+every message and context value with `@/utils/redaction/redactSensitive`
+before it touches anything, and never calls console in a production build —
+`metro.config.js` strips `console.*` from the release bundle as a second,
+independent guarantee. `crash-reporter.ts` wraps `@sentry/react-native` behind
+a narrow `CrashReporter` port: a no-op whenever `EXPO_PUBLIC_SENTRY_DSN` is
+unset, `sendDefaultPii: false`, every event and breadcrumb scrubbed before it
+leaves the device, and no user ID or device identifier ever attached.
+`error-boundary.tsx` exports `ErrorBoundary`/`SuspenseFallback` in the shape
+Expo Router expects from a route file (`{ error, retry }`, not a
+`children`-wrapping class — see `src/app/_layout.tsx`), reporting through the
+crash reporter and rendering a neutral recovery screen. See
+[docs/privacy/data-inventory.md](../../docs/privacy/data-inventory.md) for
+what actually gets sent and when.
+
 ## Belongs here
 
 - Any import of an SDK with side effects — secure storage, app integrity,

@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@expo/app-integrity": "57.0.2",
+    "@sentry/react-native": "~7.11.0",
     "@tanstack/react-query": "5.103.1",
     "expo": "~57.0.24",
     "expo-constants": "~57.0.18",

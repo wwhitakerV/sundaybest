@@ -311,6 +311,68 @@ reverted.
   choosing whether to _render_ the component that calls it —
   `shouldMonitorIntegrity(variant)` exists for exactly that.
 
+## Logging and crash reporting
+
+Full rationale in
+[ADR 0007](./adr/0007-logging-and-crash-reporting.md).
+
+| Module                                   | Does                                                                       |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| `src/core/monitoring/logger.ts`          | Leveled logger; redacts everything, never touches console in production    |
+| `src/core/monitoring/crash-reporter.ts`  | `@sentry/react-native` wrapped behind `CrashReporter`; no-op with no DSN   |
+| `src/core/monitoring/error-boundary.tsx` | `ErrorBoundary`/`SuspenseFallback`, re-exported from `src/app/_layout.tsx` |
+
+Crash reporting is gated on `EXPO_PUBLIC_SENTRY_DSN` being set, not on build
+variant — a build with no DSN sends nothing in any variant, matching
+`.env.example`'s empty default. `metro.config.js` strips every `console.*`
+call from a production/release bundle as a second, independent guarantee
+alongside the logger's own runtime check.
+
+### Traps found while building this — do not "fix" these blindly
+
+- **`@sentry/react-native/metro`'s `withSentryConfig` breaks `expo export`.**
+  Tried in `metro.config.js`: wrapping the config with it makes
+  `npx expo export -p ios` fail with `TypeError: Cannot read properties of
+undefined (reading 'match')`, thrown from inside Sentry's own Metro
+  serializer once it processes the real module graph (`withSentryConfig`
+  itself returns without error). `metro.config.js` only applies
+  `drop_console`; source maps still work via the release/dist tag without
+  Debug IDs. Checklist item to revisit against a newer `@sentry/react-native`.
+- **`Constants.manifest2` types as `any` here.** Its declared type comes from
+  `expo-manifests`, which is not an installed package — this app has no
+  `expo-updates` dependency. `crash-reporter.ts`'s `currentUpdateId()` reads
+  the field back out through an explicit runtime type guard rather than
+  trusting the type, and ESLint's type-aware rules would otherwise flag the
+  access as unsafe.
+- **`core` cannot import `ui`.** The dependency graph is
+  `core -> utils, theme, types` only. `error-boundary.tsx`'s `ErrorScreen`
+  builds its layout from `View`/`SafeAreaView` directly rather than
+  `@/ui/Screen`, which would be the obvious choice but is a disallowed import
+  from `src/core`.
+- **Expo Router's `ErrorBoundary`/`SuspenseFallback` exports are function
+  components with `{ error, retry }` / `{ route, params }` props, not a
+  `children`-wrapping class.** Router catches the render error itself
+  (`expo-router/build/views/Try.d.ts`) and renders the exported component
+  with those props. A class component that wraps `children` the way a plain
+  React error boundary does would never receive anything meaningful from
+  Router.
+- **A test file that imports anything from `logger.ts` or
+  `error-boundary.tsx` must mock `@sentry/react-native` and `expo-constants`,
+  even if it never exercises the crash reporter.** Both modules construct a
+  real `crashReporter` singleton at import time (`export const crashReporter
+= createSentryReporter(defaultEnv)`), and the unmocked SDK starts a
+  `setInterval` as an import-time side effect in its tracing integration,
+  which keeps Jest's process alive after the run
+  (`AsyncExpiringMap.startCleanup`). See the mocks at the top of
+  `logger.test.ts`, `crash-reporter.test.ts`, and `error-boundary.test.tsx`.
+- **`jest.resetModules()` invalidates mock references captured before the
+  reset.** `crash-reporter.ts` guards `Sentry.init` behind a module-scope
+  `let initialized`, which would otherwise leak across every test in
+  `crash-reporter.test.ts` in the same run. `resetModules()` per test fixes
+  that, but it also re-runs the `jest.mock(...)` factories, so the mocked
+  `@sentry/react-native` module must be re-`require`'d alongside
+  `crash-reporter` in the same call — see `freshReporter()` in that file.
+
 ## Architecture
 
 Feature-sliced, with the dependency direction enforced in ESLint. Full rationale

@@ -230,6 +230,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       secureStorePlugin({
         faceIDPermission: false,
       }),
+
+      // No organization/project/authToken here on purpose. Passing none makes
+      // the plugin fall back to the SENTRY_ORG / SENTRY_PROJECT /
+      // SENTRY_AUTH_TOKEN environment variables at build time instead
+      // (@sentry/react-native/plugin/build/withSentry.js:getSentryProperties)
+      // — the auth token is a secret and must never live in a committed file.
+      // See docs/SETUP_CHECKLIST.md for provisioning it as an EAS environment
+      // variable with secret visibility. A bare package string rather than an
+      // imported function, matching what `npx expo install @sentry/react-native`
+      // itself prints as the config to add: Expo's plugin resolver finds the
+      // package's own app.plugin.js from the name alone.
+      "@sentry/react-native",
     ],
 
     experiments: {
