@@ -26,6 +26,13 @@ declare global {
       EXPO_PUBLIC_ATTESTATION_ENABLED?: string;
       /** Optional Sentry DSN. Absent or empty disables crash reporting. */
       EXPO_PUBLIC_SENTRY_DSN?: string;
+      /**
+       * Always `"1"`. Read by Expo's own runtime, not by app code: it keeps
+       * `globalThis.fetch` as React Native's implementation instead of
+       * `expo/fetch`, which the TLS pinning library cannot reach. Declared here
+       * because the env schema validates it.
+       */
+      EXPO_PUBLIC_USE_RN_FETCH?: string;
     }
   }
 }

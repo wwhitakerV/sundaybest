@@ -247,6 +247,70 @@ library on the path that decides whether the backend trusts a request.
 - **Nothing calls the security modules yet.** They are reachable from their tests
   only. Wiring them into startup is a later prompt, deliberately.
 
+## Network security and device integrity
+
+Full rationale in [ADR 0006](./adr/0006-network-security-and-device-integrity.md).
+
+| Module                          | Does                                                            |
+| ------------------------------- | --------------------------------------------------------------- |
+| `src/core/api/client.ts`        | Typed requests, Zod-parsed responses, typed failures, one retry |
+| `src/core/api/query-client.ts`  | TanStack Query defaults; nothing persisted                      |
+| `src/core/api/pinning/`         | TLS public-key pinning, placeholder hashes                      |
+| `src/core/security/integrity/`  | freeRASP signals mapped to one small policy                     |
+| `src/core/security/screen/`     | `usePrivacyScreen` — screenshots and app-switcher blur          |
+| `src/core/security/deep-links/` | Allowlist for every inbound URL                                 |
+
+### The most surprising thing in this repo
+
+**`EXPO_PUBLIC_USE_RN_FETCH=1` is load-bearing and must never be removed.**
+
+Expo SDK 57 replaces `globalThis.fetch` with `expo/fetch`
+(`expo/src/winter/runtime.native.ts:41`). `expo/fetch` is a native module with
+its own `URLSession` (`expo/ios/Fetch/ExpoFetchModule.swift:133`) and **no
+authentication-challenge handler at all** — grepping that directory for
+`challenge` or `serverTrust` returns nothing. TrustKit pins by intercepting that
+callback, so it cannot see a single `expo/fetch` request.
+
+The consequence is the nasty part: removing this variable leaves an app that
+works perfectly, passes every test, and has **no TLS pinning whatsoever**, with
+nothing to notice. That is why it is a required field in the env schema rather
+than a line in `.env.example` — the app refuses to launch without it.
+
+The cost: React Native's fetch does not stream response bodies. Nothing needs
+that today. If something does, the decision reopens — it does not get quietly
+reverted.
+
+### Other traps from this prompt
+
+- **Never write `\uXXXX` escapes in a regex character class here.** Twice, an
+  escape like `\u0000` reached disk as a _literal_ control byte, which made git
+  treat the source file as **binary**. `validate-deep-link.ts` uses an explicit
+  code-point loop instead, which is plain text and says the same thing. Behaviour
+  was identical either way, so tests did not catch it — `file` and `git diff`
+  did.
+- **A `Response` body can only be read once.** A Jest mock using
+  `mockResolvedValue(new Response(...))` hands the _same_ instance to every call
+  and fails the second one with "Body has already been read" — which real `fetch`
+  never does. `client.test.ts` has an `alwaysJson` helper that builds a fresh one
+  per call; use it for anything that expects a retry.
+- **A Jest mock factory may only close over `mock`-prefixed variables.** A
+  factory referencing `supported` fails with "not allowed to reference any
+  out-of-scope variables"; `mockSupported` is fine.
+- **`react-native-ssl-public-key-pinning` has no Expo config plugin**, and does
+  not need one: it is autolinked and configured at runtime. It does need a
+  development build — it is unavailable in Expo Go, where
+  `isSslPinningAvailable()` returns false and `initializePinning` reports `false`
+  rather than throwing.
+- **`freerasp-react-native` has no `codegenConfig`**, so it is a legacy native
+  module running through the New Architecture interop layer on RN 0.86. It works;
+  it is the likeliest of the native dependencies to break on an SDK upgrade.
+- **Pinning cannot be verified from a cold test run.** TLS sessions are cached,
+  so a connection that already succeeded keeps succeeding after the pins change.
+  The manual bad-certificate test has to start from a cold launch.
+- **`useFreeRasp` is a hook, so it cannot be called conditionally.** Gate it by
+  choosing whether to _render_ the component that calls it —
+  `shouldMonitorIntegrity(variant)` exists for exactly that.
+
 ## Architecture
 
 Feature-sliced, with the dependency direction enforced in ESLint. Full rationale

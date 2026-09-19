@@ -10,6 +10,15 @@ waiting on a human.
 The page exists because the code cannot tell the user these things. Its value is
 that it is **complete and current**, so a stale entry is worse than no entry.
 
+## Only run this when asked
+
+The trigger is the user saying so. **Finishing other work is not a trigger** —
+not even when that work changed the very files this page describes, and not at
+the end of a prompt that added items to it.
+
+If the page is stale, say so in one line and stop. Letting it go stale until
+asked is the intended behaviour; refreshing it unprompted is not.
+
 ## 0. Work out what it currently covers
 
 Read the `.meta` block near the top of `Before-You-Start.html` — it states which

@@ -65,6 +65,7 @@ describe("env", () => {
       apiUrl: "https://preview.api.sundaybest.com",
       attestationEnabled: true,
       sentryDsn: "https://sentry.invalid/0",
+      useRnFetch: true,
     });
   });
 

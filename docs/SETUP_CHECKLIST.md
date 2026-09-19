@@ -43,6 +43,64 @@ never perform these — they stop and add the step here instead.
   - [ ] a decision on whether universal links are wanted at all; if not, delete
         the entry rather than shipping a dead entitlement
 
+## TLS pinning
+
+`app.config.ts` and `src/core/api/pinning/` are ready; the hashes are not. A
+**preview or production build will refuse to start** while the placeholders are
+in place — that is deliberate, and it is this section that unblocks it.
+
+- [ ] **Generate the real pin hashes** for `api.sundaybest.com`. A pin is the
+      base64 SHA-256 of the certificate's Subject Public Key Info, not of the
+      certificate itself. From a shell:
+
+```sh
+openssl s_client -connect api.sundaybest.com:443 -servername api.sundaybest.com </dev/null |
+  openssl x509 -pubkey -noout |
+  openssl pkey -pubin -outform der |
+  openssl dgst -sha256 -binary |
+  openssl enc -base64
+```
+
+- [ ] **Generate a backup key and pin it too.** Two pins per domain are
+      required. The backup must be a key that is generated, **held offline, and
+      not yet in use** — a backup pin for a key you do not have is not a backup,
+      and a single pin means rotating the certificate bricks every installed copy
+      of the app until users update.
+- [ ] **Write down a rotation plan** before shipping, covering: where the backup
+      key is stored, who can reach it, the order of operations (ship a build
+      pinning both keys → wait for adoption → rotate the server to the backup →
+      add a new backup in the next release), and the minimum adoption threshold
+      before rotating. Rotating without an already-shipped backup pin is an
+      outage with no remote fix.
+- [ ] **Manually test a bad certificate on a preview build.** Nothing in CI can
+      verify pinning — the unit tests cover the config and the gate, and say
+      nothing about whether TrustKit rejects anything. Put a proxy (Charles,
+      mitmproxy) in front of the device with its own root trusted by the device,
+      then confirm requests **fail**:
+  - [ ] with the real pins, requests through the proxy fail
+  - [ ] with pinning disabled, the same requests succeed — otherwise the test
+        proved nothing
+  - [ ] **start from a cold launch each time.** TLS sessions are cached, so a
+        connection that already succeeded keeps succeeding after the pins change.
+- [ ] **Re-check after any certificate or CA change**, and after any
+      `expo-sqlite`/SDK upgrade that could move the app back onto `expo/fetch`
+      (`EXPO_PUBLIC_USE_RN_FETCH=1` must stay set — see ADR 0006).
+
+## Runtime integrity (freeRASP)
+
+- [ ] **Register with Talsec** and replace `PLACEHOLDER_WATCHER_MAIL` in
+      `src/core/security/integrity/freerasp-integrity.ts` with the real reporting
+      address. Threat reports go there; a placeholder means nobody is told.
+- [ ] **Replace `PLACEHOLDER_APP_TEAM_ID`** with the Apple Developer team ID.
+      freeRASP checks the app's signature against it, so a wrong value makes
+      every launch look like a tampered build.
+- [ ] **Mount it.** `useIntegrityMonitor` is written and tested but **nothing
+      renders it yet** — it needs a session to clear and a monitoring sink to
+      report to. Until then no integrity signal is ever received.
+- [ ] **Test on a jailbroken device**, or accept that the detection is unverified.
+      A simulator cannot exercise it: development deliberately turns monitoring
+      off, because a simulator trips `simulator`, `debug`, and `devMode` by design.
+
 ## Backend — attestation and sessions
 
 **None of the client-side attestation work is worth anything until a server

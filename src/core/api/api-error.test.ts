@@ -1,5 +1,39 @@
 import { ApiError, isApiError, toApiError } from "./api-error";
 
+describe("ApiError kinds", () => {
+  /**
+   * `kind` answers "what shape of failure was this" and `code` answers "which
+   * documented error did the server report". They are different questions: a
+   * timeout and a malformed response are both `INTERNAL` by code and must be
+   * handled completely differently.
+   */
+  it("infers the kind from the status when it is not given", () => {
+    expect(new ApiError("INTERNAL", undefined).kind).toBe("network");
+    expect(new ApiError("KEY_UNKNOWN", 404).kind).toBe("client");
+    expect(new ApiError("INTERNAL", 503).kind).toBe("server");
+  });
+
+  it("takes an explicit kind for failures no status describes", () => {
+    expect(new ApiError("INTERNAL", undefined, { kind: "timeout" }).kind).toBe("timeout");
+    expect(new ApiError("INTERNAL", 200, { kind: "schema" }).kind).toBe("schema");
+  });
+
+  /**
+   * Retrying these is pointless or wrong. A server that sent a response failing
+   * its own contract will send the same shape again, and a request refused
+   * because the device is compromised does not become acceptable on the second
+   * attempt — it just costs the user another round trip.
+   */
+  it.each(["schema", "integrity"] as const)("never retries a %s failure", (kind) => {
+    // INTERNAL is retryable by code, so this proves kind overrides it.
+    expect(new ApiError("INTERNAL", undefined, { kind }).retryable).toBe(false);
+  });
+
+  it("still retries a timeout, which is the case retrying exists for", () => {
+    expect(new ApiError("INTERNAL", undefined, { kind: "timeout" }).retryable).toBe(true);
+  });
+});
+
 describe("ApiError", () => {
   it("carries the code and whether it is worth retrying", () => {
     const error = new ApiError("RATE_LIMITED", 429);

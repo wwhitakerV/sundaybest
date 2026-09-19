@@ -25,6 +25,12 @@ export interface Env {
   readonly attestationEnabled: boolean;
   /** `undefined` when no DSN is configured, which disables crash reporting. */
   readonly sentryDsn: string | undefined;
+  /**
+   * Always `true`. Present as a field so a reader of the parsed config can see
+   * that the choice was made, rather than having to know it happens in a Babel
+   * transform they cannot see.
+   */
+  readonly useRnFetch: boolean;
 }
 
 /**
@@ -44,6 +50,10 @@ const EXPECTATIONS = new Map<string, string>([
   ],
   ["EXPO_PUBLIC_ATTESTATION_ENABLED", 'must be a boolean string, e.g. "true" or "false"'],
   ["EXPO_PUBLIC_SENTRY_DSN", "must be a URL when set; leave it empty to disable crash reporting"],
+  [
+    "EXPO_PUBLIC_USE_RN_FETCH",
+    'must be exactly "1" — TLS pinning does not cover Expo\'s own fetch',
+  ],
 ]);
 
 const UNKNOWN_FIELD = "environment";
@@ -88,6 +98,15 @@ const envSchema = z
     // An empty string is how a .env file expresses "unset", so it is accepted
     // and normalised to undefined below.
     EXPO_PUBLIC_SENTRY_DSN: z.union([z.url(), z.literal("")]).optional(),
+
+    // Required, and only ever "1". Expo SDK 57 swaps `globalThis.fetch` for
+    // `expo/fetch` unless this is set (see expo/src/winter/runtime.native.ts),
+    // and `expo/fetch` runs its own URLSession with no server-trust callback —
+    // so the TLS pinning library cannot see those requests at all. A build that
+    // omits this is a build whose pinning covers nothing, with no symptom to
+    // notice. Expo also accepts "true"; one spelling is enforced here so two
+    // config files cannot disagree while both looking correct.
+    EXPO_PUBLIC_USE_RN_FETCH: z.literal("1"),
   })
   .superRefine((raw, ctx) => {
     // Plaintext http is a local-development convenience only. Allowing it in a
@@ -127,5 +146,6 @@ export function parseEnv(raw: Readonly<Record<string, string | undefined>>): Env
     apiUrl: result.data.EXPO_PUBLIC_API_URL,
     attestationEnabled: result.data.EXPO_PUBLIC_ATTESTATION_ENABLED,
     sentryDsn: dsn === undefined || dsn === "" ? undefined : dsn,
+    useRnFetch: true,
   });
 }

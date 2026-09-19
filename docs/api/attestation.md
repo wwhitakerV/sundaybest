@@ -142,6 +142,27 @@ session family and force re-attestation.
 
 Rate limit: **30 per hour per `keyId`**.
 
+## Sensitive endpoints: assertion headers
+
+Any endpoint the client marks `sensitive` carries a **fresh assertion per
+request**, as headers rather than in the body so that any method can use them:
+
+| Header                    | Contents                                  |
+| ------------------------- | ----------------------------------------- |
+| `X-Attestation-KeyId`     | The install's App Attest key identifier   |
+| `X-Attestation-Assertion` | The assertion, base64                     |
+| `X-Attestation-Challenge` | The challenge the assertion was made over |
+
+The server verifies these exactly as it verifies the body fields on
+`/session/refresh`: the assertion must validate against **that key's** stored
+public key, the challenge must be one it issued and has not yet spent, and the
+signature counter must have increased. A missing or invalid header on a
+sensitive endpoint is `ASSERTION_INVALID`.
+
+These are documented here rather than invented at the call site, because a
+header the contract does not name is a header the server will not check — which
+would make the whole mechanism decorative while looking implemented.
+
 ## Token lifetimes
 
 | Token         | Lifetime               | Stored where                             | Rotated          |

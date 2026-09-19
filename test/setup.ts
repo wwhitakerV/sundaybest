@@ -15,6 +15,7 @@ process.env.EXPO_PUBLIC_APP_VARIANT ??= "development";
 process.env.EXPO_PUBLIC_API_URL ??= "https://api.sundaybest.com";
 process.env.EXPO_PUBLIC_ATTESTATION_ENABLED ??= "false";
 process.env.EXPO_PUBLIC_SENTRY_DSN ??= "";
+process.env.EXPO_PUBLIC_USE_RN_FETCH ??= "1";
 
 // ---------------------------------------------------------------------------
 // MSW lifecycle

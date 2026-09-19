@@ -529,16 +529,16 @@
       </p>
 
       <div class="meta">
-        <span>Covers prompts 1&ndash;7</span>
+        <span>Covers prompts 1&ndash;8</span>
         <span>Updated 2026-09-18</span>
         <span>Living document &mdash; grows with each prompt</span>
       </div>
 
       <ul class="tally">
-        <li><span class="dot p0"></span><b id="n-p0">6</b> wrong right now</li>
-        <li><span class="dot p1"></span><b id="n-p1">6</b> unverified</li>
+        <li><span class="dot p0"></span><b id="n-p0">5</b> wrong right now</li>
+        <li><span class="dot p1"></span><b id="n-p1">8</b> unverified</li>
         <li><span class="dot p2"></span><b id="n-p2">3</b> before a device build</li>
-        <li><span class="dot p3"></span><b id="n-p3">18</b> before shipping</li>
+        <li><span class="dot p3"></span><b id="n-p3">22</b> before shipping</li>
       </ul>
 
       <!-- ================================================================ -->
@@ -546,7 +546,7 @@
         <div class="band sec-p0">
           <span class="tag">P0</span>
           <h2>Wrong right now</h2>
-          <span class="count">6 items</span>
+          <span class="count">5 items</span>
         </div>
         <p class="why">
           These are not future work. Each one is either actively broken, or will bite the next time
@@ -567,24 +567,6 @@
             </p>
             <p class="ref">
               <b>Fix</b> nvm use &nbsp;·&nbsp; <b>Check</b> node -v &amp;&amp; cat .nvmrc
-            </p>
-          </li>
-
-          <li>
-            <input type="checkbox" id="p0-2" />
-            <label class="head" for="p0-2"
-              >The <code>social-media</code> folder is not actually ignored<span class="sev sev-now"
-                >will commit 80+ files</span
-              ></label
-            >
-            <p class="note">
-              <code>.gitignore</code> was given an entry for <code>social_media</code> with an
-              underscore, but the folder on disk is <code>social-media</code> with a hyphen. Git
-              never matches it, so the PNGs and <code>caption-generator.html</code> are sitting
-              untracked and unignored &mdash; the next <code>git add .</code> takes all of them.
-            </p>
-            <p class="ref">
-              <b>Fix</b> change the entry to <code>social-media/</code>, or rename the folder
             </p>
           </li>
 
@@ -654,7 +636,7 @@
         <div class="band sec-p1">
           <span class="tag">P1</span>
           <h2>Built but never proven</h2>
-          <span class="count">6 items</span>
+          <span class="count">8 items</span>
         </div>
         <p class="why">
           These exist and pass their tests. Nothing has confirmed they work outside a test runner.
@@ -717,6 +699,41 @@
             <p class="ref">
               <b>Run</b> /context &nbsp;· /hooks &nbsp;· /permissions &nbsp;· /plugin &nbsp;· /mcp
               &nbsp;· /doctor
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-7" />
+            <label class="head" for="p1-7"
+              >Pinning, integrity, and screen protection are not mounted<span class="sev sev-lead"
+                >inert until wired</span
+              ></label
+            >
+            <p class="note">
+              All three are written and tested, and none of them runs.
+              <code>initializePinning</code> has no caller, so TLS pinning is never switched on.
+              <code>useIntegrityMonitor</code> is never rendered, so no freeRASP signal is ever
+              received. <code>usePrivacyScreen</code> is called by no screen. The tests prove the
+              adapters behave; they say nothing about an app that never invokes them.
+            </p>
+            <p class="ref">
+              <b>Needs</b> a startup sequence &mdash; pinning before the first request, integrity
+              with a session to clear
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p1-8" />
+            <label class="head" for="p1-8">Three native modules, none of them exercised</label>
+            <p class="note">
+              <code>react-native-ssl-public-key-pinning</code>, <code>freerasp-react-native</code>,
+              and <code>expo-screen-capture</code> are all mocked in their tests. Nothing has
+              confirmed TrustKit rejects a bad certificate, that freeRASP detects a jailbreak, or
+              that the app-switcher blur appears. All three need a development build; two need a
+              modified device or a proxy.
+            </p>
+            <p class="ref">
+              <b>See</b> the TLS pinning and freeRASP sections of SETUP_CHECKLIST.md
             </p>
           </li>
 
@@ -809,7 +826,7 @@
         <div class="band sec-p3">
           <span class="tag">P3</span>
           <h2>Before TestFlight or the App Store</h2>
-          <span class="count">9 items</span>
+          <span class="count">13 items</span>
         </div>
         <p class="why">
           Account actions and artwork. The enrollment item has a multi-day lead time and blocks
@@ -923,6 +940,63 @@
               agree with the privacy manifest. This is MASVS PRIVACY-3.
             </p>
             <p class="ref"><b>Source</b> docs/privacy/data-inventory.md</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-10" />
+            <label class="head" for="p3-10"
+              >Generate the real TLS pins &mdash; and a backup key<span class="sev sev-lead"
+                >blocks any preview build</span
+              ></label
+            >
+            <p class="note">
+              <code>src/core/api/pinning/pins.ts</code> ships placeholder hashes, and
+              <code>assertPinsUsable</code> <em>throws</em> in preview and production while they are
+              there. That is deliberate &mdash; a build that reports pinning as on while validating
+              nothing is worse than one with none &mdash; but it means this is the first thing to
+              trip when you try to build for TestFlight. Two pins are required: the live key and a
+              backup key that is generated, held offline, and not yet in use.
+            </p>
+            <p class="ref"><b>Command</b> in the TLS pinning section of SETUP_CHECKLIST.md</p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-11" />
+            <label class="head" for="p3-11">Write a pin rotation plan before shipping</label>
+            <p class="note">
+              Rotating a certificate without an already-shipped backup pin is an outage with no
+              remote fix &mdash; every installed copy stops connecting until users update. The plan
+              needs the order of operations and a minimum adoption threshold, not just a note that a
+              backup exists.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-12" />
+            <label class="head" for="p3-12"
+              >Test a bad certificate on a preview build, by hand</label
+            >
+            <p class="note">
+              Nothing in CI can verify pinning. Put a proxy in front of the device with its own root
+              trusted, and confirm requests <em>fail</em> &mdash; then confirm they succeed with
+              pinning off, or the test proved nothing. Start from a cold launch each time: TLS
+              sessions are cached, so a connection that already worked keeps working after the pins
+              change.
+            </p>
+          </li>
+
+          <li>
+            <input type="checkbox" id="p3-13" />
+            <label class="head" for="p3-13"
+              >Register with Talsec and fill in the freeRASP values</label
+            >
+            <p class="note">
+              <code>PLACEHOLDER_WATCHER_MAIL</code> is where threat reports go, so a placeholder
+              means nobody is told. <code>PLACEHOLDER_APP_TEAM_ID</code> is the Apple Developer team
+              ID, and freeRASP checks the app signature against it &mdash; a wrong value makes every
+              launch look like a tampered build.
+            </p>
+            <p class="ref"><b>Where</b> src/core/security/integrity/freerasp-integrity.ts</p>
           </li>
 
           <li>
@@ -1060,11 +1134,11 @@
         <div class="band sec-p2">
           <span class="tag">Open</span>
           <h2>Security controls still open</h2>
-          <span class="count">10 of 24</span>
+          <span class="count">8 of 24</span>
         </div>
         <p class="why">
-          OWASP MASVS v2, as tracked in <code>docs/security/masvs-checklist.md</code>: 8 done, 10
-          planned, 6 genuinely not applicable. The ten below are real gaps, and they cluster in
+          OWASP MASVS v2, as tracked in <code>docs/security/masvs-checklist.md</code>: 9 done, 9
+          planned, 6 genuinely not applicable. The eight below are real gaps, and they cluster in
           three honest places &mdash; no server, no product surface, no release plumbing.
         </p>
 
@@ -1078,22 +1152,6 @@
               Redaction, the console ban, and value-free error messages are in place. Missing:
               screenshot and app-snapshot protection, a pasteboard policy, and a backup-exclusion
               review once there is data to exclude.
-            </p>
-          </li>
-          <li>
-            <input type="checkbox" id="m-2" />
-            <label class="head" for="m-2">NETWORK-2 &mdash; certificate pinning</label>
-            <p class="note">
-              Deliberately deferred rather than skipped: it is bypassable by the device owner, who
-              is the party most able to intercept, and it brings a bricking risk on rotation.
-            </p>
-          </li>
-          <li>
-            <input type="checkbox" id="m-3" />
-            <label class="head" for="m-3">PLATFORM-1 &mdash; deep links parsed per route</label>
-            <p class="note">
-              The rule exists and the ReDoS in link parsing is patched, but there are no
-              parameterised routes yet, so there is nothing parsing anything.
             </p>
           </li>
           <li>
@@ -1158,7 +1216,7 @@
         <div class="band sec-settled">
           <span class="tag">Settled</span>
           <h2>Decided, not forgotten</h2>
-          <span class="count">8 items</span>
+          <span class="count">10 items</span>
         </div>
         <p class="why">
           These look like gaps and are not. Each was considered and decided against, with the
@@ -1172,6 +1230,25 @@
               >App Attest reports itself unavailable on the Simulator before any API can say more,
               and no bundled module exposes a simulator flag. Distinguishing it would mean adding
               <code>expo-device</code> to change a log label.</span
+            >
+          </li>
+          <li>
+            <b> <code>EXPO_PUBLIC_USE_RN_FETCH=1</code> is load-bearing. Never remove it.</b>
+            <span
+              >Expo SDK 57 otherwise replaces <code>fetch</code> with <code>expo/fetch</code>, which
+              runs its own URLSession with no server-trust callback &mdash; so TLS pinning covers
+              nothing. Removing this leaves an app that works, passes every test, and has no pinning
+              at all, with nothing to notice. It is a required field in the env schema for exactly
+              that reason. The cost is no streaming response bodies, which nothing needs.</span
+            >
+          </li>
+          <li>
+            <b>No <code>\uXXXX</code> escapes in a regex character class.</b>
+            <span
+              >Twice, an escape like <code>\u0000</code> reached disk as a literal control byte,
+              which made git treat the source file as binary. Behaviour was identical, so the tests
+              did not catch it. <code>validate-deep-link.ts</code> uses an explicit code-point loop
+              instead.</span
             >
           </li>
           <li>
@@ -1233,14 +1310,16 @@
         <div class="band sec-settled">
           <span class="tag">Queue</span>
           <h2>Prompts still to come</h2>
-          <span class="count">8&ndash;13</span>
+          <span class="count">9&ndash;13</span>
         </div>
         <p class="why">
           Several gaps above are expected to close here rather than needing separate work. What is
           known from the series so far:
         </p>
         <div class="queue">
-          <div><span>8</span><span>Not yet specified.</span></div>
+          <div>
+            <span>8</span><span>Done &mdash; api client, pinning, integrity, deep links.</span>
+          </div>
           <div>
             <span>9</span
             ><span>Diagnostics &mdash; must update the data inventory when it lands.</span>

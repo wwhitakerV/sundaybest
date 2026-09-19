@@ -9,6 +9,7 @@ const VALID_DEV = {
   EXPO_PUBLIC_API_URL: "https://api.sundaybest.com",
   EXPO_PUBLIC_ATTESTATION_ENABLED: "false",
   EXPO_PUBLIC_SENTRY_DSN: "",
+  EXPO_PUBLIC_USE_RN_FETCH: "1",
 } as const;
 
 describe("parseEnv", () => {
@@ -18,6 +19,7 @@ describe("parseEnv", () => {
       apiUrl: "https://api.sundaybest.com",
       attestationEnabled: false,
       sentryDsn: undefined,
+      useRnFetch: true,
     });
   });
 
@@ -28,12 +30,14 @@ describe("parseEnv", () => {
         EXPO_PUBLIC_API_URL: "https://api.sundaybest.com",
         EXPO_PUBLIC_ATTESTATION_ENABLED: "true",
         EXPO_PUBLIC_SENTRY_DSN: "https://sentry.invalid/0",
+        EXPO_PUBLIC_USE_RN_FETCH: "1",
       }),
     ).toEqual({
       variant: "production",
       apiUrl: "https://api.sundaybest.com",
       attestationEnabled: true,
       sentryDsn: "https://sentry.invalid/0",
+      useRnFetch: true,
     });
   });
 
@@ -85,6 +89,36 @@ describe("parseEnv", () => {
     it("rejects a DSN that is not a URL", () => {
       expect(() => parseEnv({ ...VALID_DEV, EXPO_PUBLIC_SENTRY_DSN: "not-a-dsn" })).toThrow(
         EnvConfigError,
+      );
+    });
+  });
+
+  /**
+   * Enforced, not merely documented. Expo SDK 57 replaces `globalThis.fetch`
+   * with `expo/fetch` unless this is set, and `expo/fetch` runs its own
+   * URLSession that the TLS pinning library cannot reach. A build missing this
+   * variable is a build whose pinning silently covers nothing — a failure with
+   * no symptom, which is the worst kind. So the app refuses to start instead.
+   */
+  describe("EXPO_PUBLIC_USE_RN_FETCH", () => {
+    it("must be present", () => {
+      const { EXPO_PUBLIC_USE_RN_FETCH: _omitted, ...without } = VALID_DEV;
+
+      expect(() => parseEnv(without)).toThrow(/EXPO_PUBLIC_USE_RN_FETCH/);
+    });
+
+    it('must be exactly "1"', () => {
+      expect(parseEnv({ ...VALID_DEV, EXPO_PUBLIC_USE_RN_FETCH: "1" }).useRnFetch).toBe(true);
+    });
+
+    /**
+     * Expo's own check also accepts the string "true", but accepting two
+     * spellings of one flag invites a config where one file says `true` and
+     * another says `1`. One spelling, enforced.
+     */
+    it.each(["true", "0", "false", "yes", ""])("rejects %p", (value) => {
+      expect(() => parseEnv({ ...VALID_DEV, EXPO_PUBLIC_USE_RN_FETCH: value })).toThrow(
+        /EXPO_PUBLIC_USE_RN_FETCH/,
       );
     });
   });

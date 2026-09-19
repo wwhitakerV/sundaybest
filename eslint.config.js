@@ -42,10 +42,13 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     "expo-sqlite",
     // app integrity / attestation
     "expo-app-integrity",
+    "@expo/app-integrity",
+    "freerasp-react-native",
     "react-native-device-info",
     "jail-monkey",
     "react-native-root-detection",
     // networking
+    "react-native-ssl-public-key-pinning",
     "axios",
     "ky",
     "superagent",
@@ -61,6 +64,9 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     "@segment/*",
     "expo-insights",
     "expo-tracking-transparency",
+    // screen capture and the app-switcher snapshot: a native side effect, and
+    // the wrapper belongs in src/core/security/screen like everything else.
+    "expo-screen-capture",
   ],
   message:
     "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",
