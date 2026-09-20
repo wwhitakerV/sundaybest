@@ -515,6 +515,45 @@ itself. `updates.url` and `extra.eas.projectId` are placeholders until
   will need regenerating again — check `patch-package`'s postinstall
   output after any dependency change, not just this one.
 
+## Final audit
+
+Full rationale in [ADR 0010](./adr/0010-final-audit.md). The last prompt of
+the setup series audited every prior one; the two findings that changed
+shipped behavior:
+
+- **`app.config.ts`'s privacy manifest was missing `freerasp-react-native`'s
+  own declarations.** Re-running
+  `find node_modules -name PrivacyInfo.xcprivacy` (which the file's own
+  comment says to do after adding a native module — missed when freeRASP
+  landed in prompt 6) found a bundled `PrivacyInfo.xcprivacy` in its
+  `TalsecRuntime.xcframework` declaring a `UserDefaults` reason code the
+  app's manifest didn't have, and an `NSPrivacyCollectedDataTypes` array
+  (`DeviceID`, diagnostics) where the app's was empty. Fixed; see
+  [docs/privacy/data-inventory.md](./privacy/data-inventory.md) for the
+  full picture, including the `watcherMail` off-device flow that had no
+  documentation anywhere before this audit.
+- **`src/core/api/client.ts`'s fail-closed failure paths were untested.**
+  `sessionFailureToApiError`'s `unavailable` case and
+  `assertionFailureToApiError`'s `disabled`/`unsupported`/
+  `needs-attestation` cases — the paths that refuse a request when
+  attestation cannot run at all — had no test exercising them; branch
+  coverage was 72.3%. Fixed with explicit tests per branch, now at 89%.
+
+### Traps found while building this — do not "fix" these blindly
+
+- **`src/core/api` is not in `jest.config.js`'s `STRICT_COVERAGE_PATHS`.**
+  Only `src/utils` and `src/core/security` hold the 95% floor; `src/core/api`
+  sits under the 80% global bar despite CLAUDE.md naming it alongside
+  `src/core/security` as a plan-mode-gated, "leaves the device" path. This
+  is why the `client.ts` gap above existed without failing the coverage
+  gate — the low-coverage file was averaged against near-100% files
+  elsewhere. Not changed in this audit (a coverage-policy widening is its
+  own decision); a real candidate for the next time this file is touched.
+- **The setup checklist's every item stays unchecked, on purpose.** The
+  code and config each item depends on being ready is not the same thing
+  as the account action itself having happened. Do not mark an item done
+  because the repo-side work for it is finished.
+
 ## Architecture
 
 Feature-sliced, with the dependency direction enforced in ESLint. Full rationale

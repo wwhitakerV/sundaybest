@@ -120,22 +120,31 @@ function resolveVariant(): AppVariant {
  *
  * Reason codes are Apple's; see
  * https://developer.apple.com/documentation/bundleresources/describing-use-of-required-reason-api
+ *
+ * Re-audited for prompt 13 (final audit): freerasp-react-native's bundled
+ * TalsecRuntime.xcframework ships its own PrivacyInfo.xcprivacy, missed when
+ * that dependency was first added. Its FileTimestamp (C617.1) and
+ * SystemBootTime (35F9.1) reasons were already covered by react-native's own
+ * entries below; only its UserDefaults reason (1C8F.1) was new.
  */
 const privacyManifests: NonNullable<NonNullable<ExpoConfig["ios"]>["privacyManifests"]> = {
   NSPrivacyAccessedAPITypes: [
     {
       // react-native (React, ReactCommon/cxxreact, RCT-Folly, boost, glog): C617.1
       // expo-file-system: 0A2A.1, 3B52.1
+      // freerasp-react-native (TalsecRuntime): C617.1 (already covered)
       NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryFileTimestamp",
       NSPrivacyAccessedAPITypeReasons: ["C617.1", "0A2A.1", "3B52.1"],
     },
     {
       // react-native, expo-constants
+      // freerasp-react-native (TalsecRuntime): 1C8F.1
       NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
-      NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
+      NSPrivacyAccessedAPITypeReasons: ["CA92.1", "1C8F.1"],
     },
     {
       // react-native (ReactCommon/react/timing), boost
+      // freerasp-react-native (TalsecRuntime): 35F9.1 (already covered)
       NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategorySystemBootTime",
       NSPrivacyAccessedAPITypeReasons: ["35F9.1"],
     },
@@ -147,11 +156,42 @@ const privacyManifests: NonNullable<NonNullable<ExpoConfig["ios"]>["privacyManif
   ],
 
   // The product ships no analytics, no IDFA, and no third-party telemetry, so
-  // these three are empty on purpose and must stay that way. See
-  // docs/privacy/data-inventory.md; anything that changes them needs an ADR.
+  // NSPrivacyTracking/NSPrivacyTrackingDomains stay empty/false — that is a
+  // product constraint, not an oversight, and changing it needs an ADR.
+  //
+  // NSPrivacyCollectedDataTypes is not empty, though: freerasp-react-native's
+  // bundled manifest declares DeviceID and OtherDiagnosticData/OtherDataTypes,
+  // all marked not linked to identity and not used for tracking. freeRASP
+  // itself is not mounted at any screen yet (see docs/SETUP_CHECKLIST.md,
+  // "Runtime integrity (freeRASP)"), but Apple's manifest requirement is
+  // about what's linked into the binary, not what's actively exercised at
+  // runtime — an unmounted-but-linked SDK's declared capabilities still have
+  // to appear here. See docs/privacy/data-inventory.md for the full picture.
   NSPrivacyTracking: false,
   NSPrivacyTrackingDomains: [],
-  NSPrivacyCollectedDataTypes: [],
+  NSPrivacyCollectedDataTypes: [
+    {
+      NSPrivacyCollectedDataType: "NSPrivacyCollectedDataTypeDeviceID",
+      NSPrivacyCollectedDataTypeLinked: false,
+      NSPrivacyCollectedDataTypeTracking: false,
+      NSPrivacyCollectedDataTypePurposes: [
+        "NSPrivacyCollectedDataTypePurposeAppFunctionality",
+        "NSPrivacyCollectedDataTypePurposeAnalytics",
+      ],
+    },
+    {
+      NSPrivacyCollectedDataType: "NSPrivacyCollectedDataTypeOtherDiagnosticData",
+      NSPrivacyCollectedDataTypeLinked: false,
+      NSPrivacyCollectedDataTypeTracking: false,
+      NSPrivacyCollectedDataTypePurposes: ["NSPrivacyCollectedDataTypePurposeAppFunctionality"],
+    },
+    {
+      NSPrivacyCollectedDataType: "NSPrivacyCollectedDataTypeOtherDataTypes",
+      NSPrivacyCollectedDataTypeLinked: false,
+      NSPrivacyCollectedDataTypeTracking: false,
+      NSPrivacyCollectedDataTypePurposes: ["NSPrivacyCollectedDataTypePurposeAppFunctionality"],
+    },
+  ],
 };
 
 export default ({ config }: ConfigContext): ExpoConfig => {

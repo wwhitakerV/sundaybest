@@ -4,7 +4,7 @@ What SundayBest collects, stores, and sends — and what it does not. Kept curre
 because the App Store privacy questionnaire, the privacy manifest in
 `app.config.ts`, and the MASVS checklist all have to agree with it.
 
-**Last reviewed:** 2026-09-19 (prompt 9 — logging and crash reporting)
+**Last reviewed:** 2026-09-20 (prompt 13 — final audit)
 
 ## Summary
 
@@ -23,15 +23,27 @@ after the fact.
 
 ## Collected data
 
-| Data   | Purpose | Stored where | Leaves device | Linked to identity |
-| ------ | ------- | ------------ | ------------- | ------------------ |
-| _None_ | —       | —            | —             | —                  |
+**The app itself collects nothing.** The one exception is a linked
+third-party SDK's own declared capability, not something app code reads or
+sends:
 
-`NSPrivacyCollectedDataTypes` in `app.config.ts` is an empty array, which is the
-machine-readable form of this table. Diagnostic/crash data does not get a row
-here: Apple's privacy-label category for crash data is **Diagnostics**, tracked
-separately in `docs/SETUP_CHECKLIST.md` rather than as a "collected data type"
-entry, because it is not linked to identity and not used for tracking — see
+| Data                                  | Purpose                                            | Stored where    | Leaves device                                       | Linked to identity |
+| ------------------------------------- | -------------------------------------------------- | --------------- | --------------------------------------------------- | ------------------ |
+| Device ID, diagnostic data (freeRASP) | App integrity / tamper detection (not mounted yet) | Not by app code | Only if freeRASP emails a threat report — see below | No                 |
+
+`NSPrivacyCollectedDataTypes` in `app.config.ts` is the machine-readable form
+of this: `DeviceID`, `OtherDiagnosticData`, and `OtherDataTypes`, all
+`NSPrivacyCollectedDataTypeLinked: false` and `...Tracking: false`, copied
+verbatim from `freerasp-react-native`'s bundled `TalsecRuntime.xcframework`
+manifest (found via `find node_modules -name PrivacyInfo.xcprivacy`, prompt
+13's audit — missed when that dependency first landed). freeRASP is a real,
+linked native dependency but **is not mounted at any screen yet** (see
+`docs/SETUP_CHECKLIST.md`, "Runtime integrity (freeRASP)") — Apple's manifest
+requirement is about what's linked into the binary, not what's actively
+exercised, so the declaration has to be here regardless. Diagnostic/crash
+data from Sentry does not get its own row here: Apple's privacy-label
+category for that is **Diagnostics**, tracked separately in
+`docs/SETUP_CHECKLIST.md` rather than as a "collected data type" entry — see
 "Diagnostics and crash reporting" below.
 
 ## Tracking
@@ -56,9 +68,20 @@ table must be updated when it lands, along with the export-compliance answer.
 
 ## Data sent off the device
 
-| Endpoint                    | Trigger                                                            | Contents                                                                                     | Why                                            |
-| --------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Sentry ingest (via the DSN) | An unhandled render error, or an explicit `logger.error(...)` call | Redacted stack trace, error message, breadcrumbs, release/dist tag — see "Diagnostics" below | Crash visibility during setup and early builds |
+| Endpoint                                     | Trigger                                                                                  | Contents                                                                                                     | Why                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| Sentry ingest (via the DSN)                  | An unhandled render error, or an explicit `logger.error(...)` call                       | Redacted stack trace, error message, breadcrumbs, release/dist tag — see "Diagnostics" below                 | Crash visibility during setup and early builds              |
+| Talsec (freeRASP), directly to `watcherMail` | A detected threat signal — but freeRASP isn't mounted anywhere yet, so never fires today | Whatever Talsec's native SDK includes in its own threat report; not something app code constructs or redacts | App-integrity monitoring, once mounted (see PLATFORM-3 gap) |
+
+`watcherMail` (`src/core/security/integrity/freerasp-integrity.ts`) is an
+email address Talsec's native SDK sends a threat report to directly — not a
+request this app's own client code makes, and not something
+`redactSensitive` ever sees, since it never passes through app code. Worth
+naming explicitly: it is a real off-device flow, distinct from anything
+Sentry does, and it exists whether or not `useIntegrityMonitor` is ever
+mounted at a screen (mounting only decides whether it can ever fire — the
+capability ships in the binary either way, which is why it's in the privacy
+manifest above regardless).
 
 `EXPO_PUBLIC_API_URL` is configured but no other code calls it yet. When the
 first product request lands, this section gets a second row: the endpoint, what
@@ -106,16 +129,19 @@ submission.
 
 ## Third-party SDKs with data access
 
-| SDK                             | Data it can reach                                              | In use                                                 |
-| ------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| `expo-router`, `expo-linking`   | Deep-link URLs, including any parameters                       | Yes — parse them with Zod, never trust them            |
-| `expo-constants`                | App config, `UserDefaults`                                     | Yes                                                    |
-| `expo-file-system` (via `expo`) | App container files, disk space                                | Transitively                                           |
-| `expo-splash-screen`            | None                                                           | Yes                                                    |
-| `@sentry/react-native`          | Whatever the app explicitly forwards — see "Diagnostics" above | Yes, gated on `EXPO_PUBLIC_SENTRY_DSN` being non-empty |
+| SDK                              | Data it can reach                                                                | In use                                                                        |
+| -------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `expo-router`, `expo-linking`    | Deep-link URLs, including any parameters                                         | Yes — parse them with Zod, never trust them                                   |
+| `expo-constants`                 | App config, `UserDefaults`                                                       | Yes                                                                           |
+| `expo-file-system` (via `expo`)  | App container files, disk space                                                  | Transitively                                                                  |
+| `expo-splash-screen`             | None                                                                             | Yes                                                                           |
+| `@sentry/react-native`           | Whatever the app explicitly forwards — see "Diagnostics" above                   | Yes, gated on `EXPO_PUBLIC_SENTRY_DSN` being non-empty                        |
+| `freerasp-react-native` (Talsec) | Device ID and diagnostic/integrity signals, per its own bundled privacy manifest | Linked, not yet mounted at any screen — see PLATFORM-3 in the MASVS checklist |
 
 No SDK in this list transmits anything the app has not explicitly redacted and
-handed to it first.
+handed to it first, except `freerasp-react-native`, whose native code can
+email a threat report directly to `watcherMail` without passing through app
+code at all — see "Data sent off the device" above.
 
 ## When to update this file
 

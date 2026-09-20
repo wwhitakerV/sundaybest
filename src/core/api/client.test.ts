@@ -237,6 +237,52 @@ describe("the session", () => {
       retryable: true,
     });
   });
+
+  /**
+   * Attestation cannot run on this device at all (App Attest disabled or
+   * unsupported), so there will never be a token — fail closed rather than
+   * retry a loop with no exit.
+   */
+  it("fails closed and non-retryably when attestation is unavailable on this device", async () => {
+    const session = workingSession();
+    session.getAccessToken.mockResolvedValue({ status: "unavailable", reason: "unsupported" });
+    const { client, fetchImpl } = setup({ session });
+
+    await expect(client.request({ path: "/things", schema: bodySchema })).rejects.toMatchObject({
+      code: "ATTESTATION_INVALID",
+      retryable: false,
+    });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("reports a rejected session failure with the documented code, non-retryably", async () => {
+    const session = workingSession();
+    session.getAccessToken.mockResolvedValue({ status: "rejected", code: "KEY_REVOKED" });
+    const { client } = setup({ session });
+
+    await expect(client.request({ path: "/things", schema: bodySchema })).rejects.toMatchObject({
+      code: "KEY_REVOKED",
+      retryable: false,
+    });
+  });
+
+  /**
+   * DEVICE_ERROR is a client-invented failure code (attestation.ts), not one
+   * of the server's documented ApiErrorCodes — it must never reach ApiError
+   * as-is.
+   */
+  it.each(["transient", "rejected"] as const)(
+    "maps a %s session failure's DEVICE_ERROR to INTERNAL",
+    async (status) => {
+      const session = workingSession();
+      session.getAccessToken.mockResolvedValue({ status, code: "DEVICE_ERROR" });
+      const { client } = setup({ session });
+
+      await expect(client.request({ path: "/things", schema: bodySchema })).rejects.toMatchObject({
+        code: "INTERNAL",
+      });
+    },
+  );
 });
 
 describe("sensitive requests", () => {
@@ -290,6 +336,58 @@ describe("sensitive requests", () => {
     ).rejects.toMatchObject({ code: "RATE_LIMITED" });
     expect(fetchImpl).not.toHaveBeenCalled();
   });
+
+  it("asks the caller to re-attest when the device has no key yet", async () => {
+    const { attestation } = createFakeAttestation({ assertion: { status: "needs-attestation" } });
+    const { client, fetchImpl } = setup({ attestation });
+
+    await expect(
+      client.request({ path: "/things", schema: bodySchema, sensitive: true }),
+    ).rejects.toMatchObject({ code: "KEY_UNKNOWN" });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The request needs an assertion this device will never produce — fail
+   * closed rather than send it unsigned and let the server decide.
+   * `kind: "integrity"` is what forces `retryable: false` regardless of the
+   * code's own default.
+   */
+  it("fails closed with kind integrity when App Attest is disabled", async () => {
+    const { attestation } = createFakeAttestation({ assertion: { status: "disabled" } });
+    const { client, fetchImpl } = setup({ attestation });
+
+    await expect(
+      client.request({ path: "/things", schema: bodySchema, sensitive: true }),
+    ).rejects.toMatchObject({ code: "ATTESTATION_INVALID", kind: "integrity", retryable: false });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("fails closed with kind integrity when App Attest is unsupported", async () => {
+    const { attestation } = createFakeAttestation({
+      assertion: { status: "unsupported", reason: "platform" },
+    });
+    const { client, fetchImpl } = setup({ attestation });
+
+    await expect(
+      client.request({ path: "/things", schema: bodySchema, sensitive: true }),
+    ).rejects.toMatchObject({ code: "ATTESTATION_INVALID", kind: "integrity", retryable: false });
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it.each(["transient", "rejected"] as const)(
+    "maps a %s assertion failure's DEVICE_ERROR to INTERNAL",
+    async (status) => {
+      const { attestation } = createFakeAttestation({
+        assertion: { status, stage: "assert", code: "DEVICE_ERROR" },
+      });
+      const { client } = setup({ attestation });
+
+      await expect(
+        client.request({ path: "/things", schema: bodySchema, sensitive: true }),
+      ).rejects.toMatchObject({ code: "INTERNAL" });
+    },
+  );
 
   /**
    * The link between the integrity policy and the network layer. Client-side
