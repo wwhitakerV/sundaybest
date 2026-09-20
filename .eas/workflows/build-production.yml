@@ -1,0 +1,46 @@
+name: Build production
+
+# Manual (npx eas-cli workflow:run .eas/workflows/build-production.yml), or
+# automatically when the release skill
+# (.claude/skills/release/SKILL.md) pushes a v*.*.* tag.
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+jobs:
+  lint_and_test:
+    name: Lint and test
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - run: npm run lint
+      - run: npm run test:ci
+
+  build:
+    name: Build iOS (production)
+    needs: [lint_and_test]
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  submit:
+    name: Submit to App Store Connect
+    needs: [build]
+    type: submit
+    params:
+      build_id: ${{ needs.build.outputs.build_id }}
+      profile: production
+
+  # A release channel entry alongside the store submission, so the
+  # production channel has something to serve if a later OTA update (or a
+  # rollback, see docs/release/runbook.md) is published against this exact
+  # build's runtime fingerprint.
+  publish_update:
+    name: Publish production channel entry
+    needs: [build]
+    type: update
+    params:
+      channel: production
+      message: ${{ github.ref_name }}

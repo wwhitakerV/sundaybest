@@ -50,7 +50,7 @@ Node 24.21.0 satisfies React Native 0.86.3's declared requirement
 
 ## Dependency security pins
 
-`npm audit` must stay at zero. Three pins in `package.json` `overrides` keep it
+`npm audit` must stay at zero. Pins in `package.json` `overrides` keep it
 there without moving off Expo SDK 57:
 
 | Pin                                         | Why                                                                                                                                                                                           |
@@ -61,8 +61,13 @@ there without moving off Expo SDK 57:
 
 `decode-uri-component@0.5.0` is the only patched release and is ESM-only, so
 `query-string@7.1.3`'s CJS `require` of it returns a module namespace instead of a
-function. `patches/expo-router++query-string+7.1.3.patch` makes that one require
+function. `patches/query-string+7.1.3.patch` makes that one require
 interop-aware; `patch-package` reapplies it on every install via `postinstall`.
+(Previously `patches/expo-router++query-string+7.1.3.patch`, scoped to a nested
+copy under `expo-router` — installing `eas-cli` hoisted `query-string` to the
+top level, so the patch was regenerated at its new path. Check
+`patch-package`'s postinstall output after any dependency change; a
+silently-failed patch does not fail the install.)
 
 Do not bump `query-string` to 9.x to fix this: 9.x is `export default` only, so
 expo-router's `__importStar(require("query-string")).stringify` becomes `undefined`
@@ -419,6 +424,96 @@ Full rationale in [ADR 0008](./adr/0008-repository-guardrails-and-ci.md).
   configuration hint rather than silence — only `@cyclonedx/cyclonedx-npm`
   (invoked from `ci.yml`, which knip doesn't parse) actually needs the
   ignore entry.
+
+## EAS build, submit, and update pipeline
+
+Full rationale in
+[ADR 0009](./adr/0009-eas-build-submit-and-update-pipeline.md).
+
+| File                                  | Does                                                                                                |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `eas.json`                            | development/preview/production build profiles; `environment`, never `env`, for anything per-profile |
+| `.eas/workflows/build-preview.yml`    | lint/test → iOS preview build → (optional) Maestro → PR comment                                     |
+| `.eas/workflows/build-production.yml` | lint/test → iOS production build → App Store submit → production channel update                     |
+| `.eas/workflows/hotfix.yml`           | manual-only; publishes an OTA update straight to `production` from a named branch                   |
+| `scripts/release.mjs`                 | hand-rolled semver bump from Conventional Commits; dry-run by default, `--apply` to tag and push    |
+| `docs/release/runbook.md`             | normal release, hotfix OTA, and rollback procedures                                                 |
+
+`app.config.ts`'s `runtimeVersion: { policy: "fingerprint" }` ties every OTA
+update to the exact native surface it was built against — an update whose
+fingerprint doesn't match the running binary is refused by `expo-updates`
+itself. `updates.url` and `extra.eas.projectId` are placeholders until
+`eas init` runs (`docs/SETUP_CHECKLIST.md`).
+
+### Traps found while building this — do not "fix" these blindly
+
+- **`eas.json`'s `env` field is for values you'd commit to git, not for
+  anything that should differ per profile without also being visible in
+  the repo.** `EXPO_PUBLIC_ATTESTATION_ENABLED`, the API URL, and the
+  Sentry DSN all go through EAS-hosted environment variables instead,
+  referenced per profile via `"environment"` — never `env`.
+- **A pre-packaged EAS Workflows job type (`type: update`, `type: build`)
+  always runs against "the job's recorded commit"** — the ref that
+  triggered the workflow — and has no field to override which branch it
+  checks out. `hotfix.yml`'s publish step is a custom `steps:` job with an
+  explicit `eas/checkout` (`ref: ${{ inputs.branch }}`) followed by a raw
+  `eas update` command, specifically because `type: update` would have
+  ignored the branch named in the workflow's own `inputs.branch`.
+- **`type: maestro` is EAS Workflows' own built-in job** — confirmed
+  against Expo's actual current example workflow files, not a paraphrase.
+  No separate paid Maestro Cloud subscription is needed, despite an
+  earlier, less precise source suggesting a `maestro-cloud` type that
+  would have needed one.
+- **A flow-sequence value containing `${{ ... }}` needs quoting in YAML**
+  (`["${{ needs.build.outputs.build_id }}"]`, not
+  `[${{ needs.build.outputs.build_id }}]`) — the unquoted form parses as a
+  nested flow mapping and fails. Caught by actually parsing every workflow
+  file with a real YAML parser rather than trusting hand-written syntax.
+- **A double-quoted string containing both a colon and a `${{ }}`
+  expression inside a `run:` value is a YAML trap** (e.g.
+  `run: eas update --message "hotfix: ${{ inputs.branch }}"`) — some
+  parsers read the colon as starting a nested mapping. A block scalar
+  (`run: >-`) sidesteps it entirely.
+- **`@expo/fingerprint` does not need installing separately.** It's
+  already a transitive dependency of `expo` itself (`npm ls
+@expo/fingerprint` confirms this) — the fingerprint runtime policy just
+  needs `expo-updates` installed and `runtimeVersion` configured.
+- **`eas.json`'s `autoIncrement` is boolean-only on `eas-cli@24.7.0`**,
+  not `"version" | "buildNumber" | boolean` as some documentation
+  describes — `npx eas-cli config --platform ios` (no login required to
+  reach schema validation) rejected `autoIncrement: "buildNumber"` with
+  `must be a boolean`. Use `true`/`false`; verify against `eas config`'s
+  own schema error, not a doc's prose description, if this ever needs
+  changing again.
+- **`eas-cli` does not belong in `package.json` at all.**
+  `expo-doctor` explicitly rejects installing it as a project dependency —
+  "install it globally or use npx" — and every command in this repo
+  (`docs/SETUP_CHECKLIST.md`, the release skill, the workflow files) uses
+  `npx eas-cli`/`npx expo-updates` accordingly. Installing it even
+  temporarily reopened `npm audit` to non-zero (13 vulnerabilities, all in
+  its own transitive devDependencies) and broke `expo config` entirely for
+  one install cycle — its dependency tree happened to hoist a root-level
+  `@expo/config-plugins` that `@sentry/react-native`'s Expo plugin needs
+  but doesn't declare, so removing `eas-cli` again briefly took that
+  accidental copy with it until a further `npm install` re-resolved
+  `expo`'s own copy to the root correctly. `npm audit` overrides
+  (`ajv`, `diff`, `joi`, `minimatch`, `nanoid`, `tar`, `ts-deepmerge`,
+  `uuid`, `yaml`) were tried and worked, but were unnecessary once
+  `eas-cli` came back out of `package.json` — removed again rather than
+  left in place for a problem that no longer exists.
+- **Installing `eas-cli` (even temporarily) moved `query-string` from a
+  nested copy under `expo-router` to the top level**, and this part
+  persisted after removing `eas-cli` again — npm's deduplication had
+  already settled on a single shared copy.
+  `patches/expo-router++query-string+7.1.3.patch` (path-scoped to the old
+  nested location) silently stopped applying — `patch-package`'s
+  postinstall reported the failure, it did not fail the install.
+  Re-generated as `patches/query-string+7.1.3.patch` (no `expo-router++`
+  prefix, since it now targets the top-level package). If `query-string`
+  ever moves back to being nested under `expo-router` (a future dependency
+  change could do this in either direction), the patch
+  will need regenerating again — check `patch-package`'s postinstall
+  output after any dependency change, not just this one.
 
 ## Architecture
 

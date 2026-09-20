@@ -1,0 +1,50 @@
+name: Build preview
+
+# Manual (npx eas-cli workflow:run .eas/workflows/build-preview.yml), or
+# automatically once a PR is
+# labeled "preview" — labeling is a deliberate choice per PR, not every push,
+# since a preview build is an EAS-billed resource.
+on:
+  pull_request_labeled:
+    labels: ["preview"]
+  workflow_dispatch:
+
+jobs:
+  lint_and_test:
+    name: Lint and test
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - run: npm run lint
+      - run: npm run test:ci
+
+  build:
+    name: Build iOS (preview)
+    needs: [lint_and_test]
+    type: build
+    params:
+      platform: ios
+      profile: preview
+
+  # Prompt 12 adds real flows under .maestro/; today it's an empty
+  # directory with a .gitkeep, so this job has nothing to run yet. `type:
+  # maestro` is EAS Workflows' own built-in job (no separate Maestro Cloud
+  # subscription needed), so once flows exist, only flow_path needs
+  # updating here.
+  e2e:
+    name: Maestro E2E (optional)
+    needs: [build]
+    if: ${{ hashFiles('.maestro/*.yml') != '' }}
+    type: maestro
+    params:
+      build_id: ${{ needs.build.outputs.build_id }}
+      flow_path: [".maestro/*.yml"]
+
+  comment:
+    name: Post build link to PR
+    needs: [build]
+    after: [e2e]
+    type: github-comment
+    params:
+      message: "Preview build ready."
+      build_ids: ["${{ needs.build.outputs.build_id }}"]

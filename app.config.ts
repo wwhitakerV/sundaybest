@@ -169,6 +169,35 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "automatic",
     icon: identity.icon,
 
+    // Ties an OTA update to the native build it's compatible with by
+    // hashing the project's actual native surface (SDK version, config,
+    // native modules) rather than a hand-maintained version number — an
+    // update built for one fingerprint is never offered to a build with a
+    // different one. Needs no config plugin of its own; `expo-updates`
+    // autolinks. `updates.url` needs the real EAS project ID, which only
+    // exists after `eas init` runs (see docs/SETUP_CHECKLIST.md) — the
+    // placeholder below is what `eas update:configure` would write, kept
+    // here so the shape is correct ahead of time rather than invented
+    // later under time pressure.
+    runtimeVersion: {
+      policy: "fingerprint",
+    },
+    updates: {
+      url: "https://u.expo.dev/PLACEHOLDER_EAS_PROJECT_ID",
+      // A code-signing certificate makes expo-updates refuse any update
+      // manifest that isn't signed by the matching private key — without
+      // it, anything reachable at `updates.url` (including a compromised
+      // or misconfigured CDN in front of it) could push arbitrary JS to
+      // every installed copy of the app. Generating the key/cert is a
+      // one-time human action tracked in docs/SETUP_CHECKLIST.md; the
+      // private key must never be committed to this repo.
+      codeSigningCertificate: "./certs/eas-update-certificate.pem",
+      codeSigningMetadata: {
+        keyid: "main",
+        alg: "rsa-v1_5-sha256",
+      },
+    },
+
     // iOS only, iPhone only. Listing one platform keeps `expo export` and the
     // Jest preset from building targets this product does not have.
     platforms: ["ios"],
@@ -247,6 +276,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     experiments: {
       typedRoutes: true,
       reactCompiler: true,
+    },
+
+    // Written by `eas init` once the checklist item runs; placeholder here
+    // for the same reason as `updates.url` above.
+    extra: {
+      eas: {
+        projectId: "PLACEHOLDER_EAS_PROJECT_ID",
+      },
     },
   };
 };

@@ -24,7 +24,11 @@ pre-commit:
       run: gitleaks git --pre-commit --staged --redact --config .gitleaks.toml
     related-tests:
       glob: "*.{ts,tsx}"
-      run: npm run test:related -- {staged_files}
+      # --passWithNoTests: a staged .ts file with no associated test (e.g.
+      # app.config.ts, a types-only file) is not itself a failure — jest
+      # exits 1 on "no tests found" without this flag, which would block
+      # every commit that touches a file like that.
+      run: npm run test:related -- {staged_files} --passWithNoTests
 
 commit-msg:
   commands:

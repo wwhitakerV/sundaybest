@@ -1,0 +1,44 @@
+name: Hotfix
+
+# Manual only, on purpose — a hotfix ships straight to the production
+# channel with no native build, and that decision should always be a human
+# choosing to run this workflow, never something a push or tag triggers by
+# accident. See docs/release/runbook.md, "Hotfix OTA".
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        type: string
+        required: true
+        description: The hotfix branch to publish from (e.g. hotfix/fix-crash-on-launch)
+
+jobs:
+  lint_and_test:
+    name: Lint and test
+    steps:
+      - uses: eas/checkout
+        with:
+          ref: ${{ inputs.branch }}
+      - uses: eas/install_node_modules
+      - run: npm run lint
+      - run: npm run test:ci
+
+  # A custom job, not `type: update`: the pre-packaged update job type runs
+  # against "the job's recorded commit" (the ref that triggered the
+  # workflow), which for a dashboard-dispatched workflow_dispatch is not
+  # necessarily the hotfix branch. Checking out `inputs.branch` explicitly
+  # and calling the CLI directly is what actually guarantees the update is
+  # built from the hotfix branch's code, not whatever ref the workflow
+  # itself was triggered against.
+  publish_hotfix:
+    name: Publish OTA hotfix to production
+    needs: [lint_and_test]
+    steps:
+      - uses: eas/checkout
+        with:
+          ref: ${{ inputs.branch }}
+      - uses: eas/install_node_modules
+      - run: >-
+          eas update --channel production
+          --message "hotfix from ${{ inputs.branch }}"
+          --non-interactive

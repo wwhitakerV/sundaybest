@@ -126,10 +126,11 @@ deliberate, and it is this section that turns reporting on.
       build — check the Sentry project's Releases view for the build's
       release/dist. No extra step should be needed; the plugin handles it once
       the environment variables above are set.
-- [ ] **Confirm source maps upload from EAS Update separately**, if and when
-      this app adopts `expo-updates` — it does not yet
-      (`docs/PROJECT.md`'s "expo-updates" note). EAS Update's source-map upload
-      is `npx sentry-expo-upload-sourcemaps dist`, a distinct step from the
+- [ ] **Confirm source maps upload from EAS Update separately.**
+      `expo-updates` is now installed (see "EAS build, submit, and update
+      pipeline" below), so this applies once the first real update
+      publishes. EAS Update's source-map upload is
+      `npx sentry-expo-upload-sourcemaps dist`, a distinct step from the
       Build-time upload, chained after `eas update` or run as its own CI step.
 - [ ] **Revisit `metro.config.js`'s decision to skip `withSentryConfig`.**
       `@sentry/react-native/metro`'s `withSentryConfig` (Debug IDs, better
@@ -183,6 +184,66 @@ in place. These account-level and settings-level actions are not:
       <https://github.com/gitleaks/gitleaks/releases>. **Not**
       `npm install gitleaks`: the npm package of that name is an unrelated
       tool by a different author, not the real gitleaks.
+
+## EAS build, submit, and update pipeline
+
+`eas.json`, `.eas/workflows/`, the release skill, and
+[docs/release/runbook.md](./release/runbook.md) are all in place. None of it
+can run for real until these account-level steps happen — `app.config.ts`'s
+`updates.url` and `extra.eas.projectId` are placeholders until the first one
+does.
+
+`eas-cli` is deliberately **not** a project dependency — `expo-doctor`
+rejects installing it in `package.json` at all. Every command below uses
+`npx eas-cli`, which always runs the latest release without needing a
+global install (a global `eas` install works too, if preferred).
+
+- [ ] **Run `npx eas-cli init`.** Creates the EAS project and fills in the
+      real `extra.eas.projectId` in `app.config.ts`, replacing
+      `PLACEHOLDER_EAS_PROJECT_ID`. Also update `updates.url` to
+      `https://u.expo.dev/<the real project id>` if `eas init` doesn't do
+      it automatically — confirm with `npx expo config --type prebuild`
+      afterward.
+- [ ] **Connect the GitHub repo in the Expo dashboard** (project settings →
+      GitHub). Required for `.eas/workflows/`'s `pull_request_labeled` and
+      `push` triggers to fire at all — without this, every workflow only
+      runs via manual `npx eas-cli workflow:run`.
+- [ ] **Create an Apple API key** (App Store Connect → Users and Access →
+      Integrations → Keys, "App Manager" role or narrower) and store it in
+      EAS credentials (`npx eas-cli credentials` → iOS → App Store Connect
+      API Key). Never inline in `eas.json`'s `submit` section, which is
+      deliberately empty for exactly this reason.
+- [ ] **Generate the EAS Update code-signing key and certificate**:
+      `sh
+npx expo-updates codesigning:generate \
+--key-output-directory keys \
+--certificate-output-directory certs \
+--certificate-validity-duration-years 10 \
+--certificate-common-name "SundayBest"
+`
+      then `npx expo-updates codesigning:configure` to wire
+      `certs/eas-update-certificate.pem` into `app.config.ts` (already
+      referenced there — the file just doesn't exist yet). **Store
+      `keys/private-key.pem` somewhere outside this repo** — a password
+      manager or a separate secrets vault, never committed. Without code
+      signing, anything that could intercept or compromise `updates.url`
+      could push arbitrary JS to every installed copy of the app.
+- [ ] **Create the EAS environment variables** referenced by `eas.json`'s
+      per-profile `"environment"` field — `EXPO_PUBLIC_ATTESTATION_ENABLED`
+      (`false` for `development`, `true` for `preview` and `production`),
+      `EXPO_PUBLIC_API_URL`, and `EXPO_PUBLIC_SENTRY_DSN`, once that DSN
+      exists (see "Crash reporting (Sentry)" above) — one value per EAS
+      environment:
+      `sh
+npx eas-cli env:create --environment development|preview|production
+`
+      These are what actually reach the build; nothing in `eas.json` itself
+      carries a literal value for any of them.
+- [ ] **Verify the first preview build on a real device**, not just the
+      `development` profile's simulator build. TLS pinning, SQLCipher, App
+      Attest, and freeRASP's integrity checks all either don't run at all
+      or behave differently in a simulator — see the existing notes under
+      "TLS pinning" and "Runtime integrity (freeRASP)" above.
 
 ## Backend — attestation and sessions
 
