@@ -1,3 +1,4 @@
+import { AccessibilityInfo } from "react-native";
 import { render, screen, fireEvent } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
@@ -15,6 +16,10 @@ beforeEach(() => {
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe("WelcomeScreen", () => {
@@ -67,10 +72,27 @@ describe("WelcomeScreen", () => {
     expect(dimmed.props.style).not.toHaveProperty("fontWeight");
   });
 
-  it("shows every step in the how-it-works list", () => {
+  it("shows the fanned preview of the app's screens", () => {
     render(<WelcomeScreen />);
 
-    expect(screen.getByText("Paste any sermon link")).toBeVisible();
+    expect(screen.getByTestId("welcome-screen-fan")).toBeVisible();
+  });
+
+  it("tells the three steps through the fan while the intro plays", () => {
+    render(<WelcomeScreen />);
+
+    expect(screen.getByTestId("welcome-screen-fan")).toHaveProp(
+      "accessibilityLabel",
+      "How SundayBest works: Paste any sermon link. Get a plan for 1 to 7 days. Read, reflect, pray, and quiz.",
+    );
+    expect(screen.queryByText("Paste any sermon link")).toBeNull();
+  });
+
+  it("lists the three steps instead when Reduce Motion is on", async () => {
+    jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(true);
+    render(<WelcomeScreen />);
+
+    expect(await screen.findByText("Paste any sermon link")).toBeVisible();
     expect(screen.getByText("Get a plan for 1 to 7 days")).toBeVisible();
     expect(screen.getByText("Read, reflect, pray, and quiz")).toBeVisible();
   });

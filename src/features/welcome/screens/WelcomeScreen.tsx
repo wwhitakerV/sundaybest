@@ -1,82 +1,102 @@
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { BookOpen, Calendar, Link2 } from "lucide-react-native";
 
 import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { DayStrip } from "@/ui/DayStrip";
 import { useTheme } from "@/theme";
 import { SAMPLE_PLAN_ID, planOverviewHref } from "@/features/plans";
-
-type Step = {
-  Icon: typeof Link2;
-  label: string;
-};
-
-const STEPS: readonly Step[] = [
-  { Icon: Link2, label: "Paste any sermon link" },
-  { Icon: Calendar, label: "Get a plan for 1 to 7 days" },
-  { Icon: BookOpen, label: "Read, reflect, pray, and quiz" },
-];
-
-const ICON_SIZE = 20;
+import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
+import { ScreenFan } from "../components/ScreenFan";
+import { WelcomeSteps } from "../components/WelcomeSteps";
+import { useStoryPhase } from "../hooks/use-story-phase";
+import { STORY_BEATS } from "../logic/story";
 
 export function WelcomeScreen() {
   const theme = useTheme();
   const router = useRouter();
+  // The intro story tells how it works. With Reduce Motion on it holds still
+  // on its opening — the first screen on stage — and the steps are listed instead.
+  const reduceMotion = useReduceMotion();
+  const phase = useStoryPhase(STORY_BEATS, reduceMotion);
 
   return (
-    <Screen testID="welcome-screen" style={styles.content}>
-      <View style={styles.header}>
-        <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
-      </View>
-
-      <View style={styles.weekRow}>
-        <DayStrip testID="welcome-day-strip" active="Sun" />
-      </View>
-
-      <Text
-        style={[theme.typography.supporting, styles.supporting, { color: theme.colors.textMuted }]}
+    <Screen testID="welcome-screen">
+      {/*
+       * Scrolls only when the page is taller than the phone (smaller iPhones,
+       * or Reduce Motion's list). `flexGrow` lets the stage (or, with Reduce
+       * Motion, the space above the fan) take up whatever height is spare.
+       * The page inset lives on the scroll content, not `Screen`, so the
+       * stage can bleed to the screen edges without the scroll view
+       * clipping it.
+       */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        We keep you in God&apos;s word. All week.
-      </Text>
-
-      <Text style={[theme.typography.display, styles.hero, { color: theme.colors.text }]}>
-        {"A new kind of Bible plan. "}
-        <Text style={{ color: theme.colors.textMuted }}>Built from the sermons you love.</Text>
-      </Text>
-
-      <View style={styles.steps}>
-        {STEPS.map(({ Icon, label }) => (
-          <View key={label} style={[styles.step, { borderBottomColor: theme.colors.divider }]}>
-            <View style={styles.iconArea}>
-              <Icon size={ICON_SIZE} color={theme.colors.text} strokeWidth={1.75} />
-            </View>
-            <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>{label}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.actions}>
-        <Button
-          testID="welcome-get-a-plan-now-button"
-          label="Get a plan now"
-          onPress={() => router.push("/(tabs)/home")}
-        />
-        <View style={styles.secondaryAction}>
-          <Button
-            testID="welcome-sample-plan-button"
-            label="See a sample plan"
-            variant="secondary"
-            onPress={() => router.push(planOverviewHref(SAMPLE_PLAN_ID))}
-          />
+        <View style={styles.header}>
+          <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
         </View>
+
+        <View style={styles.weekRow}>
+          <DayStrip testID="welcome-day-strip" active="Sun" />
+        </View>
+
         <Text
-          style={[theme.typography.supporting, styles.footnote, { color: theme.colors.textMuted }]}
+          style={[
+            theme.typography.supporting,
+            styles.supporting,
+            { color: theme.colors.textMuted },
+          ]}
         >
-          Free. No account needed.
+          We keep you in God&apos;s word. All week.
         </Text>
-      </View>
+
+        <ScreenFan
+          testID="welcome-screen-fan"
+          phase={phase}
+          style={reduceMotion ? styles.stillFan : styles.stage}
+        />
+
+        <Text
+          style={[
+            theme.typography.display,
+            reduceMotion ? styles.stillHero : styles.hero,
+            { color: theme.colors.text },
+          ]}
+        >
+          {"A new kind of Bible plan. "}
+          <Text style={{ color: theme.colors.textMuted }}>Built from the sermons you love.</Text>
+        </Text>
+
+        {reduceMotion && <WelcomeSteps />}
+
+        <View style={reduceMotion ? styles.stillActions : styles.actions}>
+          <Button
+            testID="welcome-get-a-plan-now-button"
+            label="Get a plan now"
+            onPress={() => router.push("/(tabs)/home")}
+          />
+          <View style={styles.secondaryAction}>
+            <Button
+              testID="welcome-sample-plan-button"
+              label="See a sample plan"
+              variant="secondary"
+              onPress={() => router.push(planOverviewHref(SAMPLE_PLAN_ID))}
+            />
+          </View>
+          <Text
+            style={[
+              theme.typography.supporting,
+              styles.footnote,
+              { color: theme.colors.textMuted },
+            ]}
+          >
+            Free. No account needed.
+          </Text>
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
@@ -85,29 +105,27 @@ export function WelcomeScreen() {
 // 393pt baseline) and rounded once — see the typography block in
 // src/theme/tokens.ts. Fixed, never scaled from the running device's width.
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24 },
+  scroll: { flex: 1 },
+  content: { flexGrow: 1, paddingHorizontal: 24 },
   // 12px above and below the wordmark. The week row's own 29 (the spec's 24
   // from the brand-mark area) is measured from this bar's edge, so it carries
   // 17 here and the bar's 12 makes up the rest.
   header: { paddingVertical: 12 },
   weekRow: { marginTop: 17 },
   supporting: { marginTop: 15 },
-  hero: { marginTop: 29 },
-  steps: { marginTop: 21, gap: 12 },
-  step: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
-  },
-  iconArea: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  actions: { marginTop: "auto", paddingBottom: 8 },
+  // With the intro playing, the page flows top-down and the stage takes all
+  // the height the rest leaves, so the phone on stage is as big as the
+  // device allows. Full-bleed: the stage runs past the 24pt page inset.
+  stage: { flex: 1, marginTop: 12, marginHorizontal: -24 },
+  hero: { marginTop: 20 },
+  actions: { marginTop: 24, paddingBottom: 8 },
+  // With Reduce Motion on, the hand holds still at a fixed size and the page
+  // anchors from the bottom: fan, headline, and the steps listed, sitting
+  // together above the buttons, any spare height above the fan.
+  stillFan: { height: 230, marginTop: "auto", marginHorizontal: -24 },
+  stillHero: { marginTop: 36 },
+  // A fixed, generous gap from the end of the list down to the buttons.
+  stillActions: { marginTop: 40, paddingBottom: 8 },
   secondaryAction: { marginTop: 12 },
   footnote: { marginTop: 17, textAlign: "center" },
 });

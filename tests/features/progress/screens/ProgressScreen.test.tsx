@@ -30,10 +30,10 @@ describe("ProgressScreen", () => {
     expect(screen.getByText("Progress")).toBeVisible();
   });
 
-  it("shows the notifications icon", () => {
+  it("has no notifications icon", () => {
     render(<ProgressScreen />);
 
-    expect(screen.getByTestId("progress-notifications-button")).toBeVisible();
+    expect(screen.queryByTestId("progress-notifications-button")).toBeNull();
   });
 
   it("shows the account icon", () => {

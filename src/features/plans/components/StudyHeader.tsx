@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import { ArrowLeft, Type } from "lucide-react-native";
+import { ALargeSmall, X } from "lucide-react-native";
 
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { ScreenHeader } from "@/ui/ScreenHeader";
@@ -18,7 +18,8 @@ const STEP_PROGRESS_SEGMENT_GAP = 4;
 export type StudyHeaderProps = {
   day: number;
   totalDays: number;
-  onBack: () => void;
+  /** Dismisses the whole Daily Study modal. */
+  onClose: () => void;
   onTextSize: () => void;
   /** 0-indexed position in Read/Scripture/Reflect/Pray. Omit to hide the tracker. */
   step?: number;
@@ -27,7 +28,7 @@ export type StudyHeaderProps = {
 
 /**
  * Shared by Read, Scripture, Reflect, and Pray — every screen in the daily
- * study flow has an identical back + "Day X of Y" + text-size header, plus
+ * study flow has an identical text-size + "Day X of Y" + close header, plus
  * the 4-segment step tracker beneath it. Local to this slice rather than
  * `src/ui`: the day/step content is specific to the plan/day study
  * experience, though it's built from `src/ui`'s generic header/progress
@@ -36,7 +37,7 @@ export type StudyHeaderProps = {
 export function StudyHeader({
   day,
   totalDays,
-  onBack,
+  onClose,
   onTextSize,
   step,
   testID,
@@ -50,19 +51,19 @@ export function StudyHeader({
         title={`Day ${day} of ${totalDays}`}
         left={
           <HeaderIconButton
-            testID={`${testID}-back-button`}
-            icon={ArrowLeft}
-            accessibilityLabel="Back"
-            onPress={onBack}
+            testID={`${testID}-text-size-button`}
+            icon={ALargeSmall}
+            size={TEXT_SIZE_ICON_SIZE}
+            accessibilityLabel="Text size"
+            onPress={onTextSize}
           />
         }
         right={
           <HeaderIconButton
-            testID={`${testID}-text-size-button`}
-            icon={Type}
-            size={TEXT_SIZE_ICON_SIZE}
-            accessibilityLabel="Text size"
-            onPress={onTextSize}
+            testID={`${testID}-close-button`}
+            icon={X}
+            accessibilityLabel="Close"
+            onPress={onClose}
           />
         }
       />

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 // Not re-exported from the top-level `expo-router` module, but this is the
 // same internal path expo-router's own `TabsClient.d.ts` imports
@@ -11,8 +11,8 @@ import { Plus } from "lucide-react-native";
 
 import { useTheme } from "@/theme";
 import { FLOATING_NAV_BAR } from "../floatingNavBar";
-import { useTabBarVisible } from "./TabBarVisibility";
-import { useTabBarVisibilityAnimation } from "./use-tab-bar-visibility-animation";
+import { AnimatedTabIcon } from "./AnimatedTabIcon";
+import { useTabBarReveal } from "./use-tab-bar-reveal";
 import { useTabIndicator, type TabLayout } from "./use-tab-indicator";
 
 export type TabBarProps = BottomTabBarProps & {
@@ -32,6 +32,11 @@ const GAP_TO_FAB = 10;
 const TAB_HEIGHT = CAPSULE_HEIGHT - CAPSULE_V_PADDING * 2;
 const TAB_PILL_RADIUS = CAPSULE_RADIUS - CAPSULE_H_PADDING;
 const TAB_ICON_SIZE = 23;
+const CAPSULE_BORDER_WIDTH = 1;
+// The icon sits centred in its tab, so this is how far its top edge is
+// below the capsule's outer top edge — what the burst must climb to clear.
+const ICON_TOP_TO_BAR_TOP =
+  CAPSULE_BORDER_WIDTH + CAPSULE_V_PADDING + (TAB_HEIGHT - TAB_ICON_SIZE) / 2;
 const FAB_SIZE = 66;
 const FAB_RADIUS = 33;
 const FAB_ICON_SIZE = 26;
@@ -68,38 +73,44 @@ const FAB_STROKE_WIDTH = 2.5;
  * box, full stop, so `left: 0`/`top: 0` on the pill and `onLayout`'s
  * `x`/`width` on a tab are guaranteed to be the same coordinate frame.
  *
- * The pill's motion lives in `useTabIndicator`; the hide/show motion in
- * `useTabBarVisibilityAnimation`.
+ * The pill's motion lives in `useTabIndicator`. As it slides, the newly
+ * active tab's icon coin-spins once and throws a small burst of streaks
+ * upward (`AnimatedTabIcon`).
+ *
+ * The whole bar reveals itself (`useTabBarReveal`) whenever the tabs are the
+ * focused screen of the root stack — on arriving from Welcome, and each time
+ * a modal (Daily Study, New Plan) or another non-tab screen is dismissed.
+ * While something covers the tabs it sits back in its hidden position and
+ * ignores touches, ready to animate up again.
  *
  * `onPress` fires on every tab and FAB press, before navigation — this
  * component has no side-effect SDK access of its own (`ui` never imports
  * `core`), so haptic feedback is the caller's job; `(tabs)/_layout.tsx`
  * passes `tapFeedback` from `@/core/haptics`.
- *
- * `useTabBarVisible()` (`TabBarVisibility.tsx`) lets a screen elsewhere in
- * the tree — the study flow's `StudyNav` screens — hide this bar in its
- * own favour. Hidden, it fades out and drops a short distance with a fast,
- * springy motion, with `pointerEvents="none"` so it can't intercept touches
- * meant for whatever replaced it, and comes back the same way.
  */
 export function TabBar({ state, descriptors, navigation, insets, onPress }: TabBarProps) {
   const theme = useTheme();
   const router = useRouter();
   const [tabLayouts, setTabLayouts] = useState<Record<string, TabLayout>>({});
-  const visible = useTabBarVisible();
 
   const activeLayout = tabLayouts[state.routes[state.index]?.key ?? ""];
   const indicatorStyle = useTabIndicator(activeLayout);
-  const visibilityStyle = useTabBarVisibilityAnimation(visible);
+
+  // Rendered by the tab navigator itself, outside any tab's screen, so this is
+  // whether the whole `(tabs)` route is focused in the root stack.
+  const isFocused = useIsFocused();
+  const revealStyle = useTabBarReveal(isFocused);
 
   return (
     <Animated.View
       testID="tab-bar"
-      pointerEvents={visible ? "auto" : "none"}
       style={[
         styles.wrapper,
-        { paddingBottom: Math.max(insets.bottom, BOTTOM_MARGIN) },
-        visibilityStyle,
+        {
+          paddingBottom: Math.max(insets.bottom, BOTTOM_MARGIN),
+          pointerEvents: isFocused ? "auto" : "none",
+        },
+        revealStyle,
       ]}
     >
       <View
@@ -155,11 +166,17 @@ export function TabBar({ state, descriptors, navigation, insets, onPress }: TabB
                 }}
                 style={styles.tab}
               >
-                {options.tabBarIcon?.({
-                  color,
-                  size: TAB_ICON_SIZE,
-                  focused: isActive,
-                })}
+                <AnimatedTabIcon
+                  active={isActive}
+                  iconSize={TAB_ICON_SIZE}
+                  burstClearance={ICON_TOP_TO_BAR_TOP}
+                >
+                  {options.tabBarIcon?.({
+                    color,
+                    size: TAB_ICON_SIZE,
+                    focused: isActive,
+                  })}
+                </AnimatedTabIcon>
               </Pressable>
             );
           })}
@@ -200,7 +217,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: CAPSULE_HEIGHT,
     borderRadius: CAPSULE_RADIUS,
-    borderWidth: 1,
+    borderWidth: CAPSULE_BORDER_WIDTH,
   },
   innerRow: {
     flex: 1,

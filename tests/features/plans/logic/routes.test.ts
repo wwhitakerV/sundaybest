@@ -15,7 +15,7 @@ describe("plan routes", () => {
 
   it("builds the study route with the day as a string", () => {
     expect(studyHref("plan-a", 2)).toEqual({
-      pathname: "/(tabs)/plans/[planId]/study",
+      pathname: "/study/[planId]",
       params: { planId: "plan-a", day: "2" },
     });
   });
@@ -25,12 +25,12 @@ describe("plan routes", () => {
   });
 
   it("builds the day-complete route", () => {
-    expect(dayCompleteHref("plan-a", 1).pathname).toBe("/(tabs)/plans/[planId]/day-complete");
+    expect(dayCompleteHref("plan-a", 1).pathname).toBe("/study/[planId]/day-complete");
   });
 
-  it("builds each quick-check stage route", () => {
-    expect(quickCheckHref("finish-verse", "plan-a", 1)).toEqual({
-      pathname: "/(tabs)/plans/[planId]/quick-check/finish-verse",
+  it("builds the quick-check route", () => {
+    expect(quickCheckHref("plan-a", 1)).toEqual({
+      pathname: "/study/[planId]/quick-check",
       params: { planId: "plan-a", day: "1" },
     });
   });

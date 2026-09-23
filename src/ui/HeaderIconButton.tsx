@@ -6,7 +6,6 @@ import { useTheme } from "@/theme";
 const SIZE = 49;
 const RADIUS = 25;
 const DEFAULT_ICON_SIZE = 23;
-const STROKE_WIDTH = 1.75;
 
 export type HeaderIconButtonProps = {
   icon: LucideIcon;
@@ -22,7 +21,7 @@ export type HeaderIconButtonProps = {
 
 /**
  * The circular icon button every header uses: back, close, more, text
- * controls, search, notifications. White fill, centered icon — one place
+ * controls, search. White fill, centered icon — one place
  * for that chrome so every header stays visually consistent. Bordered by
  * default; borderless for the top-level screens' right-side icons.
  */
@@ -50,7 +49,7 @@ export function HeaderIconButton({
         },
       ]}
     >
-      <Icon size={size} color={theme.colors.chromeIcon} strokeWidth={STROKE_WIDTH} />
+      <Icon size={size} color={theme.colors.chromeIcon} strokeWidth={theme.icon.strokeWidth} />
     </Pressable>
   );
 }

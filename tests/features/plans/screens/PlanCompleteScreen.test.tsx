@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { PlanCompleteScreen } from "@/features/plans/screens/PlanCompleteScreen";
@@ -7,15 +7,23 @@ import { PlanCompleteScreen } from "@/features/plans/screens/PlanCompleteScreen"
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useNavigation: jest.fn(),
   useLocalSearchParams: jest.fn(),
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
+const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
+const mockExitSession = jest.fn<void, []>();
 
 beforeEach(() => {
+  jest.mocked(useNavigation).mockReturnValue({
+    getParent: () => ({ goBack: mockExitSession }),
+  });
   jest
     .mocked(useRouter)
-    .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
+    .mockReturnValue({ push: mockPush, navigate: mockNavigate } as unknown as ReturnType<
+      typeof useRouter
+    >);
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-one-day" });
 });
 
@@ -37,7 +45,8 @@ describe("PlanCompleteScreen", () => {
 
     fireEvent.press(screen.getByTestId("plan-complete-plans-button"));
 
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/plans");
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/plans");
   });
 
   it("navigates to New Plan — Paste Sermon when the add-sermon action is pressed", () => {
@@ -45,7 +54,8 @@ describe("PlanCompleteScreen", () => {
 
     fireEvent.press(screen.getByTestId("plan-complete-add-sermon-button"));
 
-    expect(mockPush).toHaveBeenCalledWith("/(plan-creation)/paste-sermon");
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/(plan-creation)/paste-sermon");
   });
 
   it("navigates to Home when the Home action is pressed", () => {
@@ -53,7 +63,8 @@ describe("PlanCompleteScreen", () => {
 
     fireEvent.press(screen.getByTestId("plan-complete-home-button"));
 
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/home");
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/home");
   });
 
   it("shows a mocked share action", () => {

@@ -3,11 +3,12 @@
  * every call site. Pure: they only describe a destination — navigating is
  * the caller's job. Literal pathnames keep them assignable to Expo Router's
  * typed `Href` without importing the router here.
+ *
+ * `/study/...` is the Daily Study session: a full-screen modal with its own
+ * stack (see `src/app/_layout.tsx`).
  */
 
 type DayParam = number | string;
-
-export type QuickCheckStage = "question" | "answer" | "finish-verse" | "score";
 
 export function planOverviewHref(planId: string) {
   return { pathname: "/(tabs)/plans/[planId]", params: { planId } } as const;
@@ -15,21 +16,21 @@ export function planOverviewHref(planId: string) {
 
 export function studyHref(planId: string, day: DayParam) {
   return {
-    pathname: "/(tabs)/plans/[planId]/study",
+    pathname: "/study/[planId]",
     params: { planId, day: String(day) },
   } as const;
 }
 
 export function dayCompleteHref(planId: string, day: DayParam) {
   return {
-    pathname: "/(tabs)/plans/[planId]/day-complete",
+    pathname: "/study/[planId]/day-complete",
     params: { planId, day: String(day) },
   } as const;
 }
 
-export function quickCheckHref(stage: QuickCheckStage, planId: string, day: DayParam) {
+export function quickCheckHref(planId: string, day: DayParam) {
   return {
-    pathname: `/(tabs)/plans/[planId]/quick-check/${stage}`,
+    pathname: "/study/[planId]/quick-check",
     params: { planId, day: String(day) },
   } as const;
 }

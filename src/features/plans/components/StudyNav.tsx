@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ArrowLeft, ArrowRight, Trophy } from "lucide-react-native";
+import { ArrowLeft, ArrowRight } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 
 import { useTheme } from "@/theme";
@@ -13,9 +13,6 @@ const { capsuleHeight, capsuleRadius, sideMargin, bottomMargin } = FLOATING_NAV_
 
 const ARROW_ICON_SIZE = 20;
 const ARROW_STROKE_WIDTH = 2;
-
-const TROPHY_ICON_SIZE = 18;
-const TROPHY_STROKE_WIDTH = 2;
 
 export type StudyNavProps = {
   step: number;
@@ -107,45 +104,22 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           onPress={onNext}
           style={styles.side}
         >
-          {finishLabel ? (
-            <>
-              <Text
-                style={[
-                  theme.typography.label,
-                  {
-                    color: theme.colors.text,
-                  },
-                ]}
-              >
-                {finishLabel}
-              </Text>
+          <Text
+            style={[
+              theme.typography.label,
+              {
+                color: theme.colors.text,
+              },
+            ]}
+          >
+            {finishLabel ? "Finish" : "Next"}
+          </Text>
 
-              <Trophy
-                size={TROPHY_ICON_SIZE}
-                color={theme.colors.text}
-                strokeWidth={TROPHY_STROKE_WIDTH}
-              />
-            </>
-          ) : (
-            <>
-              <Text
-                style={[
-                  theme.typography.label,
-                  {
-                    color: theme.colors.text,
-                  },
-                ]}
-              >
-                Next
-              </Text>
-
-              <ArrowRight
-                size={ARROW_ICON_SIZE}
-                color={theme.colors.chromeIcon}
-                strokeWidth={ARROW_STROKE_WIDTH}
-              />
-            </>
-          )}
+          <ArrowRight
+            size={ARROW_ICON_SIZE}
+            color={theme.colors.chromeIcon}
+            strokeWidth={ARROW_STROKE_WIDTH}
+          />
         </Pressable>
       </View>
     </Animated.View>

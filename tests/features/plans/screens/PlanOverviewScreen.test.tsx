@@ -50,7 +50,7 @@ describe("PlanOverviewScreen", () => {
 
     expect(mockPush).toHaveBeenCalledWith(
       expect.objectContaining({
-        pathname: "/(tabs)/plans/[planId]/study",
+        pathname: "/study/[planId]",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
         params: expect.objectContaining({ planId: "plan-three-day", day: "2" }),
       }),

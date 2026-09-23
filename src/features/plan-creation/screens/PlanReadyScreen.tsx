@@ -5,16 +5,20 @@ import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { useTheme } from "@/theme";
+import { useModalSession } from "@/hooks/use-modal-session";
 import { SAMPLE_PLAN_ID, studyHref } from "@/features/plans";
 import { requestNotificationPermission } from "@/core/notifications/request-notification-permission";
 
 export function PlanReadyScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const session = useModalSession();
 
   async function handleStart() {
     await requestNotificationPermission();
-    router.push(studyHref(SAMPLE_PLAN_ID, 1));
+    // Replace, not push: the new-plan modal hands off to the study session
+    // modal rather than stacking one modal on top of the other.
+    router.replace(studyHref(SAMPLE_PLAN_ID, 1));
   }
 
   return (
@@ -32,7 +36,7 @@ export function PlanReadyScreen() {
         testID="plan-ready-not-now-button"
         label="Not now"
         variant="secondary"
-        onPress={() => router.push("/(tabs)/home")}
+        onPress={() => session.exitTo("/(tabs)/home")}
       />
     </Screen>
   );

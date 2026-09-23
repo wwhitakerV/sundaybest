@@ -9,13 +9,21 @@ import { StepProgress } from "@/ui/StepProgress";
 const QUICK_CHECK_STEPS = 3;
 
 export type QuickCheckHeaderProps = {
-  step: 1 | 2;
+  /** The question number shown as "N of 2". */
+  counter: 1 | 2;
+  /** The active segment of the 3-segment tracker (the last is the score). */
+  progressIndex: number;
   onClose: () => void;
   testID: string;
 };
 
-/** Shared by every Quick Check screen: close + "Quick check" + "N of 2" + a step tracker. */
-export function QuickCheckHeader({ step, onClose, testID }: QuickCheckHeaderProps) {
+/** Quick Check's fixed header: close + "Quick check" + "N of 2" + a step tracker. */
+export function QuickCheckHeader({
+  counter,
+  progressIndex,
+  onClose,
+  testID,
+}: QuickCheckHeaderProps) {
   return (
     <View style={styles.container}>
       <ScreenHeader
@@ -29,12 +37,12 @@ export function QuickCheckHeader({ step, onClose, testID }: QuickCheckHeaderProp
             onPress={onClose}
           />
         }
-        right={<StepCounter label={`${step} of 2`} />}
+        right={<StepCounter label={`${counter} of 2`} />}
       />
       <StepProgress
         testID={`${testID}-progress`}
         steps={QUICK_CHECK_STEPS}
-        activeIndex={step - 1}
+        activeIndex={progressIndex}
       />
     </View>
   );

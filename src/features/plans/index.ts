@@ -12,7 +12,4 @@ export { PlanOverviewScreen } from "./screens/PlanOverviewScreen";
 export { StudyScreen } from "./screens/StudyScreen";
 export { DayCompleteScreen } from "./screens/DayCompleteScreen";
 export { PlanCompleteScreen } from "./screens/PlanCompleteScreen";
-export { QuickCheckQuestionScreen } from "./screens/QuickCheckQuestionScreen";
-export { QuickCheckAnswerScreen } from "./screens/QuickCheckAnswerScreen";
-export { QuickCheckFinishVerseScreen } from "./screens/QuickCheckFinishVerseScreen";
-export { QuickCheckScoreScreen } from "./screens/QuickCheckScoreScreen";
+export { QuickCheckScreen } from "./screens/QuickCheckScreen";

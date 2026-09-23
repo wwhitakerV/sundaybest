@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
-import { useRouter } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 import { House, LibraryBig } from "lucide-react-native";
 
@@ -9,12 +9,14 @@ import type { TabBarProps } from "@/ui/tab-bar/TabBar";
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useIsFocused: jest.fn(),
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockNavigate = jest.fn();
 
 beforeEach(() => {
+  jest.mocked(useIsFocused).mockReturnValue(true);
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
@@ -72,18 +74,21 @@ function makeProps(activeIndex: number, options?: { includeHiddenRoute?: boolean
   };
 }
 
+// The bar starts in its hidden position (opacity 0) and animates in, and the
+// Jest Reanimated mock freezes animated styles at that first frame — so these
+// assert presence (`toBeOnTheScreen`), not `toBeVisible`.
 describe("TabBar", () => {
   it("is addressable as tab-bar", () => {
     render(<TabBar {...makeProps(0)} />);
 
-    expect(screen.getByTestId("tab-bar")).toBeVisible();
+    expect(screen.getByTestId("tab-bar")).toBeOnTheScreen();
   });
 
   it("renders a button for every route", () => {
     render(<TabBar {...makeProps(0)} />);
 
-    expect(screen.getByTestId("tab-home")).toBeVisible();
-    expect(screen.getByTestId("tab-plans")).toBeVisible();
+    expect(screen.getByTestId("tab-home")).toBeOnTheScreen();
+    expect(screen.getByTestId("tab-plans")).toBeOnTheScreen();
   });
 
   it("navigates to a route when its tab is pressed", () => {
@@ -97,7 +102,7 @@ describe("TabBar", () => {
   it("renders the add-sermon FAB", () => {
     render(<TabBar {...makeProps(0)} />);
 
-    expect(screen.getByTestId("tab-bar-fab")).toBeVisible();
+    expect(screen.getByTestId("tab-bar-fab")).toBeOnTheScreen();
   });
 
   it("navigates to New Plan — Paste Sermon when the FAB is pressed", () => {
@@ -111,8 +116,28 @@ describe("TabBar", () => {
   it("does not render a tab for a route hidden via href: null", () => {
     render(<TabBar {...makeProps(0, { includeHiddenRoute: true })} />);
 
-    expect(screen.getByTestId("tab-home")).toBeVisible();
-    expect(screen.getByTestId("tab-plans")).toBeVisible();
+    expect(screen.getByTestId("tab-home")).toBeOnTheScreen();
+    expect(screen.getByTestId("tab-plans")).toBeOnTheScreen();
     expect(screen.queryByTestId("tab-settings")).toBeNull();
+  });
+
+  it("starts in its hidden position so it can animate in", () => {
+    render(<TabBar {...makeProps(0)} />);
+
+    expect(screen.getByTestId("tab-bar")).toHaveStyle({ opacity: 0 });
+  });
+
+  it("ignores touches while the tabs are covered by another screen", () => {
+    jest.mocked(useIsFocused).mockReturnValue(false);
+    render(<TabBar {...makeProps(0)} />);
+
+    expect(screen.getByTestId("tab-bar")).toHaveStyle({ pointerEvents: "none" });
+  });
+
+  it("marks no tab as selected while a route without a tab is focused", () => {
+    render(<TabBar {...makeProps(2, { includeHiddenRoute: true })} />);
+
+    expect(screen.getByTestId("tab-home")).toHaveProp("accessibilityState", { selected: false });
+    expect(screen.getByTestId("tab-plans")).toHaveProp("accessibilityState", { selected: false });
   });
 });

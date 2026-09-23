@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { StudyScreen } from "@/features/plans/screens/StudyScreen";
@@ -7,15 +7,22 @@ import { StudyScreen } from "@/features/plans/screens/StudyScreen";
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useNavigation: jest.fn(),
   useLocalSearchParams: jest.fn<{ planId: string; day: string }, []>(),
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
+const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
+const mockExitSession = jest.fn<void, []>();
 const mockBack = jest.fn<void, []>();
 
 beforeEach(() => {
+  jest.mocked(useNavigation).mockReturnValue({
+    getParent: () => ({ goBack: mockExitSession }),
+  });
   jest.mocked(useRouter).mockReturnValue({
     push: mockPush,
+    replace: mockReplace,
     back: mockBack,
   } as unknown as ReturnType<typeof useRouter>);
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "2" });
@@ -101,7 +108,17 @@ describe("StudyScreen", () => {
     fireEvent.press(screen.getByTestId("study-nav-prev-button"));
 
     expect(await screen.findByTestId("study-read-body")).toBeVisible();
-    expect(mockBack).not.toHaveBeenCalled();
+    expect(mockExitSession).not.toHaveBeenCalled();
+  });
+
+  it("dismisses the whole flow when the close button is pressed", async () => {
+    render(<StudyScreen />);
+
+    fireEvent.press(screen.getByTestId("study-nav-next-button"));
+    await screen.findByTestId("study-scripture-body");
+    fireEvent.press(screen.getByTestId("study-close-button"));
+
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
   });
 
   it("exits to Plan Overview when Previous is pressed on Read", () => {
@@ -109,7 +126,7 @@ describe("StudyScreen", () => {
 
     fireEvent.press(screen.getByTestId("study-nav-prev-button"));
 
-    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
   });
 
   it("navigates to Day Complete when Finish is pressed on Pray", async () => {
@@ -124,9 +141,9 @@ describe("StudyScreen", () => {
 
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
 
-    expect(mockPush).toHaveBeenCalledWith(
+    expect(mockReplace).toHaveBeenCalledWith(
       expect.objectContaining({
-        pathname: "/(tabs)/plans/[planId]/day-complete",
+        pathname: "/study/[planId]/day-complete",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
         params: expect.objectContaining({ planId: "plan-three-day", day: "2" }),
       }),

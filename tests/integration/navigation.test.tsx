@@ -16,7 +16,7 @@ import { renderApp, screen, fireEvent } from "@tests/helpers/render";
  * untouched here. In-app `router.push()` navigation is not gated by it.
  */
 describe("navigation", () => {
-  it("walks Welcome -> Home tab -> Paste Sermon -> Link Preview -> Preparing -> Plan Ready", () => {
+  it("walks Welcome -> Home tab -> Paste Sermon -> Link Preview -> Preparing -> Plan Ready", async () => {
     const view = renderApp();
 
     expect(view.getPathname()).toBe("/");
@@ -28,8 +28,8 @@ describe("navigation", () => {
     expect(view.getPathname()).toBe("/paste-sermon");
     fireEvent.press(screen.getByTestId("paste-sermon-continue-button"));
 
-    expect(view.getPathname()).toBe("/link-preview");
-    fireEvent.press(screen.getByTestId("link-preview-create-plan-button"));
+    // New Plan's two steps change in place — the route stays put.
+    fireEvent.press(await screen.findByTestId("link-preview-create-plan-button"));
 
     expect(view.getPathname()).toBe("/preparing");
     fireEvent.press(screen.getByTestId("preparing-plan-continue-button"));
@@ -61,7 +61,7 @@ describe("navigation", () => {
     expect(screen.getByTestId("plan-overview-screen")).toBeVisible();
 
     fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/study");
+    expect(view.getPathname()).toBe("/study/sample-plan");
     expect(screen.getByTestId("study-read-body")).toBeVisible();
 
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -74,7 +74,7 @@ describe("navigation", () => {
     await screen.findByTestId("study-pray-body");
 
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/day-complete");
+    expect(view.getPathname()).toBe("/study/sample-plan/day-complete");
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
   });
 
@@ -93,19 +93,17 @@ describe("navigation", () => {
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
 
     fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/quick-check/question");
+    expect(view.getPathname()).toBe("/study/sample-plan/quick-check");
 
+    // Quick Check steps through its stages in place — the route never changes.
     fireEvent.press(screen.getByTestId("quick-check-question-check-answer-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/quick-check/answer");
-
-    fireEvent.press(screen.getByTestId("quick-check-answer-next-question-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/quick-check/finish-verse");
-
-    fireEvent.press(screen.getByTestId("quick-check-finish-verse-check-answer-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/quick-check/score");
+    fireEvent.press(await screen.findByTestId("quick-check-answer-next-question-button"));
+    fireEvent.press(await screen.findByTestId("quick-check-finish-verse-check-answer-button"));
+    await screen.findByTestId("quick-check-score-body");
+    expect(view.getPathname()).toBe("/study/sample-plan/quick-check");
 
     fireEvent.press(screen.getByTestId("quick-check-score-done-button"));
-    expect(view.getPathname()).toBe("/plans/sample-plan/day-complete");
+    expect(view.getPathname()).toBe("/study/sample-plan/day-complete");
   });
 
   it("round-trips a Settings subpage back to Settings", () => {

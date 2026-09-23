@@ -38,6 +38,8 @@ const palette = {
   overlaySubtleOnDark: "rgba(255, 255, 255, 0.06)",
   overlayMediumOnDark: "rgba(255, 255, 255, 0.16)",
   overlayStrongOnDark: "rgba(255, 255, 255, 0.18)",
+  // Darkening laid over video thumbnails, under their play button and time.
+  scrim: "rgba(0, 0, 0, 0.45)",
   // The Daily Study step labels (Read/Scripture/Reflect/Pray) beneath the
   // progress lines. Pure black per spec — distinct from `black` above,
   // which is the app's near-black brand value, not literal #000.
@@ -88,6 +90,14 @@ type ColorTokens = {
   stepLabelActive: string;
   /** A Daily Study step label for a completed or upcoming step — same grey either way. */
   stepLabelInactive: string;
+  /** The bezel and camera island of a drawn phone (the Welcome screen's mock screens). */
+  deviceFrame: string;
+  /** Drop-shadow colour for raised surfaces; paired with `theme.elevation`. */
+  shadow: string;
+  /** Darkening over a video thumbnail, behind its play button and running time. */
+  mediaScrim: string;
+  /** Text and icons on `mediaScrim`. */
+  onMediaScrim: string;
 };
 
 const lightColors: ColorTokens = {
@@ -112,6 +122,10 @@ const lightColors: ColorTokens = {
   tabActiveBackground: palette.overlayLight,
   stepLabelActive: palette.pureBlack,
   stepLabelInactive: palette.stepLabelInactive,
+  deviceFrame: palette.ink,
+  shadow: palette.pureBlack,
+  mediaScrim: palette.scrim,
+  onMediaScrim: palette.white,
 };
 
 const darkColors: ColorTokens = {
@@ -136,6 +150,12 @@ const darkColors: ColorTokens = {
   tabActiveBackground: palette.overlayStrongOnDark,
   stepLabelActive: palette.white,
   stepLabelInactive: palette.grey,
+  // A dark bezel on a dark page still reads as a phone by its lit screen.
+  deviceFrame: palette.pureBlack,
+  shadow: palette.pureBlack,
+  // A thumbnail is dark or light on its own terms; the scrim reads the same.
+  mediaScrim: palette.scrim,
+  onMediaScrim: palette.white,
 };
 
 /**
@@ -199,7 +219,24 @@ const typography = {
   filterCount: { fontSize: 11, fontWeight: "400" },
   /** A Daily Study step label (Read/Scripture/Reflect/Pray) below the progress line. */
   stepLabel: { fontSize: 13, fontWeight: "400", lineHeight: 16 },
+  /** A Scripture passage set as the page's centrepiece. Bodoni, generously leaded. */
+  scripture: { fontFamily: fonts.editorialBody, fontSize: 24, fontWeight: "400", lineHeight: 36 },
 } as const;
+
+/**
+ * Shadow geometry for raised surfaces. Colour comes from `colors.shadow`, so
+ * a component composes `{ shadowColor: theme.colors.shadow, ...theme.elevation.card }`.
+ */
+const elevation = {
+  /** A floating card, e.g. the Welcome screen's fanned phone mocks. */
+  card: { shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 16 },
+} as const;
+
+/**
+ * Line icons (lucide) share one stroke weight across the chrome — header
+ * buttons and tab bar alike — so they read as one family.
+ */
+const icon = { strokeWidth: 2 } as const;
 
 export const lightTheme = {
   name: "light",
@@ -208,6 +245,8 @@ export const lightTheme = {
   spacing,
   radii,
   typography,
+  icon,
+  elevation,
 } as const;
 
 /**
@@ -225,6 +264,8 @@ export const darkTheme = {
   spacing,
   radii,
   typography,
+  icon,
+  elevation,
 } as const;
 
 export type Theme = typeof lightTheme | typeof darkTheme;

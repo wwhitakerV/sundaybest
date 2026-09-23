@@ -1,6 +1,6 @@
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
-import { Bell, UserRound } from "lucide-react-native";
+import { UserRound } from "lucide-react-native";
 
 import { Screen } from "@/ui/Screen";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
@@ -17,23 +17,13 @@ export function ProgressScreen() {
       <TitleHeader
         title="Progress"
         actions={
-          <View style={styles.headerActions}>
-            <HeaderIconButton
-              testID="progress-notifications-button"
-              icon={Bell}
-              accessibilityLabel="Notifications"
-              bordered={false}
-              // Mocked action only — notifications aren't built yet.
-              onPress={() => undefined}
-            />
-            <HeaderIconButton
-              testID="progress-account-button"
-              icon={UserRound}
-              accessibilityLabel="Account"
-              bordered={false}
-              onPress={() => router.push("/(tabs)/settings")}
-            />
-          </View>
+          <HeaderIconButton
+            testID="progress-account-button"
+            icon={UserRound}
+            accessibilityLabel="Account"
+            bordered={false}
+            onPress={() => router.push("/(tabs)/settings")}
+          />
         }
       />
 
@@ -60,6 +50,5 @@ export function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
   item: { paddingVertical: 16, borderBottomWidth: 1 },
 });

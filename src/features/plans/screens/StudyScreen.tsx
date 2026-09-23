@@ -5,12 +5,12 @@ import Animated from "react-native-reanimated";
 
 import { Screen } from "@/ui/Screen";
 import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
-import { useHideTabBar } from "@/ui/tab-bar/TabBarVisibility";
 import { StudyHeader } from "../components/StudyHeader";
 import { StudyNav } from "../components/StudyNav";
 import { StudyStepBody } from "../components/StudyStepBody";
 import { usePlanRouteParams } from "../hooks/use-plan-route-params";
-import { useStudyStepTransition } from "../hooks/use-study-step-transition";
+import { useModalSession } from "@/hooks/use-modal-session";
+import { useStepTransition } from "@/hooks/use-step-transition";
 import { dayCompleteHref } from "../logic/routes";
 import {
   STUDY_STEPS,
@@ -27,23 +27,28 @@ const BOTTOM_NAV_CLEARANCE =
  * Read, Scripture, Reflect, and Pray as one screen with internal step state.
  * A route per step would unmount the header, tracker, and nav on every
  * change (that was the old horizontal push); here they stay put and only
- * the body cross-fades (`useStudyStepTransition`).
+ * the body cross-fades (`useStepTransition`).
+ *
+ * The first screen of the Daily Study session modal (`src/app/study`).
+ * Closing — the header's X, or Previous on the first step — dismisses the
+ * whole session. Finish *replaces* this screen with Day Complete inside the
+ * session, so the finished study isn't left underneath it.
  */
 export function StudyScreen() {
   const router = useRouter();
+  const session = useModalSession();
   const { day, plan } = usePlanRouteParams();
   const currentDay = Number(day);
-  useHideTabBar();
 
   const [step, setStep] = useState(0);
-  const { renderedStep, bodyStyle } = useStudyStepTransition(step);
+  const { renderedStep, bodyStyle } = useStepTransition(step);
 
   if (!plan) return null;
   const planId = plan.id;
 
   function applyNavAction(action: StudyNavAction) {
-    if (action.type === "exit") router.back();
-    else if (action.type === "finish") router.push(dayCompleteHref(planId, currentDay));
+    if (action.type === "exit") session.exit();
+    else if (action.type === "finish") router.replace(dayCompleteHref(planId, currentDay));
     else setStep(action.step);
   }
 
@@ -56,7 +61,7 @@ export function StudyScreen() {
         day={currentDay}
         totalDays={plan.totalDays}
         step={step}
-        onBack={() => router.back()}
+        onClose={session.exit}
         // Mocked action only — text-size controls aren't built yet.
         onTextSize={() => undefined}
       />

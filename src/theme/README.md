@@ -1,6 +1,6 @@
 # src/theme — design tokens
 
-The single source of colour, spacing, radii, and type scale. Every token has a
+The single source of colour, spacing, radii, type scale, and icon stroke weight (`theme.icon.strokeWidth`). Every token has a
 light and a dark value.
 
 ## Belongs here

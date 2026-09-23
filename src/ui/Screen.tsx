@@ -1,6 +1,6 @@
-import { type ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { SafeAreaView, type Edge } from "react-native-safe-area-context";
+import { SafeAreaInsetsContext, type Edge } from "react-native-safe-area-context";
 
 import { useTheme } from "@/theme";
 
@@ -20,7 +20,15 @@ export type ScreenProps = {
 
 const DEFAULT_EDGES: readonly Edge[] = ["top", "bottom", "left", "right"];
 
-/** Safe-area aware page container with the themed background applied. */
+/**
+ * Safe-area aware page container with the themed background applied.
+ *
+ * Insets come from the app-level `SafeAreaProvider` (window insets, fixed),
+ * not a native `SafeAreaView`. The native view measures its own position,
+ * so inside a native modal it reads a top inset of 0 while sliding up, then
+ * jumps to the notch height when it lands — the content visibly snaps.
+ * Outside a provider (unit tests), insets are 0.
+ */
 export function Screen({
   children,
   testID,
@@ -29,15 +37,22 @@ export function Screen({
   style,
 }: ScreenProps) {
   const theme = useTheme();
+  const insets = useContext(SafeAreaInsetsContext);
+
+  const safeAreaPadding = {
+    paddingTop: edges.includes("top") ? (insets?.top ?? 0) : 0,
+    paddingBottom: edges.includes("bottom") ? (insets?.bottom ?? 0) : 0,
+    paddingLeft: edges.includes("left") ? (insets?.left ?? 0) : 0,
+    paddingRight: edges.includes("right") ? (insets?.right ?? 0) : 0,
+  };
 
   return (
-    <SafeAreaView
-      edges={edges}
-      style={[styles.root, { backgroundColor: theme.colors.background }]}
+    <View
       testID={testID}
+      style={[styles.root, { backgroundColor: theme.colors.background }, safeAreaPadding]}
     >
       <View style={[styles.content, padded && styles.padded, style]}>{children}</View>
-    </SafeAreaView>
+    </View>
   );
 }
 

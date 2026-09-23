@@ -9,7 +9,7 @@ describe("StudyHeader", () => {
         testID="a-study-header"
         day={2}
         totalDays={6}
-        onBack={() => undefined}
+        onClose={() => undefined}
         onTextSize={() => undefined}
       />,
     );
@@ -17,21 +17,21 @@ describe("StudyHeader", () => {
     expect(screen.getByText("Day 2 of 6")).toBeVisible();
   });
 
-  it("calls onBack when the back button is pressed", () => {
-    const onBack = jest.fn();
+  it("calls onClose when the close button is pressed", () => {
+    const onClose = jest.fn();
     render(
       <StudyHeader
         testID="a-study-header"
         day={2}
         totalDays={6}
-        onBack={onBack}
+        onClose={onClose}
         onTextSize={() => undefined}
       />,
     );
 
-    fireEvent.press(screen.getByTestId("a-study-header-back-button"));
+    fireEvent.press(screen.getByTestId("a-study-header-close-button"));
 
-    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("calls onTextSize when the text-size button is pressed", () => {
@@ -41,7 +41,7 @@ describe("StudyHeader", () => {
         testID="a-study-header"
         day={2}
         totalDays={6}
-        onBack={() => undefined}
+        onClose={() => undefined}
         onTextSize={onTextSize}
       />,
     );
@@ -58,7 +58,7 @@ describe("StudyHeader", () => {
         day={2}
         totalDays={6}
         step={1}
-        onBack={() => undefined}
+        onClose={() => undefined}
         onTextSize={() => undefined}
       />,
     );
@@ -75,7 +75,7 @@ describe("StudyHeader", () => {
         day={2}
         totalDays={6}
         step={1}
-        onBack={() => undefined}
+        onClose={() => undefined}
         onTextSize={() => undefined}
       />,
     );
@@ -93,7 +93,7 @@ describe("StudyHeader", () => {
         day={2}
         totalDays={6}
         step={1}
-        onBack={() => undefined}
+        onClose={() => undefined}
         onTextSize={() => undefined}
       />,
     );
@@ -115,7 +115,7 @@ describe("StudyHeader", () => {
         testID="a-study-header"
         day={2}
         totalDays={6}
-        onBack={() => undefined}
+        onClose={() => undefined}
         onTextSize={() => undefined}
       />,
     );

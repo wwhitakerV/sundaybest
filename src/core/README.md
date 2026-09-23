@@ -19,6 +19,7 @@ monitoring/   logging, crash and error reporting
 providers/    app-wide React providers (AppProviders)
 fonts/        font loading
 haptics/      tap and vibration feedback
+accessibility/ OS accessibility settings (Reduce Motion)
 notifications/ notification permission (stubbed until expo-notifications lands)
 ```
 

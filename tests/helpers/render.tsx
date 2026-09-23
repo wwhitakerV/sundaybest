@@ -8,14 +8,9 @@ import type { ReactElement, ReactNode } from "react";
 
 import { AppProviders } from "@/core/providers/AppProviders";
 import { LoadingScreen } from "@/ui/LoadingScreen";
-import { TabBarVisibilityProvider } from "@/ui/tab-bar/TabBarVisibility";
 
 function Providers({ children }: { children: ReactNode }) {
-  return (
-    <AppProviders fallback={<LoadingScreen />}>
-      <TabBarVisibilityProvider>{children}</TabBarVisibilityProvider>
-    </AppProviders>
-  );
+  return <AppProviders fallback={<LoadingScreen />}>{children}</AppProviders>;
 }
 
 /**

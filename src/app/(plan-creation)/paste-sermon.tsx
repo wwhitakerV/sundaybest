@@ -1,1 +1,1 @@
-export { PasteSermonScreen as default } from "@/features/plan-creation";
+export { NewPlanScreen as default } from "@/features/plan-creation";
