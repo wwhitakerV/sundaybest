@@ -28,6 +28,7 @@ const palette = {
   // controls in the light theme — black-on-white, per spec.
   hairline: "rgba(0, 0, 0, 0.06)",
   overlaySubtle: "rgba(0, 0, 0, 0.03)",
+  overlayLight: "rgba(0, 0, 0, 0.08)",
   overlayMedium: "rgba(0, 0, 0, 0.09)",
   overlayStrong: "rgba(0, 0, 0, 0.10)",
   // The same overlays, inverted for a dark background. The spec only gives
@@ -108,7 +109,7 @@ const lightColors: ColorTokens = {
   hairline: palette.hairline,
   segmentBackground: palette.overlaySubtle,
   segmentActiveBackground: palette.overlayMedium,
-  tabActiveBackground: palette.overlayStrong,
+  tabActiveBackground: palette.overlayLight,
   stepLabelActive: palette.pureBlack,
   stepLabelInactive: palette.stepLabelInactive,
 };

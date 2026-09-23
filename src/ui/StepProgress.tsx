@@ -1,9 +1,16 @@
 import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { useTheme, type Theme } from "@/theme";
+import { getStepState, type StepState } from "@/utils/steps/getStepState";
 
 const SEGMENT_HEIGHT = 3;
 const GAP = 4;
+
+const SEGMENT_COLOR: Record<StepState, (theme: Theme) => string> = {
+  completed: (theme) => theme.palette.black,
+  active: (theme) => theme.colors.accent,
+  upcoming: (theme) => theme.palette.greyLightest,
+};
 
 export type StepProgressProps = {
   /** Total number of steps — 4 for the daily study flow, 3 for Quick Check. */
@@ -25,12 +32,7 @@ export function StepProgress({ steps, activeIndex, testID }: StepProgressProps) 
   return (
     <View testID={testID} style={styles.row}>
       {Array.from({ length: steps }, (_, index) => {
-        const color =
-          index < activeIndex
-            ? theme.palette.black
-            : index === activeIndex
-              ? theme.colors.accent
-              : theme.palette.greyLightest;
+        const color = SEGMENT_COLOR[getStepState(index, activeIndex)](theme);
 
         return (
           <View

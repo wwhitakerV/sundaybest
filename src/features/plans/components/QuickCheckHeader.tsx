@@ -1,9 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { X } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { ScreenHeader } from "@/ui/ScreenHeader";
+import { StepCounter } from "@/ui/StepCounter";
 import { StepProgress } from "@/ui/StepProgress";
 
 const QUICK_CHECK_STEPS = 3;
@@ -16,8 +16,6 @@ export type QuickCheckHeaderProps = {
 
 /** Shared by every Quick Check screen: close + "Quick check" + "N of 2" + a step tracker. */
 export function QuickCheckHeader({ step, onClose, testID }: QuickCheckHeaderProps) {
-  const theme = useTheme();
-
   return (
     <View style={styles.container}>
       <ScreenHeader
@@ -31,11 +29,7 @@ export function QuickCheckHeader({ step, onClose, testID }: QuickCheckHeaderProp
             onPress={onClose}
           />
         }
-        right={
-          <Text style={[theme.typography.stepCounter, { color: theme.colors.chromeStepCounter }]}>
-            {step} of 2
-          </Text>
-        }
+        right={<StepCounter label={`${step} of 2`} />}
       />
       <StepProgress
         testID={`${testID}-progress`}

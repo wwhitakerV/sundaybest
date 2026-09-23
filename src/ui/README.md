@@ -6,7 +6,9 @@ could appear in a different app unchanged, it belongs here.
 ## Rules
 
 - One component per file, named after the component in `PascalCase.tsx`.
-- Its test sits beside it (`Screen.test.tsx`), added in prompt 4.
+- Its test mirrors the path under `tests/` (`tests/ui/Screen.test.tsx`).
+- A component with private hooks gets its own folder (`tab-bar/`: the component
+  plus the hooks only it uses).
 - Styling reads from `@/theme` — never hardcode a colour.
 
 ## Belongs here

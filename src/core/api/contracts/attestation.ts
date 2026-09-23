@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * The executable form of [docs/api/attestation.md](../../../../docs/api/attestation.md).
  *
- * No server implements this yet; `test/mocks/attestation-handlers.ts` is a fake
+ * No server implements this yet; `tests/mocks/attestation-handlers.ts` is a fake
  * one that honours it. The document, these schemas, and those handlers are one
  * contract in three forms — change one and change all three.
  *

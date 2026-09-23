@@ -95,7 +95,7 @@ reproduces the bug. See [ADR 0002](docs/adr/0002-testing-strategy.md).
 ## Conventions
 
 - **`src/utils`**: one exported function per file, file named after it matching
-  its casing (`redaction/redactSensitive.ts`). Test beside it. No barrel files.
+  its casing (`redaction/redactSensitive.ts`). No barrel files.
 - **Named exports everywhere.** `src/app/**` is the only exception, because Expo
   Router discovers routes by default export.
 - **Zod at every boundary.** Anything crossing into the app — network responses,
@@ -104,7 +104,13 @@ reproduces the bug. See [ADR 0002](docs/adr/0002-testing-strategy.md).
 - **A `testID` on every interactive element**, and on any element a test needs to
   find. Forward `testID` through wrapper components.
 - Components in `PascalCase.tsx`, hooks and plain modules in `kebab-case.ts`.
-- Colocate unit tests as `*.test.ts(x)`; never put tests in `src/app/`.
+- **Pure functions by default.** Domain rules, derivations, and formatting live
+  in a slice's `logic/` folder (or `src/utils` if truly shared), not in JSX.
+  Components render and wire events; side effects live in hooks or `src/core`.
+- **Tests never live in `src/`.** Every test, helper, mock, and fixture is under
+  `tests/`, mirroring `src/` (`src/ui/Screen.tsx` →
+  `tests/ui/Screen.test.tsx`). See
+  [ADR 0011](docs/adr/0011-tests-in-a-mirrored-tests-tree.md).
 
 ## Security never-dos
 

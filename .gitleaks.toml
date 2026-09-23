@@ -6,12 +6,12 @@
 #   1. .env.example — placeholders only by design (see that file's own
 #      header comment), but a placeholder can still look credential-shaped
 #      to gitleaks' generic high-entropy rules.
-#   2. Test fixtures — mocks, factories, and *.test.ts(x) files
-#      intentionally contain fake credential-shaped strings (planted bearer
-#      tokens, JWTs, hex digests) to exercise
+#   2. Test fixtures — everything under tests/ (mocks, factories, and
+#      *.test.ts(x) files) intentionally contains fake credential-shaped
+#      strings (planted bearer tokens, JWTs, hex digests) to exercise
 #      src/utils/redaction/redactSensitive.ts and the crash-reporter
-#      scrubbing tests. See src/utils/redaction/redactSensitive.test.ts and
-#      src/core/monitoring/crash-reporter.test.ts.
+#      scrubbing tests. See tests/utils/redaction/redactSensitive.test.ts and
+#      tests/core/monitoring/crash-reporter.test.ts.
 #
 # Nothing else is allowlisted. A real secret anywhere outside these paths
 # still fails the scan.
@@ -23,7 +23,5 @@ useDefault = true
 description = "Placeholders and test fixtures only"
 paths = [
   '''(^|/)\.env\.example$''',
-  '''(^|/)test/mocks/.*''',
-  '''(^|/)test/factories/.*''',
-  '''.*\.test\.tsx?$''',
+  '''(^|/)tests/.*''',
 ]

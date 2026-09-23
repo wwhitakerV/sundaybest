@@ -6,6 +6,7 @@
  */
 export { SAMPLE_PLAN_ID, MOCK_PLANS } from "./mock-plans";
 export type { Plan } from "./types";
+export { planOverviewHref, studyHref } from "./logic/routes";
 export { PlansScreen } from "./screens/PlansScreen";
 export { PlanOverviewScreen } from "./screens/PlanOverviewScreen";
 export { StudyScreen } from "./screens/StudyScreen";

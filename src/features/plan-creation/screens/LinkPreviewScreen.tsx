@@ -1,4 +1,4 @@
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Screen } from "@/ui/Screen";
@@ -11,7 +11,7 @@ export function LinkPreviewScreen() {
   const router = useRouter();
 
   return (
-    <Screen testID="link-preview-screen" style={styles.content}>
+    <Screen testID="link-preview-screen" padded>
       <PlanCreationHeader
         testID="link-preview"
         leading="back"
@@ -29,7 +29,3 @@ export function LinkPreviewScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
-});

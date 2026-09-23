@@ -5,7 +5,7 @@
 This is the contract the client is built and tested against. The Zod schemas in
 [`src/core/api/contracts/attestation.ts`](../../src/core/api/contracts/attestation.ts)
 are the executable form of this document, and the MSW handlers in
-`test/mocks/attestation-handlers.ts` are a fake server that honours it. Changing
+`tests/mocks/attestation-handlers.ts` are a fake server that honours it. Changing
 one means changing all three.
 
 Server-side work is tracked in [SETUP_CHECKLIST.md](../SETUP_CHECKLIST.md).

@@ -109,14 +109,14 @@ module.exports = {
   transform,
   transformIgnorePatterns,
 
-  setupFilesAfterEnv: ["<rootDir>/test/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/tests/setup/jest.setup.ts"],
 
   // Merged with the preset's own mappings (asset stubs), not replacing them.
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^@test/(.*)$": "<rootDir>/test/$1",
+    "^@tests/(.*)$": "<rootDir>/tests/$1",
     // expo-router/testing-library's own mocks.js (required unconditionally by
-    // expo-router/testing-library, which test/render.tsx imports) sets up
+    // expo-router/testing-library, which tests/helpers/render.tsx imports) sets up
     // react-native-reanimated's *own* mock.js for Jest. That mock is correct
     // in shape but, on this installed reanimated version, transitively
     // requires react-native-worklets (reanimated's native runtime moved into
@@ -129,11 +129,12 @@ module.exports = {
     "^react-native-worklets$": "<rootDir>/node_modules/react-native-worklets/lib/module/mock.js",
   },
 
-  testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}", "<rootDir>/test/**/*.test.{ts,tsx}"],
+  // Tests live in tests/, mirroring src/ — never beside the code they cover.
+  testMatch: ["<rootDir>/tests/**/*.test.{ts,tsx}"],
 
   collectCoverageFrom: [
     "src/**/*.{ts,tsx}",
-    // Routes are one-line re-exports; they are covered by test/integration.
+    // Routes are one-line re-exports; they are covered by tests/integration.
     "!src/app/**",
     // Type-only files have nothing to execute.
     "!src/types/**",
@@ -141,7 +142,6 @@ module.exports = {
     "!src/**/types.ts",
     // Scaffold, not shipped code.
     "!src/features/_template/**",
-    "!src/**/*.test.{ts,tsx}",
   ],
 
   coverageThreshold: {

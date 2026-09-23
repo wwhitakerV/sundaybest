@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { X } from "lucide-react-native";
 
@@ -17,7 +17,7 @@ export function PreparingPlanScreen() {
   const router = useRouter();
 
   return (
-    <Screen testID="preparing-plan-screen" style={styles.content}>
+    <Screen testID="preparing-plan-screen" padded>
       <Pressable
         testID="preparing-plan-close-button"
         accessibilityRole="button"
@@ -37,7 +37,3 @@ export function PreparingPlanScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
-});

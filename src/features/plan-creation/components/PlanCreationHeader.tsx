@@ -1,9 +1,8 @@
-import { Text } from "react-native";
 import { ArrowLeft, X } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { ScreenHeader } from "@/ui/ScreenHeader";
+import { StepCounter } from "@/ui/StepCounter";
 
 export type PlanCreationHeaderProps = {
   /** "close" for the flow's first screen or a temporary step; "back" to move within the flow. */
@@ -16,7 +15,6 @@ export type PlanCreationHeaderProps = {
 
 /** Shared by every screen in the plan-creation modal flow: X or Back, "New plan", and a step count. */
 export function PlanCreationHeader({ leading, onPress, step, testID }: PlanCreationHeaderProps) {
-  const theme = useTheme();
   const Icon = leading === "close" ? X : ArrowLeft;
   const label = leading === "close" ? "Close" : "Back";
 
@@ -32,13 +30,7 @@ export function PlanCreationHeader({ leading, onPress, step, testID }: PlanCreat
           onPress={onPress}
         />
       }
-      right={
-        step !== undefined ? (
-          <Text style={[theme.typography.stepCounter, { color: theme.colors.chromeStepCounter }]}>
-            {step}
-          </Text>
-        ) : undefined
-      }
+      right={step !== undefined ? <StepCounter label={step} /> : undefined}
     />
   );
 }

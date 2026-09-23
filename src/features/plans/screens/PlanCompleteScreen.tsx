@@ -1,4 +1,4 @@
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Screen } from "@/ui/Screen";
@@ -11,7 +11,7 @@ export function PlanCompleteScreen() {
   const router = useRouter();
 
   return (
-    <Screen testID="plan-complete-screen" style={styles.content}>
+    <Screen testID="plan-complete-screen" padded>
       <ScreenHeader testID="plan-complete" title="Plan complete" />
 
       <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
@@ -43,7 +43,3 @@ export function PlanCompleteScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
-});

@@ -1,8 +1,8 @@
 import { Tabs } from "expo-router";
-import { Brain, Flame, House, LibraryBig } from "lucide-react-native";
+import { FaceGrinning, Flame, House, LibraryBig } from "lucide-react-native";
 
-import { TabBar } from "@/ui/TabBar";
-import { TabBarVisibilityProvider } from "@/ui/TabBarVisibility";
+import { TabBar } from "@/ui/tab-bar/TabBar";
+import { TabBarVisibilityProvider } from "@/ui/tab-bar/TabBarVisibility";
 import { tapFeedback } from "@/core/haptics/haptics";
 
 const STROKE_WIDTH = 2;
@@ -40,7 +40,7 @@ export default function TabsLayout() {
             title: "Fun",
             tabBarButtonTestID: "tab-fun",
             tabBarIcon: ({ color, size }) => (
-              <Brain color={color} size={size} strokeWidth={STROKE_WIDTH} />
+              <FaceGrinning color={color} size={size} strokeWidth={STROKE_WIDTH} />
             ),
           }}
         />

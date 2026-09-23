@@ -1,11 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/app/**/*.{ts,tsx}", "src/**/*.test.{ts,tsx}", "test/**/*.{ts,tsx}"],
-  "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}"],
-  "ignore": [
-    "src/features/_template/**",
-    "src/features/home/store.ts",
-    "src/features/home/types.ts"
-  ],
+  "entry": ["src/app/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+  "ignore": ["src/features/_template/**"],
   "ignoreDependencies": ["expo-mcp", "@cyclonedx/cyclonedx-npm"]
 }

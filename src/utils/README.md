@@ -6,7 +6,7 @@ Deterministic helpers. Same input, same output, no observable side effects.
 
 - **One exported function per file**, and the file is named after it, matching
   its casing (`redaction/redactSensitive.ts` exports `redactSensitive`).
-- Test beside it (`redaction/redactSensitive.test.ts`).
+- Its test mirrors the path under `tests/` (`tests/utils/redaction/redactSensitive.test.ts`).
 - **No barrel files.** Import the exact path so dead code stays visible to Knip
   and bundles stay honest.
 

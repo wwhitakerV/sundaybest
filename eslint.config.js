@@ -12,13 +12,8 @@ const jest = require("eslint-plugin-jest");
 const testingLibrary = require("eslint-plugin-testing-library");
 const globals = require("globals");
 
-/** Test files. Prompt 4 adds the actual test setup; the scoping is ready for it. */
-const TEST_FILES = [
-  "**/*.{test,spec}.{ts,tsx}",
-  "**/__tests__/**/*.{ts,tsx}",
-  "**/__mocks__/**/*.{ts,tsx}",
-  "test/**/*.{ts,tsx}",
-];
+/** Test files, helpers, mocks, and fixtures — all under tests/, mirroring src/. */
+const TEST_FILES = ["tests/**/*.{ts,tsx}"];
 
 /** A slice's internals are private; only its index.ts is public. */
 const FEATURE_ENTRY_POINT_ONLY = {

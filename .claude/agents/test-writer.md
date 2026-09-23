@@ -20,14 +20,15 @@ back. Someone else makes them pass.
    criteria.
 2. **Read `.claude/rules/testing.md` and `docs/adr/0002-testing-strategy.md`**
    for this project's conventions, and look at an existing test
-   (`src/utils/redaction/redactSensitive.test.ts`,
-   `src/theme/use-theme.test.ts`) to match style.
+   (`tests/utils/redaction/redactSensitive.test.ts`,
+   `tests/theme/use-theme.test.ts`) to match style.
 3. **Map each criterion to one test.** One `it` per criterion, named after the
    behavior. A criterion that needs two assertions with different failure
    reasons becomes two tests.
-4. **Place them correctly:** colocated `*.test.ts(x)` beside the unit under
-   test; `test/integration/` for anything crossing routes or providers. Never in
-   `src/app/`.
+4. **Place them correctly:** under `tests/`, mirroring the unit's path in
+   `src/` (`src/ui/Screen.tsx` → `tests/ui/Screen.test.tsx`), importing it via
+   `@/`; `tests/integration/` for anything crossing routes or providers. Never
+   anywhere in `src/`.
 5. **Run them and confirm they fail** with `npm run test:related <files>`.
    Paste the failure output.
 6. **Check the failure reason.** A test failing on `Cannot find module` is
@@ -36,7 +37,7 @@ back. Someone else makes them pass.
 
 ## Rules
 
-- Write only test files, fixtures in `test/factories/`, and MSW handlers.
+- Write only test files, fixtures in `tests/factories/`, and MSW handlers.
 - If a test needs a module that does not exist, import it anyway and let the
   test fail on the missing module. Do not create a stub to make the import
   resolve.
@@ -45,7 +46,7 @@ back. Someone else makes them pass.
 - Cover the boundaries the spec implies: empty, missing, malformed, too long,
   and the error branch. Say which boundaries the spec left unspecified rather
   than guessing.
-- Use `@test/render`, MSW via `server.use(...)`, and `test/factories` builders.
+- Use `@tests/helpers/render`, MSW via `server.use(...)`, and `tests/factories` builders.
 
 ## Report back
 

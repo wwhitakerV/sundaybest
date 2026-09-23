@@ -6,7 +6,7 @@ import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { DayStrip } from "@/ui/DayStrip";
 import { useTheme } from "@/theme";
-import { SAMPLE_PLAN_ID } from "@/features/plans";
+import { SAMPLE_PLAN_ID, planOverviewHref } from "@/features/plans";
 
 type Step = {
   Icon: typeof Link2;
@@ -68,12 +68,7 @@ export function WelcomeScreen() {
             testID="welcome-sample-plan-button"
             label="See a sample plan"
             variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: "/(tabs)/plans/[planId]",
-                params: { planId: SAMPLE_PLAN_ID },
-              })
-            }
+            onPress={() => router.push(planOverviewHref(SAMPLE_PLAN_ID))}
           />
         </View>
         <Text

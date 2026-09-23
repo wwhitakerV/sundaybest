@@ -2,7 +2,7 @@
  * The local database, as a port.
  *
  * Narrow on purpose: everything above this line is testable against an
- * in-memory fake (`test/mocks/database.ts`), and the only code that needs a
+ * in-memory fake (`tests/mocks/database.ts`), and the only code that needs a
  * simulator or a device is the adapter in `sqlcipher-database.ts`.
  *
  * The database is encrypted with SQLCipher. Its key is provisioned by

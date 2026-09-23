@@ -10,15 +10,22 @@ Copy `_template/` to start a slice:
 
 ```
 <feature>/
-  screens/     route-level components
+  screens/     route-level components — thin: compose, wire events, call hooks
   components/  presentational pieces used only by this slice
-  hooks/       slice-specific hooks
+  hooks/       slice-specific hooks: lifecycle, animation, route params
+  logic/       pure functions: rules, derivations, route builders, data tables
   api/         data access for this slice
   schemas/     runtime validation (parsing at the boundary)
   store.ts     local UI state
   types.ts     types owned by the slice
   index.ts     the only public entry point
 ```
+
+Create a folder only when the slice has something to put in it. `_template/`
+shows the full shape; a real slice keeps just what it uses.
+
+`logic/` is pure: no React, no Expo Router, no Reanimated, no device APIs — same
+input, same output. That keeps domain rules testable without rendering anything.
 
 ## Belongs here
 

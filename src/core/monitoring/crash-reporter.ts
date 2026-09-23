@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/react-native";
 import { redactSensitive } from "@/utils/redaction/redactSensitive";
 import { env as defaultEnv } from "../config/env";
 import type { Env } from "../config/env-schema";
-import type { LogContext } from "./logger";
+import type { LogContext } from "./log-context";
 
 /**
  * Crash reporting, wrapped behind a narrow port. `@sentry/react-native` is the

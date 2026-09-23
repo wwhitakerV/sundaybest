@@ -1,4 +1,4 @@
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Screen } from "@/ui/Screen";
@@ -11,7 +11,7 @@ export function PasteSermonScreen() {
   const router = useRouter();
 
   return (
-    <Screen testID="paste-sermon-screen" style={styles.content}>
+    <Screen testID="paste-sermon-screen" padded>
       <PlanCreationHeader
         testID="paste-sermon"
         leading="close"
@@ -29,7 +29,3 @@ export function PasteSermonScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
-});

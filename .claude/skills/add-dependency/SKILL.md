@@ -60,7 +60,7 @@ npm run validate
 - A side-effect SDK is imported **only** inside `src/core`. Add the wrapper
   there and import that. Lint blocks the import anywhere else — add the package
   to the restricted list in `eslint.config.js` if it belongs there.
-- Add a native module mock in `test/setup.ts`, in the native-module section.
+- Add a native module mock in `tests/setup/jest.setup.ts`, in the native-module section.
   Keep it honest: a mock that always resolves hides every failure path.
 - If it is ESM-only, add it to `EXTRA_TRANSFORMED_PACKAGES` in
   `jest.config.js`.

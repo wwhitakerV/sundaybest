@@ -12,8 +12,9 @@ say what remains.
 
 1. Name the behavior in one sentence. If it needs "and", it is two behaviors —
    split and do the first.
-2. Write **one** test asserting it. Colocated `*.test.ts(x)`; `test/integration/`
-   if it crosses routes or providers.
+2. Write **one** test asserting it, under `tests/` at the path mirroring the
+   source (`tests/<same path>/X.test.tsx`); `tests/integration/` if it crosses
+   routes or providers.
 3. Run it:
    ```
    npm run test:related <test file>

@@ -1,7 +1,7 @@
 ---
 paths:
   - "**/*.test.{ts,tsx}"
-  - "test/**/*.{ts,tsx}"
+  - "tests/**/*.{ts,tsx}"
   - "jest.config.js"
 ---
 
@@ -25,17 +25,20 @@ before writing implementation. A test first seen passing is not evidence.
 
 ## Mechanics specific to this project
 
-- Render through `@test/render`, never RNTL's `render` directly — the helper
+- Render through `@tests/helpers/render`, never RNTL's `render` directly — the helper
   wraps `AppProviders` so a test cannot pass by skipping a provider the app has.
 - Route-level tests use `renderApp()` (Expo Router's `renderRouter`), which
   discovers the real routes.
 - The network is mocked with MSW at the boundary. `onUnhandledRequest` is
   `"error"`: add a handler with `server.use(...)` rather than mocking our client.
-- Fixtures come from `test/factories`, not inline literals.
+- Fixtures come from `tests/factories`, not inline literals.
 - Real timers by default. Opt in per test with
   `jest.useFakeTimers({ advanceTimers: true })`; `renderApp()` already forces
   fake timers.
-- Tests never live in `src/app/` — test the feature screen instead.
+- Tests never live in `src/`. They mirror it under `tests/`
+  (`tests/features/plans/components/StudyNav.test.tsx`) and import the code
+  under test through `@/`. Routes in `src/app/` have no unit tests — test the
+  feature screen, and cover routes in `tests/integration/`.
 
 ## Do not
 

@@ -5,21 +5,15 @@ import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { StepProgress } from "@/ui/StepProgress";
 import { useTheme } from "@/theme";
+import { getStepState } from "@/utils/steps/getStepState";
+import { STUDY_STEPS, STUDY_STEP_COUNT } from "../logic/study-steps";
 
-const STUDY_STEPS = 4;
 const TEXT_SIZE_ICON_SIZE = 20;
 const STEP_LABEL_TOP_GAP = 8;
 // Mirrors `StepProgress`'s own segment gap so each label's flex-1
 // container lines up under its corresponding progress segment — read
 // only, `StepProgress` itself is untouched.
 const STEP_PROGRESS_SEGMENT_GAP = 4;
-
-const STEP_LABELS = ["Read", "Scripture", "Reflect", "Pray"] as const;
-// Read anchors to the left edge of its segment, Pray to the right edge of
-// its own; Scripture and Reflect stay left/right respectively so the row
-// spreads inward from both ends rather than every label using the same
-// alignment.
-const STEP_LABEL_ALIGN = ["left", "left", "right", "right"] as const;
 
 export type StudyHeaderProps = {
   day: number;
@@ -74,20 +68,20 @@ export function StudyHeader({
       />
       {step !== undefined && (
         <View>
-          <StepProgress testID={`${testID}-progress`} steps={STUDY_STEPS} activeIndex={step} />
+          <StepProgress testID={`${testID}-progress`} steps={STUDY_STEP_COUNT} activeIndex={step} />
           <View style={styles.labelRow}>
-            {STEP_LABELS.map((label, index) => (
+            {STUDY_STEPS.map(({ key, label, labelAlign }, index) => (
               <Text
-                key={label}
+                key={key}
                 testID={`${testID}-progress-label-${index}`}
                 numberOfLines={1}
                 style={[
                   theme.typography.stepLabel,
                   styles.label,
                   {
-                    textAlign: STEP_LABEL_ALIGN[index],
+                    textAlign: labelAlign,
                     color:
-                      index === step
+                      getStepState(index, step) === "active"
                         ? theme.colors.stepLabelActive
                         : theme.colors.stepLabelInactive,
                   },

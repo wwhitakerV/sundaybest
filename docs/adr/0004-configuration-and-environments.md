@@ -181,7 +181,7 @@ dependency.
   the match yet. The EAS build profiles (a later prompt) should set both from one
   place.
 - **`.env` is required for `npm start`**, by choice. See above.
-- `test/setup.ts` injects the development defaults, so tests have an environment
+- `tests/setup/jest.setup.ts` injects the development defaults, so tests have an environment
   the way a build does.
 - **`expo export` does not catch a missing variable.** Bundling never executes
   the module, so a build with no `.env` exports cleanly and fails on launch

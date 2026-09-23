@@ -1,0 +1,17 @@
+import { renderApp, screen } from "@tests/helpers/render";
+
+describe("app routes", () => {
+  it("renders the welcome screen at /", () => {
+    renderApp();
+
+    expect(screen.getByTestId("welcome-screen")).toBeVisible();
+  });
+
+  it("mounts / as the initial route", () => {
+    // Kept as the result object: destructuring getPathname detaches it from
+    // its `this` (@typescript-eslint/unbound-method).
+    const view = renderApp();
+
+    expect(view.getPathname()).toBe("/");
+  });
+});

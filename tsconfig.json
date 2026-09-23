@@ -8,7 +8,7 @@
     "exactOptionalPropertyTypes": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@test/*": ["./test/*"]
+      "@tests/*": ["./tests/*"]
     },
     "types": ["jest"]
   },

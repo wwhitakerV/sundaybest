@@ -6,7 +6,8 @@ import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { useTheme } from "@/theme";
-import { MOCK_PLANS } from "@/features/plans";
+import { MOCK_PLANS, planOverviewHref } from "@/features/plans";
+import { getActivePlan } from "../logic/active-plan";
 
 export type HomeScreenProps = {
   /**
@@ -22,12 +23,10 @@ export type HomeScreenProps = {
 export function HomeScreen({ mockHasActivePlan }: HomeScreenProps = {}) {
   const theme = useTheme();
   const router = useRouter();
-
-  const hasActivePlan = mockHasActivePlan ?? MOCK_PLANS.some((plan) => !plan.completed);
-  const activePlan = hasActivePlan ? MOCK_PLANS.find((plan) => !plan.completed) : undefined;
+  const activePlan = getActivePlan(MOCK_PLANS, mockHasActivePlan);
 
   return (
-    <Screen testID="home-tab-screen" style={styles.content}>
+    <Screen testID="home-tab-screen" padded>
       <View style={styles.header}>
         <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
         <HeaderIconButton
@@ -46,12 +45,7 @@ export function HomeScreen({ mockHasActivePlan }: HomeScreenProps = {}) {
           testID="home-tab-active-plan"
           accessibilityRole="button"
           style={[styles.activePlan, { borderColor: theme.colors.divider }]}
-          onPress={() =>
-            router.push({
-              pathname: "/(tabs)/plans/[planId]",
-              params: { planId: activePlan.id },
-            })
-          }
+          onPress={() => router.push(planOverviewHref(activePlan.id))}
         >
           <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
             {activePlan.title}
@@ -69,7 +63,6 @@ export function HomeScreen({ mockHasActivePlan }: HomeScreenProps = {}) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   activePlan: { padding: 16, borderWidth: 1, borderRadius: 8 },
 });

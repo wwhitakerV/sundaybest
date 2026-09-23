@@ -46,17 +46,3 @@ export const MOCK_PLANS: readonly Plan[] = [
 export function getMockPlan(id: string): Plan | undefined {
   return MOCK_PLANS.find((plan) => plan.id === id);
 }
-
-/**
- * True once every day from 1 to `totalDays` appears in `completedDays`.
- * Never hardcode a specific day number — a plan can be 1 to 7 days long.
- */
-export function isPlanComplete(plan: Pick<Plan, "totalDays" | "completedDays">): boolean {
-  const completed = new Set(plan.completedDays);
-
-  for (let day = 1; day <= plan.totalDays; day += 1) {
-    if (!completed.has(day)) return false;
-  }
-
-  return true;
-}

@@ -212,7 +212,7 @@ coverage in [docs/security/masvs-checklist.md](./security/masvs-checklist.md).
 The app has no accounts, so the backend authenticates the **install** with Apple
 App Attest rather than a user. The backend does not exist yet — it is specified
 in [docs/api/attestation.md](./api/attestation.md), with matching Zod schemas in
-`src/core/api/contracts/` and a fake server in `test/mocks/`.
+`src/core/api/contracts/` and a fake server in `tests/mocks/`.
 
 | Module                             | Does                                         |
 | ---------------------------------- | -------------------------------------------- |
@@ -627,7 +627,7 @@ rather than trusting a clean lint run.
   has no coverage data. `./src/utils/` is live now; `./src/core/security/`
   activates by itself on its first file.
 - **`renderRouter` calls `jest.useFakeTimers()` itself**, so route tests run on
-  fake timers whether they asked or not. `test/setup.ts` restores real timers
+  fake timers whether they asked or not. `tests/setup/jest.setup.ts` restores real timers
   after every test.
 
 ### Knip ignores

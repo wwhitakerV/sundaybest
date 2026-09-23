@@ -3,11 +3,7 @@ import { env as defaultEnv } from "../config/env";
 import { crashReporter } from "./crash-reporter";
 import type { CrashReporter } from "./crash-reporter";
 import type { Env } from "../config/env-schema";
-
-/** Arbitrary extra fields attached to a log line. Every value is redacted. */
-export interface LogContext {
-  readonly [key: string]: unknown;
-}
+import type { LogContext } from "./log-context";
 
 export interface Logger {
   debug(message: string, context?: LogContext): void;

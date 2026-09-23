@@ -1,6 +1,6 @@
 # ADR 0002 — Testing strategy
 
-- **Status:** Accepted
+- **Status:** Accepted — test _location_ superseded by [ADR 0011](./0011-tests-in-a-mirrored-tests-tree.md)
 - **Date:** 2026-09-15
 - **Deciders:** @wwhitakerv
 
@@ -23,7 +23,7 @@ Three layers, each with one job.
 | Layer       | Lives in                              | Runs                                 | Asserts                         |
 | ----------- | ------------------------------------- | ------------------------------------ | ------------------------------- |
 | Unit        | beside the source (`Screen.test.tsx`) | Jest + jest-expo/ios                 | one module's behaviour          |
-| Integration | `test/integration/`                   | Jest + Expo Router testing utilities | real routes, real provider tree |
+| Integration | `tests/integration/`                  | Jest + Expo Router testing utilities | real routes, real provider tree |
 | E2E         | `.maestro/` (prompt 12)               | Maestro on a simulator               | the shipped binary              |
 
 - **Unit tests are colocated.** A test beside its source is found when the
@@ -34,14 +34,14 @@ Three layers, each with one job.
   `renderRouter("src/app")`, so routes are discovered the way the app discovers
   them. A renamed or broken route file fails the test; a hand-built navigator
   would not notice.
-- **Everything renders through `AppProviders`.** `test/render.tsx` wraps every
+- **Everything renders through `AppProviders`.** `tests/helpers/render.tsx` wraps every
   render in the same provider tree the app mounts, so a unit test cannot pass by
   accidentally skipping a provider that production has.
 - **The network is mocked at the boundary, not in our code.** MSW intercepts
   HTTP, so the real client in `src/core/api` is exercised. `server.listen` uses
   `onUnhandledRequest: "error"`: an un-mocked request fails the test instead of
   hanging or escaping to the network.
-- **Fixtures come from builders** in `test/factories`, so a schema change breaks
+- **Fixtures come from builders** in `tests/factories`, so a schema change breaks
   one builder rather than thirty tests.
 
 ### Coverage

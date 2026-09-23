@@ -20,7 +20,7 @@ export type FilterTabsProps<Option extends FilterTabOption> = {
 /**
  * A borderless row of labelled counts — Plans' "All / In progress / Done /
  * Saved" row. No track, no per-segment background: just spaced text with a
- * superscript count, unlike `SegmentedControl`.
+ * superscript count.
  */
 export function FilterTabs<Option extends FilterTabOption>({
   options,

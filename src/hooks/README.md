@@ -6,7 +6,7 @@ in that feature's `hooks/` folder.
 ## Rules
 
 - One hook per file, `use-thing.ts` exporting `useThing`.
-- Test beside it.
+- Its test mirrors the path under `tests/hooks/`.
 
 ## Never goes here
 

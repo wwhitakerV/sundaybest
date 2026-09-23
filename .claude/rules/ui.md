@@ -10,7 +10,8 @@ paths:
 
 ## Structure
 
-- One component per file, named after the file (`PascalCase.tsx`), test beside it.
+- One component per file, named after the file (`PascalCase.tsx`). Its test
+  mirrors the path under `tests/` (`tests/ui/Screen.test.tsx`).
 - `src/ui/` is generic: if it could not appear unchanged in a different app, it
   belongs in the feature slice.
 - A `ui` component never imports `features`, `core`, or `app`. Data and callbacks

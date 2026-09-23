@@ -217,8 +217,8 @@ API contract as a requirement rather than left as a surprise.
 ### The backend as a contract in three forms
 
 `docs/api/attestation.md` is the specification, `src/core/api/contracts/` is its
-executable form, and `test/mocks/attestation-handlers.ts` is a fake server.
-`test/integration/attestation-contract.test.ts` makes the fake server's responses
+executable form, and `tests/mocks/attestation-handlers.ts` is a fake server.
+`tests/integration/attestation-contract.test.ts` makes the fake server's responses
 pass the app's own parsers, so the three cannot drift apart silently — otherwise
 every other test would keep passing against a fiction.
 

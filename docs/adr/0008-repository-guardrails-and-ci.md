@@ -65,9 +65,9 @@ gets confused when it doesn't trigger.
 
 `.gitleaks.toml` extends gitleaks' bundled rules (`[extend] useDefault =
 true`) rather than replacing them, and its own `[allowlist]` covers exactly
-two things: `.env.example` and test fixtures (`test/mocks/**`,
-`test/factories/**`, `*.test.tsx?`). Verified end to end against a scratch
-repo: a fake secret in `test/mocks/fake.test.ts` was allowed, the identical
+two things: `.env.example` and test fixtures (`tests/mocks/**`,
+`tests/factories/**`, `*.test.tsx?`). Verified end to end against a scratch
+repo: a fake secret in `tests/mocks/fake.test.ts` was allowed, the identical
 string in `src/core/real.ts` was flagged — the allowlist is scoped
 correctly, not a blanket exemption.
 
@@ -190,7 +190,7 @@ gitleaks` out of habit — recorded here and in `docs/PROJECT.md` so it
   (`lefthook.yml`, `commitlint.config.js`, `.gitleaks.toml`,
   `renovate.json`, `.github/**` are all outside anything `typecheck`/
   `lint`/`test` touch; `knip:check` needed `@cyclonedx/cyclonedx-npm` added
-  to `ignoreDependencies` since nothing in `src/`/`test/` imports it — knip
+  to `ignoreDependencies` since nothing in `src/`/`tests/` imports it — knip
   already understood `lefthook.yml` and `commitlint.config.js` natively via
   its own plugins and needed no ignore entry for those).
 - A non-Conventional-Commits commit message is rejected by the `commit-msg`

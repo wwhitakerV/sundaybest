@@ -1,12 +1,12 @@
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import { useRouter } from "expo-router";
 
 import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { useTheme } from "@/theme";
-import { SAMPLE_PLAN_ID } from "@/features/plans";
-import { requestNotificationPermission } from "../hooks/requestNotificationPermission";
+import { SAMPLE_PLAN_ID, studyHref } from "@/features/plans";
+import { requestNotificationPermission } from "@/core/notifications/request-notification-permission";
 
 export function PlanReadyScreen() {
   const theme = useTheme();
@@ -14,14 +14,11 @@ export function PlanReadyScreen() {
 
   async function handleStart() {
     await requestNotificationPermission();
-    router.push({
-      pathname: "/(tabs)/plans/[planId]/study",
-      params: { planId: SAMPLE_PLAN_ID, day: "1" },
-    });
+    router.push(studyHref(SAMPLE_PLAN_ID, 1));
   }
 
   return (
-    <Screen testID="plan-ready-screen" style={styles.content}>
+    <Screen testID="plan-ready-screen" padded>
       <ScreenHeader testID="plan-ready" title="Your plan is ready" />
 
       <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
@@ -40,7 +37,3 @@ export function PlanReadyScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
-});
