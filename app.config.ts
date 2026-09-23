@@ -1,5 +1,6 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 import expoRouterPlugin from "expo-router/plugin";
+import fontPlugin from "expo-font/plugin";
 import secureStorePlugin from "expo-secure-store/plugin";
 import splashScreenPlugin from "expo-splash-screen/plugin";
 import sqlitePlugin from "expo-sqlite/plugin";
@@ -203,10 +204,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     name: identity.name,
     slug: "sundaybest",
     scheme: "sundaybest",
-    owner: "walterwhitakerv",
+    owner: "sunday-best",
     version: "1.0.0",
     orientation: "portrait",
-    userInterfaceStyle: "automatic",
+    // Locked to light, not "automatic": the app never follows the device's
+    // dark-mode setting. `useTheme()` always resolves the light theme
+    // (src/theme/use-theme.ts), and this keeps native chrome — splash
+    // screen, status bar, keyboard — from going dark underneath it. A real
+    // dark theme is future work with its own design.
+    userInterfaceStyle: "light",
     icon: identity.icon,
 
     // Ties an OTA update to the native build it's compatible with by
@@ -223,7 +229,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       policy: "fingerprint",
     },
     updates: {
-      url: "https://u.expo.dev/PLACEHOLDER_EAS_PROJECT_ID",
+      url: "https://u.expo.dev/d9518090-e337-4eca-9d7e-07aadbe94a0d",
       // A code-signing certificate makes expo-updates refuse any update
       // manifest that isn't signed by the matching private key — without
       // it, anything reachable at `updates.url` (including a compromised
@@ -231,11 +237,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // every installed copy of the app. Generating the key/cert is a
       // one-time human action tracked in docs/SETUP_CHECKLIST.md; the
       // private key must never be committed to this repo.
-      codeSigningCertificate: "./certs/eas-update-certificate.pem",
-      codeSigningMetadata: {
-        keyid: "main",
-        alg: "rsa-v1_5-sha256",
-      },
+      // codeSigningCertificate: "./certs/eas-update-certificate.pem",
+      // codeSigningMetadata: {
+      //   keyid: "main",
+      //   alg: "rsa-v1_5-sha256",
+      // },
     },
 
     // iOS only, iPhone only. Listing one platform keeps `expo export` and the
@@ -311,6 +317,23 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // itself prints as the config to add: Expo's plugin resolver finds the
       // package's own app.plugin.js from the name alone.
       "@sentry/react-native",
+
+      // Links each font file into the native iOS bundle so it is present at
+      // launch, ahead of/alongside `useFonts()`'s JS-side registration in
+      // AppProviders. Font family names for `fontFamily` styles are taken
+      // from each file's own internal name, not this list — see
+      // src/theme/fonts.ts for what those names resolve to.
+      fontPlugin({
+        ios: {
+          fonts: [
+            "./assets/fonts/BodoniModa_9pt-Regular.ttf",
+            "./assets/fonts/BodoniModa_9pt-Medium.ttf",
+            "./assets/fonts/IBMPlexMono-Regular.ttf",
+            "./assets/fonts/IBMPlexMono-Medium.ttf",
+            "./assets/fonts/IBMPlexMono-SemiBold.ttf",
+          ],
+        },
+      }),
     ],
 
     experiments: {
@@ -322,7 +345,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     // for the same reason as `updates.url` above.
     extra: {
       eas: {
-        projectId: "PLACEHOLDER_EAS_PROJECT_ID",
+        projectId: "d9518090-e337-4eca-9d7e-07aadbe94a0d",
       },
     },
   };

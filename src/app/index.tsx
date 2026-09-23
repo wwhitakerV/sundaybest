@@ -1,1 +1,1 @@
-export { HomeScreen as default } from "@/features/home";
+export { WelcomeScreen as default } from "@/features/welcome";

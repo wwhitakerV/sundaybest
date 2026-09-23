@@ -159,3 +159,29 @@ A change is done when all of these hold:
   logical change.
 - **Report honestly.** If a step was skipped or a check failed, say so with the
   output. Do not claim a verification you did not run.
+
+## UI and design system
+
+`src/theme/` is the source of truth for reusable visual decisions.
+
+For every UI creation or update:
+
+1. Inspect the existing theme, tokens, typography, colors, spacing, radii, and shared UI components first.
+2. Reuse the existing system whenever possible.
+3. If the work introduces a reusable visual value, pattern, component behavior, or interaction that does not exist yet, add it to the appropriate design-system layer first.
+4. Then apply it to the feature component or screen.
+5. Keep truly one-off composition geometry local.
+
+Do not hardcode reusable colors, typography, spacing, radii, or motion into feature components.
+
+Prefer semantic theme values such as `theme.colors.*` over raw palette values when the value represents UI meaning.
+
+Any new theme-dependent semantic value must support both light and dark themes.
+
+Do not globally scale UI or typography from a reference screen width. Use flexible React Native layout and responsive behavior only where the available space requires it.
+
+When UI work establishes a lasting convention, persist that convention in the appropriate source of truth so future agents do not need conversation history to understand it.
+
+The expected flow is:
+
+theme/design system → shared primitive or variant → feature component → screen

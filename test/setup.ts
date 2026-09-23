@@ -50,6 +50,39 @@ afterAll(() => {
 //   2. Keep mocks honest — a mocked keychain that always resolves will hide
 //      every failure path we actually care about.
 
+// expo-font never actually loads a font file under Jest (there is no native
+// font-loading step in the test environment), so `useFonts()` would report
+// `loaded: false` forever without this — and every test that renders through
+// `AppProviders` (which is nearly all of them, via test/render.tsx) would see
+// nothing but the held splash screen instead of the component under test.
+// `useAppFonts`'s own test (src/core/fonts/use-app-fonts.test.ts) mocks
+// `expo-font` itself and asserts the not-loaded and error branches directly,
+// so this global default does not hide those paths — it only keeps every
+// *other* test's render path unblocked.
+jest.mock("expo-font", () => ({
+  useFonts: () => [true, null],
+}));
+
+// AppProviders calls expo-splash-screen at both module scope
+// (preventAutoHideAsync) and inside the component (hideAsync once fonts are
+// ready), and it is imported by nearly every test via test/render.tsx.
+// AppProviders' own test (src/core/providers/AppProviders.test.tsx) mocks
+// this module itself to assert the hide/no-hide behaviour directly.
+jest.mock("expo-splash-screen", () => ({
+  preventAutoHideAsync: jest.fn().mockResolvedValue(true),
+  hideAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
+// React Native's `Vibration` module (used by src/core/haptics/haptics.ts's
+// `sparkBuzz`) has no native side under Jest and throws the moment
+// anything calls `Vibration.vibrate`. Mocked at this exact internal path
+// (not the top-level `react-native` package, which would also swallow
+// every other RN export the test environment needs) so only the one
+// module with no test-environment implementation is replaced.
+jest.mock("react-native/Libraries/Vibration/Vibration", () => ({
+  default: { vibrate: jest.fn(), cancel: jest.fn() },
+}));
+
 // ---------------------------------------------------------------------------
 // Timer policy
 // ---------------------------------------------------------------------------

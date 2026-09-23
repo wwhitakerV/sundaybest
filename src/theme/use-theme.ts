@@ -1,8 +1,11 @@
-import { useColorScheme } from "react-native";
+import { lightTheme, type Theme } from "./tokens";
 
-import { darkTheme, lightTheme, type Theme } from "./tokens";
-
-/** Resolves the active theme from the OS colour scheme. */
+/**
+ * Always resolves to the light theme. Dark mode is a deliberate future
+ * feature with its own design, not a response to the OS colour scheme — the
+ * app does not read `useColorScheme()` at all right now, so an iPhone in
+ * dark mode has no effect on it.
+ */
 export function useTheme(): Theme {
-  return useColorScheme() === "dark" ? darkTheme : lightTheme;
+  return lightTheme;
 }

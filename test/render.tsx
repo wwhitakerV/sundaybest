@@ -7,9 +7,15 @@ import { renderRouter, type RenderRouterOptions } from "expo-router/testing-libr
 import type { ReactElement, ReactNode } from "react";
 
 import { AppProviders } from "@/core/providers/AppProviders";
+import { LoadingScreen } from "@/ui/LoadingScreen";
+import { TabBarVisibilityProvider } from "@/ui/TabBarVisibility";
 
 function Providers({ children }: { children: ReactNode }) {
-  return <AppProviders>{children}</AppProviders>;
+  return (
+    <AppProviders fallback={<LoadingScreen />}>
+      <TabBarVisibilityProvider>{children}</TabBarVisibilityProvider>
+    </AppProviders>
+  );
 }
 
 /**

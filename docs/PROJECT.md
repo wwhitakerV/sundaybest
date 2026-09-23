@@ -22,9 +22,15 @@ Canonical project facts. Later setup prompts read this file instead of re-asking
 - **The app ships as SundayBest.** Design files for a "Sermon Drop" concept exist
   outside this repo; the name, slug, scheme, and bundle ID above are final and
   were confirmed on 2026-09-15. Do not reconcile the two — this is decided.
-- **This repo is in setup, not product build-out.** Prompts 1-13 establish
-  tooling, architecture, testing, CI, and release plumbing. Do not import screen
-  designs, invent features, or add product surface until the setup series is done.
+- **The setup series (prompts 1-13) is complete.** Tooling, architecture,
+  testing, CI, and release plumbing are established. Product build-out has
+  started: real screens, features, and product surface are now in scope, built
+  against the design references the user provides as they're given.
+- **The app never follows the device's dark-mode setting.** `useTheme()` always
+  returns `lightTheme` and `app.config.ts` pins `userInterfaceStyle` to `light`,
+  so native chrome cannot go dark underneath it either. `darkTheme` stays
+  defined in `tokens.ts` because a real dark theme is future work with its own
+  design — it is not wired to the OS setting when it lands.
 
 ## Product constraints
 

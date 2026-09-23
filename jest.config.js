@@ -71,6 +71,9 @@ const EXTRA_TRANSFORMED_PACKAGES = [
   // that release is ESM-only. Metro transforms it; Jest will not unless it is
   // listed here.
   "decode-uri-component",
+  // lucide-react-native ships ESM only. Metro transforms it; Jest will not
+  // unless it is listed here.
+  "lucide-react-native",
 ];
 
 const expoPreset = require("jest-expo/ios/jest-preset");
@@ -112,6 +115,18 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@test/(.*)$": "<rootDir>/test/$1",
+    // expo-router/testing-library's own mocks.js (required unconditionally by
+    // expo-router/testing-library, which test/render.tsx imports) sets up
+    // react-native-reanimated's *own* mock.js for Jest. That mock is correct
+    // in shape but, on this installed reanimated version, transitively
+    // requires react-native-worklets (reanimated's native runtime moved into
+    // its own package) — the real one, which needs a native turbo module
+    // that does not exist under Jest and throws at import time. Mapping this
+    // one transitive dependency to worklets' own bundled mock (which exists
+    // for exactly this purpose) lets reanimated's real mock succeed instead
+    // of crashing, with no need to fight expo-router's jest.mock() call for
+    // control of react-native-reanimated itself.
+    "^react-native-worklets$": "<rootDir>/node_modules/react-native-worklets/lib/module/mock.js",
   },
 
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}", "<rootDir>/test/**/*.test.{ts,tsx}"],

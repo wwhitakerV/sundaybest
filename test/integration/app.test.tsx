@@ -1,10 +1,10 @@
 import { renderApp, screen } from "@test/render";
 
 describe("app routes", () => {
-  it("renders the home screen at /", () => {
+  it("renders the welcome screen at /", () => {
     renderApp();
 
-    expect(screen.getByTestId("home-screen")).toBeVisible();
+    expect(screen.getByTestId("welcome-screen")).toBeVisible();
   });
 
   it("mounts / as the initial route", () => {
