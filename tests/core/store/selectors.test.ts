@@ -18,6 +18,7 @@ import {
   getQuizAttempt,
   getQuizForDay,
   getQuizScore,
+  getQuizStatus,
   getReflectionsForDay,
   getScriptureForDay,
   getSermonForPlan,
@@ -170,6 +171,42 @@ describe("quiz selectors", () => {
 
     expect(results).toEqual(["correct", "unanswered"]);
     expect(wrong).toBe("incorrect");
+  });
+
+  it("counts each question once, however many answers a stray record gives it", () => {
+    const attemptId = finished?.id ?? "";
+    const firstQuestion = `${finished?.quizId ?? ""}-q1`;
+    const duplicated: AppState = {
+      ...state,
+      quizAnswers: {
+        ...state.quizAnswers,
+        "stray-answer": {
+          id: "stray-answer",
+          createdAt: "2026-09-22T19:08:00.000Z",
+          updatedAt: "2026-09-22T19:08:00.000Z",
+          attemptId,
+          questionId: firstQuestion,
+          choiceId: `${firstQuestion}-b`,
+          answeredAt: "2026-09-22T19:08:00.000Z",
+        },
+      },
+    };
+
+    expect(getQuizScore(duplicated, attemptId)).toEqual({
+      correct: 1,
+      answered: 2,
+      total: 2,
+      percentage: 50,
+    });
+  });
+
+  it("says where a quiz stands: not started, under way, or done", () => {
+    const savedDay = getPlanDay(state, SAVED, 1)?.id ?? "";
+    const quizFor = (dayId: string) => getQuizForDay(state, dayId)?.id ?? "";
+
+    expect(getQuizStatus(state, quizFor(savedDay))).toBe("notStarted");
+    expect(getQuizStatus(state, quizFor(day2))).toBe("inProgress");
+    expect(getQuizStatus(state, quizFor(day1))).toBe("completed");
   });
 
   it("has no attempt for a quiz that hasn't been taken", () => {

@@ -2,7 +2,17 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { AppStoreProvider, INITIAL_STATE, appReducer, type AppState } from "@/core/store";
+import { Text } from "react-native";
+
+import {
+  AppStoreProvider,
+  INITIAL_STATE,
+  appReducer,
+  getQuizForDay,
+  getQuizStatus,
+  useAppSelector,
+  type AppState,
+} from "@/core/store";
 import { DayCompleteScreen } from "@/features/plans/screens/DayCompleteScreen";
 
 jest.mock("expo-router", () => ({
@@ -32,11 +42,21 @@ function finished(planId: string, dayNumber: number): AppState {
   });
 }
 
+/** Where the day's Quick Check stands in the store. */
+function QuizProbe({ planId, dayNumber }: { planId: string; dayNumber: number }) {
+  const status = useAppSelector((state) => {
+    const quiz = getQuizForDay(state, `${planId}-day-${dayNumber}`);
+    return quiz ? getQuizStatus(state, quiz.id) : "no quiz";
+  });
+  return <Text testID="quiz-probe">{status}</Text>;
+}
+
 function renderDayComplete(planId: string, dayNumber: number) {
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId, day: String(dayNumber) });
   return render(
     <AppStoreProvider initialState={finished(planId, dayNumber)}>
       <DayCompleteScreen />
+      <QuizProbe planId={planId} dayNumber={dayNumber} />
     </AppStoreProvider>,
   );
 }
@@ -65,16 +85,29 @@ describe("DayCompleteScreen", () => {
     expect(screen.getByText("...")).toBeVisible();
   });
 
-  it("navigates to Quick Check — Question when the quick check action is pressed", () => {
+  it("offers the day's Quick Check, when it has one", () => {
+    renderDayComplete(REST, 1);
+
+    expect(screen.getByTestId("day-complete-quick-check-button")).toBeVisible();
+  });
+
+  it("offers no Quick Check for a day without one", () => {
     renderDayComplete(STORM, 1);
+
+    expect(screen.queryByTestId("day-complete-quick-check-button")).toBeNull();
+  });
+
+  it("starts the day's Quick Check and opens it", () => {
+    renderDayComplete(REST, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
 
+    expect(screen.getByTestId("quiz-probe")).toHaveTextContent("inProgress");
     expect(mockPush).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: "/study/[planId]/quick-check",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: STORM, day: "1" }),
+        params: expect.objectContaining({ planId: REST, day: "1" }),
       }),
     );
   });

@@ -13,7 +13,7 @@ import {
   useAppSelector,
   useStoreActions,
 } from "@/core/store";
-import { ProgressRing } from "../components/ProgressRing";
+import { ProgressRing } from "@/ui/ProgressRing";
 import { PreparingStages } from "../components/PreparingStages";
 import { getPreparingPercent, getPreparingRows } from "../logic/preparing-stages";
 

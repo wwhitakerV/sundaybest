@@ -20,6 +20,16 @@ export function getQuizQuestions(state: AppState, quizId: Id): QuizQuestion[] {
     .sort((a, b) => a.order - b.order);
 }
 
+/**
+ * Where a quiz stands: `notStarted` (no attempt yet), `inProgress`, or
+ * `completed` — by its latest attempt.
+ */
+export type QuizStatus = "notStarted" | "inProgress" | "completed";
+
+export function getQuizStatus(state: AppState, quizId: Id): QuizStatus {
+  return getQuizAttempt(state, quizId)?.status ?? "notStarted";
+}
+
 /** The latest attempt at a quiz, or null if it hasn't been taken. */
 export function getQuizAttempt(state: AppState, quizId: Id): QuizAttempt | null {
   return (
@@ -30,8 +40,19 @@ export function getQuizAttempt(state: AppState, quizId: Id): QuizAttempt | null 
   );
 }
 
+/**
+ * An attempt's answers, one per question — its first, should a stray record
+ * ever give a question two (submitting refuses a second, but a score must
+ * never be inflated by one) — in the order they were given.
+ */
 export function getAttemptAnswers(state: AppState, attemptId: Id): QuizAnswer[] {
-  return listAll(state.quizAnswers).filter((answer) => answer.attemptId === attemptId);
+  const answers = listAll(state.quizAnswers)
+    .filter((answer) => answer.attemptId === attemptId)
+    .sort((a, b) => compareIso(a.answeredAt, b.answeredAt));
+  return answers.filter(
+    (answer, index) =>
+      answers.findIndex((other) => other.questionId === answer.questionId) === index,
+  );
 }
 
 export function isAnswerCorrect(state: AppState, answer: QuizAnswer): boolean {

@@ -8,6 +8,7 @@ describe("QuickCheckHeader", () => {
       <QuickCheckHeader
         testID="a-quick-check-header"
         counter={1}
+        total={2}
         progressIndex={0}
         onClose={() => undefined}
       />,
@@ -22,6 +23,7 @@ describe("QuickCheckHeader", () => {
       <QuickCheckHeader
         testID="a-quick-check-header"
         counter={1}
+        total={2}
         progressIndex={0}
         onClose={onClose}
       />,
@@ -37,6 +39,7 @@ describe("QuickCheckHeader", () => {
       <QuickCheckHeader
         testID="a-quick-check-header"
         counter={2}
+        total={2}
         progressIndex={2}
         onClose={() => undefined}
       />,
@@ -45,11 +48,12 @@ describe("QuickCheckHeader", () => {
     expect(screen.getByText("2 of 2")).toBeVisible();
   });
 
-  it("shows a 3-segment step tracker at the given step", () => {
+  it("shows a tracker segment per question, and one for the score", () => {
     render(
       <QuickCheckHeader
         testID="a-quick-check-header"
         counter={2}
+        total={2}
         progressIndex={1}
         onClose={() => undefined}
       />,
@@ -58,5 +62,21 @@ describe("QuickCheckHeader", () => {
     expect(screen.getByTestId("a-quick-check-header-progress-segment-0")).toBeVisible();
     expect(screen.getByTestId("a-quick-check-header-progress-segment-2")).toBeVisible();
     expect(screen.queryByTestId("a-quick-check-header-progress-segment-3")).toBeNull();
+  });
+
+  it("sizes to the quiz: three questions, four segments", () => {
+    render(
+      <QuickCheckHeader
+        testID="a-quick-check-header"
+        counter={1}
+        total={3}
+        progressIndex={0}
+        onClose={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText("1 of 3")).toBeVisible();
+    expect(screen.getByTestId("a-quick-check-header-progress-segment-3")).toBeVisible();
+    expect(screen.queryByTestId("a-quick-check-header-progress-segment-4")).toBeNull();
   });
 });

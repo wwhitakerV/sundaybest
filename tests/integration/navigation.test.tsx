@@ -201,32 +201,39 @@ describe("navigation", () => {
     expect(screen.getByTestId("plan-overview-continue-button")).toHaveTextContent("Continue day 2");
   });
 
-  it("walks the Quick Check loop back to Day Complete", async () => {
+  it("takes a day's Quick Check after finishing it, scores it, and returns to Day Complete", async () => {
     const view = renderApp();
-
-    fireEvent.press(screen.getByTestId("welcome-sample-plan-button"));
+    const REST = "plan-come-to-me-and-rest";
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    fireEvent.press(screen.getByTestId("tab-plans"));
+    fireEvent.press(screen.getByTestId(`plans-item-${REST}`));
     fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
-    fireEvent.press(screen.getByTestId("study-nav-next-button"));
-    await screen.findByTestId("study-scripture-body");
-    fireEvent.press(screen.getByTestId("study-nav-next-button"));
-    await screen.findByTestId("study-reflect-body");
-    fireEvent.press(screen.getByTestId("study-nav-next-button"));
-    await screen.findByTestId("study-pray-body");
+    for (const next of ["scripture", "reflect", "pray"]) {
+      fireEvent.press(screen.getByTestId("study-nav-next-button"));
+      await screen.findByTestId(`study-${next}-body`);
+    }
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
 
     fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
-    expect(view.getPathname()).toBe("/study/sample-plan/quick-check");
+    expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
 
-    // Quick Check steps through its stages in place — the route never changes.
-    fireEvent.press(screen.getByTestId("quick-check-question-check-answer-button"));
-    fireEvent.press(await screen.findByTestId("quick-check-answer-next-question-button"));
-    fireEvent.press(await screen.findByTestId("quick-check-finish-verse-check-answer-button"));
-    await screen.findByTestId("quick-check-score-body");
-    expect(view.getPathname()).toBe("/study/sample-plan/quick-check");
+    // One question right, one wrong — all in place; the route never changes.
+    fireEvent.press(screen.getByTestId("quick-check-choice-b"));
+    fireEvent.press(screen.getByTestId("quick-check-check-button"));
+    expect(await screen.findByText("That's the one")).toBeVisible();
+    fireEvent.press(screen.getByTestId("quick-check-next-button"));
+    await screen.findByText("According to the sermon, what is a yoke?");
+    fireEvent.press(screen.getByTestId("quick-check-choice-a"));
+    fireEvent.press(screen.getByTestId("quick-check-check-button"));
+    expect(await screen.findByText("Not quite")).toBeVisible();
+    fireEvent.press(screen.getByTestId("quick-check-finish-button"));
+    await screen.findByTestId("quick-check-score");
+    expect(screen.getByText("1/2")).toBeVisible();
+    expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
 
-    fireEvent.press(screen.getByTestId("quick-check-score-done-button"));
-    expect(view.getPathname()).toBe("/study/sample-plan/day-complete");
+    fireEvent.press(screen.getByTestId("quick-check-done-button"));
+    expect(view.getPathname()).toBe(`/study/${REST}/day-complete`);
   });
 
   it("round-trips a Settings subpage back to Settings", () => {

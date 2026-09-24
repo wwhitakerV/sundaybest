@@ -59,9 +59,11 @@ export {
   getQuizForDay,
   getQuizQuestions,
   getQuizScore,
+  getQuizStatus,
   getQuizzesForPlan,
   isAnswerCorrect,
   type QuestionResult,
   type QuizScore,
+  type QuizStatus,
 } from "./selectors/quizzes";
 export { getCurrentUser, getReminder, getReminders, getUserSettings } from "./selectors/user";

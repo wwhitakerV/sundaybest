@@ -40,6 +40,17 @@ const palette = {
   overlayStrongOnDark: "rgba(255, 255, 255, 0.18)",
   // Darkening laid over video thumbnails, under their play button and time.
   scrim: "rgba(0, 0, 0, 0.45)",
+  // Quick Check's verdicts: a deep green for right and the brand red for
+  // wrong, each with a soft tint to fill and a lighter line to edge it.
+  correctInk: "#2E8A5E",
+  correctMist: "#EEF6F1",
+  correctLine: "#A9D3BC",
+  incorrectMist: "#FBEDED",
+  incorrectLine: "#EFB7B7",
+  correctMistOnDark: "#16261E",
+  correctLineOnDark: "#2F5A44",
+  incorrectMistOnDark: "#2A1616",
+  incorrectLineOnDark: "#6B2A2A",
   // A see-through rim around a floating card: the page, frosted.
   frost: "rgba(255, 255, 255, 0.6)",
   frostOnDark: "rgba(11, 13, 18, 0.6)",
@@ -106,6 +117,18 @@ type ColorTokens = {
    * story's lifted pieces. What's behind it shows through, faintly.
    */
   frostedRim: string;
+  /** A right answer: its check, and the words saying so. */
+  correct: string;
+  /** Behind a right answer, and its verdict panel. */
+  correctSurface: string;
+  /** The edge of a right answer. */
+  correctBorder: string;
+  /** A wrong answer: its mark, and the words saying so. */
+  incorrect: string;
+  /** Behind a wrong answer, and its verdict panel. */
+  incorrectSurface: string;
+  /** The edge of a wrong answer. */
+  incorrectBorder: string;
 };
 
 const lightColors: ColorTokens = {
@@ -135,6 +158,12 @@ const lightColors: ColorTokens = {
   mediaScrim: palette.scrim,
   onMediaScrim: palette.white,
   frostedRim: palette.frost,
+  correct: palette.correctInk,
+  correctSurface: palette.correctMist,
+  correctBorder: palette.correctLine,
+  incorrect: palette.red,
+  incorrectSurface: palette.incorrectMist,
+  incorrectBorder: palette.incorrectLine,
 };
 
 const darkColors: ColorTokens = {
@@ -166,6 +195,12 @@ const darkColors: ColorTokens = {
   mediaScrim: palette.scrim,
   onMediaScrim: palette.white,
   frostedRim: palette.frostOnDark,
+  correct: palette.correctInk,
+  correctSurface: palette.correctMistOnDark,
+  correctBorder: palette.correctLineOnDark,
+  incorrect: palette.red,
+  incorrectSurface: palette.incorrectMistOnDark,
+  incorrectBorder: palette.incorrectLineOnDark,
 };
 
 /**

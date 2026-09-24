@@ -5,7 +5,13 @@ import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { useTheme } from "@/theme";
-import { getPlanProgress, useAppSelector } from "@/core/store";
+import {
+  getPlanProgress,
+  getQuizForDay,
+  getQuizStatus,
+  useAppSelector,
+  useStoreActions,
+} from "@/core/store";
 import { useStudyRoute } from "../hooks/use-study-route";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { getNextDayToStudy } from "../logic/next-day";
@@ -16,17 +22,30 @@ import { quickCheckHref, studyHref } from "../logic/routes";
  * of it inside the session; Next day swaps it for the next day's study;
  * Plans and Home leave the session entirely. The next day is read from the
  * store's progress, which finishing the day has already moved on.
+ *
+ * The day's Quick Check is offered only when the day has one. Taking it
+ * starts the attempt then (if it hasn't been) before opening it — so Quick
+ * Check opens on its first question, or where an attempt under way left off,
+ * or on the results of one finished.
  */
 export function DayCompleteScreen() {
   const theme = useTheme();
   const router = useRouter();
   const session = useModalSession();
-  const { planId, dayNumber } = useStudyRoute();
+  const { planId, dayNumber, day } = useStudyRoute();
   const progress = useAppSelector((state) => getPlanProgress(state, planId));
+  const quiz = useAppSelector((state) => (day ? getQuizForDay(state, day.id) : null));
+  const quizStatus = useAppSelector((state) => (quiz ? getQuizStatus(state, quiz.id) : null));
+  const { startQuizAttempt } = useStoreActions();
 
   if (!progress) return null;
 
   const nextDay = getNextDayToStudy(progress, dayNumber);
+
+  function takeQuickCheck() {
+    if (quiz && quizStatus === "notStarted") startQuizAttempt(quiz.id);
+    router.push(quickCheckHref(planId, dayNumber));
+  }
 
   return (
     <Screen testID="day-complete-screen" padded>
@@ -34,11 +53,13 @@ export function DayCompleteScreen() {
 
       <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
 
-      <Button
-        testID="day-complete-quick-check-button"
-        label="Take today's quick check"
-        onPress={() => router.push(quickCheckHref(planId, dayNumber))}
-      />
+      {quiz && (
+        <Button
+          testID="day-complete-quick-check-button"
+          label="Take today's quick check"
+          onPress={takeQuickCheck}
+        />
+      )}
 
       {nextDay !== undefined && (
         <Button

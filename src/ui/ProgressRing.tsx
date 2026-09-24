@@ -20,11 +20,17 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 export type ProgressRingProps = {
   /** 0–100. */
   percent: number;
+  /** What's written inside: the percentage by default, or e.g. a score ("2/2"). */
+  label?: string;
   testID: string;
 };
 
-/** A ring that fills clockwise from the top to `percent`, easing to each new value, with the number inside. */
-export function ProgressRing({ percent, testID }: ProgressRingProps) {
+/**
+ * A ring that fills clockwise from the top to `percent`, easing to each new
+ * value, with the number — or `label` — inside. Plan creation's progress, and
+ * a Quick Check's score.
+ */
+export function ProgressRing({ percent, label, testID }: ProgressRingProps) {
   const theme = useTheme();
   const progress = useSharedValue(percent / 100);
 
@@ -64,7 +70,9 @@ export function ProgressRing({ percent, testID }: ProgressRingProps) {
           animatedProps={arcProps}
         />
       </Svg>
-      <Text style={[theme.typography.display, { color: theme.colors.text }]}>{percent}%</Text>
+      <Text style={[theme.typography.display, { color: theme.colors.text }]}>
+        {label ?? `${percent}%`}
+      </Text>
     </View>
   );
 }
