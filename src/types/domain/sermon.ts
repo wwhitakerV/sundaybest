@@ -3,6 +3,20 @@ import type { Entity, IsoDate } from "./common";
 /** Where a sermon video is hosted. */
 export type SermonPlatform = "youtube" | "vimeo" | "other";
 
+/**
+ * - `available` — a full transcript (or the uploader's captions) is in hand.
+ * - `autoCaptions` — only the platform's automatic captions; good enough, rougher.
+ * - `processing` — still being fetched.
+ * - `unavailable` — none; a plan can't be built from it.
+ */
+export type TranscriptStatus = "available" | "autoCaptions" | "processing" | "unavailable";
+
+/** One line of a sermon's transcript, and where in the video it's said. */
+export type TranscriptSegment = {
+  startSeconds: number;
+  text: string;
+};
+
 /** The sermon a plan is built from: the video behind the pasted link. */
 export type SermonSource = Entity & {
   /** The link as pasted. */
@@ -16,6 +30,9 @@ export type SermonSource = Entity & {
   thumbnailUrl: string | null;
   durationSeconds: number | null;
   publishedOn: IsoDate | null;
+  transcriptStatus: TranscriptStatus;
+  /** The transcript, in order; empty until it's in hand. */
+  transcript: TranscriptSegment[];
 };
 
 /**

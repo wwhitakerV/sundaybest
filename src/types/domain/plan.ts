@@ -45,6 +45,8 @@ export type StudyStep = "read" | "scripture" | "reflect" | "pray";
 export type DayReading = {
   title: string;
   paragraphs: string[];
+  /** A line from the sermon the reading draws on, quoted as said. */
+  sermonQuote: string | null;
   sermonClip: SermonClip | null;
 };
 

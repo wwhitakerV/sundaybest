@@ -21,7 +21,17 @@ fonts/        font loading
 haptics/      tap and vibration feedback
 accessibility/ OS accessibility settings (Reduce Motion)
 notifications/ notification permission (stubbed until expo-notifications lands)
+mock-data/    connected mock records for every screen, as `AppData` (see below)
 ```
+
+## `mock-data/`
+
+Stand-in data until the local database holds real records: one user, their
+settings, reminders, progress, and library, and plans in every state (draft,
+generating, ready, active, completed, saved) with their days, Scripture,
+reflections, prayers, and quizzes. Everything is typed with `@/types/domain`,
+points at related records by ID, and is exported once, as `MOCK_DATA`, from
+`@/core/mock-data`. "Today" is fixed (`MOCK_TODAY`) so every date lines up.
 
 ## `storage/`
 

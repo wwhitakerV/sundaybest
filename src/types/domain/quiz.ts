@@ -36,10 +36,18 @@ export type QuizQuestion = Entity & {
   correctChoiceId: Id;
   /** Shown once answered, to say why. */
   explanation: string | null;
+  /** The passage it draws on, when it has one: `"Joshua 24:15"`. */
+  scriptureReference: string | null;
 };
 
 /** - `inProgress` — started, not every question answered. - `completed` — done. */
 export type QuizAttemptStatus = "inProgress" | "completed";
+
+/** How a finished attempt went. */
+export type QuizScore = {
+  correct: number;
+  total: number;
+};
 
 /** One go at a quiz. */
 export type QuizAttempt = Entity & {
@@ -47,6 +55,8 @@ export type QuizAttempt = Entity & {
   status: QuizAttemptStatus;
   startedAt: IsoDateTime;
   completedAt: IsoDateTime | null;
+  /** Set once `completed`, as it stood then. */
+  score: QuizScore | null;
 };
 
 /** The choice the user picked for one question, in one attempt. */
