@@ -26,13 +26,15 @@ type Rendered = { step: number; swaps: number };
 export function useStepTransition(step: number) {
   const [rendered, setRendered] = useState<Rendered>({ step, swaps: 0 });
   const progress = useSharedValue(1);
-  const isFirstRender = useRef(true);
+  // The step last acted on — so the fade-out runs only when the step really
+  // changes (not on first mount, nor on a re-render with the same step).
+  const lastStep = useRef(step);
+  // Likewise the swap last faded in.
+  const lastSwap = useRef(0);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (lastStep.current === step) return;
+    lastStep.current = step;
     // Always a new swap, even back to the body already rendered, so the
     // fade-in below always follows.
     const swapTo = (next: number) =>
@@ -49,7 +51,8 @@ export function useStepTransition(step: number) {
 
   // Runs after React has committed the swapped-in body.
   useEffect(() => {
-    if (rendered.swaps === 0) return;
+    if (rendered.swaps === lastSwap.current) return;
+    lastSwap.current = rendered.swaps;
     progress.set(withTiming(1, { duration: IN_DURATION }));
   }, [rendered.swaps, progress]);
 

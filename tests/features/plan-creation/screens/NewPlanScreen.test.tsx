@@ -8,10 +8,12 @@ jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
   useNavigation: jest.fn(),
+  useIsFocused: () => true,
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitModal = jest.fn<void, []>();
+const LINK = "https://youtube.com/watch?v=Qm81xRz4";
 
 beforeEach(() => {
   jest.mocked(useNavigation).mockReturnValue({
@@ -22,7 +24,8 @@ beforeEach(() => {
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
 });
 
-async function goToLinkPreview() {
+async function goToLinkPreview(link = LINK) {
+  fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), link);
   fireEvent.press(screen.getByTestId("paste-sermon-continue-button"));
   await screen.findByTestId("link-preview-body");
 }
@@ -42,6 +45,22 @@ describe("NewPlanScreen", () => {
     expect(screen.getByTestId("paste-sermon-body")).toBeVisible();
   });
 
+  it("keeps Continue off until there's a link", () => {
+    render(<NewPlanScreen />);
+
+    expect(screen.getByTestId("paste-sermon-continue-button")).toBeDisabled();
+  });
+
+  it("says so when the link isn't a link, and stays put", () => {
+    render(<NewPlanScreen />);
+
+    fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), "last sunday");
+    fireEvent.press(screen.getByTestId("paste-sermon-continue-button"));
+
+    expect(screen.getByTestId("paste-sermon-link-input-error")).toBeVisible();
+    expect(screen.getByTestId("paste-sermon-body")).toBeVisible();
+  });
+
   it("dismisses the whole modal when Close is pressed", () => {
     render(<NewPlanScreen />);
 
@@ -50,13 +69,25 @@ describe("NewPlanScreen", () => {
     expect(mockExitModal).toHaveBeenCalledTimes(1);
   });
 
-  it("moves to Link Preview in place rather than navigating when Continue is pressed", async () => {
+  it("shows the link's sermon on Link Preview, in place rather than navigating", async () => {
     render(<NewPlanScreen />);
 
     await goToLinkPreview();
 
     expect(screen.getByText("2 of 2")).toBeVisible();
+    expect(screen.getByText("Choose Whom You Will Serve")).toBeVisible();
+    expect(screen.getByText("…/watch?v=Qm81xRz4")).toBeVisible();
     expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it("says when a plan of the chosen length would end", async () => {
+    render(<NewPlanScreen />);
+    await goToLinkPreview();
+
+    fireEvent.press(screen.getByTestId("link-preview-days-3"));
+
+    expect(screen.getByText("Ends Wednesday.")).toBeVisible();
+    expect(screen.getByTestId("link-preview-days-3")).toBeSelected();
   });
 
   it("steps back to Paste Sermon when Back is pressed", async () => {
@@ -69,12 +100,16 @@ describe("NewPlanScreen", () => {
     expect(mockExitModal).not.toHaveBeenCalled();
   });
 
-  it("navigates to Preparing when Create my plan is pressed", async () => {
+  it("creates the plan and moves on to Preparing when Create my plan is pressed", async () => {
     render(<NewPlanScreen />);
     await goToLinkPreview();
 
     fireEvent.press(screen.getByTestId("link-preview-create-plan-button"));
 
-    expect(mockPush).toHaveBeenCalledWith("/(plan-creation)/preparing");
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/(plan-creation)/preparing",
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.any()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
+      params: { planId: expect.any(String) },
+    });
   });
 });

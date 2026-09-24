@@ -52,6 +52,7 @@ export const MOCK_GENERATION: PlanGeneration = {
   lengthDays: PLAN_NEIGHBOR.lengthDays,
   quickCheckEnabled: PLAN_NEIGHBOR.quickCheckEnabled,
   status: "writingDays",
+  attempt: 1,
   sermonId: SERMON_NEIGHBOR.id,
   planId: PLAN_NEIGHBOR.id,
   startedAt: "2026-09-23T12:20:05.000Z",

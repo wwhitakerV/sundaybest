@@ -29,105 +29,106 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     // Plans ------------------------------------------------------------------
 
     /** Starts a draft plan from a pasted link. Returns its ID (the plan exists if it was accepted). */
-    createPlan(input: {
+    createPlan: (input: {
       sourceUrl: string;
+      title: string;
       lengthDays: PlanLength;
       quickCheckEnabled: boolean;
-    }): Id {
+    }): Id => {
       const planId = createId("plan");
       dispatch({ type: "plan/create", planId, sermonId: createId("sermon"), ...input, at: at() });
       return planId;
     },
-    updatePlan(planId: Id, changes: PlanChanges) {
+    updatePlan: (planId: Id, changes: PlanChanges) => {
       dispatch({ type: "plan/update", planId, changes, at: at() });
     },
-    startPlan(planId: Id) {
+    startPlan: (planId: Id) => {
       dispatch({ type: "plan/start", planId, today: today(), at: at() });
     },
-    completePlan(planId: Id) {
+    completePlan: (planId: Id) => {
       dispatch({ type: "plan/complete", planId, at: at() });
     },
-    archivePlan(planId: Id) {
+    archivePlan: (planId: Id) => {
       dispatch({ type: "plan/archive", planId, at: at() });
     },
-    savePlan(planId: Id) {
+    savePlan: (planId: Id) => {
       dispatch({ type: "plan/save", planId, libraryItemId: createId("library"), at: at() });
     },
-    removeSavedPlan(planId: Id) {
+    removeSavedPlan: (planId: Id) => {
       dispatch({ type: "plan/removeSaved", planId });
     },
 
     // Plan days ----------------------------------------------------------------
 
-    startPlanDay(dayId: Id) {
+    startPlanDay: (dayId: Id) => {
       dispatch({ type: "planDay/start", dayId, today: today(), at: at() });
     },
     /** Marks one of a day's steps done. */
-    updatePlanDay(dayId: Id, completedStep: StudyStep) {
+    updatePlanDay: (dayId: Id, completedStep: StudyStep) => {
       dispatch({ type: "planDay/update", dayId, completedStep, today: today(), at: at() });
     },
-    completePlanDay(dayId: Id) {
+    completePlanDay: (dayId: Id) => {
       dispatch({ type: "planDay/complete", dayId, today: today(), at: at() });
     },
 
     // Reflections and prayer ---------------------------------------------------
 
-    saveReflection(reflectionId: Id, answer: string) {
+    saveReflection: (reflectionId: Id, answer: string) => {
       dispatch({ type: "reflection/save", reflectionId, answer, at: at() });
     },
-    updateReflection(reflectionId: Id, answer: string) {
+    updateReflection: (reflectionId: Id, answer: string) => {
       dispatch({ type: "reflection/update", reflectionId, answer, at: at() });
     },
-    markPrayed(prayerId: Id) {
+    markPrayed: (prayerId: Id) => {
       dispatch({ type: "prayer/markPrayed", prayerId, at: at() });
     },
 
     // Quizzes ------------------------------------------------------------------
 
     /** Starts an attempt. Read it back with `getQuizAttempt` — an open one isn't replaced. */
-    startQuizAttempt(quizId: Id) {
+    startQuizAttempt: (quizId: Id) => {
       dispatch({ type: "quiz/startAttempt", quizId, attemptId: createId("attempt"), at: at() });
     },
-    selectQuizAnswer(attemptId: Id, choiceId: Id) {
+    selectQuizAnswer: (attemptId: Id, choiceId: Id) => {
       dispatch({ type: "quiz/selectAnswer", attemptId, choiceId, at: at() });
     },
-    submitQuizAnswer(attemptId: Id) {
+    submitQuizAnswer: (attemptId: Id) => {
       dispatch({ type: "quiz/submitAnswer", attemptId, answerId: createId("answer"), at: at() });
     },
-    moveToNextQuestion(attemptId: Id) {
+    moveToNextQuestion: (attemptId: Id) => {
       dispatch({ type: "quiz/nextQuestion", attemptId, at: at() });
     },
-    completeQuizAttempt(attemptId: Id) {
+    completeQuizAttempt: (attemptId: Id) => {
       dispatch({ type: "quiz/completeAttempt", attemptId, at: at() });
     },
 
     // Settings -----------------------------------------------------------------
 
-    updateReminderEnabled(reminderId: Id, enabled: boolean) {
+    updateReminderEnabled: (reminderId: Id, enabled: boolean) => {
       dispatch({ type: "settings/reminderEnabled", reminderId, enabled, at: at() });
     },
-    updateReminderTime(reminderId: Id, time: LocalTime) {
+    updateReminderTime: (reminderId: Id, time: LocalTime) => {
       dispatch({ type: "settings/reminderTime", reminderId, time, at: at() });
     },
-    updateBibleTranslation(translation: BibleTranslation) {
+    updateBibleTranslation: (translation: BibleTranslation) => {
       dispatch({ type: "settings/bibleTranslation", translation, at: at() });
     },
-    updateTextSize(textSize: TextSize) {
+    updateTextSize: (textSize: TextSize) => {
       dispatch({ type: "settings/textSize", textSize, at: at() });
     },
 
     // Progress -----------------------------------------------------------------
 
-    recordDayCompletion(dayId: Id) {
+    recordDayCompletion: (dayId: Id) => {
       dispatch({ type: "progress/recordDayCompletion", dayId, today: today(), at: at() });
     },
-    recordQuizCompletion(attemptId: Id) {
+    recordQuizCompletion: (attemptId: Id) => {
       dispatch({ type: "progress/recordQuizCompletion", attemptId, at: at() });
     },
 
     // Plan generation ----------------------------------------------------------
 
-    startPlanGeneration(planId: Id) {
+    startPlanGeneration: (planId: Id) => {
       dispatch({
         type: "generation/start",
         generationId: createId("generation"),
@@ -135,16 +136,16 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
         at: at(),
       });
     },
-    updateGenerationStep(status: PlanGenerationStatus) {
+    updateGenerationStep: (status: PlanGenerationStatus) => {
       dispatch({ type: "generation/step", status, at: at() });
     },
-    completePlanGeneration(content: GeneratedPlanContent) {
+    completePlanGeneration: (content: GeneratedPlanContent) => {
       dispatch({ type: "generation/complete", content, at: at() });
     },
-    failPlanGeneration(error: PlanGenerationError) {
+    failPlanGeneration: (error: PlanGenerationError) => {
       dispatch({ type: "generation/fail", error, at: at() });
     },
-    retryPlanGeneration() {
+    retryPlanGeneration: () => {
       dispatch({ type: "generation/retry", at: at() });
     },
   };

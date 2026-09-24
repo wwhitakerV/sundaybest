@@ -13,6 +13,7 @@ export { AppStoreProvider, useAppSelector, useToday } from "./AppStoreProvider";
 export { useStoreActions, type StoreActions } from "./use-store-actions";
 export { appReducer } from "./reducer";
 export { INITIAL_STATE, type AppState } from "./state";
+export { GENERATION_STAGES } from "./transitions";
 
 export {
   getPrayerForDay,

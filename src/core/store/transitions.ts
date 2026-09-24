@@ -33,7 +33,7 @@ export function canMoveDay(from: PlanDayStatus, to: PlanDayStatus): boolean {
 }
 
 /** Building a plan, stage by stage, in order. */
-const GENERATION_STAGES: readonly PlanGenerationStatus[] = [
+export const GENERATION_STAGES: readonly PlanGenerationStatus[] = [
   "validating",
   "preparing",
   "processingSermon",

@@ -189,15 +189,6 @@ export function getPlanScene(elapsedMs: number): { selectedDay: number | null } 
   return { selectedDay: elapsedMs >= PLAN_SCENE.pick.atMs ? PLAN_SCENE.pick.day : null };
 }
 
-/** A plan starts on Monday; this says when one `days` long ends. */
-const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-export function getPlanEndsLine(days: number | null): string {
-  if (days === null) return "Pick how long your plan runs.";
-  const endDay = WEEKDAYS.at(days - 1) ?? "Sunday";
-  return days === 6 ? `Ends ${endDay}, right before next Sunday.` : `Ends ${endDay}.`;
-}
-
 export function getCreateScene(elapsedMs: number): { pressed: boolean } {
   return { pressed: elapsedMs >= PLAN_SCENE.pressAtMs };
 }

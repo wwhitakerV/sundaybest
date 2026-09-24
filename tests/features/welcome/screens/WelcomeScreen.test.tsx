@@ -1,6 +1,6 @@
 import { AccessibilityInfo } from "react-native";
 import { render, screen, fireEvent } from "@tests/helpers/render";
-import { useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
@@ -8,11 +8,14 @@ import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useNavigation: jest.fn(),
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 
 beforeEach(() => {
+  // Welcome listens for its own transitions to restart the intro on each visit.
+  jest.mocked(useNavigation).mockReturnValue({ addListener: () => () => undefined });
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
@@ -52,9 +55,7 @@ describe("WelcomeScreen", () => {
   it("shows the headline", () => {
     render(<WelcomeScreen />);
 
-    expect(
-      screen.getByText("A new kind of Bible plan. Built from the sermons you love."),
-    ).toBeVisible();
+    expect(screen.getByText("A new way to study the sermons you love.")).toBeVisible();
   });
 
   /**
@@ -65,7 +66,7 @@ describe("WelcomeScreen", () => {
   it("tints the second half of the headline without restyling it", () => {
     render(<WelcomeScreen />);
 
-    const dimmed = screen.getByText("Built from the sermons you love.");
+    const dimmed = screen.getByText("study the sermons you love.");
 
     expect(dimmed).toHaveStyle({ color: "#8A8A92" });
     expect(dimmed.props.style).not.toHaveProperty("fontSize");

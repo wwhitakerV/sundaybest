@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@tests/helpers/render";
-import { useNavigation, useRouter } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { PlanReadyScreen } from "@/features/plan-creation/screens/PlanReadyScreen";
@@ -8,22 +8,22 @@ jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
   useNavigation: jest.fn(),
+  useLocalSearchParams: jest.fn(),
 }));
 
-const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
-const mockBack = jest.fn<void, []>();
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitModal = jest.fn<void, []>();
+// A ready plan in the mock data: three days, not started.
+const PLAN_ID = "plan-faith-through-the-storm";
 
 beforeEach(() => {
+  jest.mocked(useLocalSearchParams).mockReturnValue({ planId: PLAN_ID });
   jest.mocked(useNavigation).mockReturnValue({
     getParent: () => ({ goBack: mockExitModal }),
   });
   jest.mocked(useRouter).mockReturnValue({
-    push: mockPush,
     replace: mockReplace,
-    back: mockBack,
     navigate: mockNavigate,
   } as unknown as ReturnType<typeof useRouter>);
 });
@@ -35,25 +35,32 @@ describe("PlanReadyScreen", () => {
     expect(screen.getByTestId("plan-ready-screen")).toBeVisible();
   });
 
-  it("shows placeholder body text", () => {
+  it("says how long the plan runs and what it's from", () => {
     render(<PlanReadyScreen />);
 
-    expect(screen.getByText("...")).toBeVisible();
+    expect(screen.getByText("Your plan is ready")).toBeVisible();
+    expect(screen.getByText("3 days from Faith Through the Storm")).toBeVisible();
   });
 
-  it("navigates to Read for day 1 when Start day 1 is pressed", async () => {
+  it("sets the morning reminder to the time picked", () => {
+    render(<PlanReadyScreen />);
+
+    fireEvent.press(screen.getByTestId("plan-ready-reminder-07:00"));
+
+    expect(screen.getByTestId("plan-ready-reminder-07:00")).toBeSelected();
+    expect(screen.getByTestId("plan-ready-reminder-06:30")).not.toBeSelected();
+  });
+
+  it("opens day 1 of this plan when Start day 1 is pressed", async () => {
     render(<PlanReadyScreen />);
 
     fireEvent.press(screen.getByTestId("plan-ready-start-button"));
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: "/study/[planId]",
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-          params: expect.objectContaining({ day: "1" }),
-        }),
-      );
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: "/study/[planId]",
+        params: { planId: PLAN_ID, day: "1" },
+      });
     });
   });
 

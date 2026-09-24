@@ -16,7 +16,6 @@ import {
   getScrollTargetIndex,
   SCROLL,
   getPasteScene,
-  getPlanEndsLine,
   getPlanScene,
   getFilledPerLine,
   getPrayScene,
@@ -195,20 +194,6 @@ describe("getPlanScene", () => {
 
   it("finishes with 6 days picked", () => {
     expect(getPlanScene(Infinity)).toEqual({ selectedDay: 6 });
-  });
-});
-
-describe("getPlanEndsLine", () => {
-  it("asks for a length before one is picked", () => {
-    expect(getPlanEndsLine(null)).toBe("Pick how long your plan runs.");
-  });
-
-  it("says a 6-day plan ends right before next Sunday", () => {
-    expect(getPlanEndsLine(6)).toBe("Ends Saturday, right before next Sunday.");
-  });
-
-  it("says which day a shorter plan ends", () => {
-    expect(getPlanEndsLine(3)).toBe("Ends Wednesday.");
   });
 });
 

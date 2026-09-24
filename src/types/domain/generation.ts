@@ -33,6 +33,8 @@ export type PlanGeneration = Entity & {
   lengthDays: PlanLength;
   quickCheckEnabled: boolean;
   status: PlanGenerationStatus;
+  /** Which try this is: 1 at first, one more each time a failed build is retried. */
+  attempt: number;
   /** The sermon, once found. */
   sermonId: Id | null;
   /** The plan being built, once created. */

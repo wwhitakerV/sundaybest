@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 
 import { createQueryClient } from "@/core/api/query-client";
 import { useAppFonts } from "@/core/fonts/use-app-fonts";
+import { PlanBuilder } from "@/core/plan-builder";
 import { AppStoreProvider } from "@/core/store";
 
 // Side-effect import. `env.ts` validates and freezes the environment at module
@@ -62,7 +63,10 @@ export function AppProviders({ children, fallback }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppStoreProvider>{children}</AppStoreProvider>
+      <AppStoreProvider>
+        <PlanBuilder />
+        {children}
+      </AppStoreProvider>
     </QueryClientProvider>
   );
 }

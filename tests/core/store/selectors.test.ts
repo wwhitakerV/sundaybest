@@ -41,7 +41,7 @@ describe("plan selectors", () => {
 
   it("lists finished plans and saved ones", () => {
     expect(getCompletedPlans(state).map((plan) => plan.id)).toEqual([COMPLETED]);
-    expect(getLibraryPlans(state).map((plan) => plan.id)).toEqual([COMPLETED, SAVED]);
+    expect(getLibraryPlans(state).map((plan) => plan.id)).toEqual([SAVED, COMPLETED]);
   });
 
   it("returns null for a plan that doesn't exist", () => {

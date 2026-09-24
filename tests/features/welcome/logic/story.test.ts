@@ -28,7 +28,7 @@ describe("STORY_BEATS", () => {
   });
 
   it("waits a breath after the last side phone starts fanning out before the first turn", () => {
-    expect(STORY_BEATS.at(0)?.holdMs).toBe(getFanDelayMs(SIDE_CARDS.length - 1, true) + 200);
+    expect(STORY_BEATS.at(0)?.holdMs).toBe(getFanDelayMs(SIDE_CARDS.length - 1, true) + 500);
   });
 
   it("takes every turn once, in order", () => {

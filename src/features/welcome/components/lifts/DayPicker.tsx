@@ -3,7 +3,8 @@ import Animated from "react-native-reanimated";
 
 import { useTheme } from "@/theme";
 import { usePickPop } from "../../hooks/use-tap-feedback";
-import { getPlanEndsLine, getPlanScene } from "../../logic/scenes";
+import { getPlanEndsLine } from "@/utils/plans/getPlanEndsLine";
+import { getPlanScene } from "../../logic/scenes";
 import type { LiftPieceProps } from "./lift-piece";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;

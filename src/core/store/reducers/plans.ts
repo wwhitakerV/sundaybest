@@ -36,7 +36,7 @@ function detectPlatform(url: string): SermonPlatform {
   return "other";
 }
 
-/** A new draft plan, and a placeholder for its sermon until the plan is built. */
+/** A new draft plan, and its sermon as far as it's known, filled in once the plan is built. */
 export function createPlan(state: AppState, action: Action<"plan/create">): AppState {
   const url = action.sourceUrl.trim();
   if (!url || findById(state.plans, action.planId) || findById(state.sermons, action.sermonId)) {
@@ -48,7 +48,7 @@ export function createPlan(state: AppState, action: Action<"plan/create">): AppS
     updatedAt: action.at,
     url,
     platform: detectPlatform(url),
-    title: "",
+    title: action.title,
     speaker: null,
     church: null,
     thumbnailUrl: null,
@@ -63,7 +63,7 @@ export function createPlan(state: AppState, action: Action<"plan/create">): AppS
     updatedAt: action.at,
     userId: state.user.id,
     sermonId: sermon.id,
-    title: "",
+    title: action.title,
     status: "draft",
     lengthDays: action.lengthDays,
     quickCheckEnabled: action.quickCheckEnabled,

@@ -66,6 +66,8 @@ export type AppAction =
       planId: Id;
       sermonId: Id;
       sourceUrl: string;
+      /** The sermon's title, as far as it's known yet — the plan's working title. */
+      title: string;
       lengthDays: PlanLength;
       quickCheckEnabled: boolean;
     } & At)

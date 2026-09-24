@@ -35,6 +35,7 @@ export function startPlanGeneration(state: AppState, action: Action<"generation/
     lengthDays: plan.lengthDays,
     quickCheckEnabled: plan.quickCheckEnabled,
     status: "validating",
+    attempt: 1,
     sermonId: sermon.id,
     planId: plan.id,
     startedAt: action.at,
@@ -151,6 +152,7 @@ export function retryPlanGeneration(state: AppState, action: Action<"generation/
   return withGeneration(building, {
     ...generation,
     status: "validating",
+    attempt: generation.attempt + 1,
     error: null,
     startedAt: action.at,
     finishedAt: null,

@@ -46,6 +46,7 @@ describe("plans", () => {
       planId: "plan-new",
       sermonId: "sermon-new",
       sourceUrl: " https://youtu.be/abc123 ",
+      title: "A new sermon",
       lengthDays: 4,
       quickCheckEnabled: false,
       at: AT,
@@ -65,6 +66,7 @@ describe("plans", () => {
       planId,
       sermonId: "sermon-new",
       sourceUrl,
+      title: "A new sermon",
       lengthDays: 3,
       quickCheckEnabled: true,
       at: AT,
@@ -383,7 +385,7 @@ describe("plan generation", () => {
 
     expect(getPlanById(failed, BUILDING)?.status).toBe("draft");
     expect(failed.generation?.status).toBe("failed");
-    expect(retried.generation).toMatchObject({ status: "validating", error: null });
+    expect(retried.generation).toMatchObject({ status: "validating", attempt: 2, error: null });
     expect(getPlanById(retried, BUILDING)?.status).toBe("generating");
   });
 
