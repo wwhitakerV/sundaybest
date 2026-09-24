@@ -340,6 +340,8 @@ const ATTEMPT: QuizAttempt = {
   updatedAt: "2026-09-05T07:09:00.000Z",
   quizId: QUIZ.id,
   status: "completed",
+  currentQuestionId: null,
+  selectedChoiceId: null,
   startedAt: "2026-09-05T07:06:00.000Z",
   completedAt: "2026-09-05T07:09:00.000Z",
 };

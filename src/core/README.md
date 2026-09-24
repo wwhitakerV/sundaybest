@@ -30,15 +30,22 @@ store/        the app store: state, reducer, selectors, provider (see below)
 The single source of truth for application state — React Context +
 `useReducer`, no library. `AppStoreProvider` (mounted in `AppProviders`) holds
 `AppState`: normalized tables of facts, starting from `mock-data/`. Read it
-with `useAppSelector(selector)`, change it with `useAppDispatch()`; components
-never learn where the data came from.
+with `useAppSelector(selector)`; change it only through `useStoreActions()`
+(`createPlan`, `completePlanDay`, `submitQuizAnswer`, …). Components never
+learn where the data came from, and never change state themselves.
 
 - **Selectors** (`selectors/`) are pure: `(state, …args) => value`. Anything
   derivable — plan progress and percentages, remaining days, quiz scores,
   streaks, weekly counts — is a selector, never stored. Ones that depend on
   the date take it as an argument (`useToday()` supplies it).
-- **Actions** (`actions.ts`) carry their own timestamps and new IDs, so the
-  reducer never reads the clock and stays deterministic.
+- **Actions** (`actions.ts`) carry their own timestamps and new IDs —
+  `useStoreActions` stamps them from `clock.ts` — so the reducer never reads
+  the clock and stays deterministic. The reducer (`reducers/`) never mutates.
+- **Transitions** (`transitions.ts`) list which way each plan, day, and build
+  status may move. An impossible action — completing a locked day, taking a
+  completed plan back to being built, finishing a quiz with questions
+  unanswered — returns the state untouched, and completing anything twice
+  changes nothing, so progress can't be counted twice.
 
 ## `mock-data/`
 

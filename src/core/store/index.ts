@@ -1,14 +1,16 @@
 /**
- * The app store: the single source of truth for application state, and the
- * pure selectors that read it. Mount `AppStoreProvider` once (AppProviders
- * does), then `useAppSelector` / `useAppDispatch` from any component.
+ * The app store: the single source of truth for application state, the pure
+ * selectors that read it, and the typed actions that change it. Mount
+ * `AppStoreProvider` once (AppProviders does); then components read with
+ * `useAppSelector` and change state only through `useStoreActions`.
  *
  * Selectors take the state first and are pure: same state, same answer.
  * Anything derived — progress, percentages, streaks, scores, weekly counts —
  * is a selector, never a stored value.
  */
-export type { AppAction } from "./actions";
-export { AppStoreProvider, useAppDispatch, useAppSelector, useToday } from "./AppStoreProvider";
+export type { AppAction, GeneratedPlanContent, PlanChanges } from "./actions";
+export { AppStoreProvider, useAppSelector, useToday } from "./AppStoreProvider";
+export { useStoreActions, type StoreActions } from "./use-store-actions";
 export { appReducer } from "./reducer";
 export { INITIAL_STATE, type AppState } from "./state";
 

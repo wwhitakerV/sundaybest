@@ -18,6 +18,14 @@ export function withRecord<T extends { id: Id }>(table: EntityTable<T>, record: 
   return { ...table, [record.id]: record };
 }
 
+/** The table with every one of `records` added or replaced. */
+export function withRecords<T extends { id: Id }>(
+  table: EntityTable<T>,
+  records: readonly T[],
+): EntityTable<T> {
+  return records.reduce(withRecord, table);
+}
+
 /** The table without the record with `id`. */
 export function withoutRecord<T extends { id: Id }>(table: EntityTable<T>, id: Id): EntityTable<T> {
   return Object.fromEntries(Object.entries(table).filter(([key]) => key !== id));

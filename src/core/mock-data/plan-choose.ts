@@ -375,17 +375,24 @@ const ATTEMPT_DAY_1: QuizAttempt = {
   updatedAt: "2026-09-22T19:07:00.000Z",
   quizId: QUIZ_DAY_1.id,
   status: "completed",
+  currentQuestionId: null,
+  selectedChoiceId: null,
   startedAt: "2026-09-22T19:05:00.000Z",
   completedAt: "2026-09-22T19:07:00.000Z",
 };
 
-/** Day 2's: under way — the first question answered right, the rest not yet. */
+/**
+ * Day 2's: under way — the first question answered right, and the second on
+ * screen with a choice picked but not yet submitted.
+ */
 const ATTEMPT_DAY_2: QuizAttempt = {
   id: `${QUIZ_DAY_2.id}-attempt-1`,
   createdAt: "2026-09-23T06:58:00.000Z",
   updatedAt: "2026-09-23T06:59:00.000Z",
   quizId: QUIZ_DAY_2.id,
   status: "inProgress",
+  currentQuestionId: Q2_2,
+  selectedChoiceId: `${Q2_2}-a`,
   startedAt: "2026-09-23T06:58:00.000Z",
   completedAt: null,
 };

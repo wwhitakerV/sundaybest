@@ -4,7 +4,8 @@ import type { IsoDate } from "@/types/domain";
 
 import type { AppAction } from "./actions";
 import { appReducer } from "./reducer";
-import { INITIAL_STATE, STORE_TODAY, type AppState } from "./state";
+import { getToday } from "./clock";
+import { INITIAL_STATE, type AppState } from "./state";
 
 const StateContext = createContext<AppState | null>(null);
 const DispatchContext = createContext<Dispatch<AppAction> | null>(null);
@@ -18,7 +19,7 @@ type AppStoreProviderProps = {
 /**
  * Holds the app's state — the single source of truth for everything the app
  * knows — and hands it down. Read it with `useAppSelector`, change it with
- * `useAppDispatch`. Components never learn where the data came from.
+ * `useStoreActions`. Components never learn where the data came from.
  */
 export function AppStoreProvider({
   children,
@@ -47,7 +48,7 @@ export function useAppSelector<T>(selector: (state: AppState) => T): T {
   return selector(useStoreState());
 }
 
-/** Changes the store: `dispatch({ type: "prayer/markPrayed", prayerId, at })`. */
+/** The store's raw dispatch — for `useStoreActions` only; components use that. */
 export function useAppDispatch(): Dispatch<AppAction> {
   const dispatch = useContext(DispatchContext);
   if (!dispatch) throw new Error("The app store is changed inside AppStoreProvider only.");
@@ -57,5 +58,5 @@ export function useAppDispatch(): Dispatch<AppAction> {
 /** "Today", as the store's data sees it — for selectors that take a date. */
 export function useToday(): IsoDate {
   useStoreState();
-  return STORE_TODAY;
+  return getToday();
 }

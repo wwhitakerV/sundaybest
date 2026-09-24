@@ -43,10 +43,17 @@ export type QuizQuestion = Entity & {
 /** - `inProgress` — started, not every question answered. - `completed` — done. */
 export type QuizAttemptStatus = "inProgress" | "completed";
 
-/** One go at a quiz. */
+/**
+ * One go at a quiz, a question at a time: pick a choice (`selectedChoiceId`),
+ * submit it (it becomes a `QuizAnswer`), move on to the next question.
+ */
 export type QuizAttempt = Entity & {
   quizId: Id;
   status: QuizAttemptStatus;
+  /** The question on screen; null once the attempt is completed. */
+  currentQuestionId: Id | null;
+  /** The choice picked for the current question, not yet submitted. */
+  selectedChoiceId: Id | null;
   startedAt: IsoDateTime;
   completedAt: IsoDateTime | null;
 };
