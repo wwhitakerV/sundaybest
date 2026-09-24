@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
-import { Check, Link2, Play } from "lucide-react-native";
+import { Check, Link2 } from "lucide-react-native";
 
+import { VideoThumbnail } from "@/ui/VideoThumbnail";
 import { useTheme } from "@/theme";
 
 export type SermonPreviewProps = {
@@ -8,13 +9,21 @@ export type SermonPreviewProps = {
   link: string;
   title: string;
   church: string | null;
+  thumbnailUrl: string | null;
   /** Shown on the thumbnail, `m:ss`. */
   duration: string;
   testID: string;
 };
 
 /** The checked link, and the sermon it points to: a thumbnail, its title, and its church. */
-export function SermonPreview({ link, title, church, duration, testID }: SermonPreviewProps) {
+export function SermonPreview({
+  link,
+  title,
+  church,
+  thumbnailUrl,
+  duration,
+  testID,
+}: SermonPreviewProps) {
   const theme = useTheme();
 
   return (
@@ -43,20 +52,7 @@ export function SermonPreview({ link, title, church, duration, testID }: SermonP
           { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
         ]}
       >
-        {/* The video's own thumbnail isn't fetched yet; a still frame stands in. */}
-        <View style={[styles.thumbnail, { backgroundColor: theme.colors.segmentBackground }]}>
-          <Play size={32} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-          <View
-            style={[
-              styles.duration,
-              { backgroundColor: theme.colors.mediaScrim, borderRadius: theme.radii.pill },
-            ]}
-          >
-            <Text style={[theme.typography.stepCounter, { color: theme.colors.onMediaScrim }]}>
-              {duration}
-            </Text>
-          </View>
-        </View>
+        <VideoThumbnail uri={thumbnailUrl} duration={duration} style={styles.thumbnail} />
         <View style={styles.text}>
           <Text style={[theme.typography.listItem, styles.title, { color: theme.colors.text }]}>
             {title}
@@ -91,20 +87,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   card: { borderWidth: 1, borderRadius: 28, padding: 12, gap: 12 },
-  thumbnail: {
-    aspectRatio: 16 / 9,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  duration: {
-    position: "absolute",
-    right: 12,
-    bottom: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
+  thumbnail: { borderRadius: 20 },
   text: { paddingHorizontal: 8, paddingBottom: 6, gap: 2 },
   title: { fontSize: 20 },
 });

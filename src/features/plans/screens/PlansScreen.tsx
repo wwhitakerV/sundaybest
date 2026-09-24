@@ -8,16 +8,29 @@ import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { FilterTabs } from "@/ui/FilterTabs";
 import { TitleHeader } from "@/ui/TitleHeader";
 import { useTheme } from "@/theme";
+import {
+  getCompletedPlans,
+  getInProgressPlans,
+  getLibraryPlans,
+  getUserPlans,
+  useAppSelector,
+} from "@/core/store";
 import { getPlanFilterOptions } from "../logic/plan-filters";
 import { planOverviewHref } from "../logic/routes";
-import { MOCK_PLANS } from "../mock-plans";
-
-const FILTERS = getPlanFilterOptions(MOCK_PLANS);
 
 export function PlansScreen() {
   const theme = useTheme();
   const router = useRouter();
   const [filter, setFilter] = useState("All");
+  const plans = useAppSelector(getUserPlans);
+  const filters = useAppSelector((state) =>
+    getPlanFilterOptions({
+      all: getUserPlans(state).length,
+      inProgress: getInProgressPlans(state).length,
+      done: getCompletedPlans(state).length,
+      saved: getLibraryPlans(state).length,
+    }),
+  );
 
   return (
     <Screen testID="plans-screen" padded>
@@ -36,7 +49,7 @@ export function PlansScreen() {
 
       <FilterTabs
         testID="plans-filter-tabs"
-        options={FILTERS}
+        options={filters}
         selected={filter}
         onSelect={setFilter}
       />
@@ -44,7 +57,7 @@ export function PlansScreen() {
       <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
 
       <FlatList
-        data={MOCK_PLANS}
+        data={plans}
         keyExtractor={(plan) => plan.id}
         renderItem={({ item: plan }) => (
           <Pressable

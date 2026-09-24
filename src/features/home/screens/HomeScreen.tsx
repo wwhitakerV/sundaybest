@@ -1,29 +1,50 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { UserRound } from "lucide-react-native";
 
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
+import { Screen } from "@/ui/Screen";
+import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
 import { useTheme } from "@/theme";
-import { MOCK_PLANS, planOverviewHref } from "@/features/plans";
-import { getActivePlan } from "../logic/active-plan";
+import { planOverviewHref, studyHref } from "@/features/plans";
+import {
+  getActivePlan,
+  getPlanProgress,
+  getSamplePlan,
+  getSermonForPlan,
+  getUserPlans,
+  useAppSelector,
+} from "@/core/store";
+import { ActivePlanCard } from "../components/ActivePlanCard";
+import { PlanList } from "../components/PlanList";
+import { PlanRow } from "../components/PlanRow";
+import { StartHereCard } from "../components/StartHereCard";
+import { describePlan } from "../logic/describe-plan";
 
-export type HomeScreenProps = {
-  /**
-   * Test-only override for which mocked state to render. Real navigation
-   * always uses the derived default (the first incomplete mock plan, if
-   * any) — this exists so both the "no active plan" and "active plan"
-   * states are exercisable without a separate route for either, per the
-   * spec.
-   */
-  mockHasActivePlan?: boolean;
-};
+/** Room under the content for the floating tab bar. */
+const BOTTOM_CLEARANCE =
+  FLOATING_NAV_BAR.capsuleHeight + FLOATING_NAV_BAR.bottomMargin + FLOATING_NAV_BAR.sideMargin;
 
-export function HomeScreen({ mockHasActivePlan }: HomeScreenProps = {}) {
+/**
+ * Home, from the store. With a plan under way: that plan up top — which day
+ * it's on, how far through, and Continue — then all the user's plans. With
+ * none: a card to add a sermon, and the sample to try (or their other plans,
+ * if they have some waiting). The tab bar's + also starts a new plan.
+ */
+export function HomeScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const activePlan = getActivePlan(MOCK_PLANS, mockHasActivePlan);
+  const active = useAppSelector(getActivePlan);
+  const progress = useAppSelector((state) => (active ? getPlanProgress(state, active.id) : null));
+  const sermon = useAppSelector((state) => (active ? getSermonForPlan(state, active.id) : null));
+  const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
+  const sample = useAppSelector(getSamplePlan);
+  const sampleDetail = useAppSelector((state) =>
+    sample ? describePlan(sample, getPlanProgress(state, sample.id)) : "",
+  );
+
+  const openPlan = (planId: string) => router.push(planOverviewHref(planId));
+  const addSermon = () => router.push("/(plan-creation)/paste-sermon");
 
   return (
     <Screen testID="home-tab-screen" padded>
@@ -38,31 +59,54 @@ export function HomeScreen({ mockHasActivePlan }: HomeScreenProps = {}) {
         />
       </View>
 
-      <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {active && progress ? (
+          <ActivePlanCard
+            title={active.title}
+            thumbnailUrl={sermon?.thumbnailUrl ?? null}
+            currentDay={progress.currentDayNumber}
+            totalDays={progress.totalDays}
+            completedDayCount={progress.completedDayCount}
+            onOpen={() => openPlan(active.id)}
+            onContinue={() => router.push(studyHref(active.id, progress.currentDayNumber))}
+          />
+        ) : (
+          <StartHereCard onAddSermon={addSermon} />
+        )}
 
-      {activePlan ? (
-        <Pressable
-          testID="home-tab-active-plan"
-          accessibilityRole="button"
-          style={[styles.activePlan, { borderColor: theme.colors.divider }]}
-          onPress={() => router.push(planOverviewHref(activePlan.id))}
-        >
-          <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
-            {activePlan.title}
-          </Text>
-        </Pressable>
-      ) : (
-        <Button
-          testID="home-tab-add-sermon-button"
-          label="Add a sermon"
-          onPress={() => router.push("/(plan-creation)/paste-sermon")}
-        />
-      )}
+        {hasPlans ? (
+          <PlanList onOpenPlan={openPlan} />
+        ) : (
+          sample && (
+            <View style={styles.sample}>
+              <Text
+                style={[theme.typography.body, styles.label, { color: theme.colors.textMuted }]}
+              >
+                Try a sample
+              </Text>
+              <PlanRow
+                testID="home-tab-sample-plan"
+                title={sample.title}
+                detail={sampleDetail}
+                done={false}
+                onPress={() => openPlan(sample.id)}
+              />
+            </View>
+          )
+        )}
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  activePlan: { padding: 16, borderWidth: 1, borderRadius: 8 },
+  scroll: { flex: 1 },
+  content: { gap: 28, paddingTop: 8, paddingBottom: BOTTOM_CLEARANCE },
+  sample: { gap: 12 },
+  label: { marginLeft: 6 },
 });

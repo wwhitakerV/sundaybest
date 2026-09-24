@@ -23,6 +23,7 @@ export const PLAN_SALT: Plan = {
   startedAt: null,
   completedAt: null,
   archivedAt: null,
+  isSample: false,
 };
 
 /** Being built right now — see `MOCK_GENERATION`. */
@@ -40,6 +41,7 @@ export const PLAN_NEIGHBOR: Plan = {
   startedAt: null,
   completedAt: null,
   archivedAt: null,
+  isSample: false,
 };
 
 /** The plan being built: its sermon is in, and its days are being written. */

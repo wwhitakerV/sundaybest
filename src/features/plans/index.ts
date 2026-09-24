@@ -4,8 +4,7 @@
  *
  * Deep imports such as `@/features/<name>/screens/Thing` are blocked by lint.
  */
-export { SAMPLE_PLAN_ID, MOCK_PLANS } from "./mock-plans";
-export type { Plan } from "./types";
+export { SAMPLE_PLAN_ID } from "./mock-plans";
 export { planOverviewHref, studyHref } from "./logic/routes";
 export { PlansScreen } from "./screens/PlansScreen";
 export { PlanOverviewScreen } from "./screens/PlanOverviewScreen";

@@ -17,6 +17,7 @@ const plan = (lengthDays: Plan["lengthDays"], quickCheckEnabled: boolean): Plan 
   startedAt: null,
   completedAt: null,
   archivedAt: null,
+  isSample: false,
 });
 const sermon = lookUpMockSermon("https://youtube.com/watch?v=Qm81xRz4");
 const build = (lengthDays: Plan["lengthDays"], quickCheckEnabled = true) =>

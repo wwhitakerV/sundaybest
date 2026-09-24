@@ -2,6 +2,8 @@ import {
   INITIAL_STATE,
   getActivePlan,
   getCompletedPlans,
+  getDayMinutes,
+  getUserPlans,
   getCurrentPlanDay,
   getInProgressPlans,
   getLibraryPlans,
@@ -42,6 +44,22 @@ describe("plan selectors", () => {
   it("lists finished plans and saved ones", () => {
     expect(getCompletedPlans(state).map((plan) => plan.id)).toEqual([COMPLETED]);
     expect(getLibraryPlans(state).map((plan) => plan.id)).toEqual([SAVED, COMPLETED]);
+  });
+
+  it("lists the user's built plans, not drafts, ones being built, or the untried sample", () => {
+    const ids = getUserPlans(state).map((plan) => plan.id);
+
+    expect(ids).toEqual(expect.arrayContaining([ACTIVE, COMPLETED, SAVED]));
+    expect(ids).not.toContain("sample-plan");
+    expect(ids).not.toContain("plan-salt-and-light");
+    expect(ids).not.toContain("plan-who-is-my-neighbor");
+  });
+
+  it("estimates a day's minutes from its content, with time to reflect and pray", () => {
+    const minutes = getDayMinutes(state, getPlanDay(state, ACTIVE, 2)?.id ?? "");
+
+    expect(minutes).toBeGreaterThanOrEqual(5);
+    expect(getDayMinutes(state, "no-such-day")).toBe(0);
   });
 
   it("returns null for a plan that doesn't exist", () => {

@@ -71,6 +71,7 @@ export function createPlan(state: AppState, action: Action<"plan/create">): AppS
     startedAt: null,
     completedAt: null,
     archivedAt: null,
+    isSample: false,
   };
   return {
     ...state,

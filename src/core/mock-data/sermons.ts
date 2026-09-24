@@ -155,6 +155,29 @@ export const SERMON_NEIGHBOR: SermonSource = {
   ],
 };
 
+/** The sermon behind the sample plan anyone can try from Welcome or an empty Home. */
+export const SERMON_SAMPLE: SermonSource = {
+  id: "sermon-god-wont-leave-you",
+  createdAt: "2026-08-01T12:00:00.000Z",
+  updatedAt: "2026-08-01T12:00:00.000Z",
+  url: "https://youtube.com/watch?v=S4mpl3Pl4n",
+  platform: "youtube",
+  title: "God Won't Leave You",
+  speaker: "Marcus Hale",
+  church: "Harbor Light Church",
+  thumbnailUrl: null,
+  durationSeconds: 2_310,
+  publishedOn: "2026-07-26",
+  transcriptStatus: "available",
+  transcript: [
+    { startSeconds: 0, text: "Deuteronomy thirty-one. Moses is handing over, and he knows it." },
+    {
+      startSeconds: 1_020,
+      text: "You might feel alone. You are not left. Those are two different things.",
+    },
+  ],
+};
+
 export const MOCK_SERMONS: readonly SermonSource[] = [
   SERMON_CHOOSE,
   SERMON_GRATITUDE,
@@ -162,4 +185,5 @@ export const MOCK_SERMONS: readonly SermonSource[] = [
   SERMON_REST,
   SERMON_SALT,
   SERMON_NEIGHBOR,
+  SERMON_SAMPLE,
 ];

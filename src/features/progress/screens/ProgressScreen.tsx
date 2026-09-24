@@ -6,11 +6,13 @@ import { Screen } from "@/ui/Screen";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { TitleHeader } from "@/ui/TitleHeader";
 import { useTheme } from "@/theme";
-import { MOCK_PLANS, planOverviewHref } from "@/features/plans";
+import { planOverviewHref } from "@/features/plans";
+import { getUserPlans, useAppSelector } from "@/core/store";
 
 export function ProgressScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const plans = useAppSelector(getUserPlans);
 
   return (
     <Screen testID="progress-screen" padded>
@@ -30,7 +32,7 @@ export function ProgressScreen() {
       <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
 
       <FlatList
-        data={MOCK_PLANS}
+        data={plans}
         keyExtractor={(plan) => plan.id}
         renderItem={({ item: plan }) => (
           <Pressable

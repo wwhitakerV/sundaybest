@@ -244,6 +244,11 @@ carries a literal value for any of them.
       `development` profile's simulator build. TLS pinning, SQLCipher, App
       Attest, and freeRASP's integrity checks either don't run at all or
       behave differently in a simulator — see "Security" above.
+- [ ] **Rebuild the development client** (`npx expo run:ios`, or a new EAS
+      `development` build) now that `expo-clipboard` is installed for New
+      Plan's Paste button. It's a native module: until the dev client is
+      rebuilt, tapping Paste throws "Cannot find native module
+      'ExpoClipboard'".
 
 ## Per developer
 

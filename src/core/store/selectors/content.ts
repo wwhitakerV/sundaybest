@@ -26,6 +26,29 @@ export function getReflectionsForDay(state: AppState, dayId: Id): Reflection[] {
     .sort((a, b) => a.order - b.order);
 }
 
+/** Reading pace for a day's text, words a minute — slower than skimming, as it's meant to be. */
+const WORDS_PER_MINUTE = 150;
+/** Time for the parts that aren't reading: sitting with the questions, praying. */
+const PAUSE_MINUTES = 4;
+
+function countWords(text: string): number {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+/** About how long a day takes, in whole minutes: its words at a reading pace, plus time to reflect and pray. */
+export function getDayMinutes(state: AppState, dayId: Id): number {
+  const day = findById(state.planDays, dayId);
+  if (!day) return 0;
+  const texts = [
+    ...day.reading.paragraphs,
+    ...(getScriptureForDay(state, dayId)?.verses.map((verse) => verse.text) ?? []),
+    ...getReflectionsForDay(state, dayId).map((reflection) => reflection.question),
+    getPrayerForDay(state, dayId)?.text ?? "",
+  ];
+  const words = texts.reduce((total, text) => total + countWords(text), 0);
+  return Math.round(words / WORDS_PER_MINUTE) + PAUSE_MINUTES;
+}
+
 export function getPrayerForDay(state: AppState, dayId: Id): Prayer | null {
   return listAll(state.prayers).find((prayer) => prayer.planDayId === dayId) ?? null;
 }

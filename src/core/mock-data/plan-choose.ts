@@ -28,6 +28,7 @@ export const PLAN_CHOOSE: Plan = {
   startedAt: "2026-09-22T06:34:00.000Z",
   completedAt: null,
   archivedAt: null,
+  isSample: false,
 };
 
 const DAYS: MockDayInput[] = [

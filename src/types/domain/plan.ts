@@ -28,6 +28,11 @@ export type Plan = Entity & {
   startedAt: IsoDateTime | null;
   completedAt: IsoDateTime | null;
   archivedAt: IsoDateTime | null;
+  /**
+   * The sample plan anyone can try, rather than one the user made. It isn't
+   * one of their plans until they start it.
+   */
+  isSample: boolean;
 };
 
 /**

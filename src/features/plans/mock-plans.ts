@@ -1,6 +1,7 @@
+import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 import type { Plan } from "./types";
 
-export const SAMPLE_PLAN_ID = "sample-plan";
+export { SAMPLE_PLAN_ID };
 
 /**
  * A plan can be 1 to 7 days long, and screens must never assume otherwise.
@@ -11,8 +12,8 @@ export const SAMPLE_PLAN_ID = "sample-plan";
 export const MOCK_PLANS: readonly Plan[] = [
   {
     id: SAMPLE_PLAN_ID,
-    title: "The Sermon on the Mount",
-    totalDays: 3,
+    title: "God Won't Leave You",
+    totalDays: 5,
     currentDay: 1,
     completedDays: [],
     completed: false,

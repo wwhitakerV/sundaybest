@@ -26,6 +26,7 @@ export const PLAN_REST: Plan = {
   startedAt: null,
   completedAt: null,
   archivedAt: null,
+  isSample: false,
 };
 
 const RECORDS = makeDayRecords(PLAN_REST, BUILT_AT, MOCK_SETTINGS.bibleTranslation, {

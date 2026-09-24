@@ -16,6 +16,7 @@ export { INITIAL_STATE, type AppState } from "./state";
 export { GENERATION_STAGES } from "./transitions";
 
 export {
+  getDayMinutes,
   getPrayerForDay,
   getReflectionsForDay,
   getScriptureForDay,
@@ -34,6 +35,8 @@ export {
   getPlanDayById,
   getPlanDays,
   getPlans,
+  getSamplePlan,
+  getUserPlans,
 } from "./selectors/plans";
 export {
   getCompletedDays,

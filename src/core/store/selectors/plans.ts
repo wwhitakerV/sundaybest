@@ -18,6 +18,22 @@ export function getPlanById(state: AppState, planId: Id): Plan | null {
   return findById(state.plans, planId);
 }
 
+/**
+ * The plans the user has — built ones, not drafts, plans still being built,
+ * or ones put away — newest first. The sample counts once they've started it.
+ */
+export function getUserPlans(state: AppState): Plan[] {
+  return getPlans(state).filter((plan) => {
+    if (plan.isSample) return plan.status === "active" || plan.status === "completed";
+    return plan.status === "ready" || plan.status === "active" || plan.status === "completed";
+  });
+}
+
+/** The sample plan anyone can try, if there is one. */
+export function getSamplePlan(state: AppState): Plan | null {
+  return listAll(state.plans).find((plan) => plan.isSample) ?? null;
+}
+
 /** Plans under way, most recently started first. */
 export function getInProgressPlans(state: AppState): Plan[] {
   return listAll(state.plans)

@@ -25,6 +25,7 @@ export const PLAN_STORM: Plan = {
   startedAt: null,
   completedAt: null,
   archivedAt: null,
+  isSample: false,
 };
 
 const NOT_STARTED = {

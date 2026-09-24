@@ -62,6 +62,8 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     // screen capture and the app-switcher snapshot: a native side effect, and
     // the wrapper belongs in src/core/security/screen like everything else.
     "expo-screen-capture",
+    // the clipboard: reads what the user copied elsewhere
+    "expo-clipboard",
   ],
   message:
     "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",

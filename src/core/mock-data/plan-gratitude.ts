@@ -27,6 +27,7 @@ export const PLAN_GRATITUDE: Plan = {
   startedAt: "2026-08-30T06:36:00.000Z",
   completedAt: "2026-09-05T07:05:00.000Z",
   archivedAt: null,
+  isSample: false,
 };
 
 /** A finished day's timing: started, answered, prayed, and done that morning. */

@@ -10,6 +10,7 @@ import { StudyNav } from "../components/StudyNav";
 import { StudyStepBody } from "../components/StudyStepBody";
 import { usePlanRouteParams } from "../hooks/use-plan-route-params";
 import { useModalSession } from "@/hooks/use-modal-session";
+import { getPlanDay, useAppSelector, useStoreActions } from "@/core/store";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { dayCompleteHref } from "../logic/routes";
 import {
@@ -31,14 +32,20 @@ const BOTTOM_NAV_CLEARANCE =
  *
  * The first screen of the Daily Study session modal (`src/app/study`).
  * Closing — the header's X, or Previous on the first step — dismisses the
- * whole session. Finish *replaces* this screen with Day Complete inside the
- * session, so the finished study isn't left underneath it.
+ * whole session. Finish completes the day in the store — which records it,
+ * opens the next day, and completes the plan after its last — then
+ * *replaces* this screen with Day Complete inside the session, so the
+ * finished study isn't left underneath it.
  */
 export function StudyScreen() {
   const router = useRouter();
   const session = useModalSession();
   const { day, plan } = usePlanRouteParams();
   const currentDay = Number(day);
+  const storeDay = useAppSelector((state) =>
+    plan ? getPlanDay(state, plan.id, currentDay) : null,
+  );
+  const { completePlanDay } = useStoreActions();
 
   const [step, setStep] = useState(0);
   const { renderedStep, bodyStyle } = useStepTransition(step);
@@ -48,8 +55,10 @@ export function StudyScreen() {
 
   function applyNavAction(action: StudyNavAction) {
     if (action.type === "exit") session.exit();
-    else if (action.type === "finish") router.replace(dayCompleteHref(planId, currentDay));
-    else setStep(action.step);
+    else if (action.type === "finish") {
+      if (storeDay) completePlanDay(storeDay.id);
+      router.replace(dayCompleteHref(planId, currentDay));
+    } else setStep(action.step);
   }
 
   const bodyStep = STUDY_STEPS.at(renderedStep) ?? STUDY_STEPS[0];

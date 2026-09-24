@@ -11,6 +11,7 @@
  * | Give Thanks in All Things    | completed  | 7    | every day done, perfect Quick Check    |
  * | Faith Through the Storm      | ready      | 3    | not started, no Quick Check            |
  * | Come to Me and Rest          | ready      | 1    | saved to the library, quiz untaken     |
+ * | God Won't Leave You (sample) | ready      | 5    | the sample anyone can try              |
  * | Salt and Light               | draft      | —    | newly created in New Plan              |
  * | Who Is My Neighbor?          | generating | —    | being built (`MOCK_DATA.generation`)   |
  *
@@ -58,12 +59,20 @@ import {
   STORM_REFLECTIONS,
   STORM_SCRIPTURE,
 } from "./plan-storm";
+import {
+  PLAN_SAMPLE,
+  SAMPLE_DAYS,
+  SAMPLE_PRAYERS,
+  SAMPLE_REFLECTIONS,
+  SAMPLE_SCRIPTURE,
+} from "./plan-sample";
 import { MOCK_GENERATION, PLAN_NEIGHBOR, PLAN_SALT } from "./plans-pending";
 import { MOCK_LIBRARY_EXTRAS } from "./library";
 import { MOCK_SERMONS } from "./sermons";
 import { MOCK_REMINDERS, MOCK_SETTINGS, MOCK_USER } from "./user";
 
 export { MOCK_TODAY } from "./user";
+export { SAMPLE_PLAN_ID } from "./plan-sample";
 
 /** Records keyed by ID. */
 function toTable<T extends { id: Id }>(records: readonly T[]): EntityTable<T> {
@@ -74,21 +83,43 @@ export const MOCK_DATA: AppData = {
   user: MOCK_USER,
   settings: MOCK_SETTINGS,
   sermons: toTable(MOCK_SERMONS),
-  plans: toTable([PLAN_CHOOSE, PLAN_GRATITUDE, PLAN_STORM, PLAN_REST, PLAN_SALT, PLAN_NEIGHBOR]),
-  planDays: toTable([...CHOOSE_DAYS, ...GRATITUDE_DAYS, ...STORM_DAYS, ...REST_DAYS]),
+  plans: toTable([
+    PLAN_CHOOSE,
+    PLAN_GRATITUDE,
+    PLAN_STORM,
+    PLAN_REST,
+    PLAN_SALT,
+    PLAN_NEIGHBOR,
+    PLAN_SAMPLE,
+  ]),
+  planDays: toTable([
+    ...CHOOSE_DAYS,
+    ...GRATITUDE_DAYS,
+    ...STORM_DAYS,
+    ...REST_DAYS,
+    ...SAMPLE_DAYS,
+  ]),
   scripture: toTable([
     ...CHOOSE_SCRIPTURE,
     ...GRATITUDE_SCRIPTURE,
     ...STORM_SCRIPTURE,
     ...REST_SCRIPTURE,
+    ...SAMPLE_SCRIPTURE,
   ]),
   reflections: toTable([
     ...CHOOSE_REFLECTIONS,
     ...GRATITUDE_REFLECTIONS,
     ...STORM_REFLECTIONS,
     ...REST_REFLECTIONS,
+    ...SAMPLE_REFLECTIONS,
   ]),
-  prayers: toTable([...CHOOSE_PRAYERS, ...GRATITUDE_PRAYERS, ...STORM_PRAYERS, ...REST_PRAYERS]),
+  prayers: toTable([
+    ...CHOOSE_PRAYERS,
+    ...GRATITUDE_PRAYERS,
+    ...STORM_PRAYERS,
+    ...REST_PRAYERS,
+    ...SAMPLE_PRAYERS,
+  ]),
   quizzes: toTable([...CHOOSE_QUIZZES, ...GRATITUDE_QUIZZES, ...REST_QUIZZES]),
   quizQuestions: toTable([
     ...CHOOSE_QUIZ_QUESTIONS,

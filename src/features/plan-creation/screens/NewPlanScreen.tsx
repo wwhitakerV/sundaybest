@@ -9,6 +9,7 @@ import { Button } from "@/ui/Button";
 import { useTheme } from "@/theme";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { useStepTransition } from "@/hooks/use-step-transition";
+import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
 import { lookUpMockSermon, type SermonPreview as Preview } from "@/core/plan-builder";
 import { getPlanGeneration, getUserSettings, useAppSelector, useStoreActions } from "@/core/store";
 import { CaptionsSheet } from "../components/CaptionsSheet";
@@ -71,6 +72,11 @@ export function NewPlanScreen() {
   function onChangeLink(text: string) {
     setLink(text);
     setLinkError(null);
+  }
+
+  async function onPaste() {
+    const copied = await readClipboardText();
+    if (copied) onChangeLink(copied);
   }
 
   function onLeading() {
@@ -143,6 +149,7 @@ export function NewPlanScreen() {
                 testID="paste-sermon-link-input"
                 value={link}
                 onChangeText={onChangeLink}
+                onPaste={() => void onPaste()}
                 error={linkError}
               />
               <HowToCopyCard />
@@ -155,6 +162,7 @@ export function NewPlanScreen() {
                   link={shortenLink(checked.url)}
                   title={checked.sermon.title}
                   church={checked.sermon.church}
+                  thumbnailUrl={checked.sermon.thumbnailUrl}
                   duration={formatDuration(checked.sermon.durationSeconds)}
                 />
                 <DayCountPicker testID="link-preview-days" value={days} onChange={setDays} />

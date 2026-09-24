@@ -5,7 +5,7 @@ import { useTheme } from "@/theme";
 const STEPS = [
   "Open the sermon video",
   "Tap Share, then Copy link",
-  "Come back and paste it here",
+  "Come back and tap Paste",
 ] as const;
 
 /** "How to copy a link": three numbered steps. */

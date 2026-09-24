@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
+import * as Clipboard from "expo-clipboard";
 import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
@@ -10,6 +11,8 @@ jest.mock("expo-router", () => ({
   useNavigation: jest.fn(),
   useIsFocused: () => true,
 }));
+
+jest.mock("expo-clipboard", () => ({ getStringAsync: jest.fn() }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitModal = jest.fn<void, []>();
@@ -49,6 +52,16 @@ describe("NewPlanScreen", () => {
     render(<NewPlanScreen />);
 
     expect(screen.getByTestId("paste-sermon-continue-button")).toBeDisabled();
+  });
+
+  it("fills the link from the clipboard when Paste is pressed", async () => {
+    jest.mocked(Clipboard.getStringAsync).mockResolvedValue(LINK);
+    render(<NewPlanScreen />);
+
+    fireEvent.press(screen.getByTestId("paste-sermon-link-input-paste-button"));
+
+    expect(await screen.findByDisplayValue(LINK)).toBeVisible();
+    expect(screen.getByTestId("paste-sermon-continue-button")).toBeEnabled();
   });
 
   it("says so when the link isn't a link, and stays put", () => {
