@@ -13,14 +13,15 @@ const TEXT_SIZE_ICON_SIZE = 20;
 export type StudyMockHeaderProps = {
   /** 0-indexed: Read, Scripture, Reflect, Pray. */
   activeStep: number;
-  /** The mono kicker under the tracker, e.g. "Scripture" in "Day 2  Scripture". */
-  kicker: string;
   /** Prefix for the (inert) header buttons' testIDs. */
   testID: string;
 };
 
-/** The Daily Study header as the mocks draw it: nav, step tracker, labels, kicker. */
-export function StudyMockHeader({ activeStep, kicker, testID }: StudyMockHeaderProps) {
+/**
+ * The Daily Study header as the mocks draw it — nav, step tracker, labels —
+ * like the real `StudyHeader`: it stays put while the body steps beneath it.
+ */
+export function StudyMockHeader({ activeStep, testID }: StudyMockHeaderProps) {
   const theme = useTheme();
   const noop = () => undefined;
 
@@ -68,11 +69,6 @@ export function StudyMockHeader({ activeStep, kicker, testID }: StudyMockHeaderP
           ))}
         </View>
       </View>
-
-      <Text style={[theme.typography.metaLabel, { color: theme.colors.text }]}>
-        {"Day 2  "}
-        <Text style={{ color: theme.colors.textMuted }}>{kicker}</Text>
-      </Text>
     </>
   );
 }
@@ -81,3 +77,17 @@ const styles = StyleSheet.create({
   steps: { gap: 10, marginTop: 4 },
   stepLabels: { flexDirection: "row", justifyContent: "space-between" },
 });
+
+export type StudyKickerProps = { label: string };
+
+/** A study step's mono kicker, e.g. "Day 2  Scripture" — part of the step's body. */
+export function StudyKicker({ label }: StudyKickerProps) {
+  const theme = useTheme();
+
+  return (
+    <Text style={[theme.typography.metaLabel, { color: theme.colors.text }]}>
+      {"Day 2  "}
+      <Text style={{ color: theme.colors.textMuted }}>{label}</Text>
+    </Text>
+  );
+}

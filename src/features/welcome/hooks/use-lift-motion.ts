@@ -38,20 +38,30 @@ export function useLiftMotion(lifted: boolean, layout: LiftLayout) {
       : withTiming(0, { duration: LIFT.backMs, easing: RETURN_EASING });
   }, [lifted, progress]);
 
+  // Plain numbers, not the layout's objects: an animated style's worker on
+  // the UI thread is rebuilt whenever anything it reads changes identity, and
+  // the stage builds a new layout object on every tick of its clock. Numbers
+  // compare by value, so the workers stay put while the piece is in flight.
   const { onPhone, lifted: up, onPhoneOpacity } = layout;
+  const fromX = onPhone.x;
+  const fromY = onPhone.y;
+  const fromScale = onPhone.scale;
+  const toX = up.x;
+  const toY = up.y;
+  const toScale = up.scale;
 
   const moveStyle = useAnimatedStyle(() => {
     const clamped = Math.min(Math.max(progress.value, 0), 1);
     return {
       opacity: onPhoneOpacity + (1 - onPhoneOpacity) * clamped,
       transform: [
-        { translateX: onPhone.x + (up.x - onPhone.x) * progress.value },
-        { translateY: onPhone.y + (up.y - onPhone.y) * progress.value },
+        { translateX: fromX + (toX - fromX) * progress.value },
+        { translateY: fromY + (toY - fromY) * progress.value },
       ],
     };
   });
   const sizeStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: onPhone.scale + (up.scale - onPhone.scale) * progress.value }],
+    transform: [{ scale: fromScale + (toScale - fromScale) * progress.value }],
   }));
   const cardStyle = useAnimatedStyle(() => {
     const clamped = Math.min(Math.max(progress.value, 0), 1);

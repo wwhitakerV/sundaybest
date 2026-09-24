@@ -3,52 +3,54 @@ import { render, screen } from "@tests/helpers/render";
 import { ScreenFan } from "@/features/welcome/components/ScreenFan";
 import type { StoryPhase } from "@/features/welcome/logic/story";
 
-// Leaving: every turn played, so every scene shows finished.
+// Leaving: every turn played, so every screen shows finished.
 const LEAVE: StoryPhase = { kind: "leave" };
+const HIDDEN = { includeHiddenElements: true } as const;
 
 describe("ScreenFan", () => {
-  it("deals a card for every step of the story", () => {
+  it("fans two small phones on each side of the big one", () => {
     render(<ScreenFan testID="a-fan" phase={LEAVE} />);
 
-    expect(screen.getAllByTestId(/^a-fan-card-/)).toHaveLength(7);
+    expect(screen.getAllByTestId(/^a-fan-side-/, HIDDEN)).toHaveLength(4);
+    expect(screen.getByTestId("a-fan-phone", HIDDEN)).toBeTruthy();
   });
 
-  it("builds the mocks from real screen content, not images", () => {
-    render(<ScreenFan testID="a-fan" phase={LEAVE} />);
-
-    expect(screen.getByText("Paste a sermon link", { includeHiddenElements: true })).toBeTruthy();
-    expect(screen.getByText("A prayer for today", { includeHiddenElements: true })).toBeTruthy();
-  });
-
-  it("shows every scene finished once the last turn is over", () => {
-    render(<ScreenFan testID="a-fan" phase={LEAVE} />);
-
-    expect(
-      screen.getByText("youtube.com/watch?v=Qm81xRz4", { includeHiddenElements: true }),
-    ).toBeTruthy();
-  });
-
-  it("arrives with the paste field still empty", () => {
+  it("builds the screens from real components, not images", () => {
     render(<ScreenFan testID="a-fan" phase={{ kind: "arrive" }} />);
 
-    expect(screen.getByText("Sermon link", { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.getAllByText("Paste a sermon link", HIDDEN).length).toBeGreaterThan(0);
+  });
+
+  it("arrives on New Plan, the link field still empty", () => {
+    render(<ScreenFan testID="a-fan" phase={{ kind: "arrive" }} />);
+
+    expect(screen.getAllByText("Sermon link", HIDDEN).length).toBeGreaterThan(0);
+  });
+
+  it("shows how to copy a link under the field", () => {
+    render(<ScreenFan testID="a-fan" phase={{ kind: "arrive" }} />);
+
+    expect(screen.getAllByText("Tap Share, then Copy link", HIDDEN).length).toBeGreaterThan(0);
   });
 
   it("shows the sermon the plan is built from, as in the design", () => {
+    render(<ScreenFan testID="a-fan" phase={{ kind: "focus", card: "plan" }} />);
+
+    expect(screen.getAllByText("VOUS Church", HIDDEN).length).toBeGreaterThan(0);
+  });
+
+  it("ends on the Quick Check question", () => {
     render(<ScreenFan testID="a-fan" phase={LEAVE} />);
 
     expect(
-      screen.getAllByText("Choose Whom You Will Serve", { includeHiddenElements: true }).length,
+      screen.getAllByText("In Joshua 24, what does Joshua ask the people to do?", HIDDEN).length,
     ).toBeGreaterThan(0);
-    expect(screen.getAllByText("42:18", { includeHiddenElements: true }).length).toBeGreaterThan(0);
   });
 
-  it("captions the card on stage with the step it shows", () => {
+  it("captions the screen on the phone with the step it shows", () => {
     render(<ScreenFan testID="a-fan" phase={{ kind: "focus", card: "plan" }} />);
 
-    expect(
-      screen.getByText("Get a plan for 1 to 7 days", { includeHiddenElements: true }),
-    ).toBeTruthy();
+    expect(screen.getByText("Get a plan for 1 to 7 days", HIDDEN)).toBeTruthy();
   });
 
   it("tells VoiceOver the three steps", () => {

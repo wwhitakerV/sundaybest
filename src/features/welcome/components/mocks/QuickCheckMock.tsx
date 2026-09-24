@@ -7,12 +7,15 @@ import { StepCounter } from "@/ui/StepCounter";
 import { StepProgress } from "@/ui/StepProgress";
 import { useTheme } from "@/theme";
 import { LiftAnchor } from "../lift/LiftAnchor";
+import { getLiftId } from "../lift/lift-anchor-context";
 import { QuizOptions } from "../lifts/QuizOptions";
+import { FadeUp } from "./FadeUp";
 import { MOCK_PAGE, type MockScreenProps } from "./mock-page";
 
-/** Mock of a Quick Check question. Its answers lift off on its turn. */
+/** Mock of a Quick Check question — pushed onto, as the real one is. Its answers lift off on its turn. */
 export function QuickCheckMock({ elapsedMs }: MockScreenProps) {
   const theme = useTheme();
+  const still = elapsedMs === Infinity;
 
   return (
     <View style={MOCK_PAGE.page}>
@@ -26,22 +29,28 @@ export function QuickCheckMock({ elapsedMs }: MockScreenProps) {
             onPress={() => undefined}
           />
         }
-        right={<StepCounter label="1 of 2" />}
+        right={<StepCounter label="1 of 3" />}
       />
       <StepProgress steps={3} activeIndex={0} />
 
-      <Text style={[theme.typography.metaBody, styles.kicker, { color: theme.colors.textMuted }]}>
-        From the sermon
-      </Text>
-      <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-        In Joshua 24, what does Joshua ask the people to do?
-      </Text>
+      <FadeUp order={0} still={still}>
+        <Text style={[theme.typography.metaBody, styles.kicker, { color: theme.colors.textMuted }]}>
+          From the sermon
+        </Text>
+      </FadeUp>
+      <FadeUp order={1} still={still}>
+        <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
+          In Joshua 24, what does Joshua ask the people to do?
+        </Text>
+      </FadeUp>
 
-      <View style={styles.options}>
-        <LiftAnchor>
-          <QuizOptions elapsedMs={elapsedMs} />
-        </LiftAnchor>
-      </View>
+      <FadeUp order={2} still={still}>
+        <View style={styles.options}>
+          <LiftAnchor id={getLiftId("quiz", 0)}>
+            <QuizOptions elapsedMs={elapsedMs} />
+          </LiftAnchor>
+        </View>
+      </FadeUp>
     </View>
   );
 }

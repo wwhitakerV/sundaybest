@@ -1,19 +1,21 @@
 import { getTurnMs } from "@/features/welcome/logic/scenes";
 import {
-  STAGE_FADE,
+  FAN,
+  SIDE_CARDS,
+  STAGE_SLIDE,
   STORY_BEATS,
   STORY_CARDS,
+  STORY_LOOP_MS,
   getCaption,
-  getCardPose,
-  getPoseDurationMs,
-  getSceneMode,
-  getSceneMsFor,
+  getFanDelayMs,
+  getLiftsFor,
+  getNavigation,
+  getScreen,
+  getScreenView,
   isStageShown,
   type StoryPhase,
 } from "@/features/welcome/logic/story";
 
-const STAGE = { restScale: 0.4, supportOpacity: 0.5 };
-const LAST = STORY_CARDS.length - 1;
 const onStage = (card: (typeof STORY_CARDS)[number]["key"]): StoryPhase => ({
   kind: "focus",
   card,
@@ -25,26 +27,40 @@ describe("STORY_BEATS", () => {
     expect(STORY_BEATS.at(-1)?.phase).toEqual({ kind: "leave" });
   });
 
-  it("waits a breath after the stage has faded in before the first turn", () => {
-    expect(STORY_BEATS.at(0)?.holdMs).toBe(STAGE_FADE.inMs + 200);
+  it("waits a breath after the last side phone starts fanning out before the first turn", () => {
+    expect(STORY_BEATS.at(0)?.holdMs).toBe(getFanDelayMs(SIDE_CARDS.length - 1, true) + 200);
   });
 
-  it("gives every card one turn, in deck order", () => {
+  it("takes every turn once, in order", () => {
     const turns = STORY_BEATS.flatMap(({ phase }) => (phase.kind === "focus" ? [phase.card] : []));
 
     expect(turns).toEqual(STORY_CARDS.map((card) => card.key));
   });
 
-  it("holds each card's turn long enough for its lift and scene", () => {
-    const pasteTurn = STORY_BEATS.find(
-      ({ phase }) => phase.kind === "focus" && phase.card === "paste",
-    );
-
-    expect(pasteTurn?.holdMs).toBe(getTurnMs(getSceneMsFor("paste")));
+  it("lifts step 2's days and Create my plan together, in one lift", () => {
+    expect(getLiftsFor("plan")).toHaveLength(1);
   });
 
-  it("lets the stage finish fading out before it comes back", () => {
-    expect(STORY_BEATS.at(-1)?.holdMs).toBeGreaterThan(STAGE_FADE.outMs);
+  it("holds each turn long enough for its lifts", () => {
+    const planTurn = STORY_BEATS.find(
+      ({ phase }) => phase.kind === "focus" && phase.card === "plan",
+    );
+
+    expect(planTurn?.holdMs).toBe(getTurnMs(getLiftsFor("plan")));
+  });
+
+  it("lets the hand fold and the stage finish fading out before it comes back", () => {
+    expect(STORY_BEATS.at(-1)?.holdMs).toBeGreaterThan(
+      STAGE_SLIDE.outDelayMs + STAGE_SLIDE.hopMs + STAGE_SLIDE.dropMs,
+    );
+  });
+});
+
+describe("STORY_LOOP_MS", () => {
+  it("is one whole loop: every beat, back to back", () => {
+    const total = STORY_BEATS.map((beat) => beat.holdMs).reduce((a, b) => a + b);
+
+    expect(STORY_LOOP_MS).toBe(total);
   });
 });
 
@@ -56,81 +72,105 @@ describe("isStageShown", () => {
   });
 });
 
-describe("getCardPose", () => {
-  it("arrives with the first card already on stage as the big phone", () => {
-    expect(getCardPose(0, { kind: "arrive" }, STAGE)).toMatchObject({
-      rotateDeg: 0,
-      scale: 1,
-      opacity: 1,
-      zIndex: 200,
-    });
+describe("getScreen", () => {
+  it("shows New Plan for pasting and picking days", () => {
+    expect(getScreen({ kind: "arrive" })).toBe("newPlan");
+    expect(getScreen(onStage("plan"))).toBe("newPlan");
   });
 
-  it("never shows a closed deck or a full spread: one card is always on stage", () => {
-    const phases: StoryPhase[] = [
-      { kind: "arrive" },
-      ...STORY_CARDS.map((card) => onStage(card.key)),
-      { kind: "leave" },
-    ];
-
-    for (const phase of phases) {
-      const bigPhones = STORY_CARDS.filter(
-        (_, index) => getCardPose(index, phase, STAGE).scale === 1,
-      );
-      expect(bigPhones).toHaveLength(1);
-    }
+  it("shows the study session for read, scripture, reflect, and pray", () => {
+    expect(getScreen(onStage("read"))).toBe("study");
+    expect(getScreen(onStage("scripture"))).toBe("study");
+    expect(getScreen(onStage("pray"))).toBe("study");
   });
 
-  it("leaves with the last card still on stage", () => {
-    expect(getCardPose(LAST, { kind: "leave" }, STAGE).scale).toBe(1);
-  });
-
-  it("snaps into place on arriving, while the stage is invisible", () => {
-    expect(getPoseDurationMs({ kind: "arrive" })).toBe(0);
-    expect(getPoseDurationMs(onStage("plan"))).toBeGreaterThan(0);
-  });
-
-  it("fans cards that have had their turn out to the left, small and dimmed", () => {
-    expect(getCardPose(0, onStage("plan"), STAGE)).toMatchObject({ scale: 0.4, opacity: 0.5 });
-    expect(getCardPose(0, onStage("plan"), STAGE).rotateDeg).toBeLessThan(0);
-  });
-
-  it("fans cards still to come out to the right", () => {
-    expect(getCardPose(2, onStage("plan"), STAGE).rotateDeg).toBeGreaterThan(0);
-  });
-
-  it("fans cards further the further they are from their turn, hiding the far ones", () => {
-    const next = getCardPose(4, onStage("read"), STAGE);
-    const afterThat = getCardPose(5, onStage("read"), STAGE);
-    const farAway = getCardPose(6, onStage("read"), STAGE);
-
-    expect(afterThat.rotateDeg).toBeGreaterThan(next.rotateDeg);
-    expect(farAway.opacity).toBe(0);
-  });
-
-  it("stacks the cards around the stage below the one on it, nearest on top", () => {
-    const main = getCardPose(3, onStage("read"), STAGE);
-    const near = getCardPose(2, onStage("read"), STAGE);
-    const far = getCardPose(1, onStage("read"), STAGE);
-
-    expect(main.zIndex).toBeGreaterThan(near.zIndex);
-    expect(near.zIndex).toBeGreaterThan(far.zIndex);
+  it("shows Quick Check last, and while the stage leaves", () => {
+    expect(getScreen(onStage("quiz"))).toBe("quiz");
+    expect(getScreen({ kind: "leave" })).toBe("quiz");
   });
 });
 
-describe("getSceneMode", () => {
-  it("arrives with nothing playing yet", () => {
-    expect(getSceneMode(0, { kind: "arrive" })).toBe("before");
+describe("getNavigation — as the real app moves", () => {
+  it("starts on the first screen with no transition", () => {
+    expect(getNavigation({ kind: "arrive" })).toBe("cut");
+    expect(getNavigation(onStage("paste"))).toBe("cut");
   });
 
-  it("plays the card on stage, and leaves earlier ones finished", () => {
-    expect(getSceneMode(1, onStage("plan"))).toBe("play");
-    expect(getSceneMode(0, onStage("plan"))).toBe("after");
-    expect(getSceneMode(2, onStage("plan"))).toBe("before");
+  it("steps within New Plan from pasting to picking days", () => {
+    expect(getNavigation(onStage("plan"))).toBe("step");
   });
 
-  it("leaves with every scene finished", () => {
-    expect(getSceneMode(LAST, { kind: "leave" })).toBe("after");
+  it("presents the study session as a modal after Create my plan", () => {
+    expect(getNavigation(onStage("read"))).toBe("modal");
+  });
+
+  it("steps within the study session from read to scripture to reflect to pray", () => {
+    expect(getNavigation(onStage("scripture"))).toBe("step");
+    expect(getNavigation(onStage("reflect"))).toBe("step");
+    expect(getNavigation(onStage("pray"))).toBe("step");
+  });
+
+  it("pushes Quick Check", () => {
+    expect(getNavigation(onStage("quiz"))).toBe("push");
+  });
+});
+
+describe("getScreenView", () => {
+  it("shows the screen on the phone at its current step, on the turn's clock", () => {
+    expect(getScreenView("study", onStage("reflect"), 900)).toEqual({ step: 2, elapsedMs: 900 });
+  });
+
+  it("opens the study session on its Read step", () => {
+    expect(getScreenView("study", onStage("read"), 900)).toEqual({ step: 0, elapsedMs: 900 });
+  });
+
+  it("arrives with the first screen at its start", () => {
+    expect(getScreenView("newPlan", { kind: "arrive" }, 900)).toEqual({ step: 0, elapsedMs: 0 });
+  });
+
+  it("shows a screen that's been left at its last step, finished", () => {
+    expect(getScreenView("newPlan", onStage("read"), 900)).toEqual({
+      step: 1,
+      elapsedMs: Infinity,
+    });
+  });
+
+  it("shows the last screen finished while the stage leaves", () => {
+    expect(getScreenView("quiz", { kind: "leave" }, 0).elapsedMs).toBe(Infinity);
+  });
+});
+
+describe("SIDE_CARDS", () => {
+  it("fans an equal number of phones on each side, mirrored", () => {
+    const angles = SIDE_CARDS.map((card) => card.angleDeg);
+
+    expect(angles.filter((angle) => angle < 0)).toHaveLength(angles.length / 2);
+    expect([...angles].sort((a, b) => a - b)).toEqual(
+      angles.map((angle) => -angle).sort((a, b) => a - b),
+    );
+  });
+});
+
+describe("getFanDelayMs", () => {
+  it("fans the side phones out only once the big phone is up", () => {
+    expect(getFanDelayMs(0, true)).toBe(FAN.outFromMs);
+  });
+
+  it("fans them out one at a time, left to right", () => {
+    const delays = SIDE_CARDS.map((_, index) => getFanDelayMs(index, true));
+
+    expect(delays).toEqual([...delays].sort((a, b) => a - b));
+    expect(getFanDelayMs(1, true) - getFanDelayMs(0, true)).toBe(FAN.outStaggerMs);
+  });
+
+  it("folds both sides back in to the middle together, at once", () => {
+    expect(SIDE_CARDS.map((_, index) => getFanDelayMs(index, false))).toEqual(
+      SIDE_CARDS.map(() => 0),
+    );
+  });
+
+  it("drops the phone the moment the side phones have folded in", () => {
+    expect(STAGE_SLIDE.outDelayMs).toBe(FAN.inMs);
   });
 });
 
@@ -139,15 +179,16 @@ describe("getCaption", () => {
     expect(getCaption({ kind: "arrive" })).toEqual({ mode: "hidden" });
   });
 
-  it("shows the step the card on stage illustrates", () => {
+  it("shows the step the screen on the phone illustrates", () => {
     expect(getCaption(onStage("plan"))).toEqual({ mode: "step", step: 1, word: null });
   });
 
-  it("keeps step 2's caption up while the sermon card is tapped into", () => {
-    expect(getCaption(onStage("preview"))).toEqual({ mode: "step", step: 1, word: null });
+  it('has both reading steps, Read and Scripture, stand for "Read"', () => {
+    expect(getCaption(onStage("read"))).toEqual({ mode: "step", step: 2, word: 0 });
+    expect(getCaption(onStage("scripture"))).toEqual({ mode: "step", step: 2, word: 0 });
   });
 
-  it("picks out the item of step 3 each of its screens stands for", () => {
+  it("picks out the item of step 3 each study screen stands for", () => {
     expect(getCaption(onStage("pray"))).toEqual({ mode: "step", step: 2, word: 2 });
   });
 

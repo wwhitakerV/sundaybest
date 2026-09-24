@@ -1,4 +1,4 @@
-import { getLiftLayout } from "@/features/welcome/logic/lift";
+import { getLiftLayout, getScrollToReveal, getScrollToShow } from "@/features/welcome/logic/lift";
 
 const OPTIONS = {
   anchor: { x: 36, y: 300, width: 345, height: 74 },
@@ -62,5 +62,37 @@ describe("getLiftLayout", () => {
     const hidden = getLiftLayout({ ...OPTIONS, anchor: { ...OPTIONS.anchor, y: 500 } });
 
     expect(hidden.onPhoneOpacity).toBe(0);
+  });
+});
+
+describe("getScrollToShow", () => {
+  const WINDOW = { contentTop: 100, maxScroll: 500, topMargin: 20 };
+
+  it("brings the piece's top to just below the top of the scrolling area", () => {
+    const anchor = { x: 0, y: 500, width: 300, height: 60 };
+
+    expect(getScrollToShow(anchor, WINDOW)).toBe(500 - 100 - 20);
+  });
+
+  it("doesn't scroll a piece that's already near the top", () => {
+    expect(getScrollToShow({ x: 0, y: 120, width: 300, height: 40 }, WINDOW)).toBe(0);
+  });
+
+  it("never scrolls past the end of the page", () => {
+    expect(getScrollToShow({ x: 0, y: 2000, width: 300, height: 60 }, WINDOW)).toBe(500);
+  });
+});
+
+describe("getScrollToReveal", () => {
+  const WINDOW = { visibleBottom: 400, bottomMargin: 24 };
+
+  it("scrolls just far enough to bring the piece above the bottom of the view", () => {
+    const anchor = { x: 0, y: 500, width: 300, height: 80 };
+
+    expect(getScrollToReveal(anchor, WINDOW)).toBe(500 + 80 + 24 - 400);
+  });
+
+  it("doesn't scroll a piece that's already in view", () => {
+    expect(getScrollToReveal({ x: 0, y: 200, width: 300, height: 80 }, WINDOW)).toBe(0);
   });
 });

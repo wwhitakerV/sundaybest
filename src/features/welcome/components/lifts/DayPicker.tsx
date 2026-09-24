@@ -34,7 +34,7 @@ function DayChip({ day, selected }: { day: number; selected: boolean }) {
 
 /**
  * "How many days?": the day chips and when the plan would end. As its scene
- * plays, 3 is picked, then a change of mind to 6.
+ * plays, a day is picked.
  */
 export function DayPicker({ elapsedMs }: LiftPieceProps) {
   const theme = useTheme();

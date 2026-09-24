@@ -11,7 +11,12 @@ export function AnswerBox({ elapsedMs }: LiftPieceProps) {
   const writing = typedChars < REFLECT_ANSWER.length;
 
   return (
-    <View style={[styles.box, { backgroundColor: theme.colors.surface }]}>
+    <View
+      style={[
+        styles.box,
+        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
+      ]}
+    >
       <Text style={[theme.typography.body, { color: theme.colors.text }]}>
         {REFLECT_ANSWER.slice(0, typedChars)}
         {writing && <Text style={{ color: theme.colors.accent }}>|</Text>}
@@ -21,5 +26,5 @@ export function AnswerBox({ elapsedMs }: LiftPieceProps) {
 }
 
 const styles = StyleSheet.create({
-  box: { borderRadius: 20, padding: 18, minHeight: 124 },
+  box: { borderWidth: 1, borderRadius: 20, padding: 18, minHeight: 124 },
 });

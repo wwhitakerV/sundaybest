@@ -190,8 +190,12 @@ const typography = {
 
   /** Hero sentence. Spec 30/500/1.06/-0.03em. */
   display: { fontSize: 37, fontWeight: "500", lineHeight: 39, letterSpacing: -1.11 },
-  /** The static weekday strip. Spec 17/-0.01em, IBM Plex Mono Medium. */
-  dayStrip: { fontFamily: fonts.metaLabel, fontSize: 21, fontWeight: "500", letterSpacing: -0.21 },
+  /**
+   * The static weekday strip. Spec 17/-0.01em, IBM Plex Mono Medium — set a
+   * touch under the spec's scaled 21, so the strip sits quieter under the
+   * wordmark.
+   */
+  dayStrip: { fontFamily: fonts.metaLabel, fontSize: 19, fontWeight: "500", letterSpacing: -0.19 },
   /** Supporting copy and footnotes. Spec 11/1.45/0.02em, IBM Plex Mono. */
   supporting: {
     fontFamily: fonts.metaBody,
@@ -219,6 +223,8 @@ const typography = {
   filterCount: { fontSize: 11, fontWeight: "400" },
   /** A Daily Study step label (Read/Scripture/Reflect/Pray) below the progress line. */
   stepLabel: { fontSize: 13, fontWeight: "400", lineHeight: 16 },
+  /** Long-form reading (a Daily Study's Read step): body size, loosely leaded for a page of it. */
+  reading: { fontSize: 17, fontWeight: "400", lineHeight: 30 },
   /** A Scripture passage set as the page's centrepiece. Bodoni, generously leaded. */
   scripture: { fontFamily: fonts.editorialBody, fontSize: 24, fontWeight: "400", lineHeight: 36 },
 } as const;

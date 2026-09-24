@@ -6,6 +6,9 @@ const IN_DURATION = 150;
 const REST_TRANSLATE_Y = 0;
 const EXIT_TRANSLATE_Y = 8;
 
+/** The body on screen, and how many times it has been swapped. */
+type Rendered = { step: number; swaps: number };
+
 /**
  * Cross-fades a multi-step screen's body between steps (Daily Study, Quick
  * Check, New Plan). `step` updates at once, so step indicators move immediately; the
@@ -14,9 +17,14 @@ const EXIT_TRANSLATE_Y = 8;
  * 150ms. The same sequence plays forward and back, the two bodies are never
  * both at full opacity, and nothing animates on first mount. The screen's
  * header and chrome never move.
+ *
+ * The fade-in starts only once React has actually swapped the body in. It
+ * can't start from the fade-out's completion: that runs on the UI thread, and
+ * the swap reaches React a few frames later — so for those frames the
+ * outgoing body would fade back in.
  */
 export function useStepTransition(step: number) {
-  const [renderedStep, setRenderedStep] = useState(step);
+  const [rendered, setRendered] = useState<Rendered>({ step, swaps: 0 });
   const progress = useSharedValue(1);
   const isFirstRender = useRef(true);
 
@@ -25,16 +33,25 @@ export function useStepTransition(step: number) {
       isFirstRender.current = false;
       return;
     }
+    // Always a new swap, even back to the body already rendered, so the
+    // fade-in below always follows.
+    const swapTo = (next: number) =>
+      setRendered((previous) => ({ step: next, swaps: previous.swaps + 1 }));
     // The completion callback runs as a worklet on the UI thread, so the
     // React state setter has to hop back to JS through `runOnJS` — calling it
-    // directly crashes on device. Reassigning `progress.value` from the same
-    // worklet is the normal way to chain the fade-in.
-    progress.value = withTiming(0, { duration: OUT_DURATION }, (finished) => {
-      if (!finished) return;
-      runOnJS(setRenderedStep)(step);
-      progress.value = withTiming(1, { duration: IN_DURATION });
-    });
+    // directly crashes on device.
+    progress.set(
+      withTiming(0, { duration: OUT_DURATION }, (finished) => {
+        if (finished) runOnJS(swapTo)(step);
+      }),
+    );
   }, [step, progress]);
+
+  // Runs after React has committed the swapped-in body.
+  useEffect(() => {
+    if (rendered.swaps === 0) return;
+    progress.set(withTiming(1, { duration: IN_DURATION }));
+  }, [rendered.swaps, progress]);
 
   const bodyStyle = useAnimatedStyle(() => ({
     opacity: progress.value,
@@ -43,5 +60,5 @@ export function useStepTransition(step: number) {
     ],
   }));
 
-  return { renderedStep, bodyStyle };
+  return { renderedStep: rendered.step, bodyStyle };
 }

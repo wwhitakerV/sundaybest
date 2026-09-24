@@ -27,6 +27,15 @@ describe("getStageGeometry", () => {
     expect(geometry.liftBottom).toBeLessThan(captionTop);
   });
 
+  it("runs the progress line between the lifted card and the caption, in the white", () => {
+    const captionTop = 280 - geometry.caption.bottom - geometry.caption.height;
+    const progressTop = 280 - geometry.progress.bottom;
+
+    expect(progressTop).toBeLessThan(captionTop);
+    expect(progressTop).toBeGreaterThan(geometry.liftBottom);
+    expect(progressTop).toBeGreaterThanOrEqual(geometry.fade.to);
+  });
+
   it("gives a taller stage more room for the lifted card", () => {
     expect(getStageGeometry(393, 400).liftBottom).toBeGreaterThan(geometry.liftBottom);
   });

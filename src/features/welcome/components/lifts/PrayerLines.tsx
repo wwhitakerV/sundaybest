@@ -1,69 +1,34 @@
-import { StyleSheet, View } from "react-native";
-import Animated from "react-native-reanimated";
+import { StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/theme";
-import { useFadeTo } from "../../hooks/use-tap-feedback";
-import { PRAYER_LINES, getPrayScene } from "../../logic/scenes";
+import { PRAYER_LINES, getFilledPerLine, getPrayScene } from "../../logic/scenes";
 import type { LiftPieceProps } from "./lift-piece";
 
-/** Lines not yet prayed rest faintly, so the card is never blank. */
-const RESTING_OPACITY = 0.22;
-// The glow: concentric accent discs, faintest outermost.
-// Sized to stay inside the lifted card, so nothing needs clipping.
-const GLOW_RINGS = [
-  { size: 170, opacity: 0.06 },
-  { size: 120, opacity: 0.08 },
-  { size: 76, opacity: 0.1 },
-] as const;
-
-function PrayerLine({ text, shown }: { text: string; shown: boolean }) {
-  const theme = useTheme();
-  const fadeStyle = useFadeTo(shown ? 1 : RESTING_OPACITY, 420);
-
-  return (
-    <Animated.Text style={[theme.typography.scripture, { color: theme.colors.text }, fadeStyle]}>
-      {text}
-    </Animated.Text>
-  );
-}
-
 /**
- * The day's prayer. As its scene plays, a warm glow comes up behind it and
- * its lines come in one after another, as if being prayed.
+ * The day's prayer. It rests grey; as its scene plays, black fills across it
+ * a character at a time, line after line — a karaoke highlight, as if it were
+ * being read aloud. Each line is just two runs of text (filled, then not), so
+ * it stays sharp and cheap to redraw.
  */
 export function PrayerLines({ elapsedMs }: LiftPieceProps) {
   const theme = useTheme();
-  const scene = getPrayScene(elapsedMs);
-  const glowStyle = useFadeTo(scene.glowing ? 1 : 0, 500);
+  const filledPerLine = getFilledPerLine(getPrayScene(elapsedMs).filledChars);
 
   return (
     <View style={styles.lines}>
-      <Animated.View style={[styles.glow, glowStyle]} pointerEvents="none">
-        {GLOW_RINGS.map(({ size, opacity }) => (
-          <View
-            key={size}
-            style={[
-              styles.ring,
-              {
-                width: size,
-                height: size,
-                borderRadius: size / 2,
-                backgroundColor: theme.colors.accent,
-                opacity,
-              },
-            ]}
-          />
-        ))}
-      </Animated.View>
-      {PRAYER_LINES.map((line, position) => (
-        <PrayerLine key={line} text={line} shown={position < scene.shownLines} />
-      ))}
+      {PRAYER_LINES.map((line, position) => {
+        const filled = filledPerLine.at(position) ?? 0;
+        return (
+          <Text key={line} style={[theme.typography.scripture, { color: theme.colors.border }]}>
+            <Text style={{ color: theme.colors.text }}>{line.slice(0, filled)}</Text>
+            {line.slice(filled)}
+          </Text>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   lines: { paddingVertical: 4 },
-  glow: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
-  ring: { position: "absolute" },
 });

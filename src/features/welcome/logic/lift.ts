@@ -77,3 +77,39 @@ export function getLiftLayout({
     },
   };
 }
+
+export type RevealWindow = {
+  /** The bottom of the part of the phone in view, in the mock's own layout (design points). */
+  visibleBottom: number;
+  /** Clear space kept below the piece once it's scrolled into view. */
+  bottomMargin: number;
+};
+
+/**
+ * How far a screen should scroll (design points, 0 = top) to bring `anchor`
+ * just into view above the bottom of the part of the phone the stage shows —
+ * no further than it needs to, and not at all if it's already in view.
+ */
+export function getScrollToReveal(anchor: DesignRect, window: RevealWindow): number {
+  return Math.max(0, anchor.y + anchor.height + window.bottomMargin - window.visibleBottom);
+}
+
+export type ScrollWindow = {
+  /** Where the screen's scrolling content starts, in the mock's own layout (design points). */
+  contentTop: number;
+  /** How far the content can scroll at most. */
+  maxScroll: number;
+  /** Clear space kept above the piece once it's scrolled to. */
+  topMargin: number;
+};
+
+/**
+ * How far a screen should scroll (design points, 0 = top) to bring `anchor`
+ * into view near the top of the part of the phone the stage shows — high
+ * enough to be clearly seen before it lifts, and never past either end of
+ * the page.
+ */
+export function getScrollToShow(anchor: DesignRect, window: ScrollWindow): number {
+  const wanted = anchor.y - window.contentTop - window.topMargin;
+  return Math.min(window.maxScroll, Math.max(0, wanted));
+}

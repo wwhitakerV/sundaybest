@@ -14,8 +14,8 @@ export type StageLiftProps = {
   /** Its size and place in the mock — it's laid out at exactly this size. */
   anchor: DesignRect;
   layout: LiftLayout;
-  /** The floating card's padding around the piece, at real size. */
-  cardPadding: number;
+  /** The floating card behind the piece: padding around it and corner radius, at real size. */
+  backing: { padding: number; radius: number };
   /** Up in the foreground, or on its way back down. */
   lifted: boolean;
 };
@@ -27,14 +27,7 @@ export type StageLiftProps = {
  * hides meanwhile), and the card behind it only exists once it's off the
  * phone — so the hand-off can't be seen. Mount one per turn.
  */
-export function StageLift({
-  Piece,
-  elapsedMs,
-  anchor,
-  layout,
-  cardPadding,
-  lifted,
-}: StageLiftProps) {
+export function StageLift({ Piece, elapsedMs, anchor, layout, backing, lifted }: StageLiftProps) {
   const theme = useTheme();
   const { moveStyle, sizeStyle, cardStyle } = useLiftMotion(lifted, layout);
 
@@ -48,11 +41,11 @@ export function StageLift({
           style={[
             styles.card,
             {
-              top: -cardPadding,
-              left: -cardPadding,
-              right: -cardPadding,
-              bottom: -cardPadding,
-              borderRadius: cardPadding + 18,
+              top: -backing.padding,
+              left: -backing.padding,
+              right: -backing.padding,
+              bottom: -backing.padding,
+              borderRadius: backing.radius,
               backgroundColor: theme.colors.background,
               borderColor: theme.colors.hairline,
               shadowColor: theme.colors.shadow,

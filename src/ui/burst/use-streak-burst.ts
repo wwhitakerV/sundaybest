@@ -10,32 +10,31 @@ import {
 
 import type { BurstStreak } from "@/utils/burst/makeBurstStreaks";
 
-// Shorter than the spin, so the streaks are gone by the time the coin lands.
+/** One burst, launch to gone. (On a tab icon it ends just before the coin-spin lands.) */
 const BURST_DURATION_MS = 460;
 const BURST_EASING = Easing.out(Easing.cubic);
 /** Streaks grow to full length over this first part of the flight… */
 const GROW_UNTIL = 0.2;
-/** …hold full opacity until here — by then they're clearing the bar — then
- * fade out by the end, above it. */
+/** …hold full opacity until here, then fade out by the end. */
 const FADE_FROM = 0.65;
 /** How much of its length a streak keeps at the end of the flight. */
 const END_LENGTH_SCALE = 0.15;
 
 /**
- * Drives one burst per activation (see `useActivationCount`). Activation 0
- * is mount, which doesn't burst. Returns the shared 0→1 progress that every
- * streak reads, so the whole fan moves as one crisp gesture.
+ * Drives one burst each time `trigger` changes to a new non-null value; null
+ * means nothing to burst for (yet). Returns the shared 0→1 progress that
+ * every streak reads, so the whole fan moves as one crisp gesture.
  */
-export function useTabIconBurst(activation: number): SharedValue<number> {
+export function useStreakBurst(trigger: string | number | null): SharedValue<number> {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    if (activation === 0) return;
+    if (trigger === null) return;
     progress.value = withSequence(
       withTiming(0, { duration: 0 }),
       withTiming(1, { duration: BURST_DURATION_MS, easing: BURST_EASING }),
     );
-  }, [activation, progress]);
+  }, [trigger, progress]);
 
   return progress;
 }
@@ -44,7 +43,7 @@ export function useTabIconBurst(activation: number): SharedValue<number> {
  * One streak's motion, split in two so no transform order is relied on:
  *
  * - `travelStyle` (translate only) moves the streak's centre from the burst's
- *   origin out along its angle to its `reach`, above the bar. The x/y offsets
+ *   origin out along its angle to its `reach`. The x/y offsets
  *   are computed here rather than by rotating then translating.
  * - `lengthStyle` (scaleY only, applied inside a view that's statically
  *   rotated to the streak's angle) grows the line almost at once, then thins

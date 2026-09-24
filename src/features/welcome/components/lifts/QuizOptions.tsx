@@ -16,6 +16,9 @@ const OPTIONS = [
 const ANSWER = "B";
 /** Once the answer is shown, the wrong options step back. */
 const DIMMED_OPACITY = 0.35;
+const OPTION_RADIUS = 24;
+/** The picked outline's weight — drawn over the 1pt border, never in layout. */
+const PICKED_OUTLINE = 2;
 
 function Option({
   letter,
@@ -33,28 +36,27 @@ function Option({
   const theme = useTheme();
   const markStyle = usePopIn(right);
   const fadeStyle = useFadeTo(dimmed ? DIMMED_OPACITY : 1);
+  const outlineColor = right ? theme.colors.selected : theme.colors.text;
 
   return (
     <Animated.View
       style={[
         styles.option,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: right
-            ? theme.colors.selected
-            : picked
-              ? theme.colors.text
-              : theme.colors.divider,
-          borderWidth: picked ? 2 : 1,
-        },
+        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
         fadeStyle,
       ]}
     >
+      {/* Every option keeps the same 1pt border, so picking one never moves
+          anything; the heavier outline is a layer over it. */}
+      {picked && (
+        <View pointerEvents="none" style={[styles.outline, { borderColor: outlineColor }]} />
+      )}
       <View
         style={[
           styles.letter,
           {
-            borderColor: theme.colors.divider,
+            // The green check reads as one solid disc: its border takes the fill.
+            borderColor: right ? theme.colors.selected : theme.colors.divider,
             backgroundColor: right
               ? theme.colors.selected
               : picked
@@ -120,9 +122,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
-    borderRadius: 24,
+    borderWidth: 1,
+    borderRadius: OPTION_RADIUS,
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+  // Sits exactly over the 1pt border (outset by it), heavier.
+  outline: {
+    position: "absolute",
+    top: -1,
+    left: -1,
+    right: -1,
+    bottom: -1,
+    borderWidth: PICKED_OUTLINE,
+    borderRadius: OPTION_RADIUS + 1,
   },
   letter: {
     width: 32,

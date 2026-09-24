@@ -4,16 +4,24 @@ import {
   PASTE_LINK,
   PASTE_SCENE,
   PRAYER_LINES,
-  READ_WORDS,
+  PRAY_SCENE,
+  SCRIPTURE_WORDS,
   REFLECT_ANSWER,
+  getActiveLift,
+  getCreateScene,
+  getListenScene,
+  LISTEN_SCENE,
+  getLiftElapsedMs,
   getLiftState,
+  getScrollTargetIndex,
+  SCROLL,
   getPasteScene,
   getPlanEndsLine,
   getPlanScene,
-  getPreviewScene,
+  getFilledPerLine,
   getPrayScene,
   getQuizScene,
-  getReadScene,
+  getScriptureScene,
   getReflectScene,
   getTurnMs,
 } from "@/features/welcome/logic/scenes";
@@ -49,7 +57,104 @@ describe("getLiftState", () => {
   it("fits the whole lift inside the card's turn", () => {
     const landed = LIFTED_AT_MS + SCENE_MS + LIFT.backMs + LIFT.handoffMs;
 
-    expect(getTurnMs(SCENE_MS)).toBeGreaterThan(landed);
+    expect(getTurnMs([{ sceneMs: SCENE_MS }])).toBeGreaterThan(landed);
+  });
+});
+
+describe("a turn with several lifts", () => {
+  const LIFTS = [{ sceneMs: 1000 }, { sceneMs: 500 }];
+  const secondStartMs =
+    LIFT.startMs + LIFT.outMs + 1000 + LIFT.backMs + LIFT.handoffMs + LIFT.gapMs;
+
+  it("plays the first lift first, on the turn's own clock", () => {
+    expect(getActiveLift(LIFT.startMs, LIFTS)).toMatchObject({
+      index: 0,
+      elapsedMs: LIFT.startMs,
+    });
+  });
+
+  it("pauses between lifts, with nothing off the phone", () => {
+    expect(getActiveLift(secondStartMs - 1, LIFTS)).toBeNull();
+  });
+
+  it("plays the second once the first has landed, its clock starting as if it were first", () => {
+    expect(getActiveLift(secondStartMs, LIFTS)).toMatchObject({
+      index: 1,
+      elapsedMs: LIFT.startMs,
+    });
+  });
+
+  it("holds a later lift's piece at its start until its lift", () => {
+    expect(getLiftElapsedMs(LIFT.startMs, LIFTS, 1)).toBe(0);
+  });
+
+  it("shows every piece finished once the turn is over", () => {
+    expect(getLiftElapsedMs(Infinity, LIFTS, 1)).toBe(Infinity);
+  });
+
+  it("lasts long enough for both lifts", () => {
+    const secondLandedMs = secondStartMs + LIFT.outMs + 500 + LIFT.backMs + LIFT.handoffMs;
+
+    expect(getTurnMs(LIFTS)).toBeGreaterThan(secondLandedMs);
+  });
+});
+
+describe("scrolling into view before a lift", () => {
+  const LEAD = SCROLL.leadMs;
+  const LIFTS = [
+    { sceneMs: 1000, leadMs: LEAD },
+    { sceneMs: 500, leadMs: LEAD },
+  ];
+
+  it("waits out the lead-in before the first lift", () => {
+    expect(getActiveLift(LIFT.startMs + LEAD - 1, LIFTS)).toBeNull();
+    expect(getActiveLift(LIFT.startMs + LEAD, LIFTS)?.index).toBe(0);
+  });
+
+  it("stays at the top until the first lead-in begins", () => {
+    expect(getScrollTargetIndex(LIFT.startMs - 1, LIFTS)).toBeNull();
+  });
+
+  it("scrolls to each piece as its lead-in begins", () => {
+    expect(getScrollTargetIndex(LIFT.startMs, LIFTS)).toBe(0);
+
+    const firstLandedMs =
+      LIFT.startMs + LEAD + LIFT.outMs + 1000 + LIFT.backMs + LIFT.handoffMs + LIFT.gapMs;
+    expect(getScrollTargetIndex(firstLandedMs, LIFTS)).toBe(1);
+  });
+
+  it("gives the scroll time to finish before the piece lifts", () => {
+    expect(SCROLL.leadMs).toBeGreaterThan(SCROLL.durationMs);
+  });
+});
+
+describe("waiting before a lift's lead-in", () => {
+  const LIFTS = [{ sceneMs: 1000, waitMs: 500, leadMs: SCROLL.leadMs }];
+
+  it("holds the screen still before it starts scrolling", () => {
+    expect(getScrollTargetIndex(LIFT.startMs + 499, LIFTS)).toBeNull();
+    expect(getScrollTargetIndex(LIFT.startMs + 500, LIFTS)).toBe(0);
+  });
+
+  it("lifts once the wait and the lead-in are both over", () => {
+    expect(getActiveLift(LIFT.startMs + 500 + SCROLL.leadMs - 1, LIFTS)).toBeNull();
+    expect(getActiveLift(LIFT.startMs + 500 + SCROLL.leadMs, LIFTS)?.index).toBe(0);
+  });
+});
+
+describe("pausing after a lift", () => {
+  const LIFTS = [{ sceneMs: 1000, afterMs: 700 }, { sceneMs: 500 }];
+  const firstLandedMs = LIFT.startMs + LIFT.outMs + 1000 + LIFT.backMs + LIFT.handoffMs;
+
+  it("holds still before the next lift", () => {
+    expect(getActiveLift(firstLandedMs + LIFT.gapMs + 699, LIFTS)).toBeNull();
+    expect(getActiveLift(firstLandedMs + LIFT.gapMs + 700, LIFTS)?.index).toBe(1);
+  });
+
+  it("holds still before the turn ends, after the last", () => {
+    const withPause = getTurnMs([{ sceneMs: 1000, afterMs: 700 }]);
+
+    expect(withPause).toBe(getTurnMs([{ sceneMs: 1000 }]) + 700);
   });
 });
 
@@ -83,9 +188,9 @@ describe("getPlanScene", () => {
     expect(getPlanScene(0)).toEqual({ selectedDay: null });
   });
 
-  it("picks 3 days, then changes to 6", () => {
-    expect(getPlanScene(LIFTED_AT_MS + 300).selectedDay).toBe(3);
-    expect(getPlanScene(LIFTED_AT_MS + 850).selectedDay).toBe(6);
+  it("picks a day once the days are up", () => {
+    expect(getPlanScene(LIFTED_AT_MS + 299).selectedDay).toBeNull();
+    expect(getPlanScene(LIFTED_AT_MS + 300).selectedDay).toBe(6);
   });
 
   it("finishes with 6 days picked", () => {
@@ -107,17 +212,35 @@ describe("getPlanEndsLine", () => {
   });
 });
 
-describe("getPreviewScene", () => {
-  it("taps into the sermon card once it's up", () => {
-    expect(getPreviewScene(0).tapped).toBe(false);
-    expect(getPreviewScene(Infinity).tapped).toBe(true);
+describe("getCreateScene", () => {
+  it("presses Create my plan after the day is picked", () => {
+    expect(getCreateScene(LIFTED_AT_MS + 300).pressed).toBe(false);
+    expect(getCreateScene(Infinity).pressed).toBe(true);
   });
 });
 
-describe("getReadScene", () => {
+describe("getListenScene", () => {
+  it("waits to be played, showing where this part of the sermon starts", () => {
+    expect(getListenScene(0)).toEqual({ playing: false, clock: "18:42" });
+  });
+
+  it("plays once pressed, from 18:42", () => {
+    expect(getListenScene(LISTEN_SCENE.pressAtMs)).toEqual({ playing: true, clock: "18:42" });
+  });
+
+  it("ticks the sermon's clock on as it plays", () => {
+    expect(getListenScene(LISTEN_SCENE.pressAtMs + 1000).clock).toBe("18:43");
+  });
+
+  it("stops ticking where the scene ends", () => {
+    expect(getListenScene(Infinity).clock).toBe("18:43");
+  });
+});
+
+describe("getScriptureScene", () => {
   it("lights the verse's words one after another, ending with all lit", () => {
-    expect(getReadScene(0).litWords).toBe(0);
-    expect(getReadScene(Infinity).litWords).toBe(READ_WORDS.length);
+    expect(getScriptureScene(0).litWords).toBe(0);
+    expect(getScriptureScene(Infinity).litWords).toBe(SCRIPTURE_WORDS.length);
   });
 });
 
@@ -129,15 +252,25 @@ describe("getReflectScene", () => {
 });
 
 describe("getPrayScene", () => {
-  it("brings every line in by the end", () => {
-    expect(getPrayScene(0).shownLines).toBe(0);
-    expect(getPrayScene(Infinity).shownLines).toBe(PRAYER_LINES.length);
+  it("starts with none of the prayer filled, and ends with all of it", () => {
+    const total = PRAYER_LINES.join("").length;
+
+    expect(getPrayScene(0).filledChars).toBe(0);
+    expect(getPrayScene(Infinity).filledChars).toBe(total);
   });
 
-  it("glows only while the prayer is up, not at rest", () => {
-    expect(getPrayScene(0).glowing).toBe(false);
-    expect(getPrayScene(LIFTED_AT_MS).glowing).toBe(true);
-    expect(getPrayScene(Infinity).glowing).toBe(false);
+  it("finishes filling before the prayer goes back down", () => {
+    const total = PRAYER_LINES.join("").length;
+
+    expect(getPrayScene(LIFTED_AT_MS + PRAY_SCENE.sceneMs).filledChars).toBe(total);
+  });
+});
+
+describe("getFilledPerLine", () => {
+  it("fills the lines in order, finishing each before starting the next", () => {
+    const first = PRAYER_LINES[0]?.length ?? 0;
+
+    expect(getFilledPerLine(first + 3)).toEqual([first, 3, 0, 0]);
   });
 });
 

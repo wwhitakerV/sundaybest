@@ -13,6 +13,7 @@ import type { LiftPlacement } from "../logic/lift";
  *   │  ▯  │  ┌─ lifted piece ─┐ │ ▯ │
  *   │     │  └────────────────┘ │   │  liftBottom
  *   │     … phones fade to white …  │  fade.to
+ *   │━━━━━━━━ progress line ────────│
  *   │         ☐ step caption        │  captionTop
  *   └───────────────────────────────┘  stage height (flexes with the page)
  */
@@ -36,6 +37,11 @@ export const PIVOT_DISTANCE = BUILD_HEIGHT * REST_SCALE * 1.6;
 export const TOP_PAD = 14;
 /** How strongly the cards not on stage are dimmed. */
 export const SUPPORT_OPACITY = 0.5;
+/**
+ * How far the hand sits below the big phone's top. A tilted card's inner top
+ * corner rises as it swings; this keeps it from peeking over the big phone.
+ */
+export const HAND_DROP = 8;
 
 /** The stage never gets shorter than this; below it, the page scrolls. */
 export const MIN_STAGE_HEIGHT = 230;
@@ -46,8 +52,10 @@ const CAPTION_BOTTOM = 4;
 const CAPTION_CLEARANCE = 6;
 /** The ramp from clear to white above that. */
 const FADE_RAMP = 64;
-/** Gap between the lifted card and the caption. */
-const LIFT_GAP = 10;
+/** Gap between the lifted card and the caption — room for the progress line between. */
+const LIFT_GAP = 14;
+/** The progress line's gap above the caption. */
+const PROGRESS_GAP = 4;
 const LIFT_MIN_TOP = 6;
 /** Clear space either side of the lifted card. */
 export const LIFT_SIDE_PADDING = 8;
@@ -56,6 +64,8 @@ export const LIFT_CARD_PADDING = 12;
 
 export type StageGeometry = {
   caption: { bottom: number; height: number };
+  /** The story's progress line, full width, just above the caption. */
+  progress: { bottom: number };
   /** Where the phones fade: clear at `from`, white by `to`. */
   fade: { from: number; to: number };
   /** The fade layer: that ramp, then solid white to the bottom. */
@@ -75,6 +85,7 @@ export function getStageGeometry(width: number, height: number): StageGeometry {
 
   return {
     caption: { bottom: CAPTION_BOTTOM, height: CAPTION_HEIGHT },
+    progress: { bottom: CAPTION_BOTTOM + CAPTION_HEIGHT + PROGRESS_GAP },
     fade: { from: fadeFrom, to: whiteFrom },
     fadeLayer: { height: height - fadeFrom, solidHeight: height - whiteFrom },
     liftBottom: captionTop - LIFT_GAP,

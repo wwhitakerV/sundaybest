@@ -4,16 +4,18 @@ import { StyleSheet, View } from "react-native";
 import { LiftAnchorContext } from "./lift-anchor-context";
 
 export type LiftAnchorProps = {
+  /** Which piece this is — `getLiftId(turn, index)`. */
+  id: string;
   children: ReactNode;
 };
 
 /**
- * Marks the piece of a mock screen that lifts off the phone on its turn.
+ * Marks a piece of a mock screen that lifts off the phone on its turn.
  * Reports where the piece sits in the mock (measured, so it stays right if
  * the mock's layout changes) and hides it while its foreground copy is up.
- * Outside a fan card it's just a plain wrapper.
+ * Outside the big phone it's just a plain wrapper.
  */
-export function LiftAnchor({ children }: LiftAnchorProps) {
+export function LiftAnchor({ id, children }: LiftAnchorProps) {
   const context = useContext(LiftAnchorContext);
   const ref = useRef<View>(null);
 
@@ -22,7 +24,7 @@ export function LiftAnchor({ children }: LiftAnchorProps) {
     const self = ref.current;
     if (!context || !frame || !self) return;
     self.measureLayout(frame, (x, y, width, height) => {
-      context.onAnchor({ x, y, width, height });
+      context.onAnchor(id, { x, y, width, height });
     });
   }
 
@@ -32,7 +34,7 @@ export function LiftAnchor({ children }: LiftAnchorProps) {
       ref={ref}
       collapsable={false}
       onLayout={measure}
-      style={context?.hidden ? styles.hidden : undefined}
+      style={context?.hiddenId === id ? styles.hidden : undefined}
     >
       {children}
     </View>

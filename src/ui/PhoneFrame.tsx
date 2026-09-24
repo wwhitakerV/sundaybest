@@ -10,16 +10,21 @@ const SCREEN_HEIGHT = 852;
 const BEZEL = 12;
 const SCREEN_RADIUS = 50;
 
+// One-off device chrome, drawn to match iOS rather than the app's own type
+// scale: the status bar is the system's, not ours.
+const STATUS_BAR_HEIGHT = 54;
+
 /** Outer size of a `PhoneFrame`, bezel included — what a scaler scales. */
 export const PHONE_FRAME = {
+  /** The content area inside the bezel, below the status bar — where a screen is laid out. */
+  contentTop: BEZEL + STATUS_BAR_HEIGHT,
+  contentWidth: SCREEN_WIDTH,
+  contentHeight: SCREEN_HEIGHT - STATUS_BAR_HEIGHT,
   width: SCREEN_WIDTH + BEZEL * 2,
   height: SCREEN_HEIGHT + BEZEL * 2,
   radius: SCREEN_RADIUS + BEZEL,
 } as const;
 
-// One-off device chrome, drawn to match iOS rather than the app's own type
-// scale: the status bar is the system's, not ours.
-const STATUS_BAR_HEIGHT = 54;
 const STATUS_TIME_STYLE = { fontSize: 17, fontWeight: "600" } as const;
 const STATUS_ICON_SIZE = 18;
 const ISLAND = { width: 125, height: 37, top: 11 } as const;

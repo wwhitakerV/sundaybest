@@ -22,7 +22,7 @@ export function PasteField({ elapsedMs }: LiftPieceProps) {
     <View
       style={[
         styles.field,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
       ]}
     >
       <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />

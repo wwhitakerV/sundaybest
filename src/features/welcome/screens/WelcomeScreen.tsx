@@ -7,10 +7,9 @@ import { DayStrip } from "@/ui/DayStrip";
 import { useTheme } from "@/theme";
 import { SAMPLE_PLAN_ID, planOverviewHref } from "@/features/plans";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
-import { ScreenFan } from "../components/ScreenFan";
+import { IntroStory } from "../components/IntroStory";
 import { WelcomeSteps } from "../components/WelcomeSteps";
-import { useStoryPhase } from "../hooks/use-story-phase";
-import { STORY_BEATS } from "../logic/story";
+import { useVisit } from "../hooks/use-visit";
 
 export function WelcomeScreen() {
   const theme = useTheme();
@@ -18,7 +17,10 @@ export function WelcomeScreen() {
   // The intro story tells how it works. With Reduce Motion on it holds still
   // on its opening — the first screen on stage — and the steps are listed instead.
   const reduceMotion = useReduceMotion();
-  const phase = useStoryPhase(STORY_BEATS, reduceMotion);
+  // It plays only while the screen can be seen, and starts over on every
+  // visit: once covered it's unmounted (its timers and animations with it),
+  // and it mounts fresh once the screen has come back and settled.
+  const visit = useVisit();
 
   return (
     <Screen testID="welcome-screen">
@@ -53,12 +55,6 @@ export function WelcomeScreen() {
           We keep you in God&apos;s word. All week.
         </Text>
 
-        <ScreenFan
-          testID="welcome-screen-fan"
-          phase={phase}
-          style={reduceMotion ? styles.stillFan : styles.stage}
-        />
-
         <Text
           style={[
             theme.typography.display,
@@ -66,9 +62,21 @@ export function WelcomeScreen() {
             { color: theme.colors.text },
           ]}
         >
-          {"A new kind of Bible plan. "}
-          <Text style={{ color: theme.colors.textMuted }}>Built from the sermons you love.</Text>
+          {"A new way to "}
+          <Text style={{ color: theme.colors.textMuted }}>study the sermons you love.</Text>
         </Text>
+
+        {visit.visible ? (
+          <IntroStory
+            key={visit.count}
+            testID="welcome-screen-fan"
+            paused={reduceMotion}
+            style={reduceMotion ? styles.stillFan : styles.stage}
+          />
+        ) : (
+          // Holds its place while out of view, so the page doesn't reflow.
+          <View style={reduceMotion ? styles.stillFan : styles.stage} />
+        )}
 
         {reduceMotion && <WelcomeSteps />}
 
@@ -107,25 +115,27 @@ export function WelcomeScreen() {
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: 24 },
-  // 12px above and below the wordmark. The week row's own 29 (the spec's 24
-  // from the brand-mark area) is measured from this bar's edge, so it carries
-  // 17 here and the bar's 12 makes up the rest.
-  header: { paddingVertical: 12 },
+  // 20px above the wordmark and 12px below. The week row's own 29 (the spec's
+  // 24 from the brand-mark area) is measured from this bar's edge, so it
+  // carries 17 here and the bar's 12 makes up the rest.
+  header: { paddingTop: 20, paddingBottom: 12 },
   weekRow: { marginTop: 17 },
   supporting: { marginTop: 15 },
   // With the intro playing, the page flows top-down and the stage takes all
   // the height the rest leaves, so the phone on stage is as big as the
-  // device allows. Full-bleed: the stage runs past the 24pt page inset.
-  stage: { flex: 1, marginTop: 12, marginHorizontal: -24 },
-  hero: { marginTop: 20 },
-  actions: { marginTop: 24, paddingBottom: 8 },
+  // device allows. Full-bleed: the stage runs past the 24pt page inset. It
+  // stops 20pt short of the buttons, so a little more of the phone is cut
+  // off under its fade, and the steps line sits higher on it.
+  stage: { flex: 1, marginTop: 22, marginBottom: 20, marginHorizontal: -24 },
+  hero: { marginTop: 26 },
+  actions: { marginTop: 24, paddingBottom: 20 },
   // With Reduce Motion on, the hand holds still at a fixed size and the page
   // anchors from the bottom: fan, headline, and the steps listed, sitting
   // together above the buttons, any spare height above the fan.
   stillFan: { height: 230, marginTop: "auto", marginHorizontal: -24 },
   stillHero: { marginTop: 36 },
   // A fixed, generous gap from the end of the list down to the buttons.
-  stillActions: { marginTop: 40, paddingBottom: 8 },
+  stillActions: { marginTop: 40, paddingBottom: 20 },
   secondaryAction: { marginTop: 12 },
   footnote: { marginTop: 17, textAlign: "center" },
 });
