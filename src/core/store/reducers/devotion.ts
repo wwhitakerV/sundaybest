@@ -45,6 +45,24 @@ export function updateReflection(state: AppState, action: Action<"reflection/upd
   };
 }
 
+/**
+ * An answer taken back: the user emptied it, so the question is unanswered
+ * again — any time after, like a change. Nothing to clear on one not answered.
+ */
+export function clearReflection(state: AppState, action: Action<"reflection/clear">): AppState {
+  const reflection = findById(state.reflections, action.reflectionId);
+  if (!reflection || reflection.answer === null) return state;
+  return {
+    ...state,
+    reflections: withRecord(state.reflections, {
+      ...reflection,
+      answer: null,
+      answeredAt: null,
+      updatedAt: action.at,
+    }),
+  };
+}
+
 /** A day's prayer, prayed — once. */
 export function markPrayed(state: AppState, action: Action<"prayer/markPrayed">): AppState {
   const prayer = findById(state.prayers, action.prayerId);

@@ -13,6 +13,12 @@ const { capsuleHeight, capsuleRadius, sideMargin, bottomMargin } = FLOATING_NAV_
 
 const ARROW_ICON_SIZE = 20;
 const ARROW_STROKE_WIDTH = 2;
+/**
+ * Both ends of the bar are this wide, whatever they say — "Previous", "Next",
+ * "Finish" — so the dots stay centred and nothing shifts as a label changes.
+ * Fits the longest, "Previous", with its arrow.
+ */
+const SIDE_WIDTH = 96;
 
 export type StudyNavProps = {
   step: number;
@@ -66,7 +72,7 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           accessibilityRole="button"
           accessibilityLabel="Previous"
           onPress={onPrevious}
-          style={styles.side}
+          style={[styles.side, styles.sideStart]}
         >
           <ArrowLeft
             size={ARROW_ICON_SIZE}
@@ -102,7 +108,7 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           accessibilityRole="button"
           accessibilityLabel={finishLabel ?? "Next"}
           onPress={onNext}
-          style={styles.side}
+          style={[styles.side, styles.sideEnd]}
         >
           <Text
             style={[
@@ -146,8 +152,11 @@ const styles = StyleSheet.create({
   },
 
   side: {
+    width: SIDE_WIDTH,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
+  sideStart: { justifyContent: "flex-start" },
+  sideEnd: { justifyContent: "flex-end" },
 });

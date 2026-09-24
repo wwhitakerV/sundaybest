@@ -19,7 +19,7 @@ import { PlanCreationHeader } from "../components/PlanCreationHeader";
 import { QuickCheckToggle } from "../components/QuickCheckToggle";
 import { SermonLinkField } from "../components/SermonLinkField";
 import { SermonPreview } from "../components/SermonPreview";
-import { formatDuration } from "../logic/format-duration";
+import { formatDuration } from "@/utils/time/formatDuration";
 import {
   NEW_PLAN_STEPS,
   getNewPlanLeadingAction,

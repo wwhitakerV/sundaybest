@@ -4,11 +4,13 @@ import { Brain, Flame, House, LibraryBig } from "lucide-react-native";
 import { TabBar } from "@/ui/tab-bar/TabBar";
 import { TabIcon } from "@/ui/tab-bar/TabIcon";
 import { tapFeedback } from "@/core/haptics/haptics";
+import { headerEntranceLayout } from "@/ui/HeaderEntranceScope";
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
+      screenLayout={headerEntranceLayout}
       tabBar={(props) => <TabBar {...props} onPress={tapFeedback} />}
     >
       <Tabs.Screen

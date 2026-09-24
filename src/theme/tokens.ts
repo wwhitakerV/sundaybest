@@ -40,6 +40,9 @@ const palette = {
   overlayStrongOnDark: "rgba(255, 255, 255, 0.18)",
   // Darkening laid over video thumbnails, under their play button and time.
   scrim: "rgba(0, 0, 0, 0.45)",
+  // A see-through rim around a floating card: the page, frosted.
+  frost: "rgba(255, 255, 255, 0.6)",
+  frostOnDark: "rgba(11, 13, 18, 0.6)",
   // The Daily Study step labels (Read/Scripture/Reflect/Pray) beneath the
   // progress lines. Pure black per spec — distinct from `black` above,
   // which is the app's near-black brand value, not literal #000.
@@ -98,6 +101,11 @@ type ColorTokens = {
   mediaScrim: string;
   /** Text and icons on `mediaScrim`. */
   onMediaScrim: string;
+  /**
+   * The see-through rim of a card floating over the page — the Welcome
+   * story's lifted pieces. What's behind it shows through, faintly.
+   */
+  frostedRim: string;
 };
 
 const lightColors: ColorTokens = {
@@ -126,6 +134,7 @@ const lightColors: ColorTokens = {
   shadow: palette.pureBlack,
   mediaScrim: palette.scrim,
   onMediaScrim: palette.white,
+  frostedRim: palette.frost,
 };
 
 const darkColors: ColorTokens = {
@@ -156,6 +165,7 @@ const darkColors: ColorTokens = {
   // A thumbnail is dark or light on its own terms; the scrim reads the same.
   mediaScrim: palette.scrim,
   onMediaScrim: palette.white,
+  frostedRim: palette.frostOnDark,
 };
 
 /**

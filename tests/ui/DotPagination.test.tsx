@@ -44,5 +44,18 @@ describe("DotPagination", () => {
       expect(activeDot).toHaveStyle({ width: 20 });
       expect(inactiveDot).toHaveStyle({ width: 6 });
     });
+
+    it("moves the pill to the new active dot, the old one back to a dot", () => {
+      const view = render(
+        <DotPagination testID="a-dot-pagination" count={3} activeIndex={1} variant="pill" />,
+      );
+
+      view.rerender(
+        <DotPagination testID="a-dot-pagination" count={3} activeIndex={2} variant="pill" />,
+      );
+
+      expect(screen.getByTestId("a-dot-pagination-dot-2")).toHaveStyle({ width: 20 });
+      expect(screen.getByTestId("a-dot-pagination-dot-1")).toHaveStyle({ width: 6 });
+    });
   });
 });

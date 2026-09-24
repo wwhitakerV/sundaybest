@@ -29,6 +29,27 @@ describe("StudyNav", () => {
     expect(screen.getByTestId("study-nav-dots-dot-2")).toHaveStyle({ width: 20 });
   });
 
+  it("gives Previous and Next the same fixed width, so the bar never shifts", () => {
+    render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
+
+    expect(screen.getByTestId("study-nav-prev-button")).toHaveStyle({ width: 96 });
+    expect(screen.getByTestId("study-nav-next-button")).toHaveStyle({ width: 96 });
+  });
+
+  it("keeps Next's width when it turns into Finish", () => {
+    render(
+      <StudyNav
+        testID="study-nav"
+        step={3}
+        finishLabel="Finish"
+        onPrevious={jest.fn()}
+        onNext={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("study-nav-next-button")).toHaveStyle({ width: 96 });
+  });
+
   it("shows Previous and Next labels by default", () => {
     render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
 

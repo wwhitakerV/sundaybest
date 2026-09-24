@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { AppStoreProvider, INITIAL_STATE, appReducer, type AppState } from "@/core/store";
 import { DayCompleteScreen } from "@/features/plans/screens/DayCompleteScreen";
 
 jest.mock("expo-router", () => ({
@@ -16,6 +17,30 @@ const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, []>();
 
+// Three days: day 1 just finished, days 2 and 3 to go.
+const STORM = "plan-faith-through-the-storm";
+// One day: finishing it finishes the plan.
+const REST = "plan-come-to-me-and-rest";
+
+/** The store once `dayNumber` of `planId` has been finished. */
+function finished(planId: string, dayNumber: number): AppState {
+  return appReducer(INITIAL_STATE, {
+    type: "planDay/complete",
+    dayId: `${planId}-day-${dayNumber}`,
+    today: "2026-09-23",
+    at: "2026-09-23T07:00:00.000Z",
+  });
+}
+
+function renderDayComplete(planId: string, dayNumber: number) {
+  jest.mocked(useLocalSearchParams).mockReturnValue({ planId, day: String(dayNumber) });
+  return render(
+    <AppStoreProvider initialState={finished(planId, dayNumber)}>
+      <DayCompleteScreen />
+    </AppStoreProvider>,
+  );
+}
+
 beforeEach(() => {
   jest.mocked(useNavigation).mockReturnValue({
     getParent: () => ({ goBack: mockExitSession }),
@@ -29,22 +54,19 @@ beforeEach(() => {
 
 describe("DayCompleteScreen", () => {
   it("is addressable as day-complete-screen", () => {
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "1" });
-    render(<DayCompleteScreen />);
+    renderDayComplete(STORM, 1);
 
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
   });
 
   it("shows placeholder body text", () => {
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "1" });
-    render(<DayCompleteScreen />);
+    renderDayComplete(STORM, 1);
 
     expect(screen.getByText("...")).toBeVisible();
   });
 
   it("navigates to Quick Check — Question when the quick check action is pressed", () => {
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "1" });
-    render(<DayCompleteScreen />);
+    renderDayComplete(STORM, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
 
@@ -52,14 +74,13 @@ describe("DayCompleteScreen", () => {
       expect.objectContaining({
         pathname: "/study/[planId]/quick-check",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: "plan-three-day", day: "1" }),
+        params: expect.objectContaining({ planId: STORM, day: "1" }),
       }),
     );
   });
 
   it("navigates to Plans when the Plans action is pressed", () => {
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "1" });
-    render(<DayCompleteScreen />);
+    renderDayComplete(STORM, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-plans-button"));
 
@@ -68,8 +89,7 @@ describe("DayCompleteScreen", () => {
   });
 
   it("navigates to Home when the Home action is pressed", () => {
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "1" });
-    render(<DayCompleteScreen />);
+    renderDayComplete(STORM, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-home-button"));
 
@@ -77,10 +97,8 @@ describe("DayCompleteScreen", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/home");
   });
 
-  it("shows a next-day action when days remain in the plan", () => {
-    // plan-three-day: completedDays [1], totalDays 3 — day 1 just finished, day 2 remains.
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-three-day", day: "1" });
-    render(<DayCompleteScreen />);
+  it("offers the next day, now open, when days remain in the plan", () => {
+    renderDayComplete(STORM, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-next-day-button"));
 
@@ -88,16 +106,21 @@ describe("DayCompleteScreen", () => {
       expect.objectContaining({
         pathname: "/study/[planId]",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: "plan-three-day" }),
+        params: expect.objectContaining({ planId: STORM, day: "2" }),
       }),
     );
   });
 
-  it("does not show a next-day action once every day in the plan is complete", () => {
-    // plan-one-day: totalDays 1 — completing day 1 finishes the whole plan.
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-one-day", day: "1" });
-    render(<DayCompleteScreen />);
+  it("offers no next day once every day in the plan is complete", () => {
+    renderDayComplete(REST, 1);
 
     expect(screen.queryByTestId("day-complete-next-day-button")).toBeNull();
+  });
+
+  it("shows nothing for a plan that doesn't exist", () => {
+    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "no-such-plan", day: "1" });
+    render(<DayCompleteScreen />);
+
+    expect(screen.queryByTestId("day-complete-screen")).toBeNull();
   });
 });

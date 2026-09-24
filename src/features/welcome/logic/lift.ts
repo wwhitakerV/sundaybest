@@ -8,6 +8,15 @@
 /** A rect in a mock's own layout: real-phone points, from the phone frame's top left. */
 export type DesignRect = { x: number; y: number; width: number; height: number };
 
+/**
+ * The floating card a lifted piece rides on: a see-through rim around a solid
+ * container. The piece sits in the container, `inset` in from its edge — 0
+ * for a piece that is a card itself, room to breathe for one that isn't.
+ * `radius` is the container's corners (a card piece's own corners, so they
+ * line up); the rim's outer corners follow it, concentric.
+ */
+export type LiftBacking = { rim: number; inset: number; radius: number };
+
 /** A top-left position and uniform scale (about the top left), in the stage's coordinates. */
 export type LiftPlacement = { x: number; y: number; scale: number };
 

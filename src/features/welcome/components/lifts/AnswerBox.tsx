@@ -25,6 +25,9 @@ export function AnswerBox({ elapsedMs }: LiftPieceProps) {
   );
 }
 
+/** Its corners — shared with the floating card it lifts onto. */
+export const ANSWER_BOX_RADIUS = 20;
+
 const styles = StyleSheet.create({
-  box: { borderWidth: 1, borderRadius: 20, padding: 18, minHeight: 124 },
+  box: { borderWidth: 1, borderRadius: ANSWER_BOX_RADIUS, padding: 18, minHeight: 124 },
 });

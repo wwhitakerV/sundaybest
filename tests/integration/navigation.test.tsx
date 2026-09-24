@@ -1,4 +1,5 @@
 import { act, renderApp, screen, fireEvent } from "@tests/helpers/render";
+import { hasHeaderEntrance } from "@tests/helpers/header-entrance";
 
 import { BUILD_STAGE_MS, MOCK_TEST_LINKS } from "@/core/plan-builder";
 
@@ -119,6 +120,25 @@ describe("navigation", () => {
     BUILD_FLOW_TIMEOUT_MS,
   );
 
+  it("opens Plan Detail from Home's plan card within Home's own stack, and back again", () => {
+    const view = renderApp();
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+    // Pushed onto Home's stack (not the Plans tab's), so iOS's zoom
+    // transition can run from the card.
+    fireEvent.press(screen.getByTestId("home-tab-active-plan"));
+    expect(view.getPathname()).toBe("/home/plan-choose-whom-you-will-serve");
+    expect(screen.getByTestId("plan-overview-title")).toHaveTextContent(
+      "Choose Whom You Will Serve",
+    );
+
+    fireEvent.press(screen.getByTestId("plan-overview-back-button"));
+    expect(view.getPathname()).toBe("/home");
+
+    fireEvent.press(screen.getByTestId("home-tab-active-plan"));
+    expect(view.getPathname()).toBe("/home/plan-choose-whom-you-will-serve");
+  });
+
   it("walks Welcome -> Plan Overview for the sample plan", () => {
     const view = renderApp();
 
@@ -150,6 +170,35 @@ describe("navigation", () => {
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
     expect(view.getPathname()).toBe("/study/sample-plan/day-complete");
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
+  });
+
+  it("works through a whole day to its completion, and Plan Detail shows it done and the next day open", async () => {
+    renderApp();
+    fireEvent.press(screen.getByTestId("welcome-sample-plan-button"));
+    fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
+
+    // Read, Scripture, Reflect, and Pray — all day 1's.
+    expect(screen.getByText("Day 1 of 5")).toBeVisible();
+    expect(screen.getByText("Not left")).toBeVisible();
+    fireEvent.press(screen.getByTestId("study-nav-next-button"));
+    await screen.findByTestId("study-scripture-body");
+    expect(screen.getByText("Deuteronomy 31:6")).toBeVisible();
+    fireEvent.press(screen.getByTestId("study-nav-next-button"));
+    await screen.findByTestId("study-reflect-body");
+    fireEvent.changeText(screen.getByTestId("study-reflect-answer-1"), "Since the move.");
+    fireEvent.press(screen.getByTestId("study-nav-next-button"));
+    await screen.findByTestId("study-pray-body");
+    fireEvent.press(screen.getByTestId("study-nav-next-button"));
+    expect(screen.getByTestId("day-complete-screen")).toBeVisible();
+
+    // On to day 2, then out to the plan.
+    fireEvent.press(screen.getByTestId("day-complete-next-day-button"));
+    expect(screen.getByText("Day 2 of 5")).toBeVisible();
+    fireEvent.press(screen.getByTestId("study-close-button"));
+
+    expect(screen.getByTestId("plan-overview-day-1")).toHaveTextContent(/Done/);
+    expect(screen.getByTestId("plan-overview-day-2")).not.toHaveTextContent(/Locked/);
+    expect(screen.getByTestId("plan-overview-continue-button")).toHaveTextContent("Continue day 2");
   });
 
   it("walks the Quick Check loop back to Day Complete", async () => {
@@ -192,5 +241,83 @@ describe("navigation", () => {
 
     fireEvent.press(screen.getByTestId("daily-reminder-back-button"));
     expect(view.getPathname()).toBe("/settings");
+  });
+
+  describe("header icons arriving", () => {
+    const TABS = [
+      ["tab-home", "home-tab-account-button"],
+      ["tab-plans", "plans-account-button"],
+      ["tab-fun", "fun-account-button"],
+      ["tab-progress", "progress-account-button"],
+    ] as const;
+
+    it("never animates a tab root's header icon going between tab roots, first visits included", () => {
+      renderApp();
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+      for (const [tab, button] of [...TABS.slice(1), ...TABS]) {
+        fireEvent.press(screen.getByTestId(tab));
+        expect(hasHeaderEntrance(button)).toBe(false);
+      }
+    });
+
+    it("animates Home's header icon arriving from Welcome", () => {
+      renderApp();
+
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+      expect(hasHeaderEntrance("home-tab-account-button")).toBe(true);
+    });
+
+    it("animates Home's header icon coming back from Plan Detail", () => {
+      renderApp();
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+      fireEvent.press(screen.getByTestId("home-tab-active-plan"));
+      fireEvent.press(screen.getByTestId("plan-overview-back-button"));
+
+      expect(hasHeaderEntrance("home-tab-account-button")).toBe(true);
+    });
+
+    it("animates Plan Detail's header buttons as it's pushed", () => {
+      renderApp();
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+      fireEvent.press(screen.getByTestId("home-tab-active-plan"));
+
+      expect(hasHeaderEntrance("plan-overview-back-button")).toBe(true);
+    });
+
+    it("animates Home's header icon coming back from Settings", () => {
+      renderApp();
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+      fireEvent.press(screen.getByTestId("home-tab-account-button"));
+      fireEvent.press(screen.getByTestId("tab-home"));
+
+      expect(hasHeaderEntrance("home-tab-account-button")).toBe(true);
+    });
+
+    it("animates another tab root's header icon going to it from Settings", () => {
+      renderApp();
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      fireEvent.press(screen.getByTestId("tab-fun"));
+      fireEvent.press(screen.getByTestId("tab-home"));
+
+      fireEvent.press(screen.getByTestId("home-tab-account-button"));
+      fireEvent.press(screen.getByTestId("tab-fun"));
+
+      expect(hasHeaderEntrance("fun-account-button")).toBe(true);
+    });
+
+    it("animates a tab root's header icon arriving from a screen in another tab's stack", () => {
+      renderApp();
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+      fireEvent.press(screen.getByTestId("home-tab-active-plan"));
+      fireEvent.press(screen.getByTestId("tab-plans"));
+
+      expect(hasHeaderEntrance("plans-account-button")).toBe(true);
+    });
   });
 });

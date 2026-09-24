@@ -37,6 +37,14 @@ export function VerseCard({ elapsedMs }: LiftPieceProps) {
   );
 }
 
+/** Its corners — shared with the floating card it lifts onto. */
+export const VERSE_CARD_RADIUS = 24;
+
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 24, paddingHorizontal: 22, paddingVertical: 18 },
+  card: {
+    borderWidth: 1,
+    borderRadius: VERSE_CARD_RADIUS,
+    paddingHorizontal: 22,
+    paddingVertical: 18,
+  },
 });

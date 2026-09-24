@@ -219,6 +219,28 @@ describe("reflections", () => {
     expect(find(next.reflections, first)?.answer).toBe("My evenings.");
   });
 
+  it("clears an answer the user has emptied, back to unanswered", () => {
+    const next = run({ type: "reflection/clear", reflectionId: first, at: AT });
+
+    expect(find(next.reflections, first)).toMatchObject({ answer: null, answeredAt: null });
+  });
+
+  it("has nothing to clear on a question not answered", () => {
+    expect(run({ type: "reflection/clear", reflectionId: second, at: AT })).toBe(state);
+  });
+
+  it("can answer a question again once it's been cleared", () => {
+    const cleared = run({ type: "reflection/clear", reflectionId: first, at: AT });
+    const next = appReducer(cleared, {
+      type: "reflection/save",
+      reflectionId: first,
+      answer: "Something else.",
+      at: AT,
+    });
+
+    expect(find(next.reflections, first)?.answer).toBe("Something else.");
+  });
+
   it("won't answer a locked day's reflection", () => {
     const locked = `${dayId(ACTIVE, 4)}-reflection-1`;
 

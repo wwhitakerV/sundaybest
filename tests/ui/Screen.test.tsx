@@ -2,7 +2,7 @@ import { Text } from "react-native";
 
 import { render, screen } from "@tests/helpers/render";
 
-import { Screen } from "@/ui/Screen";
+import { PAGE_INSET, Screen } from "@/ui/Screen";
 
 describe("Screen", () => {
   it("forwards testID to the outermost view", () => {
@@ -33,10 +33,22 @@ describe("Screen", () => {
     );
 
     expect(screen.getByText("content").parent?.parent).toHaveStyle({
-      paddingHorizontal: 24,
+      paddingHorizontal: PAGE_INSET,
       paddingTop: 12,
       gap: 16,
     });
+  });
+
+  it("keeps the top inset and gap but not the side inset when padded vertically", () => {
+    render(
+      <Screen testID="a-screen" padded="vertical">
+        <Text>content</Text>
+      </Screen>,
+    );
+
+    const content = screen.getByText("content").parent?.parent;
+    expect(content).toHaveStyle({ paddingTop: 12, gap: 16 });
+    expect(content).not.toHaveStyle({ paddingHorizontal: 24 });
   });
 
   it("applies the themed background colour", () => {

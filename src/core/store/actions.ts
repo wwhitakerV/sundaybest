@@ -84,6 +84,7 @@ export type AppAction =
   // Reflections and prayer
   | ({ type: "reflection/save"; reflectionId: Id; answer: string } & At)
   | ({ type: "reflection/update"; reflectionId: Id; answer: string } & At)
+  | ({ type: "reflection/clear"; reflectionId: Id } & At)
   | ({ type: "prayer/markPrayed"; prayerId: Id } & At)
   // Quizzes
   | ({ type: "quiz/startAttempt"; quizId: Id; attemptId: Id } & At)

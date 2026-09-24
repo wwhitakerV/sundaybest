@@ -19,6 +19,27 @@ export function getScriptureForDay(state: AppState, dayId: Id): ScripturePassage
   return day ? findById(state.scripture, day.scriptureId) : null;
 }
 
+/**
+ * A day's Scripture as the user reads it: in their Bible translation
+ * (Settings), where the passage is there in it — the same reference and
+ * verses — and otherwise as the plan was built.
+ */
+export function getDayScripture(state: AppState, dayId: Id): ScripturePassage | null {
+  const built = getScriptureForDay(state, dayId);
+  const translation = state.settings.bibleTranslation;
+  if (!built || built.translation === translation) return built;
+  return (
+    listAll(state.scripture).find(
+      (passage) =>
+        passage.translation === translation &&
+        passage.book === built.book &&
+        passage.chapter === built.chapter &&
+        passage.verseStart === built.verseStart &&
+        passage.verseEnd === built.verseEnd,
+    ) ?? built
+  );
+}
+
 /** A day's reflection questions, in order. */
 export function getReflectionsForDay(state: AppState, dayId: Id): Reflection[] {
   return listAll(state.reflections)

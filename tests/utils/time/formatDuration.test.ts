@@ -1,4 +1,4 @@
-import { formatDuration } from "@/features/plan-creation/logic/format-duration";
+import { formatDuration } from "@/utils/time/formatDuration";
 
 describe("formatDuration", () => {
   it("shows minutes and seconds", () => {

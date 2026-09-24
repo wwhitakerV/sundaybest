@@ -3,10 +3,10 @@ import { useRouter } from "expo-router";
 import { UserRound } from "lucide-react-native";
 
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { Screen } from "@/ui/Screen";
+import { PAGE_INSET, Screen } from "@/ui/Screen";
 import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
 import { useTheme } from "@/theme";
-import { planOverviewHref, studyHref } from "@/features/plans";
+import { planOverviewHref } from "@/features/plans";
 import {
   getActivePlan,
   getPlanProgress,
@@ -20,6 +20,7 @@ import { PlanList } from "../components/PlanList";
 import { PlanRow } from "../components/PlanRow";
 import { StartHereCard } from "../components/StartHereCard";
 import { describePlan } from "../logic/describe-plan";
+import { homePlanOverviewHref } from "../logic/routes";
 
 /** Room under the content for the floating tab bar. */
 const BOTTOM_CLEARANCE =
@@ -27,7 +28,8 @@ const BOTTOM_CLEARANCE =
 
 /**
  * Home, from the store. With a plan under way: that plan up top — which day
- * it's on, how far through, and Continue — then all the user's plans. With
+ * it's on, how far through, and Continue; the whole card zooms open into
+ * Plan Detail — then all the user's plans. With
  * none: a card to add a sermon, and the sample to try (or their other plans,
  * if they have some waiting). The tab bar's + also starts a new plan.
  */
@@ -47,7 +49,9 @@ export function HomeScreen() {
   const addSermon = () => router.push("/(plan-creation)/paste-sermon");
 
   return (
-    <Screen testID="home-tab-screen" padded>
+    // Built like an iOS scroll screen: the scroll view runs edge to edge, and
+    // the header and content apply the page inset themselves.
+    <Screen testID="home-tab-screen" padded="vertical">
       <View style={styles.header}>
         <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
         <HeaderIconButton
@@ -71,15 +75,18 @@ export function HomeScreen() {
             currentDay={progress.currentDayNumber}
             totalDays={progress.totalDays}
             completedDayCount={progress.completedDayCount}
-            onOpen={() => openPlan(active.id)}
-            onContinue={() => router.push(studyHref(active.id, progress.currentDayNumber))}
+            href={homePlanOverviewHref(active.id)}
           />
         ) : (
           <StartHereCard onAddSermon={addSermon} />
         )}
 
         {hasPlans ? (
-          <PlanList onOpenPlan={openPlan} />
+          <>
+            <PlanList onOpenPlan={openPlan} />
+            <PlanList onOpenPlan={openPlan} />
+            <PlanList onOpenPlan={openPlan} />
+          </>
         ) : (
           sample && (
             <View style={styles.sample}>
@@ -104,9 +111,19 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: PAGE_INSET,
+  },
   scroll: { flex: 1 },
-  content: { gap: 28, paddingTop: 8, paddingBottom: BOTTOM_CLEARANCE },
+  content: {
+    gap: 28,
+    paddingHorizontal: PAGE_INSET,
+    paddingTop: 8,
+    paddingBottom: BOTTOM_CLEARANCE,
+  },
   sample: { gap: 12 },
   label: { marginLeft: 6 },
 });

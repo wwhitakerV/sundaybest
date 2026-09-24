@@ -2,6 +2,8 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 import { X } from "lucide-react-native";
 
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
+import { HeaderEntranceContext } from "@/ui/header-entrance";
+import { hasHeaderEntrance } from "@tests/helpers/header-entrance";
 
 describe("HeaderIconButton", () => {
   it("forwards testID to the outermost pressable", () => {
@@ -94,5 +96,52 @@ describe("HeaderIconButton", () => {
     expect(screen.getByTestId("a-header-icon-button")).toHaveStyle({
       borderColor: "transparent",
     });
+  });
+
+  it("arrives with its entrance by default", () => {
+    render(
+      <HeaderIconButton
+        testID="a-header-icon-button"
+        icon={X}
+        accessibilityLabel="Close"
+        onPress={() => undefined}
+      />,
+    );
+
+    expect(hasHeaderEntrance("a-header-icon-button")).toBe(true);
+  });
+
+  it("is just there, no entrance, when its screen says to hold still", () => {
+    render(
+      <HeaderEntranceContext.Provider value={{ arrivals: 1, animate: false }}>
+        <HeaderIconButton
+          testID="a-header-icon-button"
+          icon={X}
+          accessibilityLabel="Close"
+          onPress={() => undefined}
+        />
+      </HeaderEntranceContext.Provider>,
+    );
+
+    expect(hasHeaderEntrance("a-header-icon-button")).toBe(false);
+  });
+
+  it("comes in afresh each time its screen is arrived at", () => {
+    const button = (arrivals: number) => (
+      <HeaderEntranceContext.Provider value={{ arrivals, animate: true }}>
+        <HeaderIconButton
+          testID="a-header-icon-button"
+          icon={X}
+          accessibilityLabel="Close"
+          onPress={() => undefined}
+        />
+      </HeaderEntranceContext.Provider>
+    );
+    const view = render(button(1));
+    const first = screen.getByTestId("a-header-icon-button");
+
+    view.rerender(button(2));
+
+    expect(screen.getByTestId("a-header-icon-button")).not.toBe(first);
   });
 });

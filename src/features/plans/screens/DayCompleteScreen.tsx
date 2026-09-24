@@ -5,25 +5,28 @@ import { Screen } from "@/ui/Screen";
 import { Button } from "@/ui/Button";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { useTheme } from "@/theme";
-import { usePlanRouteParams } from "../hooks/use-plan-route-params";
+import { getPlanProgress, useAppSelector } from "@/core/store";
+import { useStudyRoute } from "../hooks/use-study-route";
 import { useModalSession } from "@/hooks/use-modal-session";
-import { getNextDayAfterCompleting } from "../logic/plan-progress";
+import { getNextDayToStudy } from "../logic/next-day";
 import { quickCheckHref, studyHref } from "../logic/routes";
 
 /**
  * Where the Daily Study session lands after Finish. Quick Check pushes on top
  * of it inside the session; Next day swaps it for the next day's study;
- * Plans and Home leave the session entirely.
+ * Plans and Home leave the session entirely. The next day is read from the
+ * store's progress, which finishing the day has already moved on.
  */
 export function DayCompleteScreen() {
   const theme = useTheme();
   const router = useRouter();
   const session = useModalSession();
-  const { day, plan } = usePlanRouteParams();
+  const { planId, dayNumber } = useStudyRoute();
+  const progress = useAppSelector((state) => getPlanProgress(state, planId));
 
-  if (!plan) return null;
+  if (!progress) return null;
 
-  const nextDay = getNextDayAfterCompleting(plan, Number(day));
+  const nextDay = getNextDayToStudy(progress, dayNumber);
 
   return (
     <Screen testID="day-complete-screen" padded>
@@ -34,7 +37,7 @@ export function DayCompleteScreen() {
       <Button
         testID="day-complete-quick-check-button"
         label="Take today's quick check"
-        onPress={() => router.push(quickCheckHref(plan.id, day))}
+        onPress={() => router.push(quickCheckHref(planId, dayNumber))}
       />
 
       {nextDay !== undefined && (
@@ -42,7 +45,7 @@ export function DayCompleteScreen() {
           testID="day-complete-next-day-button"
           label="Next day"
           variant="secondary"
-          onPress={() => router.replace(studyHref(plan.id, nextDay))}
+          onPress={() => router.replace(studyHref(planId, nextDay))}
         />
       )}
 

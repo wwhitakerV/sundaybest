@@ -79,6 +79,10 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     updateReflection: (reflectionId: Id, answer: string) => {
       dispatch({ type: "reflection/update", reflectionId, answer, at: at() });
     },
+    /** Takes an answer back — the question is unanswered again. */
+    clearReflection: (reflectionId: Id) => {
+      dispatch({ type: "reflection/clear", reflectionId, at: at() });
+    },
     markPrayed: (prayerId: Id) => {
       dispatch({ type: "prayer/markPrayed", prayerId, at: at() });
     },

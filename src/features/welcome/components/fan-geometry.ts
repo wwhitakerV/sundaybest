@@ -59,8 +59,8 @@ const PROGRESS_GAP = 4;
 const LIFT_MIN_TOP = 6;
 /** Clear space either side of the lifted card. */
 export const LIFT_SIDE_PADDING = 8;
-/** The floating card's padding around a lifted piece. */
-export const LIFT_CARD_PADDING = 12;
+/** The floating card's see-through rim around a lifted piece. */
+export const LIFT_RIM = 6;
 
 export type StageGeometry = {
   caption: { bottom: number; height: number };

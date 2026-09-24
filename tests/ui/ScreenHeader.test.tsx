@@ -2,6 +2,12 @@ import { render, screen } from "@tests/helpers/render";
 import { Text } from "react-native";
 
 import { ScreenHeader } from "@/ui/ScreenHeader";
+import { useHeaderSide } from "@/ui/header-side";
+
+/** Shows which side of the header it was put on. */
+function SideProbe() {
+  return <Text>{useHeaderSide()}</Text>;
+}
 
 describe("ScreenHeader", () => {
   it("forwards testID to the outermost view", () => {
@@ -44,5 +50,12 @@ describe("ScreenHeader", () => {
     render(<ScreenHeader testID="a-screen-header" title="New plan" />);
 
     expect(screen.getByTestId("a-screen-header")).toHaveStyle({ minHeight: 54 });
+  });
+
+  it("tells what's in each slot which side it's on, so buttons arrive from their own edge", () => {
+    render(<ScreenHeader title="New plan" left={<SideProbe />} right={<SideProbe />} />);
+
+    expect(screen.getByText("leading")).toBeVisible();
+    expect(screen.getByText("trailing")).toBeVisible();
   });
 });

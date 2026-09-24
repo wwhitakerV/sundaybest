@@ -15,6 +15,9 @@
  * | Salt and Light               | draft      | —    | newly created in New Plan              |
  * | Who Is My Neighbor?          | generating | —    | being built (`MOCK_DATA.generation`)   |
  *
+ * The active and sample plans' passages are also there in the King James
+ * Version (`SCRIPTURE_VARIANTS`), for a user who picks it.
+ *
  * Records point at each other by ID; each exists once, in its table. Only
  * facts are recorded — progress, streaks, and scores are worked out from them.
  */
@@ -68,6 +71,7 @@ import {
 } from "./plan-sample";
 import { MOCK_GENERATION, PLAN_NEIGHBOR, PLAN_SALT } from "./plans-pending";
 import { MOCK_LIBRARY_EXTRAS } from "./library";
+import { SCRIPTURE_VARIANTS } from "./scripture-variants";
 import { MOCK_SERMONS } from "./sermons";
 import { MOCK_REMINDERS, MOCK_SETTINGS, MOCK_USER } from "./user";
 
@@ -105,6 +109,7 @@ export const MOCK_DATA: AppData = {
     ...STORM_SCRIPTURE,
     ...REST_SCRIPTURE,
     ...SAMPLE_SCRIPTURE,
+    ...SCRIPTURE_VARIANTS,
   ]),
   reflections: toTable([
     ...CHOOSE_REFLECTIONS,

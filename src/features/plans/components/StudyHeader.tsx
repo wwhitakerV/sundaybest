@@ -23,6 +23,9 @@ export type StudyHeaderProps = {
   onTextSize: () => void;
   /** 0-indexed position in Read/Scripture/Reflect/Pray. Omit to hide the tracker. */
   step?: number;
+  /** Pages in each step (Reflect has one per question), and the page within `step`. */
+  pages?: readonly number[];
+  page?: number;
   testID: string;
 };
 
@@ -40,6 +43,8 @@ export function StudyHeader({
   onClose,
   onTextSize,
   step,
+  pages,
+  page,
   testID,
 }: StudyHeaderProps) {
   const theme = useTheme();
@@ -69,7 +74,13 @@ export function StudyHeader({
       />
       {step !== undefined && (
         <View>
-          <StepProgress testID={`${testID}-progress`} steps={STUDY_STEP_COUNT} activeIndex={step} />
+          <StepProgress
+            testID={`${testID}-progress`}
+            steps={STUDY_STEP_COUNT}
+            activeIndex={step}
+            {...(pages && { pages })}
+            {...(page !== undefined && { activePage: page })}
+          />
           <View style={styles.labelRow}>
             {STUDY_STEPS.map(({ key, label, labelAlign }, index) => (
               <Text

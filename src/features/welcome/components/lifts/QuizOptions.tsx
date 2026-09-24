@@ -16,7 +16,8 @@ const OPTIONS = [
 const ANSWER = "B";
 /** Once the answer is shown, the wrong options step back. */
 const DIMMED_OPACITY = 0.35;
-const OPTION_RADIUS = 24;
+/** An option's corners — shared with the floating card they lift onto. */
+export const QUIZ_OPTION_RADIUS = 24;
 /** The picked outline's weight — drawn over the 1pt border, never in layout. */
 const PICKED_OUTLINE = 2;
 
@@ -123,7 +124,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 14,
     borderWidth: 1,
-    borderRadius: OPTION_RADIUS,
+    borderRadius: QUIZ_OPTION_RADIUS,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
@@ -135,7 +136,7 @@ const styles = StyleSheet.create({
     right: -1,
     bottom: -1,
     borderWidth: PICKED_OUTLINE,
-    borderRadius: OPTION_RADIUS + 1,
+    borderRadius: QUIZ_OPTION_RADIUS + 1,
   },
   letter: {
     width: 32,

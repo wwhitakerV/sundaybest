@@ -17,6 +17,7 @@ export { GENERATION_STAGES } from "./transitions";
 
 export {
   getDayMinutes,
+  getDayScripture,
   getPrayerForDay,
   getReflectionsForDay,
   getScriptureForDay,

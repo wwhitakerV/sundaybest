@@ -5,6 +5,7 @@ import {
   getDayMinutes,
   getUserPlans,
   getCurrentPlanDay,
+  getDayScripture,
   getInProgressPlans,
   getLibraryPlans,
   getPlanById,
@@ -85,6 +86,37 @@ describe("plan selectors", () => {
     expect(getScriptureForDay(state, day?.id ?? "")?.reference).toBe("Ephesians 2:8–9");
     expect(getReflectionsForDay(state, day?.id ?? "").map((r) => r.order)).toEqual([1, 2]);
     expect(getSermonForPlan(state, ACTIVE)?.title).toBe("Choose Whom You Will Serve");
+  });
+});
+
+describe("getDayScripture", () => {
+  const dayId = getPlanDay(state, ACTIVE, 2)?.id ?? "";
+  const reading = (translation: AppState["settings"]["bibleTranslation"]): AppState => ({
+    ...state,
+    settings: { ...state.settings, bibleTranslation: translation },
+  });
+
+  it("gives a day's passage in the user's translation", () => {
+    const passage = getDayScripture(state, dayId);
+
+    expect(passage?.translation).toBe("NIV");
+    expect(passage?.verses.at(0)?.text).toMatch(/^For it is by grace you have been saved/);
+  });
+
+  it("switches to another translation the user picks, where the passage is there in it", () => {
+    const passage = getDayScripture(reading("KJV"), dayId);
+
+    expect(passage?.reference).toBe("Ephesians 2:8–9");
+    expect(passage?.translation).toBe("KJV");
+    expect(passage?.verses.at(0)?.text).toMatch(/^For by grace are ye saved through faith/);
+  });
+
+  it("keeps the passage as the plan was built when it isn't there in the user's translation", () => {
+    expect(getDayScripture(reading("ESV"), dayId)?.translation).toBe("NIV");
+  });
+
+  it("finds nothing for a day that doesn't exist", () => {
+    expect(getDayScripture(state, "no-such-day")).toBeNull();
   });
 });
 

@@ -15,7 +15,13 @@ import { PHONE_FRAME } from "@/ui/PhoneFrame";
 // import { ProgressLine } from "@/ui/ProgressLine";
 import { useSceneClock } from "../hooks/use-scene-clock";
 import { useStageSlide } from "../hooks/use-stage-slide";
-import { getLiftLayout, getScrollToReveal, getScrollToShow, type DesignRect } from "../logic/lift";
+import {
+  getLiftLayout,
+  getScrollToReveal,
+  getScrollToShow,
+  type DesignRect,
+  type LiftBacking,
+} from "../logic/lift";
 import { NAVIGATION_MS, getActiveLift, getScrollTargetIndex } from "../logic/scenes";
 import {
   SIDE_CARDS,
@@ -31,7 +37,7 @@ import {
   type StoryScreen,
 } from "../logic/story";
 import {
-  LIFT_CARD_PADDING,
+  LIFT_RIM,
   LIFT_SIDE_PADDING,
   MIN_STAGE_HEIGHT,
   SUPPORT_OPACITY,
@@ -41,14 +47,14 @@ import {
 } from "./fan-geometry";
 import { LiftAnchorContext, getLiftId } from "./lift/lift-anchor-context";
 import { StageLift } from "./lift/StageLift";
-import { AnswerBox } from "./lifts/AnswerBox";
+import { ANSWER_BOX_RADIUS, AnswerBox } from "./lifts/AnswerBox";
 import type { LiftPieceProps } from "./lifts/lift-piece";
-import { ListenCard } from "./lifts/ListenCard";
-import { PasteField } from "./lifts/PasteField";
+import { LISTEN_CARD_RADIUS, ListenCard } from "./lifts/ListenCard";
+import { PASTE_FIELD_RADIUS, PasteField } from "./lifts/PasteField";
 import { PlanSetup } from "./lifts/PlanSetup";
 import { PrayerLines } from "./lifts/PrayerLines";
-import { QuizOptions } from "./lifts/QuizOptions";
-import { VerseCard } from "./lifts/VerseCard";
+import { QUIZ_OPTION_RADIUS, QuizOptions } from "./lifts/QuizOptions";
+import { VERSE_CARD_RADIUS, VerseCard } from "./lifts/VerseCard";
 import type { MockScreenProps } from "./mocks/mock-page";
 import { NEW_PLAN_HEADER_HEIGHT, NewPlanMock } from "./mocks/NewPlanMock";
 import { QuickCheckMock } from "./mocks/QuickCheckMock";
@@ -74,37 +80,49 @@ function getScreenMock(screen: StoryScreen): ComponentType<MockScreenProps> {
 /** A piece that lifts off the phone, and the floating card it rides on. */
 type LiftPart = {
   Piece: ComponentType<LiftPieceProps>;
-  /** The floating card behind it: padding around the piece and corner radius. */
-  backing: { padding: number; radius: number };
+  /** The floating card behind it: a see-through rim around a solid container. */
+  backing: LiftBacking;
   /** How much higher than usual it rests once lifted (points). */
   raise?: number;
 };
 
-const FLOATING_CARD = { padding: LIFT_CARD_PADDING, radius: LIFT_CARD_PADDING + 18 };
-const lift = (Piece: ComponentType<LiftPieceProps>): LiftPart => ({
+/** A piece that's a card itself: the container sits right behind it, corners matched. */
+const lift = (Piece: ComponentType<LiftPieceProps>, radius: number): LiftPart => ({
   Piece,
-  backing: FLOATING_CARD,
+  backing: { rim: LIFT_RIM, inset: 0, radius },
 });
+
+/**
+ * A piece with no surface of its own — straight on the page on the phone —
+ * sits in the container with room around it.
+ */
+const liftOntoCard = (
+  Piece: ComponentType<LiftPieceProps>,
+  inset: number,
+  radius: number,
+): LiftPart => ({ Piece, backing: { rim: LIFT_RIM, inset, radius } });
 
 /** The pieces that lift off on each turn, in order (matching `STORY_CARDS[].lifts`). */
 function getLiftParts(key: StoryCardKey): readonly LiftPart[] {
   switch (key) {
     case "paste":
       // A short piece: raised a little, so it floats nearer the middle of the phone.
-      return [{ ...lift(PasteField), raise: 30 }];
+      return [{ ...lift(PasteField, PASTE_FIELD_RADIUS), raise: 30 }];
     case "plan":
-      return [lift(PlanSetup)];
+      return [liftOntoCard(PlanSetup, 12, 24)];
     case "read":
-      return [lift(ListenCard)];
+      // Rests a little higher than the rest.
+      return [{ ...lift(ListenCard, LISTEN_CARD_RADIUS), raise: 24 }];
     case "scripture":
-      return [lift(VerseCard)];
+      return [lift(VerseCard, VERSE_CARD_RADIUS)];
     case "reflect":
-      return [lift(AnswerBox)];
+      return [lift(AnswerBox, ANSWER_BOX_RADIUS)];
     case "pray":
-      // Serif lines run close to the edges, so this card gets extra room.
-      return [{ Piece: PrayerLines, backing: { padding: 20, radius: 38 } }];
+      // Serif lines run close to the edges, so this one gets extra room.
+      return [liftOntoCard(PrayerLines, 20, 32)];
     case "quiz":
-      return [lift(QuizOptions)];
+      // The options' gaps show the container, so a dimmed option never goes see-through.
+      return [lift(QuizOptions, QUIZ_OPTION_RADIUS)];
   }
 }
 
@@ -285,7 +303,7 @@ export function ScreenFan({ phase, testID, style }: ScreenFanProps) {
           bottom: geometry.liftBottom - (liftPart.raise ?? 0),
           minTop: geometry.liftMinTop,
           sidePadding: LIFT_SIDE_PADDING,
-          cardPadding: liftPart.backing.padding,
+          cardPadding: liftPart.backing.rim + liftPart.backing.inset,
           fade: geometry.fade,
         })
       : null;

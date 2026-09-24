@@ -13,12 +13,21 @@ export type ScreenProps = {
    * Applies the standard page inset (24 horizontal, 12 top) and the 16pt gap
    * between sections that nearly every screen uses. `style` still applies on
    * top, for screens that need something extra.
+   *
+   * `"vertical"` keeps the top inset and gap but not the side inset — for a
+   * screen built around a full-width scroll view, as iOS apps are: the scroll
+   * view runs edge to edge (its scroll bar at the screen edge, nothing clipped
+   * short of it) and its content, like the screen's other sections, applies
+   * `PAGE_INSET` itself.
    */
-  padded?: boolean;
+  padded?: boolean | "vertical";
   style?: StyleProp<ViewStyle>;
 };
 
 const DEFAULT_EDGES: readonly Edge[] = ["top", "bottom", "left", "right"];
+
+/** The page's side inset. Content inside a `padded="vertical"` screen applies it itself. */
+export const PAGE_INSET = 24;
 
 /**
  * Safe-area aware page container with the themed background applied.
@@ -51,7 +60,15 @@ export function Screen({
       testID={testID}
       style={[styles.root, { backgroundColor: theme.colors.background }, safeAreaPadding]}
     >
-      <View style={[styles.content, padded && styles.padded, style]}>{children}</View>
+      <View
+        style={[
+          styles.content,
+          padded === "vertical" ? styles.paddedVertical : padded && styles.padded,
+          style,
+        ]}
+      >
+        {children}
+      </View>
     </View>
   );
 }
@@ -59,5 +76,6 @@ export function Screen({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flex: 1 },
-  padded: { paddingHorizontal: 24, paddingTop: 12, gap: 16 },
+  padded: { paddingHorizontal: PAGE_INSET, paddingTop: 12, gap: 16 },
+  paddedVertical: { paddingTop: 12, gap: 16 },
 });

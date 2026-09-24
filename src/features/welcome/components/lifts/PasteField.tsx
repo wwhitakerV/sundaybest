@@ -60,11 +60,14 @@ export function PasteField({ elapsedMs }: LiftPieceProps) {
   );
 }
 
+/** Its corners — shared with the floating card it lifts onto. */
+export const PASTE_FIELD_RADIUS = 37;
+
 const styles = StyleSheet.create({
   field: {
     height: 74,
     borderWidth: 1,
-    borderRadius: 37,
+    borderRadius: PASTE_FIELD_RADIUS,
     flexDirection: "row",
     alignItems: "center",
     paddingLeft: 22,

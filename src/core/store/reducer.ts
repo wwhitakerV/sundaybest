@@ -1,6 +1,6 @@
 import type { AppAction } from "./actions";
 import { completePlanDay, startPlanDay, updatePlanDay } from "./reducers/days";
-import { markPrayed, saveReflection, updateReflection } from "./reducers/devotion";
+import { clearReflection, markPrayed, saveReflection, updateReflection } from "./reducers/devotion";
 import {
   completePlanGeneration,
   failPlanGeneration,
@@ -69,6 +69,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return saveReflection(state, action);
     case "reflection/update":
       return updateReflection(state, action);
+    case "reflection/clear":
+      return clearReflection(state, action);
     case "prayer/markPrayed":
       return markPrayed(state, action);
 

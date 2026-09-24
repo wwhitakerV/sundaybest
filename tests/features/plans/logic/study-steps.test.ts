@@ -1,9 +1,12 @@
 import {
   STUDY_STEPS,
   STUDY_STEP_COUNT,
+  fromPageIndex,
   getNextStudyAction,
   getPreviousStudyAction,
-  isLastStudyStep,
+  getStudyPages,
+  isLastStudyPage,
+  toPageIndex,
 } from "@/features/plans/logic/study-steps";
 
 describe("STUDY_STEPS", () => {
@@ -20,28 +23,76 @@ describe("STUDY_STEPS", () => {
   });
 });
 
-describe("isLastStudyStep", () => {
-  it("is true only for Pray", () => {
-    expect([0, 1, 2, 3].map(isLastStudyStep)).toEqual([false, false, false, true]);
+// A day with two reflection questions: Read, Scripture, two Reflect pages, Pray.
+const PAGES = getStudyPages(2);
+
+describe("getStudyPages", () => {
+  it("gives Reflect a page per question, and every other step one", () => {
+    expect(getStudyPages(2)).toEqual([1, 1, 2, 1]);
+  });
+
+  it("keeps a page for Reflect with no questions", () => {
+    expect(getStudyPages(0)).toEqual([1, 1, 1, 1]);
   });
 });
 
-describe("getPreviousStudyAction", () => {
-  it("exits the flow from the first step", () => {
-    expect(getPreviousStudyAction(0)).toEqual({ type: "exit" });
-  });
-
-  it("steps back from any later step", () => {
-    expect(getPreviousStudyAction(2)).toEqual({ type: "step", step: 1 });
+describe("isLastStudyPage", () => {
+  it("is true only on Pray's last page", () => {
+    expect(isLastStudyPage({ step: 3, page: 0 }, PAGES)).toBe(true);
+    expect(isLastStudyPage({ step: 2, page: 1 }, PAGES)).toBe(false);
   });
 });
 
 describe("getNextStudyAction", () => {
-  it("steps forward before the last step", () => {
-    expect(getNextStudyAction(0)).toEqual({ type: "step", step: 1 });
+  it("turns to the next page within a step", () => {
+    expect(getNextStudyAction({ step: 2, page: 0 }, PAGES)).toEqual({
+      type: "move",
+      to: { step: 2, page: 1 },
+    });
   });
 
-  it("finishes the day from the last step", () => {
-    expect(getNextStudyAction(3)).toEqual({ type: "finish" });
+  it("moves to the next step's first page from a step's last", () => {
+    expect(getNextStudyAction({ step: 2, page: 1 }, PAGES)).toEqual({
+      type: "move",
+      to: { step: 3, page: 0 },
+    });
+  });
+
+  it("finishes the day from the last page of the last step", () => {
+    expect(getNextStudyAction({ step: 3, page: 0 }, PAGES)).toEqual({ type: "finish" });
+  });
+});
+
+describe("getPreviousStudyAction", () => {
+  it("exits the flow from the very first page", () => {
+    expect(getPreviousStudyAction({ step: 0, page: 0 }, PAGES)).toEqual({ type: "exit" });
+  });
+
+  it("turns back a page within a step", () => {
+    expect(getPreviousStudyAction({ step: 2, page: 1 }, PAGES)).toEqual({
+      type: "move",
+      to: { step: 2, page: 0 },
+    });
+  });
+
+  it("moves back to the previous step's last page", () => {
+    expect(getPreviousStudyAction({ step: 3, page: 0 }, PAGES)).toEqual({
+      type: "move",
+      to: { step: 2, page: 1 },
+    });
+  });
+});
+
+describe("page indexes", () => {
+  it("counts every page before a position, across steps", () => {
+    expect(toPageIndex({ step: 3, page: 0 }, PAGES)).toBe(4);
+  });
+
+  it("turns a page index back into its step and page", () => {
+    expect(fromPageIndex(3, PAGES)).toEqual({ step: 2, page: 1 });
+  });
+
+  it("clamps an index past the end to the last page", () => {
+    expect(fromPageIndex(9, PAGES)).toEqual({ step: 3, page: 0 });
   });
 });

@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/theme";
+import { HeaderSideContext } from "./header-side";
 
 const MIN_HEIGHT = 54;
 const GAP = 12;
@@ -21,20 +22,27 @@ export type ScreenHeaderProps = {
  * border or background of its own — every screen sits directly on the
  * page background, matching the design's "no explicit header background
  * separate from screen" rule.
+ *
+ * Tells each slot which side it's on (`useHeaderSide`), so a button arrives
+ * from its own edge.
  */
 export function ScreenHeader({ title, left, right, testID }: ScreenHeaderProps) {
   const theme = useTheme();
 
   return (
     <View testID={testID} style={styles.row}>
-      <View style={styles.side}>{left}</View>
+      <View style={styles.side}>
+        <HeaderSideContext.Provider value="leading">{left}</HeaderSideContext.Provider>
+      </View>
       <Text
         style={[theme.typography.navTitle, styles.title, { color: theme.colors.chromeTitle }]}
         numberOfLines={1}
       >
         {title}
       </Text>
-      <View style={[styles.side, styles.sideEnd]}>{right}</View>
+      <View style={[styles.side, styles.sideEnd]}>
+        <HeaderSideContext.Provider value="trailing">{right}</HeaderSideContext.Provider>
+      </View>
     </View>
   );
 }

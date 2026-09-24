@@ -1,4 +1,5 @@
 import { server } from "../mocks/server";
+import type * as SlotModule from "expo-router/build/ui/Slot";
 
 // ---------------------------------------------------------------------------
 // Environment
@@ -81,6 +82,17 @@ jest.mock("expo-splash-screen", () => ({
 // module with no test-environment implementation is replaced.
 jest.mock("react-native/Libraries/Vibration/Vibration", () => ({
   default: { vibrate: jest.fn(), cancel: jest.fn() },
+}));
+
+// Expo Router's `Link.AppleZoom` (iOS's zoom transition source) wraps its
+// child in a native view that has no implementation under Jest, which renders
+// it empty — dropping the whole card it's meant to host. The transition
+// itself is native-only and can't be exercised here, so this stands in with
+// the real Link.AppleZoom's own fallback — Expo Router's `Slot`, which it
+// renders wherever zoom is off. Using the real `Slot` keeps its rules in play
+// (it refuses a child whose `style` is an array, as it does on device).
+jest.mock("expo-router/build/link/zoom/link-apple-zoom", () => ({
+  LinkAppleZoom: jest.requireActual<typeof SlotModule>("expo-router/build/ui/Slot").Slot,
 }));
 
 // ---------------------------------------------------------------------------

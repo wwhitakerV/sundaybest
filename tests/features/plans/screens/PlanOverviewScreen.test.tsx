@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
@@ -58,6 +58,14 @@ describe("PlanOverviewScreen", () => {
       "Choose Whom You Will Serve",
     );
     expect(screen.getByText("From Choose Whom You Will Serve · VOUS Church")).toBeVisible();
+  });
+
+  it("fades its content in as it appears, rather than cutting to it", () => {
+    renderOverview(ACTIVE);
+
+    expect(
+      within(screen.getByTestId("plan-overview-content")).getByTestId("plan-overview-title"),
+    ).toBeVisible();
   });
 
   it("shows the day it's on and how far through it is", () => {

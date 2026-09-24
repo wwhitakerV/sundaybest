@@ -1,7 +1,11 @@
 import { Pressable, StyleSheet } from "react-native";
+import Animated from "react-native-reanimated";
 import type { LucideIcon } from "lucide-react-native";
 
 import { useTheme } from "@/theme";
+import { headerButtonEntrance } from "./header-button-entrance";
+import { useHeaderEntrance } from "./header-entrance";
+import { useHeaderSide } from "./header-side";
 
 const SIZE = 49;
 const RADIUS = 25;
@@ -24,6 +28,11 @@ export type HeaderIconButtonProps = {
  * controls, search. White fill, centered icon — one place
  * for that chrome so every header stays visually consistent. Bordered by
  * default; borderless for the top-level screens' right-side icons.
+ *
+ * Arrives with its screen: a quick fade, a few points' slide in from its own
+ * side of the header, and a small spring up to full size
+ * (`headerButtonEntrance`). Its screen decides when (`useHeaderEntrance`):
+ * each time the app arrives at it, except switching between tab roots.
  */
 export function HeaderIconButton({
   icon: Icon,
@@ -34,23 +43,32 @@ export function HeaderIconButton({
   testID,
 }: HeaderIconButtonProps) {
   const theme = useTheme();
+  const side = useHeaderSide();
+  const { arrivals, animate } = useHeaderEntrance();
 
   return (
-    <Pressable
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      onPress={onPress}
-      style={[
-        styles.button,
-        {
-          backgroundColor: theme.colors.background,
-          borderColor: bordered ? theme.colors.hairline : "transparent",
-        },
-      ]}
+    // A new key is a new view: it comes in afresh, with its entrance or without.
+    <Animated.View
+      key={arrivals}
+      {...(testID !== undefined && { testID: `${testID}-entrance` })}
+      {...(animate && { entering: headerButtonEntrance(side) })}
     >
-      <Icon size={size} color={theme.colors.chromeIcon} strokeWidth={theme.icon.strokeWidth} />
-    </Pressable>
+      <Pressable
+        testID={testID}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        onPress={onPress}
+        style={[
+          styles.button,
+          {
+            backgroundColor: theme.colors.background,
+            borderColor: bordered ? theme.colors.hairline : "transparent",
+          },
+        ]}
+      >
+        <Icon size={size} color={theme.colors.chromeIcon} strokeWidth={theme.icon.strokeWidth} />
+      </Pressable>
+    </Animated.View>
   );
 }
 

@@ -8,7 +8,8 @@ import { getListenScene } from "../../logic/scenes";
 import type { LiftPieceProps } from "./lift-piece";
 
 const PLAY_SIZE = 48;
-const RADIUS = 36;
+/** Its corners — shared with the floating card it lifts onto. */
+export const LISTEN_CARD_RADIUS = 36;
 
 /**
  * "Hear this part of the sermon": the Read step's link to where this reading
@@ -52,7 +53,7 @@ export function ListenCard({ elapsedMs }: LiftPieceProps) {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderRadius: RADIUS,
+    borderRadius: LISTEN_CARD_RADIUS,
     flexDirection: "row",
     alignItems: "center",
     gap: 16,

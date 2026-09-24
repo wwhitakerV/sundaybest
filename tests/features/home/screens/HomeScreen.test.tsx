@@ -98,29 +98,16 @@ describe("HomeScreen", () => {
       expect(screen.getByTestId("home-tab-active-plan")).toBeVisible();
       expect(screen.getAllByText("Choose Whom You Will Serve").length).toBeGreaterThan(0);
       expect(screen.getByTestId("home-tab-active-plan-day")).toHaveTextContent("Day 2 of 6");
-      expect(screen.getByLabelText("1 of 6 days done")).toBeVisible();
+      expect(screen.getByText("Continue")).toBeVisible();
     });
 
-    it("continues with the day it's on", () => {
+    it("makes the whole card one control, saying where the plan stands", () => {
       renderHome();
 
-      fireEvent.press(screen.getByTestId("home-tab-continue-button"));
-
-      expect(mockPush).toHaveBeenCalledWith({
-        pathname: "/study/[planId]",
-        params: { planId: ACTIVE, day: "2" },
-      });
-    });
-
-    it("opens Plan Overview when the plan is pressed", () => {
-      renderHome();
-
-      fireEvent.press(screen.getByTestId("home-tab-active-plan"));
-
-      expect(mockPush).toHaveBeenCalledWith({
-        pathname: "/(tabs)/plans/[planId]",
-        params: { planId: ACTIVE },
-      });
+      expect(screen.getByTestId("home-tab-active-plan")).toHaveAccessibleName(
+        "Choose Whom You Will Serve, day 2 of 6. 1 of 6 days done.",
+      );
+      expect(screen.queryByTestId("home-tab-continue-button")).toBeNull();
     });
 
     it("lists the user's plans, with a finished one marked when it finished", () => {
@@ -143,7 +130,9 @@ describe("HomeScreen", () => {
       );
 
       expect(screen.getByTestId("home-tab-active-plan-day")).toHaveTextContent("Day 3 of 6");
-      expect(screen.getByLabelText("2 of 6 days done")).toBeVisible();
+      expect(screen.getByTestId("home-tab-active-plan")).toHaveAccessibleName(
+        "Choose Whom You Will Serve, day 3 of 6. 2 of 6 days done.",
+      );
     });
   });
 });
