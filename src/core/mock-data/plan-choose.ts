@@ -1,11 +1,4 @@
-import type {
-  Plan,
-  PlanProgress,
-  Quiz,
-  QuizAnswer,
-  QuizAttempt,
-  QuizQuestion,
-} from "@/types/domain";
+import type { Plan, Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "@/types/domain";
 
 import { ALL_STEPS, makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
@@ -247,15 +240,6 @@ export const CHOOSE_PRAYERS = RECORDS.map((records) => records.prayer);
 
 const [DAY_1, DAY_2] = CHOOSE_DAYS;
 
-export const CHOOSE_PROGRESS: PlanProgress = {
-  id: `${PLAN_CHOOSE.id}-progress`,
-  createdAt: "2026-09-22T06:34:00.000Z",
-  updatedAt: "2026-09-22T06:52:00.000Z",
-  planId: PLAN_CHOOSE.id,
-  currentDayNumber: 2,
-  completedDayNumbers: [1],
-};
-
 // ---------------------------------------------------------------------------
 // Quick Checks
 // ---------------------------------------------------------------------------
@@ -393,7 +377,6 @@ const ATTEMPT_DAY_1: QuizAttempt = {
   status: "completed",
   startedAt: "2026-09-22T19:05:00.000Z",
   completedAt: "2026-09-22T19:07:00.000Z",
-  score: { correct: 1, total: 2 },
 };
 
 /** Day 2's: under way — the first question answered right, the rest not yet. */
@@ -405,7 +388,6 @@ const ATTEMPT_DAY_2: QuizAttempt = {
   status: "inProgress",
   startedAt: "2026-09-23T06:58:00.000Z",
   completedAt: null,
-  score: null,
 };
 
 const ANSWERS: QuizAnswer[] = [
@@ -416,7 +398,6 @@ const ANSWERS: QuizAnswer[] = [
     attemptId: ATTEMPT_DAY_1.id,
     questionId: Q1_1,
     choiceId: `${Q1_1}-b`,
-    isCorrect: true,
     answeredAt: "2026-09-22T19:06:00.000Z",
   },
   {
@@ -426,7 +407,6 @@ const ANSWERS: QuizAnswer[] = [
     attemptId: ATTEMPT_DAY_1.id,
     questionId: Q1_2,
     choiceId: `${Q1_2}-a`,
-    isCorrect: false,
     answeredAt: "2026-09-22T19:07:00.000Z",
   },
   {
@@ -436,7 +416,6 @@ const ANSWERS: QuizAnswer[] = [
     attemptId: ATTEMPT_DAY_2.id,
     questionId: Q2_1,
     choiceId: `${Q2_1}-b`,
-    isCorrect: true,
     answeredAt: "2026-09-23T06:59:00.000Z",
   },
 ];

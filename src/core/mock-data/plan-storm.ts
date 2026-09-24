@@ -1,4 +1,4 @@
-import type { Plan, PlanProgress } from "@/types/domain";
+import type { Plan } from "@/types/domain";
 
 import { makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { SERMON_STORM } from "./sermons";
@@ -127,12 +127,3 @@ export const STORM_DAYS = RECORDS.map((records) => records.day);
 export const STORM_SCRIPTURE = RECORDS.map((records) => records.scripture);
 export const STORM_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
 export const STORM_PRAYERS = RECORDS.map((records) => records.prayer);
-
-export const STORM_PROGRESS: PlanProgress = {
-  id: `${PLAN_STORM.id}-progress`,
-  createdAt: BUILT_AT,
-  updatedAt: BUILT_AT,
-  planId: PLAN_STORM.id,
-  currentDayNumber: 1,
-  completedDayNumbers: [],
-};

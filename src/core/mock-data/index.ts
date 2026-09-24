@@ -14,14 +14,14 @@
  * | Salt and Light               | draft      | —    | newly created in New Plan              |
  * | Who Is My Neighbor?          | generating | —    | being built (`MOCK_DATA.generation`)   |
  *
- * Records point at each other by ID; each exists once, in its table.
+ * Records point at each other by ID; each exists once, in its table. Only
+ * facts are recorded — progress, streaks, and scores are worked out from them.
  */
 import type { AppData, EntityTable, Id } from "@/types/domain";
 
 import {
   CHOOSE_DAYS,
   CHOOSE_PRAYERS,
-  CHOOSE_PROGRESS,
   CHOOSE_QUIZ_ANSWERS,
   CHOOSE_QUIZ_ATTEMPTS,
   CHOOSE_QUIZ_QUESTIONS,
@@ -33,7 +33,6 @@ import {
 import {
   GRATITUDE_DAYS,
   GRATITUDE_PRAYERS,
-  GRATITUDE_PROGRESS,
   GRATITUDE_QUIZ_ANSWERS,
   GRATITUDE_QUIZ_ATTEMPTS,
   GRATITUDE_QUIZ_QUESTIONS,
@@ -46,7 +45,6 @@ import {
   PLAN_REST,
   REST_DAYS,
   REST_PRAYERS,
-  REST_PROGRESS,
   REST_QUIZ_QUESTIONS,
   REST_QUIZZES,
   REST_REFLECTIONS,
@@ -57,12 +55,11 @@ import {
   PLAN_STORM,
   STORM_DAYS,
   STORM_PRAYERS,
-  STORM_PROGRESS,
   STORM_REFLECTIONS,
   STORM_SCRIPTURE,
 } from "./plan-storm";
 import { MOCK_GENERATION, PLAN_NEIGHBOR, PLAN_SALT } from "./plans-pending";
-import { MOCK_LIBRARY_EXTRAS, MOCK_PROGRESS } from "./progress";
+import { MOCK_LIBRARY_EXTRAS } from "./library";
 import { MOCK_SERMONS } from "./sermons";
 import { MOCK_REMINDERS, MOCK_SETTINGS, MOCK_USER } from "./user";
 
@@ -76,11 +73,9 @@ function toTable<T extends { id: Id }>(records: readonly T[]): EntityTable<T> {
 export const MOCK_DATA: AppData = {
   user: MOCK_USER,
   settings: MOCK_SETTINGS,
-  progress: MOCK_PROGRESS,
   sermons: toTable(MOCK_SERMONS),
   plans: toTable([PLAN_CHOOSE, PLAN_GRATITUDE, PLAN_STORM, PLAN_REST, PLAN_SALT, PLAN_NEIGHBOR]),
   planDays: toTable([...CHOOSE_DAYS, ...GRATITUDE_DAYS, ...STORM_DAYS, ...REST_DAYS]),
-  planProgress: toTable([CHOOSE_PROGRESS, GRATITUDE_PROGRESS, STORM_PROGRESS, REST_PROGRESS]),
   scripture: toTable([
     ...CHOOSE_SCRIPTURE,
     ...GRATITUDE_SCRIPTURE,

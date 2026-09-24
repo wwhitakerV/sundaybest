@@ -1,11 +1,4 @@
-import type {
-  Plan,
-  PlanProgress,
-  Quiz,
-  QuizAnswer,
-  QuizAttempt,
-  QuizQuestion,
-} from "@/types/domain";
+import type { Plan, Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "@/types/domain";
 
 import { ALL_STEPS, makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
@@ -274,15 +267,6 @@ export const GRATITUDE_SCRIPTURE = RECORDS.map((records) => records.scripture);
 export const GRATITUDE_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
 export const GRATITUDE_PRAYERS = RECORDS.map((records) => records.prayer);
 
-export const GRATITUDE_PROGRESS: PlanProgress = {
-  id: `${PLAN_GRATITUDE.id}-progress`,
-  createdAt: "2026-08-30T06:36:00.000Z",
-  updatedAt: "2026-09-05T07:05:00.000Z",
-  planId: PLAN_GRATITUDE.id,
-  currentDayNumber: 7,
-  completedDayNumbers: [1, 2, 3, 4, 5, 6, 7],
-};
-
 // ---------------------------------------------------------------------------
 // Quick Check — after the last day, finished with every answer right
 // ---------------------------------------------------------------------------
@@ -358,7 +342,6 @@ const ATTEMPT: QuizAttempt = {
   status: "completed",
   startedAt: "2026-09-05T07:06:00.000Z",
   completedAt: "2026-09-05T07:09:00.000Z",
-  score: { correct: 3, total: 3 },
 };
 
 const ANSWERS: QuizAnswer[] = QUESTIONS.map((question, index) => {
@@ -370,7 +353,6 @@ const ANSWERS: QuizAnswer[] = QUESTIONS.map((question, index) => {
     attemptId: ATTEMPT.id,
     questionId: question.id,
     choiceId: question.correctChoiceId,
-    isCorrect: true,
     answeredAt,
   };
 });

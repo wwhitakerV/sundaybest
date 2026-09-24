@@ -63,6 +63,10 @@ export type PlanDay = Entity & {
   scriptureId: Id;
   /** The steps finished so far, in the order they were finished. */
   completedSteps: StudyStep[];
+  /**
+   * `completedAt` is the day's completion record: progress, streaks, and
+   * weekly counts are all worked out from it.
+   */
   /** The day it's meant for, once the plan has started. */
   scheduledOn: IsoDate | null;
   startedAt: IsoDateTime | null;

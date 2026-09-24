@@ -8,7 +8,6 @@ export type * from "./devotion";
 export type * from "./generation";
 export type * from "./library";
 export type * from "./plan";
-export type * from "./progress";
 export type * from "./quiz";
 export type * from "./reminder";
 export type * from "./scripture";

@@ -22,16 +22,34 @@ haptics/      tap and vibration feedback
 accessibility/ OS accessibility settings (Reduce Motion)
 notifications/ notification permission (stubbed until expo-notifications lands)
 mock-data/    connected mock records for every screen, as `AppData` (see below)
+store/        the app store: state, reducer, selectors, provider (see below)
 ```
+
+## `store/`
+
+The single source of truth for application state — React Context +
+`useReducer`, no library. `AppStoreProvider` (mounted in `AppProviders`) holds
+`AppState`: normalized tables of facts, starting from `mock-data/`. Read it
+with `useAppSelector(selector)`, change it with `useAppDispatch()`; components
+never learn where the data came from.
+
+- **Selectors** (`selectors/`) are pure: `(state, …args) => value`. Anything
+  derivable — plan progress and percentages, remaining days, quiz scores,
+  streaks, weekly counts — is a selector, never stored. Ones that depend on
+  the date take it as an argument (`useToday()` supplies it).
+- **Actions** (`actions.ts`) carry their own timestamps and new IDs, so the
+  reducer never reads the clock and stays deterministic.
 
 ## `mock-data/`
 
 Stand-in data until the local database holds real records: one user, their
-settings, reminders, progress, and library, and plans in every state (draft,
+settings, reminders, and library, and plans in every state (draft,
 generating, ready, active, completed, saved) with their days, Scripture,
 reflections, prayers, and quizzes. Everything is typed with `@/types/domain`,
 points at related records by ID, and is exported once, as `MOCK_DATA`, from
 `@/core/mock-data`. "Today" is fixed (`MOCK_TODAY`) so every date lines up.
+Only facts are recorded; progress, streaks, and scores are worked out by the
+store's selectors.
 
 ## `storage/`
 

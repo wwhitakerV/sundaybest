@@ -43,27 +43,21 @@ export type QuizQuestion = Entity & {
 /** - `inProgress` — started, not every question answered. - `completed` — done. */
 export type QuizAttemptStatus = "inProgress" | "completed";
 
-/** How a finished attempt went. */
-export type QuizScore = {
-  correct: number;
-  total: number;
-};
-
 /** One go at a quiz. */
 export type QuizAttempt = Entity & {
   quizId: Id;
   status: QuizAttemptStatus;
   startedAt: IsoDateTime;
   completedAt: IsoDateTime | null;
-  /** Set once `completed`, as it stood then. */
-  score: QuizScore | null;
 };
 
-/** The choice the user picked for one question, in one attempt. */
+/**
+ * The choice the user picked for one question, in one attempt. Whether it's
+ * right is worked out against the question's `correctChoiceId`.
+ */
 export type QuizAnswer = Entity & {
   attemptId: Id;
   questionId: Id;
   choiceId: Id;
-  isCorrect: boolean;
   answeredAt: IsoDateTime;
 };

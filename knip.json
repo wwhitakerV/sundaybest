@@ -4,7 +4,7 @@
     "src/app/**/*.{ts,tsx}",
     "tests/**/*.{ts,tsx}",
     "src/types/domain/index.ts",
-    "src/core/mock-data/index.ts"
+    "src/core/store/index.ts"
   ],
   "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
   "ignore": ["src/features/_template/**"],

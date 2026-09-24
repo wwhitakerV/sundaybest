@@ -9,7 +9,6 @@ describe("MOCK_DATA", () => {
       data.sermons,
       data.plans,
       data.planDays,
-      data.planProgress,
       data.scripture,
       data.reflections,
       data.prayers,
@@ -73,40 +72,26 @@ describe("MOCK_DATA", () => {
     for (const answer of all(data.quizAnswers)) {
       const question = data.quizQuestions[answer.questionId];
       expect(data.quizAttempts[answer.attemptId]).toBeDefined();
-      expect(answer.isCorrect).toBe(answer.choiceId === question?.correctChoiceId);
+      expect(question?.choices.map((choice) => choice.id)).toContain(answer.choiceId);
     }
   });
 
-  it("scores each finished attempt from its answers", () => {
+  it("answers every question in a finished attempt, and some in an unfinished one", () => {
     for (const attempt of all(data.quizAttempts)) {
-      if (attempt.status !== "completed") continue;
-      const answers = all(data.quizAnswers).filter((answer) => answer.attemptId === attempt.id);
+      const answered = all(data.quizAnswers).filter((answer) => answer.attemptId === attempt.id);
+      const questions = all(data.quizQuestions).filter(
+        (question) => question.quizId === attempt.quizId,
+      );
 
-      expect(attempt.score).toEqual({
-        correct: answers.filter((answer) => answer.isCorrect).length,
-        total: answers.length,
-      });
+      expect(answered.length).toBeLessThanOrEqual(questions.length);
+      expect(answered.length === questions.length).toBe(attempt.status === "completed");
     }
   });
 
-  it("marks a plan's finished days as it tracks them", () => {
-    for (const progress of all(data.planProgress)) {
-      const completed = all(data.planDays)
-        .filter((day) => day.planId === progress.planId && day.status === "completed")
-        .map((day) => day.dayNumber)
-        .sort((a, b) => a - b);
-
-      expect(progress.completedDayNumbers).toEqual(completed);
+  it("marks a day completed exactly when it has a completion time", () => {
+    for (const day of all(data.planDays)) {
+      expect(day.status === "completed").toBe(day.completedAt !== null);
     }
-  });
-
-  it("counts every finished day in the user's history, on the day it was finished", () => {
-    const finishedOn = all(data.planDays)
-      .flatMap((day) => (day.completedAt ? [day.completedAt.slice(0, 10)] : []))
-      .sort();
-
-    expect(data.progress.studiedOn).toEqual(finishedOn);
-    expect(data.progress.completedDayCount).toBe(finishedOn.length);
   });
 
   it("saves only things that exist", () => {

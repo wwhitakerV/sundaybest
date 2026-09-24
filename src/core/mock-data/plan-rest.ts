@@ -1,4 +1,4 @@
-import type { LibraryItem, Plan, PlanProgress, Quiz, QuizQuestion } from "@/types/domain";
+import type { LibraryItem, Plan, Quiz, QuizQuestion } from "@/types/domain";
 
 import { makeDayRecords } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
@@ -68,15 +68,6 @@ export const REST_DAYS = [RECORDS.day];
 export const REST_SCRIPTURE = [RECORDS.scripture];
 export const REST_REFLECTIONS = RECORDS.reflections;
 export const REST_PRAYERS = [RECORDS.prayer];
-
-export const REST_PROGRESS: PlanProgress = {
-  id: `${PLAN_REST.id}-progress`,
-  createdAt: BUILT_AT,
-  updatedAt: BUILT_AT,
-  planId: PLAN_REST.id,
-  currentDayNumber: 1,
-  completedDayNumbers: [],
-};
 
 /** Saved for later — the Plans tab's "Saved". */
 export const REST_SAVED: LibraryItem = {

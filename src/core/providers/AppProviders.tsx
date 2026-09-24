@@ -4,6 +4,7 @@ import * as SplashScreen from "expo-splash-screen";
 
 import { createQueryClient } from "@/core/api/query-client";
 import { useAppFonts } from "@/core/fonts/use-app-fonts";
+import { AppStoreProvider } from "@/core/store";
 
 // Side-effect import. `env.ts` validates and freezes the environment at module
 // scope, so importing it from the composition root is what makes a misconfigured
@@ -30,7 +31,8 @@ export type AppProvidersProps = {
 };
 
 /**
- * Single place every app-wide provider gets mounted.
+ * Single place every app-wide provider gets mounted — including the app
+ * store (`@/core/store`), the single source of truth for application state.
  *
  * Integrity monitoring is deliberately **not** mounted here yet. It needs a
  * session to clear and a monitoring sink to report to, and neither is wired up —
@@ -58,5 +60,9 @@ export function AppProviders({ children, fallback }: AppProvidersProps) {
 
   if (!ready) return fallback;
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AppStoreProvider>{children}</AppStoreProvider>
+    </QueryClientProvider>
+  );
 }
