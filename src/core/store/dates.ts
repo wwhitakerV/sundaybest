@@ -1,4 +1,5 @@
 import type { IsoDate, IsoDateTime, Weekday } from "@/types/domain";
+import { addDays } from "@/utils/dates/addDays";
 
 const WEEKDAYS: readonly Weekday[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
@@ -15,12 +16,8 @@ export function toIsoDate(at: IsoDateTime): IsoDate {
   return at.slice(0, 10);
 }
 
-/** `date` moved by `days` (negative goes back). */
-export function addDays(date: IsoDate, days: number): IsoDate {
-  const moved = toUtcMidnight(date);
-  moved.setUTCDate(moved.getUTCDate() + days);
-  return moved.toISOString().slice(0, 10);
-}
+/** `date` moved by `days` (negative goes back) — shared with the app from `utils`. */
+export { addDays };
 
 export function getWeekday(date: IsoDate): Weekday {
   return WEEKDAYS.at(toUtcMidnight(date).getUTCDay()) ?? "sun";

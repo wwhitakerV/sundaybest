@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { UserRound } from "lucide-react-native";
 
@@ -7,22 +7,38 @@ import { Screen } from "@/ui/Screen";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { FilterTabs } from "@/ui/FilterTabs";
 import { TitleHeader } from "@/ui/TitleHeader";
-import { useTheme } from "@/theme";
 import {
   getCompletedPlans,
   getInProgressPlans,
   getLibraryPlans,
+  getPlanProgress,
+  getSermonForPlan,
   getUserPlans,
   useAppSelector,
 } from "@/core/store";
-import { getPlanFilterOptions } from "../logic/plan-filters";
+import { LibraryPlanCard } from "../components/LibraryPlanCard";
+import { describeLibraryPlan } from "../logic/library";
+import { getPlanFilterOptions, getPlansForFilter } from "../logic/plan-filters";
 import { planOverviewHref } from "../logic/routes";
 
+/**
+ * The library: the user's plans, filtered — All, In progress, Done, Saved —
+ * each list and count read from the store's selectors. Each plan is a card
+ * showing where it stands (the day it's on, or when it finished) and opens
+ * the plan.
+ */
 export function PlansScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const [filter, setFilter] = useState("All");
-  const plans = useAppSelector(getUserPlans);
+  const cards = useAppSelector((state) =>
+    getPlansForFilter(state, filter).map((plan) => ({
+      plan,
+      thumbnailUrl: getSermonForPlan(state, plan.id)?.thumbnailUrl ?? null,
+      look: describeLibraryPlan(plan, {
+        currentDayNumber: getPlanProgress(state, plan.id)?.currentDayNumber ?? 1,
+      }),
+    })),
+  );
   const filters = useAppSelector((state) =>
     getPlanFilterOptions({
       all: getUserPlans(state).length,
@@ -54,22 +70,19 @@ export function PlansScreen() {
         onSelect={setFilter}
       />
 
-      <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
-
       <FlatList
-        data={plans}
-        keyExtractor={(plan) => plan.id}
-        renderItem={({ item: plan }) => (
-          <Pressable
+        data={cards}
+        keyExtractor={({ plan }) => plan.id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item: { plan, thumbnailUrl, look } }) => (
+          <LibraryPlanCard
             testID={`plans-item-${plan.id}`}
-            accessibilityRole="button"
-            style={[styles.item, { borderBottomColor: theme.colors.divider }]}
+            title={plan.title}
+            thumbnailUrl={thumbnailUrl}
+            look={look}
             onPress={() => router.push(planOverviewHref(plan.id))}
-          >
-            <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
-              {plan.title}
-            </Text>
-          </Pressable>
+          />
         )}
       />
     </Screen>
@@ -77,5 +90,5 @@ export function PlansScreen() {
 }
 
 const styles = StyleSheet.create({
-  item: { paddingVertical: 16, borderBottomWidth: 1 },
+  list: { gap: 16, paddingBottom: 140 },
 });

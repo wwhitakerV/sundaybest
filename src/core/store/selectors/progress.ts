@@ -1,9 +1,9 @@
-import type { Id, IsoDate, PlanDay, Weekday } from "@/types/domain";
+import type { Id, IsoDate, Plan, PlanDay, Weekday } from "@/types/domain";
 
 import { addDays, compareIso, getWeekday, getWeekStart, listDates, toIsoDate } from "../dates";
 import type { AppState } from "../state";
 import { findById, listAll } from "../table";
-import { getPlanDays } from "./plans";
+import { getActivePlan, getCurrentPlanDay, getPlanDays } from "./plans";
 
 /** How far through one plan the user is — all worked out from its days. */
 export type PlanProgress = {
@@ -109,6 +109,22 @@ export function getStreak(state: AppState, today: IsoDate): Streak {
   }
 
   return { current, longest };
+}
+
+/** The study to do next: the plan under way, its day, and the date it's for. */
+export type UpNext = { plan: Plan; day: PlanDay; date: IsoDate };
+
+/**
+ * What's up next: the active plan's current day — today, or tomorrow once a
+ * day's been finished today (one a day is the plan's pace). Nothing without
+ * a plan under way.
+ */
+export function getUpNext(state: AppState, today: IsoDate): UpNext | null {
+  const plan = getActivePlan(state);
+  const day = plan ? getCurrentPlanDay(state, plan.id) : null;
+  if (!plan || !day || day.status === "completed") return null;
+  const studiedToday = getStudyDates(state).includes(today);
+  return { plan, day, date: studiedToday ? addDays(today, 1) : today };
 }
 
 export type ProgressTotals = { completedDayCount: number; completedPlanCount: number };

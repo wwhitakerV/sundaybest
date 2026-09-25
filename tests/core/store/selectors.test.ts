@@ -1,5 +1,6 @@
 import {
   INITIAL_STATE,
+  appReducer,
   getActivePlan,
   getCompletedPlans,
   getDayMinutes,
@@ -7,6 +8,8 @@ import {
   getCurrentPlanDay,
   getDayScripture,
   getInProgressPlans,
+  getLatestQuizScore,
+  getUpNext,
   getLibraryPlans,
   getPlanById,
   getPlanDay,
@@ -213,6 +216,45 @@ describe("quiz selectors", () => {
     const savedDay = getPlanDay(state, SAVED, 1)?.id ?? "";
 
     expect(getQuizAttempt(state, getQuizForDay(state, savedDay)?.id ?? "")).toBeNull();
+  });
+});
+
+describe("getUpNext", () => {
+  it("is the active plan's current day, today, when nothing's been finished today", () => {
+    const next = getUpNext(state, TODAY);
+
+    expect(next?.plan.id).toBe(ACTIVE);
+    expect(next?.day.dayNumber).toBe(2);
+    expect(next?.date).toBe(TODAY);
+  });
+
+  it("is tomorrow once a day has been finished today", () => {
+    const done = appReducer(state, {
+      type: "planDay/complete",
+      dayId: getPlanDay(state, ACTIVE, 2)?.id ?? "",
+      today: TODAY,
+      at: `${TODAY}T07:00:00.000Z`,
+    });
+    const next = getUpNext(done, TODAY);
+
+    expect(next?.day.dayNumber).toBe(3);
+    expect(next?.date).toBe("2026-09-24");
+  });
+
+  it("is nothing without a plan under way", () => {
+    const none: AppState = { ...state, plans: {} };
+
+    expect(getUpNext(none, TODAY)).toBeNull();
+  });
+});
+
+describe("getLatestQuizScore", () => {
+  it("scores the quiz finished most recently", () => {
+    expect(getLatestQuizScore(state)).toMatchObject({ correct: 1, total: 2 });
+  });
+
+  it("is nothing before any quiz is finished", () => {
+    expect(getLatestQuizScore({ ...state, quizAttempts: {} })).toBeNull();
   });
 });
 

@@ -79,6 +79,15 @@ export type QuizScore = {
   percentage: number;
 };
 
+/** The score of the quiz finished most recently, or null before any is. */
+export function getLatestQuizScore(state: AppState): QuizScore | null {
+  const latest = listAll(state.quizAttempts)
+    .filter((attempt) => attempt.status === "completed")
+    .sort((a, b) => compareIso(b.completedAt ?? "", a.completedAt ?? ""))
+    .at(0);
+  return latest ? getQuizScore(state, latest.id) : null;
+}
+
 export function getQuizScore(state: AppState, attemptId: Id): QuizScore | null {
   const attempt = findById(state.quizAttempts, attemptId);
   if (!attempt) return null;

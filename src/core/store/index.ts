@@ -44,12 +44,14 @@ export {
   getPlanProgress,
   getProgressForDateRange,
   getProgressTotals,
+  getUpNext,
   getStreak,
   getStudyDates,
   getWeeklyCompletionCounts,
   type DayActivity,
   type PlanProgress,
   type ProgressTotals,
+  type UpNext,
   type Streak,
 } from "./selectors/progress";
 export {
@@ -58,6 +60,7 @@ export {
   getQuizAttempt,
   getQuizForDay,
   getQuizQuestions,
+  getLatestQuizScore,
   getQuizScore,
   getQuizStatus,
   getQuizzesForPlan,

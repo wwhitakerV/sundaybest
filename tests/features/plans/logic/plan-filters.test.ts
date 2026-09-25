@@ -1,4 +1,5 @@
-import { getPlanFilterOptions } from "@/features/plans/logic/plan-filters";
+import { INITIAL_STATE } from "@/core/store";
+import { getPlanFilterOptions, getPlansForFilter } from "@/features/plans/logic/plan-filters";
 
 describe("getPlanFilterOptions", () => {
   it("labels each filter with its count, in order", () => {
@@ -16,5 +17,20 @@ describe("getPlanFilterOptions", () => {
         (option) => option.count,
       ),
     ).toEqual([0, 0, 0, 0]);
+  });
+});
+
+describe("getPlansForFilter", () => {
+  const ids = (filter: string) => getPlansForFilter(INITIAL_STATE, filter).map((plan) => plan.id);
+
+  it("reads each filter's plans from the store", () => {
+    expect(ids("In progress")).toEqual(["plan-choose-whom-you-will-serve"]);
+    expect(ids("Done")).toEqual(["plan-give-thanks"]);
+    expect(ids("Saved")).toEqual(["plan-come-to-me-and-rest", "plan-give-thanks"]);
+    expect(ids("All")).toHaveLength(4);
+  });
+
+  it("shows every plan for a filter it doesn't know", () => {
+    expect(ids("Something else")).toEqual(ids("All"));
   });
 });
