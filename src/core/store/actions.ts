@@ -31,9 +31,9 @@ export type GeneratedPlanContent = {
   sermon: Pick<
     SermonSource,
     | "title"
-    | "speaker"
     | "church"
     | "thumbnailUrl"
+    | "thumbnailColors"
     | "durationSeconds"
     | "publishedOn"
     | "transcriptStatus"

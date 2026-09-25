@@ -9,6 +9,8 @@ jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
   useLocalSearchParams: jest.fn<{ planId: string }, []>(),
+  // The screen's shown — so the tab bar and status bar may follow it.
+  useIsFocused: () => true,
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
@@ -51,13 +53,70 @@ describe("PlanOverviewScreen", () => {
     expect(screen.queryByTestId("plan-overview-screen")).toBeNull();
   });
 
-  it("shows the plan's title and the sermon it's from", () => {
+  it("puts the plan in context: where it stands, its title, and its church", () => {
     renderOverview(ACTIVE);
 
-    expect(screen.getByTestId("plan-overview-title")).toHaveTextContent(
-      "Choose Whom You Will Serve",
+    expect(screen.getByTestId("plan-overview-status")).toHaveTextContent(
+      "IN PROGRESS · DAY 2 OF 6",
     );
-    expect(screen.getByText("From Choose Whom You Will Serve · VOUS Church")).toBeVisible();
+    expect(screen.getByTestId("plan-overview-title")).toHaveTextContent(
+      "Today I Choose to Be a Blessing",
+    );
+    expect(screen.getByText("VOUS Church")).toBeVisible();
+  });
+
+  it("sets its hero in the sermon's colours", () => {
+    renderOverview(ACTIVE);
+
+    expect(screen.getByTestId("plan-overview-hero")).toHaveStyle({ backgroundColor: "#3D403F" });
+  });
+
+  it("washes the sermon's still faintly across the hero, behind its artwork", () => {
+    // A sermon with its still on the web (a bundled one has no address under Jest).
+    renderOverview(READY);
+
+    expect(screen.getByTestId("plan-overview-hero-backdrop-underlay")).toHaveProp("opacity", 0.2);
+  });
+
+  it("lays its colour back over the artwork's lower part once the hero's measured", () => {
+    renderOverview(ACTIVE);
+
+    fireEvent(screen.getByTestId("plan-overview-hero"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 393, height: 700 } },
+    });
+
+    expect(screen.getByTestId("plan-overview-hero-cover-fill").props.mask).toBeTruthy();
+  });
+
+  it("covers the still with that colour too, rather than carrying it down the words", () => {
+    renderOverview(READY);
+
+    fireEvent(screen.getByTestId("plan-overview-hero"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 393, height: 700 } },
+    });
+
+    expect(screen.getByTestId("plan-overview-hero-cover")).toBeOnTheScreen();
+    expect(screen.queryByTestId("plan-overview-hero-cover-underlay")).toBeNull();
+  });
+
+  it("floats Back and More over the hero, dark over its dark colour", () => {
+    renderOverview(ACTIVE);
+
+    expect(screen.getByTestId("plan-overview-back-button")).toHaveStyle({
+      backgroundColor: "rgba(8, 9, 10, 0.5)",
+    });
+    expect(screen.getByTestId("plan-overview-more-button")).toHaveStyle({
+      backgroundColor: "rgba(8, 9, 10, 0.5)",
+    });
+  });
+
+  it("has one Continue at rest — the hero's", () => {
+    renderOverview(ACTIVE);
+
+    expect(screen.getAllByText("Continue Day 2")).toHaveLength(1);
+    expect(screen.getByTestId("plan-overview-continue-button")).toHaveAccessibleName(
+      "Continue Day 2",
+    );
   });
 
   it("fades its content in as it appears, rather than cutting to it", () => {
@@ -68,10 +127,9 @@ describe("PlanOverviewScreen", () => {
     ).toBeVisible();
   });
 
-  it("shows the day it's on and how far through it is", () => {
+  it("shows how far through it is", () => {
     renderOverview(ACTIVE);
 
-    expect(screen.getByTestId("plan-overview-current-day")).toHaveTextContent("2 of 6");
     expect(screen.getByLabelText("1 of 6 days done")).toBeVisible();
   });
 
@@ -131,6 +189,8 @@ describe("PlanOverviewScreen", () => {
 
     expect(screen.getByTestId("plan-overview-day-1")).toHaveTextContent(/Start/);
     expect(screen.getByLabelText("0 of 3 days done")).toBeVisible();
+    expect(screen.getByTestId("plan-overview-status")).toHaveTextContent("NOT STARTED · 3 DAYS");
+    expect(screen.getByTestId("plan-overview-continue-button")).toHaveAccessibleName("Start Day 1");
     fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
     expect(mockPush).toHaveBeenCalledWith({
       pathname: "/study/[planId]",

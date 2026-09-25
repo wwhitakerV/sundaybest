@@ -10,14 +10,18 @@ const GAP = 4;
 const DOT_SIZE = SEGMENT_HEIGHT;
 const DOT_RING = 0.25;
 
-function segmentColor(state: StepState, theme: Theme): string {
+/** The ink of the colour the line sits on; undefined on the app's own page. */
+type LineInk = "light" | "dark";
+
+function segmentColor(state: StepState, theme: Theme, ink: LineInk | undefined): string {
   switch (state) {
     case "completed":
-      return theme.palette.black;
+      return ink === "light" ? theme.colors.inkOnDark : theme.palette.black;
     case "active":
       return theme.colors.accent;
     case "upcoming":
-      return theme.palette.greyLightest;
+      if (ink === "light") return theme.colors.inkOnDarkFaint;
+      return ink === "dark" ? theme.colors.inkOnLightFaint : theme.palette.greyLightest;
   }
 }
 
@@ -30,6 +34,11 @@ export type StepProgressProps = {
   pages?: readonly number[];
   /** 0-indexed page within the active step. */
   activePage?: number;
+  /**
+   * Set on a colour of the content's own: `light` ink on a dark colour
+   * (done steps white), `dark` ink on a light one. Omit on the app's page.
+   */
+  ink?: "light" | "dark";
   testID?: string;
 };
 
@@ -49,6 +58,7 @@ export function StepProgress({
   activeIndex,
   pages,
   activePage = 0,
+  ink,
   testID,
 }: StepProgressProps) {
   const theme = useTheme();
@@ -65,14 +75,14 @@ export function StepProgress({
             <View
               key={index}
               testID={segmentID}
-              style={[styles.segment, { backgroundColor: segmentColor(state, theme) }]}
+              style={[styles.segment, { backgroundColor: segmentColor(state, theme, ink) }]}
             />
           );
         }
 
         const { fill, dots } = getSegmentFill(state, pageCount, activePage);
-        const fillColor = segmentColor(state === "completed" ? "completed" : "active", theme);
-        const trackColor = state === "completed" ? fillColor : segmentColor("upcoming", theme);
+        const fillColor = segmentColor(state === "completed" ? "completed" : "active", theme, ink);
+        const trackColor = state === "completed" ? fillColor : segmentColor("upcoming", theme, ink);
 
         return (
           <View

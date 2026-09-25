@@ -1,17 +1,26 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { AppStoreProvider, INITIAL_STATE, appReducer, type AppState } from "@/core/store";
+import {
+  AppStoreProvider,
+  INITIAL_STATE,
+  appReducer,
+  getDayMinutes,
+  getSermonForPlan,
+  type AppState,
+} from "@/core/store";
 import { HomeScreen } from "@/features/home/screens/HomeScreen";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  // Home's shown — so the status bar may follow its plan bar.
+  useIsFocused: () => true,
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
-// The store's starting data has "Choose Whom You Will Serve" under way: six
+// The store's starting data has "Today I Choose to Be a Blessing" under way: six
 // days, day 1 done, day 2 today.
 const ACTIVE = "plan-choose-whom-you-will-serve";
 
@@ -54,6 +63,22 @@ describe("HomeScreen", () => {
     expect(screen.getByText("SUNDAYBEST")).toBeVisible();
   });
 
+  it("lets its content scroll up over the fixed header, not under it", () => {
+    renderHome();
+
+    // A scroll view clips its content to its own frame unless told not to;
+    // unclipped, content scrolled past its top keeps drawing over the header.
+    expect(screen.getByTestId("home-tab-scroll")).toHaveStyle({ overflow: "visible" });
+  });
+
+  it("leaves snapping a let-go collapse to iOS — free above it and below it", () => {
+    renderHome();
+
+    const scroll = screen.getByTestId("home-tab-scroll");
+    expect(scroll).toHaveProp("snapToStart", false);
+    expect(scroll).toHaveProp("snapToEnd", false);
+  });
+
   it("navigates to Settings when the account icon is pressed", () => {
     renderHome();
 
@@ -92,22 +117,94 @@ describe("HomeScreen", () => {
   });
 
   describe("with a plan under way", () => {
-    it("shows the plan, the day it's on, and how far through it is", () => {
+    it("features it at the top, full width, in its sermon's colours", () => {
       renderHome();
 
-      expect(screen.getByTestId("home-tab-active-plan")).toBeVisible();
-      expect(screen.getAllByText("Choose Whom You Will Serve").length).toBeGreaterThan(0);
-      expect(screen.getByTestId("home-tab-active-plan-day")).toHaveTextContent("Day 2 of 6");
-      expect(screen.getByText("Continue")).toBeVisible();
+      expect(screen.getByTestId("home-tab-active-hero")).toHaveStyle({
+        backgroundColor: "#3D403F",
+      });
+      expect(screen.getByTestId("home-tab-active-hero-backdrop")).toBeOnTheScreen();
     });
 
-    it("makes the whole card one control, saying where the plan stands", () => {
+    it("gives the colour room to breathe above and below the plan", () => {
+      renderHome();
+
+      expect(screen.getByTestId("home-tab-active-hero")).toHaveStyle({
+        paddingTop: 52,
+        paddingBottom: 44,
+      });
+    });
+
+    it("puts the plan in context: where it stands, its title, and its church", () => {
+      renderHome();
+
+      expect(screen.getByTestId("home-tab-active-plan-status")).toHaveTextContent(
+        "IN PROGRESS · DAY 2 OF 6",
+      );
+      const hero = within(screen.getByTestId("home-tab-active-hero"));
+      expect(hero.getByText("Today I Choose to Be a Blessing")).toBeVisible();
+      expect(hero.getByText("VOUS Church")).toBeVisible();
+    });
+
+    it("says what today's study is, and about how long it takes", () => {
+      renderHome();
+      const minutes = getDayMinutes(INITIAL_STATE, `${ACTIVE}-day-2`);
+
+      expect(screen.getByTestId("home-tab-active-plan-today")).toHaveTextContent(
+        `Today: Grace is received · ${minutes} min`,
+      );
+    });
+
+    it("sets its words in white on a dark colour", () => {
+      renderHome();
+
+      const hero = within(screen.getByTestId("home-tab-active-hero"));
+      expect(hero.getByText("Today I Choose to Be a Blessing")).toHaveStyle({ color: "#FFFFFF" });
+    });
+
+    it("continues with today's day from its button", () => {
+      renderHome();
+
+      fireEvent.press(screen.getByTestId("home-tab-continue-button"));
+
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: "/study/[planId]",
+        params: { planId: ACTIVE, day: "2" },
+      });
+    });
+
+    it("opens the plan from its artwork, saying where the plan stands", () => {
       renderHome();
 
       expect(screen.getByTestId("home-tab-active-plan")).toHaveAccessibleName(
-        "Choose Whom You Will Serve, day 2 of 6. 1 of 6 days done.",
+        "Today I Choose to Be a Blessing, day 2 of 6. 1 of 6 days done.",
       );
-      expect(screen.queryByTestId("home-tab-continue-button")).toBeNull();
+    });
+
+    it("stands in a quiet colour for a sermon whose colours aren't known yet", () => {
+      const sermon = getSermonForPlan(INITIAL_STATE, ACTIVE);
+      if (!sermon) throw new Error("expected the active plan's sermon");
+      renderHome({
+        ...INITIAL_STATE,
+        sermons: Object.fromEntries(
+          Object.entries(INITIAL_STATE.sermons).map(([id, record]) => [
+            id,
+            id === sermon.id ? { ...record, thumbnailColors: [] } : record,
+          ]),
+        ),
+      });
+
+      expect(screen.getByTestId("home-tab-active-hero")).toHaveStyle({
+        backgroundColor: "#111113",
+      });
+    });
+
+    it("keeps the plan bar ready at rest, but out of the way — hidden, taking no taps", () => {
+      renderHome();
+
+      expect(screen.getByTestId("home-tab-plan-bar")).toHaveProp("pointerEvents", "none");
+      expect(screen.getByTestId("home-tab-plan-bar")).toHaveTextContent(/Day 2/);
+      expect(screen.getByTestId("home-tab-header")).toHaveProp("pointerEvents", "auto");
     });
 
     it("lists the user's plans, with a finished one marked when it finished", () => {
@@ -129,9 +226,12 @@ describe("HomeScreen", () => {
         }),
       );
 
-      expect(screen.getByTestId("home-tab-active-plan-day")).toHaveTextContent("Day 3 of 6");
+      expect(screen.getByTestId("home-tab-active-plan-status")).toHaveTextContent(
+        "IN PROGRESS · DAY 3 OF 6",
+      );
+      expect(screen.getByTestId("home-tab-continue-button")).toHaveAccessibleName("Continue Day 3");
       expect(screen.getByTestId("home-tab-active-plan")).toHaveAccessibleName(
-        "Choose Whom You Will Serve, day 3 of 6. 2 of 6 days done.",
+        "Today I Choose to Be a Blessing, day 3 of 6. 2 of 6 days done.",
       );
     });
   });

@@ -23,11 +23,16 @@ export type SermonSource = Entity & {
   url: string;
   platform: SermonPlatform;
   title: string;
-  /** Who preached it, if known. */
-  speaker: string | null;
   /** The church or channel it's from, if known. */
   church: string | null;
   thumbnailUrl: string | null;
+  /**
+   * The colours to set its thumbnail on when it's featured, as hex, the
+   * strongest first — its main colour, then an accent, then a deep anchor —
+   * worked out from the thumbnail (by the backend, once sermons are
+   * processed). Empty until known; a quiet default stands in.
+   */
+  thumbnailColors: string[];
   durationSeconds: number | null;
   publishedOn: IsoDate | null;
   transcriptStatus: TranscriptStatus;

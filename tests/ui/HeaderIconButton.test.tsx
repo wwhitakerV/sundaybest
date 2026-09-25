@@ -144,4 +144,39 @@ describe("HeaderIconButton", () => {
 
     expect(screen.getByTestId("a-header-icon-button")).not.toBe(first);
   });
+
+  describe("over a colour of the content's own", () => {
+    it("is dark with a light icon over a dark colour", () => {
+      render(
+        <HeaderIconButton
+          testID="a-header-icon-button"
+          icon={X}
+          accessibilityLabel="Close"
+          overlay="dark"
+          onPress={() => undefined}
+        />,
+      );
+
+      expect(screen.getByTestId("a-header-icon-button")).toHaveStyle({
+        backgroundColor: "rgba(8, 9, 10, 0.5)",
+        borderColor: "transparent",
+      });
+    });
+
+    it("is light with a dark icon over a light colour", () => {
+      render(
+        <HeaderIconButton
+          testID="a-header-icon-button"
+          icon={X}
+          accessibilityLabel="Close"
+          overlay="light"
+          onPress={() => undefined}
+        />,
+      );
+
+      expect(screen.getByTestId("a-header-icon-button")).toHaveStyle({
+        backgroundColor: "rgba(255, 255, 255, 0.85)",
+      });
+    });
+  });
 });

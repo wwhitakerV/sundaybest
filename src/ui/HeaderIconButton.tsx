@@ -20,6 +20,12 @@ export type HeaderIconButtonProps = {
   /** Draws the hairline border. Defaults to true; the top-level screens'
    * right-side icons (account, search) turn it off. */
   bordered?: boolean;
+  /**
+   * Floating over a colour of the content's own rather than the page: `dark`
+   * over a dark colour (a dark fill, a light icon), `light` over a light one.
+   * No border.
+   */
+  overlay?: "light" | "dark";
   testID?: string;
 };
 
@@ -40,6 +46,7 @@ export function HeaderIconButton({
   onPress,
   size = DEFAULT_ICON_SIZE,
   bordered = true,
+  overlay,
   testID,
 }: HeaderIconButtonProps) {
   const theme = useTheme();
@@ -61,12 +68,27 @@ export function HeaderIconButton({
         style={[
           styles.button,
           {
-            backgroundColor: theme.colors.background,
-            borderColor: bordered ? theme.colors.hairline : "transparent",
+            backgroundColor:
+              overlay === "dark"
+                ? theme.colors.overlayButtonDark
+                : overlay === "light"
+                  ? theme.colors.overlayButtonLight
+                  : theme.colors.background,
+            borderColor: bordered && !overlay ? theme.colors.hairline : "transparent",
           },
         ]}
       >
-        <Icon size={size} color={theme.colors.chromeIcon} strokeWidth={theme.icon.strokeWidth} />
+        <Icon
+          size={size}
+          color={
+            overlay === "dark"
+              ? theme.colors.inkOnDark
+              : overlay === "light"
+                ? theme.colors.inkOnLight
+                : theme.colors.chromeIcon
+          }
+          strokeWidth={theme.icon.strokeWidth}
+        />
       </Pressable>
     </Animated.View>
   );

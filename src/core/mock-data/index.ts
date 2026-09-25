@@ -7,7 +7,7 @@
  *
  * | Plan                         | Status     | Days | Shows                                  |
  * | ---------------------------- | ---------- | ---- | -------------------------------------- |
- * | Choose Whom You Will Serve   | active     | 6    | day 1 done, day 2 under way, quizzes   |
+ * | Today I Choose to Be a Blessing | active  | 6    | day 1 done, day 2 under way, quizzes   |
  * | Give Thanks in All Things    | completed  | 7    | every day done, perfect Quick Check    |
  * | Faith Through the Storm      | ready      | 3    | not started, no Quick Check            |
  * | Come to Me and Rest          | ready      | 1    | saved to the library, quiz untaken     |

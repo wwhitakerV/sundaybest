@@ -1,7 +1,10 @@
-import type { SermonSource } from "@/types/domain";
+import { Image } from "react-native";
 
-// Speakers and most churches are invented for the mocks; the VOUS Church
-// sermon is the one the Welcome intro and marketing screens show.
+import type { SermonSource } from "@/types/domain";
+import BLESSING_THUMBNAIL from "../../../assets/images/mock/sermon-today-i-choose-to-be-a-blessing.jpg";
+
+// Most churches are invented for the mocks; the VOUS Church sermon is the
+// active plan's, with its real thumbnail bundled until the backend sends it.
 
 export const SERMON_CHOOSE: SermonSource = {
   id: "sermon-choose-whom-you-will-serve",
@@ -9,10 +12,13 @@ export const SERMON_CHOOSE: SermonSource = {
   updatedAt: "2026-09-21T19:41:30.000Z",
   url: "https://youtube.com/watch?v=Qm81xRz4",
   platform: "youtube",
-  title: "Choose Whom You Will Serve",
-  speaker: null,
+  title: "Today I Choose to Be a Blessing",
   church: "VOUS Church",
-  thumbnailUrl: "https://i.ytimg.com/vi/Qm81xRz4/hqdefault.jpg",
+  // Bundled for now; the backend will send the video's own thumbnail URL.
+  thumbnailUrl: Image.resolveAssetSource(BLESSING_THUMBNAIL).uri,
+  // From the thumbnail, deepened for white type: the grey paper panel's
+  // graphite, the cyan band's teal, and the blazer's warm near-black.
+  thumbnailColors: ["#3D403F", "#1F5A6E", "#1C1D20"],
   durationSeconds: 2_874,
   publishedOn: "2026-09-20",
   transcriptStatus: "available",
@@ -48,9 +54,9 @@ export const SERMON_GRATITUDE: SermonSource = {
   url: "https://youtube.com/watch?v=Gt7hanks22",
   platform: "youtube",
   title: "Give Thanks in All Things",
-  speaker: "Dana Reyes",
   church: "Grace Street Fellowship",
   thumbnailUrl: "https://i.ytimg.com/vi/Gt7hanks22/hqdefault.jpg",
+  thumbnailColors: [],
   durationSeconds: 2_406,
   publishedOn: "2026-08-23",
   transcriptStatus: "autoCaptions",
@@ -72,9 +78,9 @@ export const SERMON_STORM: SermonSource = {
   url: "https://youtube.com/watch?v=St0rmF4ith",
   platform: "youtube",
   title: "Faith Through the Storm",
-  speaker: "Marcus Hale",
   church: "Harbor Light Church",
   thumbnailUrl: "https://i.ytimg.com/vi/St0rmF4ith/hqdefault.jpg",
+  thumbnailColors: [],
   durationSeconds: 2_152,
   publishedOn: "2026-09-13",
   transcriptStatus: "available",
@@ -98,9 +104,9 @@ export const SERMON_REST: SermonSource = {
   url: "https://vimeo.com/881240517",
   platform: "vimeo",
   title: "Come to Me and Rest",
-  speaker: "Samuel Okafor",
   church: "Northside Community Church",
   thumbnailUrl: null,
+  thumbnailColors: [],
   durationSeconds: 1_845,
   publishedOn: "2026-09-06",
   transcriptStatus: "available",
@@ -121,9 +127,9 @@ export const SERMON_SALT: SermonSource = {
   url: "https://youtube.com/watch?v=S4ltL1ght9",
   platform: "youtube",
   title: "Salt and Light",
-  speaker: "Priya Natarajan",
   church: "Riverside Chapel",
   thumbnailUrl: "https://i.ytimg.com/vi/S4ltL1ght9/hqdefault.jpg",
+  thumbnailColors: [],
   durationSeconds: 2_590,
   publishedOn: "2026-09-20",
   transcriptStatus: "available",
@@ -140,9 +146,9 @@ export const SERMON_NEIGHBOR: SermonSource = {
   url: "https://youtube.com/watch?v=N3ighb0rLk",
   platform: "youtube",
   title: "Who Is My Neighbor?",
-  speaker: "Elena Brooks",
   church: "Harbor Light Church",
   thumbnailUrl: "https://i.ytimg.com/vi/N3ighb0rLk/hqdefault.jpg",
+  thumbnailColors: [],
   durationSeconds: 2_233,
   publishedOn: "2026-09-20",
   transcriptStatus: "available",
@@ -163,9 +169,9 @@ export const SERMON_SAMPLE: SermonSource = {
   url: "https://youtube.com/watch?v=S4mpl3Pl4n",
   platform: "youtube",
   title: "God Won't Leave You",
-  speaker: "Marcus Hale",
   church: "Harbor Light Church",
   thumbnailUrl: null,
+  thumbnailColors: [],
   durationSeconds: 2_310,
   publishedOn: "2026-07-26",
   transcriptStatus: "available",

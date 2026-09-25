@@ -6,7 +6,7 @@ import { SERMON_CHOOSE } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
- * The active plan: six days from "Choose Whom You Will Serve", started
+ * The active plan: six days from "Today I Choose to Be a Blessing", started
  * yesterday. Day 1 is done; day 2 is under way today (Read and Scripture
  * done, the first reflection answered). Its Quick Checks show a finished
  * quiz with one wrong answer, and one half-way through.
@@ -20,7 +20,7 @@ export const PLAN_CHOOSE: Plan = {
   updatedAt: "2026-09-23T06:40:00.000Z",
   userId: MOCK_USER.id,
   sermonId: SERMON_CHOOSE.id,
-  title: "Choose Whom You Will Serve",
+  title: "Today I Choose to Be a Blessing",
   status: "active",
   lengthDays: 6,
   quickCheckEnabled: true,

@@ -1,15 +1,22 @@
+import { useContext } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
 import Animated from "react-native-reanimated";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { useTheme } from "@/theme";
 import { DotPagination } from "@/ui/DotPagination";
-import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
+import { BottomFade } from "@/ui/BottomFade";
+import {
+  FLOATING_NAV_BAR,
+  getFloatingNavBarBottom,
+  getFloatingNavBarTintHeight,
+} from "@/ui/floatingNavBar";
 import { useStudyNavEntrance } from "../hooks/use-study-nav-entrance";
 import { STUDY_STEP_COUNT } from "../logic/study-steps";
 import { SparkBurst } from "./SparkBurst";
 
-const { capsuleHeight, capsuleRadius, sideMargin, bottomMargin } = FLOATING_NAV_BAR;
+const { capsuleHeight, capsuleRadius, sideMargin } = FLOATING_NAV_BAR;
 
 const ARROW_ICON_SIZE = 20;
 const ARROW_STROKE_WIDTH = 2;
@@ -37,18 +44,33 @@ export type StudyNavProps = {
 export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: StudyNavProps) {
   const theme = useTheme();
   const { entranceStyle, showSparks } = useStudyNavEntrance();
+  const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
+  const capsuleBottom = getFloatingNavBarBottom(insetBottom);
+  const tintHeight = getFloatingNavBarTintHeight(capsuleBottom);
 
   return (
     <Animated.View
       testID={testID}
       style={[
         styles.wrapper,
-        {
-          paddingBottom: bottomMargin,
-        },
+        // Placed inside `Screen`, whose content already ends at the safe
+        // area's edge — so measured from there, to land where the tab bar does.
+        { bottom: capsuleBottom - insetBottom },
         entranceStyle,
       ]}
     >
+      {/* Behind it, edge to edge and down to the screen's edge: hides what
+      scrolls under the bar — solid below the capsule, fading out a little above it. */}
+      <View
+        pointerEvents="none"
+        style={[styles.tint, { bottom: -capsuleBottom, height: tintHeight }]}
+      >
+        <BottomFade
+          {...(testID && { testID: `${testID}-tint` })}
+          height={tintHeight}
+          solidHeight={capsuleBottom}
+        />
+      </View>
       <View
         style={[
           styles.capsule,
@@ -139,6 +161,8 @@ const styles = StyleSheet.create({
     right: sideMargin,
     bottom: 0,
   },
+
+  tint: { position: "absolute", left: -sideMargin, right: -sideMargin },
 
   capsule: {
     height: capsuleHeight,

@@ -89,7 +89,7 @@ describe("plan selectors", () => {
 
     expect(getScriptureForDay(state, day?.id ?? "")?.reference).toBe("Ephesians 2:8–9");
     expect(getReflectionsForDay(state, day?.id ?? "").map((r) => r.order)).toEqual([1, 2]);
-    expect(getSermonForPlan(state, ACTIVE)?.title).toBe("Choose Whom You Will Serve");
+    expect(getSermonForPlan(state, ACTIVE)?.title).toBe("Today I Choose to Be a Blessing");
   });
 });
 

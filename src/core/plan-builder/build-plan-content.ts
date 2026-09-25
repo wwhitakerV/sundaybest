@@ -144,9 +144,9 @@ export function buildMockPlanContent({
     title: sermon.title,
     sermon: {
       title: sermon.title,
-      speaker: sermon.speaker,
       church: sermon.church,
       thumbnailUrl: sermon.thumbnailUrl,
+      thumbnailColors: sermon.thumbnailColors,
       durationSeconds: sermon.durationSeconds,
       publishedOn: sermon.publishedOn,
       transcriptStatus: sermon.transcriptStatus,

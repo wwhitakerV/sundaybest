@@ -72,7 +72,7 @@ describe("navigation", () => {
       await waitForBuild();
 
       expect(view.getPathname()).toBe("/ready");
-      expect(screen.getByText("6 days from Choose Whom You Will Serve")).toBeVisible();
+      expect(screen.getByText("6 days from Today I Choose to Be a Blessing")).toBeVisible();
       expect(screen.getByTestId("plan-ready-start-button")).toBeVisible();
 
       // "Start day 1" -> Read is covered by PlanReadyScreen.test.tsx, with a
@@ -129,7 +129,7 @@ describe("navigation", () => {
     fireEvent.press(screen.getByTestId("home-tab-active-plan"));
     expect(view.getPathname()).toBe("/home/plan-choose-whom-you-will-serve");
     expect(screen.getByTestId("plan-overview-title")).toHaveTextContent(
-      "Choose Whom You Will Serve",
+      "Today I Choose to Be a Blessing",
     );
 
     fireEvent.press(screen.getByTestId("plan-overview-back-button"));
@@ -198,43 +198,48 @@ describe("navigation", () => {
 
     expect(screen.getByTestId("plan-overview-day-1")).toHaveTextContent(/Done/);
     expect(screen.getByTestId("plan-overview-day-2")).not.toHaveTextContent(/Locked/);
-    expect(screen.getByTestId("plan-overview-continue-button")).toHaveTextContent("Continue day 2");
+    expect(screen.getByTestId("plan-overview-continue-button")).toHaveTextContent("Continue Day 2");
   });
 
-  it("takes a day's Quick Check after finishing it, scores it, and returns to Day Complete", async () => {
-    const view = renderApp();
-    const REST = "plan-come-to-me-and-rest";
-    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-    fireEvent.press(screen.getByTestId("tab-plans"));
-    fireEvent.press(screen.getByTestId(`plans-item-${REST}`));
-    fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
-    for (const next of ["scripture", "reflect", "pray"]) {
+  it(
+    "takes a day's Quick Check after finishing it, scores it, and returns to Day Complete",
+    async () => {
+      const view = renderApp();
+      const REST = "plan-come-to-me-and-rest";
+      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      fireEvent.press(screen.getByTestId("tab-plans"));
+      fireEvent.press(screen.getByTestId(`plans-item-${REST}`));
+      fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
+      for (const next of ["scripture", "reflect", "pray"]) {
+        fireEvent.press(screen.getByTestId("study-nav-next-button"));
+        await screen.findByTestId(`study-${next}-body`);
+      }
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
-      await screen.findByTestId(`study-${next}-body`);
-    }
-    fireEvent.press(screen.getByTestId("study-nav-next-button"));
-    expect(screen.getByTestId("day-complete-screen")).toBeVisible();
+      expect(screen.getByTestId("day-complete-screen")).toBeVisible();
 
-    fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
-    expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
+      fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
+      expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
 
-    // One question right, one wrong — all in place; the route never changes.
-    fireEvent.press(screen.getByTestId("quick-check-choice-b"));
-    fireEvent.press(screen.getByTestId("quick-check-check-button"));
-    expect(await screen.findByText("That's the one")).toBeVisible();
-    fireEvent.press(screen.getByTestId("quick-check-next-button"));
-    await screen.findByText("According to the sermon, what is a yoke?");
-    fireEvent.press(screen.getByTestId("quick-check-choice-a"));
-    fireEvent.press(screen.getByTestId("quick-check-check-button"));
-    expect(await screen.findByText("Not quite")).toBeVisible();
-    fireEvent.press(screen.getByTestId("quick-check-finish-button"));
-    await screen.findByTestId("quick-check-score");
-    expect(screen.getByText("1/2")).toBeVisible();
-    expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
+      // One question right, one wrong — all in place; the route never changes.
+      fireEvent.press(screen.getByTestId("quick-check-choice-b"));
+      fireEvent.press(screen.getByTestId("quick-check-check-button"));
+      expect(await screen.findByText("That's the one")).toBeVisible();
+      fireEvent.press(screen.getByTestId("quick-check-next-button"));
+      await screen.findByText("According to the sermon, what is a yoke?");
+      fireEvent.press(screen.getByTestId("quick-check-choice-a"));
+      fireEvent.press(screen.getByTestId("quick-check-check-button"));
+      expect(await screen.findByText("Not quite")).toBeVisible();
+      fireEvent.press(screen.getByTestId("quick-check-finish-button"));
+      await screen.findByTestId("quick-check-score");
+      expect(screen.getByText("1/2")).toBeVisible();
+      expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
 
-    fireEvent.press(screen.getByTestId("quick-check-done-button"));
-    expect(view.getPathname()).toBe(`/study/${REST}/day-complete`);
-  });
+      fireEvent.press(screen.getByTestId("quick-check-done-button"));
+      expect(view.getPathname()).toBe(`/study/${REST}/day-complete`);
+    },
+    // A long walk — Plans, a whole study day, and a whole Quick Check.
+    BUILD_FLOW_TIMEOUT_MS,
+  );
 
   it("round-trips a Settings subpage back to Settings", () => {
     const view = renderApp();

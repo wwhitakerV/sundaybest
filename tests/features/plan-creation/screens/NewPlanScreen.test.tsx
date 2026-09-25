@@ -88,7 +88,7 @@ describe("NewPlanScreen", () => {
     await goToLinkPreview();
 
     expect(screen.getByText("2 of 2")).toBeVisible();
-    expect(screen.getByText("Choose Whom You Will Serve")).toBeVisible();
+    expect(screen.getByText("Today I Choose to Be a Blessing")).toBeVisible();
     expect(screen.getByText("…/watch?v=Qm81xRz4")).toBeVisible();
     expect(mockPush).not.toHaveBeenCalled();
   });

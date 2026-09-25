@@ -161,4 +161,31 @@ describe("StepProgress", () => {
       expect(screen.queryByTestId("a-step-progress-segment-1-fill")).toBeNull();
     });
   });
+
+  describe("on a coloured backdrop", () => {
+    it("draws done steps and those ahead in white on a dark colour", () => {
+      render(<StepProgress testID="a-step-progress" steps={3} activeIndex={1} ink="light" />);
+
+      expect(screen.getByTestId("a-step-progress-segment-0")).toHaveStyle({
+        backgroundColor: "#FFFFFF",
+      });
+      expect(screen.getByTestId("a-step-progress-segment-2")).toHaveStyle({
+        backgroundColor: "rgba(255, 255, 255, 0.28)",
+      });
+      expect(screen.getByTestId("a-step-progress-segment-1")).toHaveStyle({
+        backgroundColor: "#D62626",
+      });
+    });
+
+    it("draws them in black on a light colour", () => {
+      render(<StepProgress testID="a-step-progress" steps={3} activeIndex={1} ink="dark" />);
+
+      expect(screen.getByTestId("a-step-progress-segment-0")).toHaveStyle({
+        backgroundColor: "#08090A",
+      });
+      expect(screen.getByTestId("a-step-progress-segment-2")).toHaveStyle({
+        backgroundColor: "rgba(8, 9, 10, 0.18)",
+      });
+    });
+  });
 });

@@ -70,7 +70,7 @@ describe("buildMockPlanContent", () => {
   });
 
   it("titles the plan after its sermon", () => {
-    expect(build(2).title).toBe("Choose Whom You Will Serve");
+    expect(build(2).title).toBe("Today I Choose to Be a Blessing");
   });
 
   it("builds the same plan every time", () => {
@@ -80,7 +80,10 @@ describe("buildMockPlanContent", () => {
 
 describe("lookUpMockSermon", () => {
   it("finds a mock sermon by its link", () => {
-    expect(sermon).toMatchObject({ title: "Choose Whom You Will Serve", church: "VOUS Church" });
+    expect(sermon).toMatchObject({
+      title: "Today I Choose to Be a Blessing",
+      church: "VOUS Church",
+    });
   });
 
   it("finds the same sermon for the same unknown link, every time", () => {

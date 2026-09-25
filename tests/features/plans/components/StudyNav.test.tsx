@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { StudyNav } from "@/features/plans/components/StudyNav";
+import { getFloatingNavBarBottom } from "@/ui/floatingNavBar";
 
 // StudyNav fades in from opacity 0 on mount (useStudyNavEntrance). Jest's
 // Reanimated mock never runs that animation, so everything inside the nav
@@ -11,6 +12,19 @@ describe("StudyNav", () => {
     render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
 
     expect(screen.getByTestId("study-nav")).toBeOnTheScreen();
+  });
+
+  it("sits where every floating bar does — the tab bar's place", () => {
+    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
+
+    // Measured from the safe area's edge, where `Screen` ends its content (no inset here).
+    expect(screen.getByTestId("study-nav")).toHaveStyle({ bottom: getFloatingNavBarBottom(0) });
+  });
+
+  it("tints what scrolls under it", () => {
+    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
+
+    expect(screen.getByTestId("study-nav-tint")).toBeOnTheScreen();
   });
 
   it("renders one dot per study step", () => {

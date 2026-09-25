@@ -151,7 +151,7 @@ describe("ProgressScreen", () => {
       const minutes = getDayMinutes(INITIAL_STATE, `${ACTIVE}-day-2`);
 
       const card = screen.getByTestId("progress-active-plan");
-      expect(card).toHaveTextContent(/Choose Whom You Will Serve/);
+      expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
       expect(card).toHaveTextContent(`Day 2, ${minutes} min`, { exact: false });
       expect(card).toHaveTextContent(/17%/);
       expect(card).toHaveTextContent(/6:30 AM/);

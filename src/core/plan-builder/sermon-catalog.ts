@@ -5,9 +5,9 @@ import { MOCK_DATA } from "@/core/mock-data";
 /** What looking up a sermon link finds: the video's details, before any plan is built. */
 export type SermonPreview = {
   title: string;
-  speaker: string | null;
   church: string | null;
   thumbnailUrl: string | null;
+  thumbnailColors: string[];
   durationSeconds: number;
   publishedOn: IsoDate | null;
   transcriptStatus: TranscriptStatus;
@@ -63,9 +63,9 @@ function stableIndex(text: string, count: number): number {
 function toPreview(sermon: SermonSource): SermonPreview {
   return {
     title: sermon.title,
-    speaker: sermon.speaker,
     church: sermon.church,
     thumbnailUrl: sermon.thumbnailUrl,
+    thumbnailColors: sermon.thumbnailColors,
     durationSeconds: sermon.durationSeconds ?? 0,
     publishedOn: sermon.publishedOn,
     transcriptStatus: sermon.transcriptStatus,
@@ -86,9 +86,9 @@ export function lookUpMockSermon(url: string): SermonPreview {
   const other = OTHER_SERMONS.at(stableIndex(id, OTHER_SERMONS.length)) ?? OTHER_SERMONS[0];
   return {
     title: other?.title ?? "Sunday's Sermon",
-    speaker: null,
     church: other?.church ?? null,
     thumbnailUrl: null,
+    thumbnailColors: [],
     durationSeconds: other?.durationSeconds ?? 2_400,
     publishedOn: null,
     transcriptStatus: hasNoCaptions(url) ? "unavailable" : "available",

@@ -51,6 +51,19 @@ const palette = {
   correctLineOnDark: "#2F5A44",
   incorrectMistOnDark: "#2A1616",
   incorrectLineOnDark: "#6B2A2A",
+  // Type and marks on a colour of the content's own (a featured sermon's):
+  // white on a dark one, black on a light one, each full, muted, and faint.
+  whiteMuted: "rgba(255, 255, 255, 0.72)",
+  whiteFaint: "rgba(255, 255, 255, 0.28)",
+  blackMuted: "rgba(8, 9, 10, 0.6)",
+  blackFaint: "rgba(8, 9, 10, 0.18)",
+  // A floating button's fill over content's own colour: dark on a dark
+  // colour, light on a light one — so it sits in, not on.
+  blackVeil: "rgba(8, 9, 10, 0.5)",
+  whiteVeil: "rgba(255, 255, 255, 0.85)",
+  // A soft halo behind words set over a picture, keeping them readable.
+  blackHalo: "rgba(0, 0, 0, 0.35)",
+  whiteHalo: "rgba(255, 255, 255, 0.5)",
   // A see-through rim around a floating card: the page, frosted.
   frost: "rgba(255, 255, 255, 0.6)",
   frostOnDark: "rgba(11, 13, 18, 0.6)",
@@ -77,6 +90,8 @@ type ColorTokens = {
   /** Inactive items in a strip or set. Darker than `textMuted`. */
   textInactive: string;
   border: string;
+  /** A heavier edge, for a control that should stand out from the chrome around it. */
+  borderStrong: string;
   /** Hairline rules between list rows. Lighter than `border`. */
   divider: string;
   accent: string;
@@ -129,6 +144,27 @@ type ColorTokens = {
   incorrectSurface: string;
   /** The edge of a wrong answer. */
   incorrectBorder: string;
+  /**
+   * Type and marks on a colour of the content's own — a featured sermon's —
+   * whatever the app's theme: `inkOnDark*` on a dark one, `inkOnLight*` on a
+   * light one (`prefersLightInk` picks). Full, muted, and faint.
+   */
+  inkOnDark: string;
+  inkOnDarkMuted: string;
+  inkOnDarkFaint: string;
+  inkOnLight: string;
+  inkOnLightMuted: string;
+  inkOnLightFaint: string;
+  /** Behind featured content whose own colour isn't known yet. */
+  featureBackdrop: string;
+  /** A floating button's fill over a dark colour of the content's own (its icon `inkOnDark`). */
+  overlayButtonDark: string;
+  /** …and over a light one (its icon `inkOnLight`). */
+  overlayButtonLight: string;
+  /** The soft shadow behind light words set over a picture… */
+  inkHaloOnDark: string;
+  /** …and behind dark ones. */
+  inkHaloOnLight: string;
 };
 
 const lightColors: ColorTokens = {
@@ -138,6 +174,7 @@ const lightColors: ColorTokens = {
   textMuted: palette.grey,
   textInactive: palette.darkgrey,
   border: palette.ink300,
+  borderStrong: palette.darkgrey,
   divider: palette.greyLightest,
   accent: palette.accent,
   controlPrimary: palette.black,
@@ -164,6 +201,17 @@ const lightColors: ColorTokens = {
   incorrect: palette.red,
   incorrectSurface: palette.incorrectMist,
   incorrectBorder: palette.incorrectLine,
+  inkOnDark: palette.white,
+  inkOnDarkMuted: palette.whiteMuted,
+  inkOnDarkFaint: palette.whiteFaint,
+  inkOnLight: palette.black,
+  inkOnLightMuted: palette.blackMuted,
+  inkOnLightFaint: palette.blackFaint,
+  featureBackdrop: palette.ink,
+  overlayButtonDark: palette.blackVeil,
+  overlayButtonLight: palette.whiteVeil,
+  inkHaloOnDark: palette.blackHalo,
+  inkHaloOnLight: palette.whiteHalo,
 };
 
 const darkColors: ColorTokens = {
@@ -173,6 +221,7 @@ const darkColors: ColorTokens = {
   textMuted: palette.grey,
   textInactive: palette.darkgrey,
   border: palette.ink600,
+  borderStrong: palette.grey,
   divider: palette.slate700,
   accent: palette.accent,
   controlPrimary: palette.white,
@@ -201,6 +250,17 @@ const darkColors: ColorTokens = {
   incorrect: palette.red,
   incorrectSurface: palette.incorrectMistOnDark,
   incorrectBorder: palette.incorrectLineOnDark,
+  inkOnDark: palette.white,
+  inkOnDarkMuted: palette.whiteMuted,
+  inkOnDarkFaint: palette.whiteFaint,
+  inkOnLight: palette.black,
+  inkOnLightMuted: palette.blackMuted,
+  inkOnLightFaint: palette.blackFaint,
+  featureBackdrop: palette.ink,
+  overlayButtonDark: palette.blackVeil,
+  overlayButtonLight: palette.whiteVeil,
+  inkHaloOnDark: palette.blackHalo,
+  inkHaloOnLight: palette.whiteHalo,
 };
 
 /**
@@ -253,6 +313,8 @@ const typography = {
   listItem: { fontSize: 17, fontWeight: "500" },
   /** Button labels, both variants. Spec 15/-0.01em. */
   button: { fontSize: 18, fontWeight: "600" },
+  /** A compact button's label — a smaller call to action set on a colour. */
+  compactButton: { fontSize: 16, fontWeight: "600" },
 
   /** Centered header title ("New plan", "Day 2 of 6", "Quick check"). Spec 14/500. */
   navTitle: { fontSize: 17, fontWeight: "500" },

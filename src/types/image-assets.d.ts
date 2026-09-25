@@ -9,3 +9,9 @@ declare module "*.png" {
   // eslint-disable-next-line import/no-default-export -- an asset-module shim has no named export to offer; `import x from "*.png"` is the only shape Metro's own resolution supports.
   export default assetId;
 }
+
+declare module "*.jpg" {
+  const assetId: number;
+  // eslint-disable-next-line import/no-default-export -- an asset-module shim has no named export to offer; `import x from "*.jpg"` is the only shape Metro's own resolution supports.
+  export default assetId;
+}

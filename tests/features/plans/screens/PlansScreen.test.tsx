@@ -113,7 +113,7 @@ describe("PlansScreen", () => {
 
     const card = screen.getByTestId(`plans-item-${ACTIVE}`);
     expect(card).toHaveTextContent(/In progress/);
-    expect(card).toHaveTextContent(/Choose Whom You Will Serve/);
+    expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
     expect(card).toHaveTextContent(/Day 2 of 6/);
     expect(card).toHaveTextContent(/Continue/);
   });

@@ -352,9 +352,9 @@ describe("plan generation", () => {
     title: "Who Is My Neighbor?",
     sermon: {
       title: "Who Is My Neighbor?",
-      speaker: "Elena Brooks",
       church: "Harbor Light Church",
       thumbnailUrl: null,
+      thumbnailColors: [],
       durationSeconds: 2_233,
       publishedOn: "2026-09-20",
       transcriptStatus: "available",
