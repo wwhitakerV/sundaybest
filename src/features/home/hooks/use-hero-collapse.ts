@@ -22,7 +22,8 @@ import {
   getBarThumbRect,
   getCollapseGeometry,
   getCollapsePhase,
-  getCollapseProgress,
+  getFlightHandoff,
+  getFlightProgress,
   getFlightRect,
   getHeaderOpacity,
   getHeroContentOpacity,
@@ -139,11 +140,11 @@ export function useHeroCollapse() {
     opacity: getBarProgress(scrolled.value, geometry),
   }));
 
-  // The artwork's flight: the copy shows only on the way, while the hero's
-  // artwork and the bar's thumbnail — which it sits exactly on at either
-  // end — hide.
+  // The artwork's flight, from the moment the hero moves: the copy shows
+  // only on the way, while the hero's artwork and the bar's thumbnail —
+  // which it sits exactly on at either end — hide.
   const flightStyle = useAnimatedStyle(() => {
-    const progress = getCollapseProgress(scrolled.value, geometry);
+    const progress = getFlightProgress(scrolled.value, geometry);
     const rect = getFlightRect(progress, getArtworkRect(scrolled.value, geometry, frame), barThumb);
     return {
       left: rect.x,
@@ -151,14 +152,19 @@ export function useHeroCollapse() {
       width: rect.width,
       height: rect.height,
       borderRadius: HERO_ARTWORK_RADIUS + (BAR_THUMB_RADIUS - HERO_ARTWORK_RADIUS) * progress,
-      opacity: progress > 0 && progress < 1 ? 1 : 0,
+      // Fading in over the hero's artwork at first, then whole until it lands.
+      opacity: progress > 0 && progress < 1 ? getFlightHandoff(scrolled.value) : 0,
     };
   });
+  // Under the copy while it fades in; hidden once the copy's whole.
   const heroArtworkStyle = useAnimatedStyle(() => ({
-    opacity: getCollapseProgress(scrolled.value, geometry) > 0 ? 0 : 1,
+    opacity:
+      getFlightProgress(scrolled.value, geometry) > 0 && getFlightHandoff(scrolled.value) >= 1
+        ? 0
+        : 1,
   }));
   const barThumbStyle = useAnimatedStyle(() => ({
-    opacity: getCollapseProgress(scrolled.value, geometry) < 1 ? 0 : 1,
+    opacity: getFlightProgress(scrolled.value, geometry) < 1 ? 0 : 1,
   }));
 
   function onHeaderLayout(event: LayoutChangeEvent) {

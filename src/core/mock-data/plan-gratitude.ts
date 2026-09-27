@@ -2,6 +2,7 @@ import type { Plan, Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "@/types/
 
 import { ALL_STEPS, makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
+import { makeAttempt, makeDayQuiz, type WrittenQuestion } from "./quiz-builders";
 import { SERMON_GRATITUDE } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
@@ -269,7 +270,7 @@ export const GRATITUDE_REFLECTIONS = RECORDS.flatMap((records) => records.reflec
 export const GRATITUDE_PRAYERS = RECORDS.map((records) => records.prayer);
 
 // ---------------------------------------------------------------------------
-// Quick Check — after the last day, finished with every answer right
+// Day 7's Quick Check — the last day's, finished with every answer right
 // ---------------------------------------------------------------------------
 
 const QUIZ: Quiz = {
@@ -360,7 +361,244 @@ const ANSWERS: QuizAnswer[] = QUESTIONS.map((question, index) => {
   };
 });
 
-export const GRATITUDE_QUIZZES: Quiz[] = [QUIZ];
-export const GRATITUDE_QUIZ_QUESTIONS = QUESTIONS;
-export const GRATITUDE_QUIZ_ATTEMPTS: QuizAttempt[] = [ATTEMPT];
-export const GRATITUDE_QUIZ_ANSWERS = ANSWERS;
+// ---------------------------------------------------------------------------
+// Days 1–6's Quick Checks — taken the morning of each, with a slip or two;
+// day 6's left half-way: the first answered, the second picked, not submitted
+// ---------------------------------------------------------------------------
+
+type Letter = "a" | "b" | "c" | "d";
+
+const EARLIER: {
+  questions: WrittenQuestion[];
+  picks: Letter[];
+  pending?: Letter;
+}[] = [
+  {
+    questions: [
+      {
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt:
+          "Finish the verse: “Rejoice always, pray continually, give ___ in all circumstances.”",
+        choices: ["praise", "thanks", "glory", "alms"],
+        correct: "b",
+        explanation: "Give thanks in all circumstances — 1 Thessalonians 5:18.",
+        scriptureReference: "1 Thessalonians 5:16–18",
+      },
+      {
+        kind: "multipleChoice",
+        source: "sermon",
+        prompt: "The sermon says Paul tells us to give thanks in all circumstances, not…",
+        choices: ["in hard ones", "for all of them", "out loud", "every day"],
+        correct: "b",
+        explanation: "In all circumstances, not for all of them.",
+        scriptureReference: null,
+      },
+      {
+        kind: "multipleChoice",
+        source: "scripture",
+        prompt: "Whose will does 1 Thessalonians 5:18 say giving thanks is?",
+        choices: ["Paul's", "God's will for you in Christ Jesus", "The church's", "Moses'"],
+        correct: "b",
+        explanation: "“…for this is God's will for you in Christ Jesus.”",
+        scriptureReference: "1 Thessalonians 5:18",
+      },
+    ],
+    picks: ["b", "b", "b"],
+  },
+  {
+    questions: [
+      {
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt: "Finish the verse: “Enter his gates with thanksgiving and his courts with ___.”",
+        choices: ["singing", "praise", "offerings", "joy"],
+        correct: "b",
+        explanation: "“…and his courts with praise” — Psalm 100:4.",
+        scriptureReference: "Psalm 100:4",
+      },
+      {
+        kind: "multipleChoice",
+        source: "sermon",
+        prompt: "What does the sermon call thanksgiving?",
+        choices: ["The side door", "The front door", "The last word", "The hard part"],
+        correct: "b",
+        explanation: "Thanksgiving is the front door — you don't sneak into worship the side way.",
+        scriptureReference: null,
+      },
+      {
+        kind: "multipleChoice",
+        source: "scripture",
+        prompt: "What does Psalm 100:4 say to do with his name?",
+        choices: ["Fear it", "Praise it", "Keep it secret", "Write it down"],
+        correct: "b",
+        explanation: "“Give thanks to him and praise his name.”",
+        scriptureReference: "Psalm 100:4",
+      },
+    ],
+    picks: ["b", "a", "b"],
+  },
+  {
+    questions: [
+      {
+        kind: "multipleChoice",
+        source: "scripture",
+        prompt: "In Philippians 4:6, what should we be anxious about?",
+        choices: ["Our future", "Nothing", "Our families", "Our sin"],
+        correct: "b",
+        explanation: "“Do not be anxious about anything” — bring it all to God.",
+        scriptureReference: "Philippians 4:6",
+      },
+      {
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt:
+          "Finish the verse: “…by prayer and petition, with ___, present your requests to God.”",
+        choices: ["fasting", "thanksgiving", "tears", "patience"],
+        correct: "b",
+        explanation: "With thanksgiving — Philippians 4:6.",
+        scriptureReference: "Philippians 4:6",
+      },
+      {
+        kind: "multipleChoice",
+        source: "sermon",
+        prompt: "The sermon says gratitude is not a feeling you wait for. What is it?",
+        choices: ["A reward", "A practice you choose", "A season", "A gift you earn"],
+        correct: "b",
+        explanation: "It's a practice you choose.",
+        scriptureReference: null,
+      },
+    ],
+    picks: ["b", "b", "c"],
+  },
+  {
+    questions: [
+      {
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt: "Finish the verse: “Give thanks to the LORD, for he is ___.”",
+        choices: ["mighty", "good", "holy", "near"],
+        correct: "b",
+        explanation: "“…for he is good; his love endures forever” — Psalm 107:1.",
+        scriptureReference: "Psalm 107:1",
+      },
+      {
+        kind: "multipleChoice",
+        source: "scripture",
+        prompt: "What does Psalm 107:1 say endures forever?",
+        choices: ["His law", "His love", "His temple", "His people"],
+        correct: "b",
+        explanation: "His love endures forever.",
+        scriptureReference: "Psalm 107:1",
+      },
+      {
+        kind: "multipleChoice",
+        source: "sermon",
+        prompt: "Where does the sermon say to start, because it never needs updating?",
+        choices: ["With what you need", "With who He is", "With what went wrong", "With a list"],
+        correct: "b",
+        explanation: "Start with who He is. That never needs updating.",
+        scriptureReference: null,
+      },
+    ],
+    picks: ["b", "b", "b"],
+  },
+  {
+    questions: [
+      {
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt: "Finish the verse: “His compassions never fail. They are new every ___.”",
+        choices: ["day", "morning", "season", "hour"],
+        correct: "b",
+        explanation: "New every morning — Lamentations 3:22–23.",
+        scriptureReference: "Lamentations 3:22–23",
+      },
+      {
+        kind: "multipleChoice",
+        source: "sermon",
+        prompt: "What does the sermon say God's mercy doesn't carry over?",
+        choices: ["A promise", "A balance", "A grudge", "A blessing"],
+        correct: "b",
+        explanation: "His mercy doesn't carry over a balance.",
+        scriptureReference: null,
+      },
+      {
+        kind: "multipleChoice",
+        source: "scripture",
+        prompt: "Why, in Lamentations 3:22, are we not consumed?",
+        choices: [
+          "Because we were faithful",
+          "Because of the LORD's great love",
+          "Because the city stood",
+          "Because we repented in time",
+        ],
+        correct: "b",
+        explanation: "Because of the LORD's great love we are not consumed.",
+        scriptureReference: "Lamentations 3:22",
+      },
+    ],
+    picks: ["a", "b", "b"],
+  },
+  {
+    questions: [
+      {
+        kind: "multipleChoice",
+        source: "scripture",
+        prompt: "In James 1:17, where does every good and perfect gift come from?",
+        choices: ["From our work", "From above", "From each other", "From the earth"],
+        correct: "b",
+        explanation: "From above, from the Father of the heavenly lights.",
+        scriptureReference: "James 1:17",
+      },
+      {
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt:
+          "Finish the verse: “…the Father of the heavenly lights, who does not change like shifting ___.”",
+        choices: ["seasons", "shadows", "winds", "tides"],
+        correct: "b",
+        explanation: "He does not change like shifting shadows — James 1:17.",
+        scriptureReference: "James 1:17",
+      },
+      {
+        kind: "multipleChoice",
+        source: "sermon",
+        prompt: "The sermon says every good thing in your life has a…",
+        choices: ["price tag", "return address", "shelf life", "second side"],
+        correct: "b",
+        explanation: "Every good thing in your life has a return address.",
+        scriptureReference: null,
+      },
+    ],
+    picks: ["b"],
+    pending: "a",
+  },
+];
+
+const DAILY = EARLIER.map(({ questions: written, picks, pending }, index) => {
+  const day = GRATITUDE_DAYS.at(index);
+  const { quiz, questions } = makeDayQuiz(PLAN_GRATITUDE, day, BUILT_AT, written);
+  const { attempt, answers } = makeAttempt(
+    quiz,
+    questions,
+    `${day?.scheduledOn ?? "2026-08-30"}T07:00:00.000Z`,
+    picks,
+    pending ?? null,
+  );
+  return { quiz, questions, attempt, answers };
+});
+
+export const GRATITUDE_QUIZZES: Quiz[] = [...DAILY.map(({ quiz }) => quiz), QUIZ];
+export const GRATITUDE_QUIZ_QUESTIONS: QuizQuestion[] = [
+  ...DAILY.flatMap(({ questions }) => questions),
+  ...QUESTIONS,
+];
+export const GRATITUDE_QUIZ_ATTEMPTS: QuizAttempt[] = [
+  ...DAILY.map(({ attempt }) => attempt),
+  ATTEMPT,
+];
+export const GRATITUDE_QUIZ_ANSWERS: QuizAnswer[] = [
+  ...DAILY.flatMap(({ answers }) => answers),
+  ...ANSWERS,
+];

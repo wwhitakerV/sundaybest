@@ -251,7 +251,8 @@ describe("reflections", () => {
 });
 
 describe("quizzes", () => {
-  const quizId = `${ACTIVE}-day-2-quiz`;
+  // Give Thanks' day 6 Quick Check: left half-way, its second question picked, not submitted.
+  const quizId = `${COMPLETED}-day-6-quiz`;
   const open = getQuizAttempt(state, quizId)?.id ?? "";
   const q2 = `${quizId}-q2`;
   const q3 = `${quizId}-q3`;

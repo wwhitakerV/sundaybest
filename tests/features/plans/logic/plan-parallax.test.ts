@@ -2,6 +2,8 @@ import {
   getArtworkDrift,
   getArtworkOpacity,
   getArtworkScale,
+  getPullZoom,
+  hasHeroCleared,
   isContinueHandedOff,
 } from "@/features/plans/logic/plan-parallax";
 
@@ -11,8 +13,8 @@ describe("getArtworkDrift", () => {
     expect(getArtworkDrift(200)).toBe(100);
   });
 
-  it("lets it follow the page down, half as far, when pulled past the top", () => {
-    expect(getArtworkDrift(-80)).toBe(-40);
+  it("doesn't hold it back when pulled past the top — it moves with the words, as one", () => {
+    expect(getArtworkDrift(-80)).toBe(0);
   });
 });
 
@@ -57,7 +59,7 @@ describe("getArtworkScale", () => {
     expect(getArtworkScale(0)).toBe(1);
   });
 
-  it("keeps it full size when the page is pulled down past the top", () => {
+  it("doesn't shrink it when the page is pulled down past the top", () => {
     expect(getArtworkScale(-60)).toBe(1);
   });
 
@@ -68,5 +70,37 @@ describe("getArtworkScale", () => {
   it("never shrinks it by more than 15%", () => {
     expect(getArtworkScale(450)).toBeCloseTo(0.85);
     expect(getArtworkScale(2000)).toBeCloseTo(0.85);
+  });
+});
+
+describe("getPullZoom", () => {
+  it("leaves the hero's colour as it is at rest and scrolling up", () => {
+    expect(getPullZoom(0, 700)).toBe(1);
+    expect(getPullZoom(250, 700)).toBe(1);
+  });
+
+  it("zooms it from its foot just enough to reach the top of the screen when pulled down", () => {
+    // Pulled 70pt down: the 700pt hero's colour must now span 770pt.
+    expect(getPullZoom(-70, 700)).toBeCloseTo(770 / 700);
+  });
+
+  it("leaves it be until the hero's measured", () => {
+    expect(getPullZoom(-70, 0)).toBe(1);
+  });
+});
+
+describe("hasHeroCleared", () => {
+  // A 700pt hero; the nav buttons' middle 91pt down the screen.
+  it("keeps what's at that line over the hero at rest", () => {
+    expect(hasHeroCleared(0, 700, 91)).toBe(false);
+  });
+
+  it("has it over the page once the hero's bottom edge has scrolled up past it", () => {
+    expect(hasHeroCleared(608, 700, 91)).toBe(false);
+    expect(hasHeroCleared(609, 700, 91)).toBe(true);
+  });
+
+  it("never before the hero's measured", () => {
+    expect(hasHeroCleared(2000, 0, 91)).toBe(false);
   });
 });

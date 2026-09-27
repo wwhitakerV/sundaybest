@@ -153,8 +153,10 @@ describe("getPlanProgress", () => {
 describe("quiz selectors", () => {
   const day1 = getPlanDay(state, ACTIVE, 1)?.id ?? "";
   const day2 = getPlanDay(state, ACTIVE, 2)?.id ?? "";
+  // Give Thanks' day 6: its Quick Check left half-way.
+  const halfway = getPlanDay(state, COMPLETED, 6)?.id ?? "";
   const finished = getQuizAttempt(state, getQuizForDay(state, day1)?.id ?? "");
-  const underway = getQuizAttempt(state, getQuizForDay(state, day2)?.id ?? "");
+  const underway = getQuizAttempt(state, getQuizForDay(state, halfway)?.id ?? "");
 
   it("scores a finished quiz from its answers", () => {
     expect(getQuizScore(state, finished?.id ?? "")).toEqual({
@@ -166,7 +168,7 @@ describe("quiz selectors", () => {
   });
 
   it("tells right, wrong, and unanswered questions apart", () => {
-    const quiz = getQuizForDay(state, day2)?.id ?? "";
+    const quiz = getQuizForDay(state, halfway)?.id ?? "";
     const results = ["q1", "q2"].map((q) =>
       getQuestionResult(state, underway?.id ?? "", `${quiz}-${q}`),
     );
@@ -208,7 +210,9 @@ describe("quiz selectors", () => {
     const quizFor = (dayId: string) => getQuizForDay(state, dayId)?.id ?? "";
 
     expect(getQuizStatus(state, quizFor(savedDay))).toBe("notStarted");
-    expect(getQuizStatus(state, quizFor(day2))).toBe("inProgress");
+    // A day not finished yet hasn't had its Quick Check.
+    expect(getQuizStatus(state, quizFor(day2))).toBe("notStarted");
+    expect(getQuizStatus(state, quizFor(halfway))).toBe("inProgress");
     expect(getQuizStatus(state, quizFor(day1))).toBe("completed");
   });
 

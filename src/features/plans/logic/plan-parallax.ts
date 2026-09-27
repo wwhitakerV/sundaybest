@@ -16,10 +16,14 @@ const ARTWORK_SCALE_RANGE = 450;
 /** How small it gets: 15% smaller at most. */
 const ARTWORK_MIN_SCALE = 0.85;
 
-/** How far down to hold the artwork against the scroll, so it rises at half the rate — and follows the page down, half as far, when pulled past the top. */
+/**
+ * How far down to hold the artwork against the scroll, so it rises at half
+ * the rate. Pulled down past the top it isn't held back: it moves with the
+ * words, as one.
+ */
 export function getArtworkDrift(scrolled: number): number {
   "worklet";
-  return scrolled * (1 - ARTWORK_RATE);
+  return Math.max(0, scrolled) * (1 - ARTWORK_RATE);
 }
 
 /**
@@ -49,4 +53,28 @@ export function getArtworkScale(scrolled: number): number {
   "worklet";
   const progress = Math.min(1, Math.max(0, scrolled / ARTWORK_SCALE_RANGE));
   return 1 - (1 - ARTWORK_MIN_SCALE) * progress;
+}
+
+/**
+ * How much to zoom the hero's colour — gradient, wash, and the words' own —
+ * from its foot while the page is pulled down past the top, so it always
+ * reaches the top of the screen instead of leaving white above it: evenly,
+ * so the wash never distorts. 1 at rest, scrolling up, and until the hero's
+ * `height` is known.
+ */
+export function getPullZoom(scrolled: number, height: number): number {
+  "worklet";
+  if (scrolled >= 0 || height <= 0) return 1;
+  return (height - scrolled) / height;
+}
+
+/**
+ * Whether the hero's bottom edge has scrolled up past a `line` down the
+ * screen — so what's at that line (the nav buttons, the status bar) is over
+ * the page now, not the hero, and should look it. Never before the hero's
+ * `height` is known.
+ */
+export function hasHeroCleared(scrolled: number, height: number, line: number): boolean {
+  "worklet";
+  return height > 0 && height - scrolled <= line;
 }

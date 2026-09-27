@@ -5,6 +5,8 @@ import {
   getCollapseGeometry,
   getCollapsePhase,
   getCollapseProgress,
+  getFlightHandoff,
+  getFlightProgress,
   getFlightRect,
   getHeaderOpacity,
   getHeroContentOpacity,
@@ -195,6 +197,57 @@ describe("getArtworkRect", () => {
   });
 });
 
+describe("getFlightProgress", () => {
+  it("hasn't begun at rest", () => {
+    expect(getFlightProgress(0, GEOMETRY)).toBe(0);
+  });
+
+  it("begins as soon as the hero moves, before it reaches the top", () => {
+    expect(getFlightProgress(50, GEOMETRY)).toBeCloseTo(50 / 557);
+  });
+
+  it("lands as the collapse does", () => {
+    expect(getFlightProgress(at(1), GEOMETRY)).toBe(1);
+    expect(getFlightProgress(2000, GEOMETRY)).toBe(1);
+  });
+
+  it("stays put when the page is pulled down past the top", () => {
+    expect(getFlightProgress(-40, GEOMETRY)).toBe(0);
+  });
+
+  it("doesn't fly before the hero's measured", () => {
+    const unmeasured = getCollapseGeometry({
+      insetTop: 59,
+      headerBottom: 73,
+      scrollTop: 89,
+      contentTop: 8,
+      heroHeight: 0,
+      barHeight: 119,
+    });
+
+    expect(getFlightProgress(100, unmeasured)).toBe(0);
+  });
+});
+
+describe("getFlightHandoff", () => {
+  it("leaves the hero's own artwork showing at rest", () => {
+    expect(getFlightHandoff(0)).toBe(0);
+  });
+
+  it("fades the flying copy in over the first of the scroll, so the words' colour over the artwork fades rather than pops", () => {
+    expect(getFlightHandoff(12)).toBeCloseTo(0.5);
+  });
+
+  it("has the copy whole a little way in", () => {
+    expect(getFlightHandoff(24)).toBe(1);
+    expect(getFlightHandoff(400)).toBe(1);
+  });
+
+  it("stays with the hero's artwork when pulled down", () => {
+    expect(getFlightHandoff(-30)).toBe(0);
+  });
+});
+
 describe("getBarThumbRect", () => {
   it("places the bar's thumbnail at its inset, centred in the bar's row", () => {
     expect(getBarThumbRect(59, 24)).toEqual({ x: 24, y: 59 + 12, width: 64, height: 36 });
@@ -211,11 +264,21 @@ describe("getFlightRect", () => {
   });
 
   it("eases between them — halfway through, halfway there", () => {
-    expect(getFlightRect(0.5, from, to)).toEqual({ x: 12, y: 135.5, width: 172, height: 96.75 });
+    const halfway = getFlightRect(0.5, from, to);
+
+    expect(halfway.x).toBeCloseTo(12);
+    expect(halfway.y).toBeCloseTo(135.5);
+    expect(halfway.width).toBeCloseTo(172);
+    expect(halfway.height).toBeCloseTo(96.75);
   });
 
   it("moves slowly at first, and quickly through the middle", () => {
     expect(getFlightRect(0.1, from, to).y).toBeGreaterThan(200 - (200 - 71) * 0.1);
+  });
+
+  it("is well on its way by the time the hero reaches the top — about a quarter through", () => {
+    // 156 of 557pt: the hero's risen to the top, and the artwork's visibly flying.
+    expect(getFlightRect(156 / 557, from, to).y).toBeLessThan(200 - (200 - 71) * 0.15);
   });
 });
 

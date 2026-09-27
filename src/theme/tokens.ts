@@ -7,7 +7,7 @@ const palette = {
   ink900: "#10131A",
   ink600: "#4A5160",
   ink300: "#9AA1B1",
-  paper: "#F7F8FA",
+  paper: "#F6F7FA",
   slate900: "#0B0D12",
   slate700: "#171A21",
   accent: "#D62626",
@@ -72,6 +72,29 @@ const palette = {
   // which is the app's near-black brand value, not literal #000.
   pureBlack: "#000000",
   stepLabelInactive: "#A1A1AA",
+  // Each study step's own colour — muted, editorial — and a soft tint of it,
+  // light and dark: Read ochre, Scripture indigo, Reflect sage, Pray rose,
+  // Quick Check a blue-leaning teal.
+  ochre: "#B0741C",
+  ochreTint: "rgba(176, 116, 28, 0.12)",
+  ochreOnDark: "#E3AA55",
+  ochreTintOnDark: "rgba(227, 170, 85, 0.18)",
+  indigo: "#3E4FA0",
+  indigoTint: "rgba(62, 79, 160, 0.10)",
+  indigoOnDark: "#95A3E6",
+  indigoTintOnDark: "rgba(149, 163, 230, 0.18)",
+  sage: "#4B8566",
+  sageTint: "rgba(75, 133, 102, 0.12)",
+  sageOnDark: "#8FC7A8",
+  sageTintOnDark: "rgba(143, 199, 168, 0.18)",
+  rose: "#B0506A",
+  roseTint: "rgba(176, 80, 106, 0.11)",
+  roseOnDark: "#E595AA",
+  roseTintOnDark: "rgba(229, 149, 170, 0.18)",
+  teal: "#2B7488",
+  tealTint: "rgba(43, 116, 136, 0.11)",
+  tealOnDark: "#7FC3D4",
+  tealTintOnDark: "rgba(127, 195, 212, 0.18)",
 } as const;
 
 /**
@@ -165,6 +188,21 @@ type ColorTokens = {
   inkHaloOnDark: string;
   /** …and behind dark ones. */
   inkHaloOnLight: string;
+  /**
+   * Each study step's colour, and a soft tint of it — its icon, and the
+   * square behind it — on Plan Detail's day: Read, Scripture, Reflect, Pray,
+   * and the Quick Check.
+   */
+  stepRead: string;
+  stepReadTint: string;
+  stepScripture: string;
+  stepScriptureTint: string;
+  stepReflect: string;
+  stepReflectTint: string;
+  stepPray: string;
+  stepPrayTint: string;
+  stepQuickCheck: string;
+  stepQuickCheckTint: string;
 };
 
 const lightColors: ColorTokens = {
@@ -212,6 +250,16 @@ const lightColors: ColorTokens = {
   overlayButtonLight: palette.whiteVeil,
   inkHaloOnDark: palette.blackHalo,
   inkHaloOnLight: palette.whiteHalo,
+  stepRead: palette.ochre,
+  stepReadTint: palette.ochreTint,
+  stepScripture: palette.indigo,
+  stepScriptureTint: palette.indigoTint,
+  stepReflect: palette.sage,
+  stepReflectTint: palette.sageTint,
+  stepPray: palette.rose,
+  stepPrayTint: palette.roseTint,
+  stepQuickCheck: palette.teal,
+  stepQuickCheckTint: palette.tealTint,
 };
 
 const darkColors: ColorTokens = {
@@ -261,6 +309,16 @@ const darkColors: ColorTokens = {
   overlayButtonLight: palette.whiteVeil,
   inkHaloOnDark: palette.blackHalo,
   inkHaloOnLight: palette.whiteHalo,
+  stepRead: palette.ochreOnDark,
+  stepReadTint: palette.ochreTintOnDark,
+  stepScripture: palette.indigoOnDark,
+  stepScriptureTint: palette.indigoTintOnDark,
+  stepReflect: palette.sageOnDark,
+  stepReflectTint: palette.sageTintOnDark,
+  stepPray: palette.roseOnDark,
+  stepPrayTint: palette.roseTintOnDark,
+  stepQuickCheck: palette.tealOnDark,
+  stepQuickCheckTint: palette.tealTintOnDark,
 };
 
 /**
@@ -269,7 +327,7 @@ const darkColors: ColorTokens = {
  */
 const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;
 
-const radii = { sm: 6, md: 10, lg: 16, pill: 999 } as const;
+const radii = { sm: 6, md: 10, lg: 16, xl: 24, pill: 999 } as const;
 
 /**
  * `fontFamily` keys reference `src/theme/fonts.ts`'s custom-loaded faces.
@@ -285,6 +343,8 @@ const radii = { sm: 6, md: 10, lg: 16, pill: 999 } as const;
 const typography = {
   masthead: { fontFamily: fonts.masthead, fontSize: 18, fontWeight: "400" },
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
+  /** The editorial face, larger: the title of the day the plan's on. */
+  editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
   editorialBody: { fontFamily: fonts.editorialBody, fontSize: 16, fontWeight: "400" },
   metaLabel: { fontFamily: fonts.metaLabel, fontSize: 13, fontWeight: "500" },
   metaBody: { fontFamily: fonts.metaBody, fontSize: 13, fontWeight: "400" },
@@ -292,6 +352,16 @@ const typography = {
   body: { fontSize: 17, fontWeight: "400" },
   label: { fontSize: 14, fontWeight: "500" },
   headline: { fontSize: 24, fontWeight: "700" },
+  /** A title on a large card (the Plans library's): bold, set close for up to three lines. */
+  cardTitle: { fontSize: 20, fontWeight: "700", lineHeight: 25 },
+  /** The number on a small tile (Plan Detail's days): large enough to read at a glance. */
+  tileNumber: { fontSize: 22, fontWeight: "600" },
+  /** A study step's name on its row (Plan Detail's day): clear, and firm enough to tap. */
+  stepTitle: { fontSize: 17, fontWeight: "600", lineHeight: 22 },
+  /** What the step holds, under its name: small and light. */
+  stepDetail: { fontSize: 14, fontWeight: "400", lineHeight: 18 },
+  /** The date under it: small, in the hero's mono, set in capitals by the tile. */
+  tileDate: { fontFamily: fonts.metaLabel, fontSize: 11, fontWeight: "500", letterSpacing: 0.6 },
 
   /** Hero sentence. Spec 30/500/1.06/-0.03em. */
   display: { fontSize: 37, fontWeight: "500", lineHeight: 39, letterSpacing: -1.11 },

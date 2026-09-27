@@ -31,6 +31,7 @@ const REST_QUIZ = `${REST}-quiz`;
 // under way — its first question answered, the second (finish the verse) on
 // screen with a choice picked.
 const ACTIVE = "plan-choose-whom-you-will-serve";
+const GRATITUDE = "plan-give-thanks";
 
 /** The store with the Rest plan's Quick Check started. */
 const STARTED: AppState = appReducer(INITIAL_STATE, {
@@ -122,15 +123,14 @@ describe("QuickCheckScreen", () => {
 
   describe("resuming", () => {
     it("picks up an attempt under way on its unanswered question, the choice still picked", () => {
-      renderQuickCheck(ACTIVE, 2);
+      // Give Thanks' day 6: the first answered, the second's “seasons” picked, not submitted.
+      renderQuickCheck(GRATITUDE, 6);
 
       expect(screen.getByText("2 of 3")).toBeVisible();
       expect(screen.getByText("Finish the verse")).toBeVisible();
       expect(screen.getByTestId("quick-check-choice-a")).toBeSelected();
       // The picked words fill the verse's blank.
-      expect(screen.getByTestId("quick-check-verse")).toHaveTextContent(
-        /it is the reward of the faithful\./,
-      );
+      expect(screen.getByTestId("quick-check-verse")).toHaveTextContent(/like shifting seasons\./);
     });
   });
 

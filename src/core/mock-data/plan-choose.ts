@@ -2,14 +2,16 @@ import type { Plan, Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "@/types/
 
 import { ALL_STEPS, makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
+import { makeDayQuiz } from "./quiz-builders";
 import { SERMON_CHOOSE } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
  * The active plan: six days from "Today I Choose to Be a Blessing", started
  * yesterday. Day 1 is done; day 2 is under way today (Read and Scripture
- * done, the first reflection answered). Its Quick Checks show a finished
- * quiz with one wrong answer, and one half-way through.
+ * done, the first reflection answered). Every day has a Quick Check: day
+ * 1's finished with one wrong answer; the rest not yet taken — day 2's
+ * opens once its steps are done, the others as their days do.
  */
 
 const BUILT_AT = "2026-09-21T19:41:30.000Z";
@@ -239,7 +241,7 @@ export const CHOOSE_SCRIPTURE = RECORDS.map((records) => records.scripture);
 export const CHOOSE_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
 export const CHOOSE_PRAYERS = RECORDS.map((records) => records.prayer);
 
-const [DAY_1, DAY_2] = CHOOSE_DAYS;
+const [DAY_1, DAY_2, DAY_3, DAY_4, DAY_5, DAY_6] = CHOOSE_DAYS;
 
 // ---------------------------------------------------------------------------
 // Quick Checks
@@ -382,22 +384,6 @@ const ATTEMPT_DAY_1: QuizAttempt = {
   completedAt: "2026-09-22T19:07:00.000Z",
 };
 
-/**
- * Day 2's: under way — the first question answered right, and the second on
- * screen with a choice picked but not yet submitted.
- */
-const ATTEMPT_DAY_2: QuizAttempt = {
-  id: `${QUIZ_DAY_2.id}-attempt-1`,
-  createdAt: "2026-09-23T06:58:00.000Z",
-  updatedAt: "2026-09-23T06:59:00.000Z",
-  quizId: QUIZ_DAY_2.id,
-  status: "inProgress",
-  currentQuestionId: Q2_2,
-  selectedChoiceId: `${Q2_2}-a`,
-  startedAt: "2026-09-23T06:58:00.000Z",
-  completedAt: null,
-};
-
 const ANSWERS: QuizAnswer[] = [
   {
     id: `${ATTEMPT_DAY_1.id}-q1`,
@@ -417,18 +403,157 @@ const ANSWERS: QuizAnswer[] = [
     choiceId: `${Q1_2}-a`,
     answeredAt: "2026-09-22T19:07:00.000Z",
   },
-  {
-    id: `${ATTEMPT_DAY_2.id}-q1`,
-    createdAt: "2026-09-23T06:59:00.000Z",
-    updatedAt: "2026-09-23T06:59:00.000Z",
-    attemptId: ATTEMPT_DAY_2.id,
-    questionId: Q2_1,
-    choiceId: `${Q2_1}-b`,
-    answeredAt: "2026-09-23T06:59:00.000Z",
-  },
 ];
 
-export const CHOOSE_QUIZZES: Quiz[] = [QUIZ_DAY_1, QUIZ_DAY_2];
-export const CHOOSE_QUIZ_QUESTIONS = QUESTIONS;
-export const CHOOSE_QUIZ_ATTEMPTS: QuizAttempt[] = [ATTEMPT_DAY_1, ATTEMPT_DAY_2];
+// Days 3–6: written, not yet taken.
+const LATER = [
+  makeDayQuiz(PLAN_CHOOSE, DAY_3, BUILT_AT, [
+    {
+      kind: "multipleChoice",
+      source: "scripture",
+      prompt: "In Matthew 6:24, what does Jesus say no one can do?",
+      choices: [
+        "Pray without ceasing",
+        "Serve two masters",
+        "Keep every commandment",
+        "Love their enemies",
+      ],
+      correct: "b",
+      explanation: "No one can serve two masters — every heart ends up devoted to one.",
+      scriptureReference: "Matthew 6:24",
+    },
+    {
+      kind: "finishTheVerse",
+      source: "scripture",
+      prompt: "Finish the verse: “You cannot serve both God and ___.”",
+      choices: ["yourself", "money", "the world", "your fears"],
+      correct: "b",
+      explanation: "“You cannot serve both God and money” — Matthew 6:24.",
+      scriptureReference: "Matthew 6:24",
+    },
+    {
+      kind: "multipleChoice",
+      source: "sermon",
+      prompt: "According to the sermon, what is always going to get your “yes”?",
+      choices: ["Your family", "Something", "Your church", "Your job"],
+      correct: "b",
+      explanation: "“Something is going to get your yes” — the question is only what.",
+      scriptureReference: null,
+    },
+  ]),
+  makeDayQuiz(PLAN_CHOOSE, DAY_4, BUILT_AT, [
+    {
+      kind: "finishTheVerse",
+      source: "scripture",
+      prompt: "Finish the verse: “Teach us to number our days, that we may gain a heart of ___.”",
+      choices: ["courage", "wisdom", "peace", "joy"],
+      correct: "b",
+      explanation: "A heart of wisdom — Psalm 90:12.",
+      scriptureReference: "Psalm 90:12",
+    },
+    {
+      kind: "multipleChoice",
+      source: "sermon",
+      prompt: "How does the sermon say to make every day count?",
+      choices: [
+        "By earning it",
+        "By choosing Him in it",
+        "By filling it with work",
+        "By planning it well",
+      ],
+      correct: "b",
+      explanation: "Not by earning it, but by choosing Him in it.",
+      scriptureReference: null,
+    },
+    {
+      kind: "multipleChoice",
+      source: "scripture",
+      prompt: "Who prays in Psalm 90 to see his days clearly?",
+      choices: ["David", "Moses", "Solomon", "Asaph"],
+      correct: "b",
+      explanation: "Psalm 90 is a prayer of Moses.",
+      scriptureReference: "Psalm 90:12",
+    },
+  ]),
+  makeDayQuiz(PLAN_CHOOSE, DAY_5, BUILT_AT, [
+    {
+      kind: "multipleChoice",
+      source: "scripture",
+      prompt: "In Romans 12:1, what does Paul urge us to offer?",
+      choices: ["Our tithes", "Our bodies, as a living sacrifice", "Our songs", "Our gifts"],
+      correct: "b",
+      explanation: "A living sacrifice — a whole self, offered in view of God's mercy.",
+      scriptureReference: "Romans 12:1",
+    },
+    {
+      kind: "finishTheVerse",
+      source: "scripture",
+      prompt: "Finish the verse: “…holy and pleasing to God—this is your true and proper ___.”",
+      choices: ["calling", "worship", "reward", "service"],
+      correct: "b",
+      explanation: "“Your true and proper worship” — Romans 12:1.",
+      scriptureReference: "Romans 12:1",
+    },
+    {
+      kind: "multipleChoice",
+      source: "sermon",
+      prompt: "The sermon says serving Him isn't a Sunday thing. What is it?",
+      choices: [
+        "A Christmas thing",
+        "A Tuesday-afternoon thing",
+        "A once-a-year thing",
+        "A someday thing",
+      ],
+      correct: "b",
+      explanation: "It's a Tuesday-afternoon thing — ordinary days are where it happens.",
+      scriptureReference: null,
+    },
+  ]),
+  makeDayQuiz(PLAN_CHOOSE, DAY_6, BUILT_AT, [
+    {
+      kind: "multipleChoice",
+      source: "scripture",
+      prompt: "In Joshua 24:24, how do the people answer Joshua?",
+      choices: [
+        "“We will think about it”",
+        "“We will serve the LORD our God”",
+        "“We will go back to Egypt”",
+        "“We will build a temple”",
+      ],
+      correct: "b",
+      explanation: "Together they say it: we will serve the LORD our God and obey him.",
+      scriptureReference: "Joshua 24:24",
+    },
+    {
+      kind: "multipleChoice",
+      source: "sermon",
+      prompt: "What does the sermon say makes a choice stronger?",
+      choices: [
+        "Keeping it to yourself",
+        "Saying it out loud, where someone hears",
+        "Writing it down once",
+        "Waiting until you're sure",
+      ],
+      correct: "b",
+      explanation: "Choices get stronger when someone else hears them.",
+      scriptureReference: null,
+    },
+    {
+      kind: "finishTheVerse",
+      source: "scripture",
+      prompt: "Finish the verse: “We will serve the LORD our God and ___ him.”",
+      choices: ["praise", "obey", "follow", "honor"],
+      correct: "b",
+      explanation: "“…and obey him” — Joshua 24:24.",
+      scriptureReference: "Joshua 24:24",
+    },
+  ]),
+];
+
+export const CHOOSE_QUIZZES: Quiz[] = [QUIZ_DAY_1, QUIZ_DAY_2, ...LATER.map(({ quiz }) => quiz)];
+export const CHOOSE_QUIZ_QUESTIONS: QuizQuestion[] = [
+  ...QUESTIONS,
+  ...LATER.flatMap(({ questions }) => questions),
+];
+export const CHOOSE_QUIZ_ATTEMPTS: QuizAttempt[] = [ATTEMPT_DAY_1];
 export const CHOOSE_QUIZ_ANSWERS = ANSWERS;

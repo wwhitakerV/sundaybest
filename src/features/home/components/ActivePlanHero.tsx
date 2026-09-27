@@ -1,7 +1,7 @@
+import { useState } from "react";
 import {
   Pressable,
   StyleSheet,
-  Text,
   View,
   type LayoutChangeEvent,
   type StyleProp,
@@ -9,12 +9,12 @@ import {
 } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { Link, type Href } from "expo-router";
-import { BookOpen } from "lucide-react-native";
 
-import { CompactButton } from "@/ui/CompactButton";
 import { GradientBackdrop } from "@/ui/GradientBackdrop";
+import { HeroContent } from "@/ui/hero/HeroContent";
+import { HeroContentFade } from "@/ui/hero/HeroContentFade";
+import { HERO_WASH_OPACITY, HERO_WORDS_GAP } from "@/ui/hero/hero-layout";
 import { PAGE_INSET } from "@/ui/Screen";
-import { StepProgress } from "@/ui/StepProgress";
 import { VideoThumbnail } from "@/ui/VideoThumbnail";
 import { useTheme } from "@/theme";
 import { getBackdropStops } from "@/utils/color/getBackdropStops";
@@ -58,11 +58,11 @@ export type ActivePlanHeroProps = {
 
 /**
  * The plan under way, featured at the top of Home the way Apple presents a
- * show: the full width in a gradient of its sermon's own colours, with room
- * to breathe (rounded at the top, just under the header) — its thumbnail
- * centred, a quiet status line, the title and church, a compact call to
- * continue, and what today holds, over the day-by-day line. Its type is
- * white on a dark colour and black on a light one.
+ * show: the full width in a gradient of its sermon's own colours with its
+ * still washed faintly over it, with room to breathe (rounded at the top,
+ * just under the header) — its thumbnail centred, and under it the hero's
+ * words (`HeroContent`) on their own colour (`HeroContentFade`), exactly as
+ * on Plan Detail.
  *
  * The artwork opens Plan Detail — on iOS 18+ it's the source of the system's
  * zoom transition (`Link.AppleZoom`), shrinking back into place on the way
@@ -88,9 +88,10 @@ export function ActivePlanHero({
 }: ActivePlanHeroProps) {
   const theme = useTheme();
   const colour = colors.at(0) ?? theme.colors.featureBackdrop;
-  const light = prefersLightInk(colour);
-  const ink = light ? theme.colors.inkOnDark : theme.colors.inkOnLight;
-  const muted = light ? theme.colors.inkOnDarkMuted : theme.colors.inkOnLightMuted;
+  const stops = getBackdropStops(colors, theme.colors.featureBackdrop);
+  const underlay = thumbnailUrl ? { uri: thumbnailUrl, opacity: HERO_WASH_OPACITY } : undefined;
+  // Where the artwork sits in the content, for the words' colour to come in over.
+  const [artwork, setArtwork] = useState({ y: 0, height: 0 });
 
   return (
     // The slot keeps the hero's full height in the page; the frame inside
@@ -102,7 +103,8 @@ export function ActivePlanHero({
       >
         <GradientBackdrop
           testID="home-tab-active-hero-backdrop"
-          stops={getBackdropStops(colors, theme.colors.featureBackdrop)}
+          stops={stops}
+          {...(underlay && { underlay })}
         />
         <Animated.View onLayout={onContentLayout} style={[styles.content, contentStyle]}>
           <Link href={href} asChild>
@@ -111,6 +113,10 @@ export function ActivePlanHero({
               accessibilityRole="button"
               accessibilityLabel={`${title}, day ${currentDay} of ${totalDays}. ${completedDayCount} of ${totalDays} days done.`}
               accessibilityHint="Opens the plan"
+              onLayout={(event) => {
+                const { y, height } = event.nativeEvent.layout;
+                setArtwork({ y, height });
+              }}
               style={styles.artworkButton}
             >
               <Link.AppleZoom>
@@ -127,41 +133,34 @@ export function ActivePlanHero({
             </Pressable>
           </Link>
 
-          <View style={styles.words}>
-            <Text
-              testID="home-tab-active-plan-status"
-              style={[theme.typography.metaLabel, styles.status, { color: muted }]}
-            >
-              {words.status}
-            </Text>
-            <Text style={[theme.typography.headline, styles.centred, { color: ink }]}>{title}</Text>
-            {church && (
-              <Text style={[theme.typography.body, styles.centred, { color: muted }]}>
-                {church}
-              </Text>
-            )}
-          </View>
-
-          <CompactButton
-            testID="home-tab-continue-button"
-            label={words.action}
-            icon={BookOpen}
-            tone={light ? "light" : "dark"}
-            onPress={onContinue}
+          {/* Over the artwork, under the words, across the whole hero: its
+          top is the hero's, so the content's inset and breathing room back out. */}
+          <HeroContentFade
+            testID="home-tab-active-hero-content-fade"
+            stops={stops}
+            artworkBottom={HERO_BREATHE_TOP + artwork.y + artwork.height}
+            artworkHeight={artwork.height}
+            // Not before the artwork's measured, or it'd come in over it.
+            heroHeight={artwork.height > 0 ? (slotHeight ?? 0) : 0}
+            style={[styles.contentFade, { height: slotHeight }]}
           />
 
-          <Text
-            testID="home-tab-active-plan-today"
-            style={[theme.typography.body, styles.centred, { color: muted }]}
-          >
-            {words.today}
-          </Text>
-          <StepProgress
-            testID="home-tab-active-plan-progress"
-            steps={totalDays}
-            // Days are done in order, so the first not yet done is the active segment.
-            activeIndex={completedDayCount}
-            ink={light ? "light" : "dark"}
+          <HeroContent
+            title={title}
+            church={church}
+            words={words}
+            totalDays={totalDays}
+            completedDayCount={completedDayCount}
+            light={prefersLightInk(colour)}
+            onContinue={onContinue}
+            testIDs={{
+              content: "home-tab-active-plan-content",
+              status: "home-tab-active-plan-status",
+              continueButton: "home-tab-continue-button",
+              today: "home-tab-active-plan-today",
+              progress: "home-tab-active-plan-progress",
+            }}
+            style={styles.words}
           />
         </Animated.View>
       </Animated.View>
@@ -184,12 +183,10 @@ const styles = StyleSheet.create({
   },
   // Never squeezed as the frame shortens around it: it keeps its full size,
   // clipped, so its measured height is always the hero's real one.
-  content: { gap: 16, flexShrink: 0 },
+  content: { flexShrink: 0 },
   artworkButton: { alignSelf: "center", width: `${HERO_ARTWORK_WIDTH_RATIO * 100}%` },
   zoomSource: { borderRadius: HERO_ARTWORK_RADIUS },
   artwork: { borderRadius: HERO_ARTWORK_RADIUS },
-  // A little more room after the artwork, and before the call to action.
-  words: { alignItems: "center", gap: 6, marginTop: 8, marginBottom: 4 },
-  status: { letterSpacing: 1 },
-  centred: { textAlign: "center" },
+  contentFade: { top: -HERO_BREATHE_TOP, left: -PAGE_INSET, right: -PAGE_INSET },
+  words: { marginTop: HERO_WORDS_GAP },
 });

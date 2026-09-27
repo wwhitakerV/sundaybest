@@ -4,6 +4,26 @@ import { Play } from "lucide-react-native";
 import { CompactButton } from "@/ui/CompactButton";
 
 describe("CompactButton", () => {
+  it("sits centred in its row by default", () => {
+    render(<CompactButton testID="a-compact" label="Go" tone="light" onPress={() => undefined} />);
+
+    expect(screen.getByTestId("a-compact")).toHaveStyle({ alignSelf: "center" });
+  });
+
+  it("can sit at the start of its row instead", () => {
+    render(
+      <CompactButton
+        testID="a-compact"
+        label="Go"
+        tone="light"
+        align="start"
+        onPress={() => undefined}
+      />,
+    );
+
+    expect(screen.getByTestId("a-compact")).toHaveStyle({ alignSelf: "flex-start" });
+  });
+
   it("shows its label, and is named by it", () => {
     render(
       <CompactButton

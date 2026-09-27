@@ -5,6 +5,7 @@ import type * as ExpoRouter from "expo-router";
 import { Pressable } from "react-native";
 
 import { useStoreActions } from "@/core/store";
+import { planOverviewHref, studyHref } from "@/features/plans/logic/routes";
 import { PlansScreen } from "@/features/plans/screens/PlansScreen";
 
 jest.mock("expo-router", () => ({
@@ -138,6 +139,42 @@ describe("PlansScreen", () => {
         params: expect.objectContaining({ planId: GRATITUDE }),
       }),
     );
+  });
+
+  it("gives each plan the page's full width, one to a row", () => {
+    render(<PlansScreen />);
+
+    for (const card of screen.getAllByTestId(/^plans-item-/)) {
+      expect(card).toHaveStyle({ width: "100%" });
+    }
+  });
+
+  it("shapes each plan 3:4", () => {
+    render(<PlansScreen />);
+
+    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveStyle({ aspectRatio: 3 / 4 });
+  });
+
+  it("sets each plan in its sermon's colours", () => {
+    render(<PlansScreen />);
+
+    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveStyle({ backgroundColor: "#3D403F" });
+  });
+
+  it("continues a plan under way from its card's button, on the day it's on", () => {
+    render(<PlansScreen />);
+
+    fireEvent.press(screen.getByTestId(`plans-action-${ACTIVE}`));
+
+    expect(mockPush).toHaveBeenCalledWith(studyHref(ACTIVE, 2));
+  });
+
+  it("opens a finished plan to review from its card's button", () => {
+    render(<PlansScreen />);
+
+    fireEvent.press(screen.getByTestId(`plans-action-${GRATITUDE}`));
+
+    expect(mockPush).toHaveBeenCalledWith(planOverviewHref(GRATITUDE));
   });
 
   it("shows a plan's progress moving as soon as a day of it is finished", () => {

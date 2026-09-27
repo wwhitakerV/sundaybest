@@ -196,8 +196,8 @@ describe("navigation", () => {
     expect(screen.getByText("Day 2 of 5")).toBeVisible();
     fireEvent.press(screen.getByTestId("study-close-button"));
 
-    expect(screen.getByTestId("plan-overview-day-1")).toHaveTextContent(/Done/);
-    expect(screen.getByTestId("plan-overview-day-2")).not.toHaveTextContent(/Locked/);
+    expect(screen.getByTestId("plan-overview-day-1")).toHaveAccessibleName(/^Day 1, done/);
+    expect(screen.getByTestId("plan-overview-day-2")).not.toHaveAccessibleName(/locked/);
     expect(screen.getByTestId("plan-overview-continue-button")).toHaveTextContent("Continue Day 2");
   });
 

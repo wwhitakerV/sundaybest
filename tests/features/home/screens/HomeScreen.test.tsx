@@ -126,12 +126,12 @@ describe("HomeScreen", () => {
       expect(screen.getByTestId("home-tab-active-hero-backdrop")).toBeOnTheScreen();
     });
 
-    it("gives the colour room to breathe above and below the plan", () => {
+    it("gives the colour room to breathe above and below the plan — below, as Plan Detail does", () => {
       renderHome();
 
       expect(screen.getByTestId("home-tab-active-hero")).toHaveStyle({
         paddingTop: 52,
-        paddingBottom: 44,
+        paddingBottom: 40,
       });
     });
 

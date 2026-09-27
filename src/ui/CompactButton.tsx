@@ -16,6 +16,8 @@ export type CompactButtonProps = {
    * button, dark words), `dark` for a light one (a black button, white words).
    */
   tone: "light" | "dark";
+  /** Where it sits in its row: centred (the default), or at the start. */
+  align?: "center" | "start";
   onPress: () => void;
   testID?: string;
 };
@@ -30,6 +32,7 @@ export function CompactButton({
   icon: Icon,
   iconOnly = false,
   tone,
+  align = "center",
   onPress,
   testID,
 }: CompactButtonProps) {
@@ -46,6 +49,7 @@ export function CompactButton({
       style={[
         styles.button,
         iconOnly && styles.round,
+        align === "start" && styles.start,
         { backgroundColor: fill, borderRadius: theme.radii.pill },
       ]}
     >
@@ -73,4 +77,5 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   round: { width: HEIGHT, paddingHorizontal: 0 },
+  start: { alignSelf: "flex-start" },
 });

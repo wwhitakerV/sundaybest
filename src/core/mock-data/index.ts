@@ -7,8 +7,8 @@
  *
  * | Plan                         | Status     | Days | Shows                                  |
  * | ---------------------------- | ---------- | ---- | -------------------------------------- |
- * | Today I Choose to Be a Blessing | active  | 6    | day 1 done, day 2 under way, quizzes   |
- * | Give Thanks in All Things    | completed  | 7    | every day done, perfect Quick Check    |
+ * | Today I Choose to Be a Blessing | active  | 6    | day 1 done (its quiz taken, one wrong), day 2 under way; a quiz every day |
+ * | Give Thanks in All Things    | completed  | 7    | every day done, a quiz each: day 6's half-way, day 7's perfect |
  * | Faith Through the Storm      | ready      | 3    | not started, no Quick Check            |
  * | Come to Me and Rest          | ready      | 1    | saved to the library, quiz untaken     |
  * | God Won't Leave You (sample) | ready      | 5    | the sample anyone can try              |
