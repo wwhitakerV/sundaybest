@@ -7,8 +7,10 @@ const HEIGHT = 44;
 
 export type CompactButtonProps = {
   label: string;
-  /** An icon before the label, e.g. `Play`. */
+  /** An icon beside the label, e.g. `Play`. */
   icon?: LucideIcon;
+  /** Which side of the label the icon sits: before it (the default), or after, as a way forward. */
+  iconPosition?: "start" | "end";
   /** Just the icon, in a circle — still named by `label` for a screen reader. */
   iconOnly?: boolean;
   /**
@@ -33,6 +35,7 @@ export function CompactButton({
   label,
   icon: Icon,
   iconOnly = false,
+  iconPosition = "start",
   tone,
   align = "center",
   onPress,
@@ -46,6 +49,9 @@ export function CompactButton({
         ? theme.colors.inkOnDark
         : theme.colors.inkOnLight;
   const ink = tone === "light" ? theme.colors.inkOnLight : theme.colors.inkOnDark;
+  const icon = Icon && (
+    <Icon size={iconOnly ? 20 : 16} color={ink} strokeWidth={theme.icon.strokeWidth} />
+  );
 
   return (
     <Pressable
@@ -60,15 +66,9 @@ export function CompactButton({
         { backgroundColor: fill, borderRadius: theme.radii.pill },
       ]}
     >
-      {Icon && (
-        <Icon
-          size={iconOnly ? 20 : 16}
-          color={ink}
-          // {...(!iconOnly && { fill: ink })}
-          strokeWidth={theme.icon.strokeWidth}
-        />
-      )}
+      {iconPosition === "start" && icon}
       {!iconOnly && <Text style={[theme.typography.compactButton, { color: ink }]}>{label}</Text>}
+      {iconPosition === "end" && icon}
     </Pressable>
   );
 }

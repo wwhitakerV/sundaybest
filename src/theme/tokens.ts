@@ -76,29 +76,6 @@ const palette = {
   // which is the app's near-black brand value, not literal #000.
   pureBlack: "#000000",
   stepLabelInactive: "#A1A1AA",
-  // Each study step's own colour — muted, editorial — and a soft tint of it,
-  // light and dark: Read ochre, Scripture indigo, Reflect sage, Pray rose,
-  // Quick Check a blue-leaning teal.
-  ochre: "#B0741C",
-  ochreTint: "rgba(176, 116, 28, 0.12)",
-  ochreOnDark: "#E3AA55",
-  ochreTintOnDark: "rgba(227, 170, 85, 0.18)",
-  indigo: "#3E4FA0",
-  indigoTint: "rgba(62, 79, 160, 0.10)",
-  indigoOnDark: "#95A3E6",
-  indigoTintOnDark: "rgba(149, 163, 230, 0.18)",
-  sage: "#4B8566",
-  sageTint: "rgba(75, 133, 102, 0.12)",
-  sageOnDark: "#8FC7A8",
-  sageTintOnDark: "rgba(143, 199, 168, 0.18)",
-  rose: "#B0506A",
-  roseTint: "rgba(176, 80, 106, 0.11)",
-  roseOnDark: "#E595AA",
-  roseTintOnDark: "rgba(229, 149, 170, 0.18)",
-  teal: "#2B7488",
-  tealTint: "rgba(43, 116, 136, 0.11)",
-  tealOnDark: "#7FC3D4",
-  tealTintOnDark: "rgba(127, 195, 212, 0.18)",
   // Pastels matched to the backdrops baked into Fun's illustrations, so each
   // one dissolves into the card it's set on: a hazy dawn (light, mid, deep),
   // blush, butter, lilac, and sky.
@@ -215,21 +192,6 @@ type ColorTokens = {
   /** …and behind dark ones. */
   inkHaloOnLight: string;
   /**
-   * Each study step's colour, and a soft tint of it — its icon, and the
-   * square behind it — on Fun's plan picks: Read, Scripture, Reflect, Pray,
-   * and the Quick Check.
-   */
-  stepRead: string;
-  stepReadTint: string;
-  stepScripture: string;
-  stepScriptureTint: string;
-  stepReflect: string;
-  stepReflectTint: string;
-  stepPray: string;
-  stepPrayTint: string;
-  stepQuickCheck: string;
-  stepQuickCheckTint: string;
-  /**
    * Behind an illustration that carries a light backdrop of its own (Fun's
    * games): a pastel matched to it, so the art dissolves into its card. The
    * same in either theme, as the art's backdrop is; words and marks on one
@@ -242,8 +204,6 @@ type ColorTokens = {
   illustrationButter: string;
   illustrationLilac: string;
   illustrationSky: string;
-  /** A win or achievement — the trophy — set on an illustration surface, so the same in either theme. */
-  trophy: string;
 };
 
 const lightColors: ColorTokens = {
@@ -294,16 +254,6 @@ const lightColors: ColorTokens = {
   overlayButtonLight: palette.whiteVeil,
   inkHaloOnDark: palette.blackHalo,
   inkHaloOnLight: palette.whiteHalo,
-  stepRead: palette.ochre,
-  stepReadTint: palette.ochreTint,
-  stepScripture: palette.indigo,
-  stepScriptureTint: palette.indigoTint,
-  stepReflect: palette.sage,
-  stepReflectTint: palette.sageTint,
-  stepPray: palette.rose,
-  stepPrayTint: palette.roseTint,
-  stepQuickCheck: palette.teal,
-  stepQuickCheckTint: palette.tealTint,
   illustrationDawnLight: palette.dawnLight,
   illustrationDawn: palette.dawn,
   illustrationDawnDeep: palette.dawnDeep,
@@ -311,7 +261,6 @@ const lightColors: ColorTokens = {
   illustrationButter: palette.butter,
   illustrationLilac: palette.lilac,
   illustrationSky: palette.sky,
-  trophy: palette.ochre,
 };
 
 const darkColors: ColorTokens = {
@@ -364,16 +313,6 @@ const darkColors: ColorTokens = {
   overlayButtonLight: palette.whiteVeil,
   inkHaloOnDark: palette.blackHalo,
   inkHaloOnLight: palette.whiteHalo,
-  stepRead: palette.ochreOnDark,
-  stepReadTint: palette.ochreTintOnDark,
-  stepScripture: palette.indigoOnDark,
-  stepScriptureTint: palette.indigoTintOnDark,
-  stepReflect: palette.sageOnDark,
-  stepReflectTint: palette.sageTintOnDark,
-  stepPray: palette.roseOnDark,
-  stepPrayTint: palette.roseTintOnDark,
-  stepQuickCheck: palette.tealOnDark,
-  stepQuickCheckTint: palette.tealTintOnDark,
   // Matched to art whose light backdrop is baked in: they read the same.
   illustrationDawnLight: palette.dawnLight,
   illustrationDawn: palette.dawn,
@@ -382,7 +321,6 @@ const darkColors: ColorTokens = {
   illustrationButter: palette.butter,
   illustrationLilac: palette.lilac,
   illustrationSky: palette.sky,
-  trophy: palette.ochre,
 };
 
 /**
@@ -391,7 +329,8 @@ const darkColors: ColorTokens = {
  */
 const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;
 
-const radii = { sm: 6, md: 10, lg: 16, xl: 24, pill: 999 } as const;
+/** `card` is a featured or tappable card's corner (Fun's hero, games, and banner). */
+const radii = { sm: 6, md: 10, lg: 16, card: 20, xl: 24, pill: 999 } as const;
 
 /**
  * `fontFamily` keys reference `src/theme/fonts.ts`'s custom-loaded faces.
@@ -451,7 +390,7 @@ const typography = {
   compactButton: { fontSize: 16, fontWeight: "600" },
   /** A heading over one section of a scrolling page ("Play now"): bold, a step under `headline`. */
   sectionTitle: { fontSize: 22, fontWeight: "700", lineHeight: 28, letterSpacing: -0.22 },
-  /** A title on a tile or a small card (Fun's games, its plan picks): bold, set close. */
+  /** A title on a tile or a small card (Fun's games): bold, set close. */
   tileTitle: { fontSize: 17, fontWeight: "700", lineHeight: 22 },
   /** Supporting copy on a card, under its title: a line or two, quiet. */
   cardDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
@@ -466,6 +405,8 @@ const typography = {
   stepCounter: { fontFamily: fonts.metaBody, fontSize: 14, fontWeight: "400", letterSpacing: 0.28 },
   /** A segmented control's option label. Spec 12.5/400. */
   segmentLabel: { fontSize: 15, fontWeight: "400" },
+  /** The picked option's label: the same size, firmer. */
+  segmentLabelActive: { fontSize: 15, fontWeight: "600" },
   /** A borderless filter-tabs label (Plans' All/In progress/Done/Saved row). Spec 13/400. */
   filterLabel: { fontSize: 16, fontWeight: "400" },
   /** A filter tab's superscript count. Spec 9pt. */

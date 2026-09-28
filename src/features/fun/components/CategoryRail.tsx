@@ -1,51 +1,65 @@
-import { useState } from "react";
-import { ScrollView } from "react-native";
-import { BookOpen, Gamepad2, GraduationCap, Lightbulb, UsersRound, Zap } from "lucide-react-native";
+import { ScrollView, type LayoutChangeEvent } from "react-native";
+import {
+  Gamepad2,
+  GraduationCap,
+  Lightbulb,
+  UsersRound,
+  Zap,
+  type LucideIcon,
+} from "lucide-react-native";
 
 import { Chip } from "@/ui/Chip";
-import { PAGE_INSET } from "@/ui/Screen";
 import { useTheme } from "@/theme";
+import { FUN_CATEGORIES, type FunCategory } from "../logic/categories";
 
-/** Fun's categories, in order, each with its icon. */
-const CATEGORIES = [
-  { label: "Quick Play", icon: Gamepad2 },
-  { label: "Multiplayer", icon: UsersRound },
-  { label: "Trivia", icon: Lightbulb },
-  { label: "Exams", icon: GraduationCap },
-  { label: "From Your Plans", icon: BookOpen },
-  { label: "Streaks", icon: Zap },
-] as const;
-
-type Category = (typeof CATEGORIES)[number]["label"];
+/** Each category's icon. */
+function getCategoryIcon(category: FunCategory): LucideIcon {
+  switch (category) {
+    case "Multiplayer":
+      return UsersRound;
+    case "Trivia":
+      return Lightbulb;
+    case "Exams":
+      return GraduationCap;
+    case "Streaks":
+      return Zap;
+    default:
+      return Gamepad2;
+  }
+}
 
 export type CategoryRailProps = {
+  selected: FunCategory;
+  onSelect: (category: FunCategory) => void;
+  /** Where the row lands on the page, so the page can bring it up. */
+  onLayout?: (event: LayoutChangeEvent) => void;
   testID: string;
 };
 
 /**
  * Fun's categories as a row of chips that runs edge to edge and scrolls
- * sideways. One is selected at a time — Quick Play to begin with — filled
- * quietly grey, so the row reads without shouting.
+ * sideways, so none has to shrink its label to fit. One is selected at a
+ * time, filled quietly grey, so the row reads without shouting.
  */
-export function CategoryRail({ testID }: CategoryRailProps) {
+export function CategoryRail({ selected, onSelect, onLayout, testID }: CategoryRailProps) {
   const theme = useTheme();
-  const [selected, setSelected] = useState<Category>("Quick Play");
 
   return (
     <ScrollView
       testID={testID}
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: PAGE_INSET, gap: theme.spacing.sm }}
+      onLayout={onLayout}
+      contentContainerStyle={{ paddingHorizontal: theme.spacing.md, gap: theme.spacing.sm }}
     >
-      {CATEGORIES.map(({ label, icon }) => (
+      {FUN_CATEGORIES.map((category) => (
         <Chip
-          key={label}
-          testID={`${testID}-option-${label}`}
-          label={label}
-          icon={icon}
-          selected={label === selected}
-          onPress={() => setSelected(label)}
+          key={category}
+          testID={`${testID}-option-${category}`}
+          label={category}
+          icon={getCategoryIcon(category)}
+          selected={category === selected}
+          onPress={() => onSelect(category)}
         />
       ))}
     </ScrollView>

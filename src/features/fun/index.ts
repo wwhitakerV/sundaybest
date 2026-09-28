@@ -4,4 +4,5 @@
  *
  * Deep imports such as `@/features/<name>/screens/Thing` are blocked by lint.
  */
+export { ComingSoonScreen } from "./screens/ComingSoonScreen";
 export { FunScreen } from "./screens/FunScreen";

@@ -16,6 +16,7 @@ const TAB_ROOTS = [
   "(tabs)/home",
   "(tabs)/plans/index",
   "(tabs)/plans",
+  "(tabs)/fun/index",
   "(tabs)/fun",
   "(tabs)/progress",
 ];

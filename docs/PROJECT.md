@@ -578,6 +578,11 @@ utils -> types
   analytics) may be imported only inside `src/core`.
 - `src/utils` is pure: no React, no I/O.
 - `src/app` is the only place default exports are allowed (Expo Router needs them).
+- **Fun's games are not built yet.** Everything Fun opens — each game, Play now's
+  "See all", and Challenge friends — goes to `/(tabs)/fun/[destination]`, a
+  "Coming soon" page whose param is parsed by `funDestinationSchema`
+  (`src/features/fun/logic/destinations.ts`). A real screen replaces its
+  destination there. Never point an unbuilt game at an unrelated screen.
 
 ### Two lint-config traps — read before touching eslint.config.js
 
@@ -626,6 +631,14 @@ rather than trusting a clean lint run.
   folders that contain a source file, because Jest fails a threshold whose path
   has no coverage data. `./src/utils/` is live now; `./src/core/security/`
   activates by itself on its first file.
+- **RNTL skips anything hidden from VoiceOver.** Decorative art carries
+  `accessibilityElementsHidden`, so queries for it need
+  `{ includeHiddenElements: true }`.
+- **react-native-svg rewrites `mask="url(#id)"` to `id`** on the rendered
+  element, and a `viewBox` to `minX`/`minY`/`vbWidth`/`vbHeight`. Assert those.
+- **`ScrollView.prototype.scrollTo` is a shared `jest.fn`** in React Native's
+  ScrollView mock. Watch it with `jest.spyOn(ScrollView.prototype, "scrollTo")`;
+  reading it off the prototype trips `@typescript-eslint/unbound-method`.
 - **`renderRouter` calls `jest.useFakeTimers()` itself**, so route tests run on
   fake timers whether they asked or not. `tests/setup/jest.setup.ts` restores real timers
   after every test.
