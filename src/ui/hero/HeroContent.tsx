@@ -73,7 +73,7 @@ export function HeroContent({
   continueStyle,
   continueShown = true,
   onContinueLayout,
-  showProgress = true,
+  showProgress = false,
   testIDs,
   style,
 }: HeroContentProps) {
