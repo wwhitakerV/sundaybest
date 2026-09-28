@@ -14,8 +14,10 @@ export type CompactButtonProps = {
   /**
    * The ink of the colour it sits on: `light` for a dark colour (a white
    * button, dark words), `dark` for a light one (a black button, white words).
+   * `accent` is the brand red with white words, for the one action a featured
+   * card leads to.
    */
-  tone: "light" | "dark";
+  tone: "light" | "dark" | "accent";
   /** Where it sits in its row: centred (the default), or at the start. */
   align?: "center" | "start";
   onPress: () => void;
@@ -37,7 +39,12 @@ export function CompactButton({
   testID,
 }: CompactButtonProps) {
   const theme = useTheme();
-  const fill = tone === "light" ? theme.colors.inkOnDark : theme.colors.inkOnLight;
+  const fill =
+    tone === "accent"
+      ? theme.colors.accent
+      : tone === "light"
+        ? theme.colors.inkOnDark
+        : theme.colors.inkOnLight;
   const ink = tone === "light" ? theme.colors.inkOnLight : theme.colors.inkOnDark;
 
   return (

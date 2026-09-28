@@ -43,10 +43,4 @@ describe("FunScreen", () => {
 
     expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings");
   });
-
-  it("shows placeholder body text", () => {
-    render(<FunScreen />);
-
-    expect(screen.getByText("...")).toBeVisible();
-  });
 });

@@ -95,6 +95,16 @@ const palette = {
   tealTint: "rgba(43, 116, 136, 0.11)",
   tealOnDark: "#7FC3D4",
   tealTintOnDark: "rgba(127, 195, 212, 0.18)",
+  // Pastels matched to the backdrops baked into Fun's illustrations, so each
+  // one dissolves into the card it's set on: a hazy dawn (light, mid, deep),
+  // blush, butter, lilac, and sky.
+  dawnLight: "#F8F5F1",
+  dawn: "#F5EBDD",
+  dawnDeep: "#F1D7A9",
+  blush: "#FDF1F6",
+  butter: "#FDF6E5",
+  lilac: "#F5ECFA",
+  sky: "#EFF6FD",
 } as const;
 
 /**
@@ -203,6 +213,21 @@ type ColorTokens = {
   stepPrayTint: string;
   stepQuickCheck: string;
   stepQuickCheckTint: string;
+  /**
+   * Behind an illustration that carries a light backdrop of its own (Fun's
+   * games): a pastel matched to it, so the art dissolves into its card. The
+   * same in either theme, as the art's backdrop is; words and marks on one
+   * are `inkOnLight*`. Dawn is a gradient — light, mid, deep.
+   */
+  illustrationDawnLight: string;
+  illustrationDawn: string;
+  illustrationDawnDeep: string;
+  illustrationBlush: string;
+  illustrationButter: string;
+  illustrationLilac: string;
+  illustrationSky: string;
+  /** A win or achievement — the trophy — set on an illustration surface, so the same in either theme. */
+  trophy: string;
 };
 
 const lightColors: ColorTokens = {
@@ -260,6 +285,14 @@ const lightColors: ColorTokens = {
   stepPrayTint: palette.roseTint,
   stepQuickCheck: palette.teal,
   stepQuickCheckTint: palette.tealTint,
+  illustrationDawnLight: palette.dawnLight,
+  illustrationDawn: palette.dawn,
+  illustrationDawnDeep: palette.dawnDeep,
+  illustrationBlush: palette.blush,
+  illustrationButter: palette.butter,
+  illustrationLilac: palette.lilac,
+  illustrationSky: palette.sky,
+  trophy: palette.ochre,
 };
 
 const darkColors: ColorTokens = {
@@ -319,6 +352,15 @@ const darkColors: ColorTokens = {
   stepPrayTint: palette.roseTintOnDark,
   stepQuickCheck: palette.tealOnDark,
   stepQuickCheckTint: palette.tealTintOnDark,
+  // Matched to art whose light backdrop is baked in: they read the same.
+  illustrationDawnLight: palette.dawnLight,
+  illustrationDawn: palette.dawn,
+  illustrationDawnDeep: palette.dawnDeep,
+  illustrationBlush: palette.blush,
+  illustrationButter: palette.butter,
+  illustrationLilac: palette.lilac,
+  illustrationSky: palette.sky,
+  trophy: palette.ochre,
 };
 
 /**
@@ -385,6 +427,14 @@ const typography = {
   button: { fontSize: 18, fontWeight: "600" },
   /** A compact button's label — a smaller call to action set on a colour. */
   compactButton: { fontSize: 16, fontWeight: "600" },
+  /** A heading over one section of a scrolling page ("Play now"): bold, a step under `headline`. */
+  sectionTitle: { fontSize: 22, fontWeight: "700", lineHeight: 28, letterSpacing: -0.22 },
+  /** A title on a tile or a small card (Fun's games, its plan picks): bold, set close. */
+  tileTitle: { fontSize: 17, fontWeight: "700", lineHeight: 22 },
+  /** Supporting copy on a card, under its title: a line or two, quiet. */
+  cardDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
+  /** A tag's label — a small pill naming a kind or a count ("Quiz", "12 day streak"). */
+  tag: { fontSize: 12, fontWeight: "600", lineHeight: 16 },
 
   /** Centered header title ("New plan", "Day 2 of 6", "Quick check"). Spec 14/500. */
   navTitle: { fontSize: 17, fontWeight: "500" },
