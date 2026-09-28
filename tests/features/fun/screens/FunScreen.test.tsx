@@ -5,6 +5,7 @@ import type * as ExpoRouter from "expo-router";
 
 import { funDestinationHref } from "@/features/fun/logic/destinations";
 import { FunScreen } from "@/features/fun/screens/FunScreen";
+import { theologyExamsHref } from "@/features/exams";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -192,16 +193,28 @@ describe("FunScreen", () => {
     it.each([
       ["duel", "duel", "1v1 Duel"],
       ["trivia", "daily-trivia", "Daily Trivia"],
-      ["exams", "theology-exams", "Theology Exams"],
       ["verse-builder", "verse-builder", "Verse Builder"],
-    ] as const)("opens %s at its own destination, and says so", (game, destination, name) => {
-      render(<FunScreen />);
-      const tile = screen.getByTestId(`fun-games-${game}`);
+    ] as const)(
+      "opens %s at its own Coming soon destination, and says so",
+      (game, destination, name) => {
+        render(<FunScreen />);
+        const tile = screen.getByTestId(`fun-games-${game}`);
 
-      expect(tile).toHaveProp("accessibilityHint", `Opens ${name}`);
+        expect(tile).toHaveProp("accessibilityHint", `Opens ${name}`);
+        fireEvent.press(tile);
+
+        expect(mockPush).toHaveBeenCalledWith(funDestinationHref(destination));
+      },
+    );
+
+    it("opens Theology Exams at the exam route, not its old Coming soon destination", () => {
+      render(<FunScreen />);
+      const tile = screen.getByTestId("fun-games-exams");
+
+      expect(tile).toHaveProp("accessibilityHint", "Opens Theology Exams");
       fireEvent.press(tile);
 
-      expect(mockPush).toHaveBeenCalledWith(funDestinationHref(destination));
+      expect(mockPush).toHaveBeenCalledWith(theologyExamsHref);
     });
 
     it("opens every game from See all", () => {

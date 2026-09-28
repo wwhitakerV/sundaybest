@@ -2,6 +2,12 @@ import type { AppAction } from "./actions";
 import { completePlanDay, startPlanDay, updatePlanDay } from "./reducers/days";
 import { clearReflection, markPrayed, saveReflection, updateReflection } from "./reducers/devotion";
 import {
+  checkExamResponse,
+  completeExamAttempt,
+  recordExamResponse,
+  startExamAttempt,
+} from "./reducers/exams";
+import {
   completePlanGeneration,
   failPlanGeneration,
   retryPlanGeneration,
@@ -85,6 +91,15 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "quiz/completeAttempt":
     case "progress/recordQuizCompletion":
       return completeQuizAttempt(state, action);
+
+    case "exam/startAttempt":
+      return startExamAttempt(state, action);
+    case "exam/recordResponse":
+      return recordExamResponse(state, action);
+    case "exam/checkResponse":
+      return checkExamResponse(state, action);
+    case "exam/completeAttempt":
+      return completeExamAttempt(state, action);
 
     case "settings/reminderEnabled":
       return updateReminderEnabled(state, action);

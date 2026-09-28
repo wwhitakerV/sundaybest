@@ -578,11 +578,25 @@ utils -> types
   analytics) may be imported only inside `src/core`.
 - `src/utils` is pure: no React, no I/O.
 - `src/app` is the only place default exports are allowed (Expo Router needs them).
-- **Fun's games are not built yet.** Everything Fun opens — each game, Play now's
-  "See all", and Challenge friends — goes to `/(tabs)/fun/[destination]`, a
-  "Coming soon" page whose param is parsed by `funDestinationSchema`
-  (`src/features/fun/logic/destinations.ts`). A real screen replaces its
-  destination there. Never point an unbuilt game at an unrelated screen.
+- **Most of Fun's games are not built yet.** Everything Fun opens that isn't
+  built — each unbuilt game, Play now's "See all", and Challenge friends — goes
+  to `/(tabs)/fun/[destination]`, a "Coming soon" page whose param is parsed by
+  `funDestinationSchema` (`src/features/fun/logic/destinations.ts`). A real
+  screen replaces its destination there: `getGameHref` sends it to its own
+  route and its name leaves the schema. Never point an unbuilt game at an
+  unrelated screen.
+- **Theology Exams is the first built game.** Its tile opens
+  `/(tabs)/fun/theology-exams`, the overview; an attempt — questions, results,
+  and Understand why — is the `exam` full-screen modal. The content is bundled
+  JSON in `src/features/exams/data/content/`, checked by `parseExamContent`,
+  which fails closed. It's excluded from Prettier so it stays byte-identical to
+  the file it was copied from. Answer keys are bundled and graded on the device
+  only through `src/features/exams/data/exam-grading.ts`
+  ([ADR 0013](./adr/0013-theology-exams-bundled-content-and-on-device-grading.md)).
+  Attempts live in the app store, in memory only. Passage links open in an
+  in-app Safari sheet through `src/core/links`, and only for
+  `https://www.biblegateway.com`
+  ([ADR 0014](./adr/0014-expo-web-browser-for-passage-links.md)).
 
 ### Two lint-config traps — read before touching eslint.config.js
 

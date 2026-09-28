@@ -64,6 +64,9 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     "expo-screen-capture",
     // the clipboard: reads what the user copied elsewhere
     "expo-clipboard",
+    // opening a web page: the one way content leaves for another site, so the
+    // allowlist that guards it lives in src/core/links
+    "expo-web-browser",
   ],
   message:
     "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",

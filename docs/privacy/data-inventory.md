@@ -62,6 +62,10 @@ adding one at all requires an ADR.
 | App container files | React Native / Expo runtime files                | Declared as `FileTimestamp` and `DiskSpace` usage.                        |
 | Keychain            | _nothing yet_                                    | `src/core/security/secure-storage` is the only place allowed to write it. |
 
+Theology exam attempts — which answers were chosen, and the score — live in
+the app store in memory only. They are never written to disk and are gone when
+the app quits.
+
 Nothing sensitive is stored anywhere, so nothing is currently at rest that would
 need encrypting. Prompt 7 adds an encrypted local database (SQLCipher); this
 table must be updated when it lands, along with the export-compliance answer.
@@ -82,6 +86,17 @@ Sentry does, and it exists whether or not `useIntegrityMonitor` is ever
 mounted at a screen (mounting only decides whether it can ever fire — the
 capability ships in the binary either way, which is why it's in the privacy
 manifest above regardless).
+
+**Bible passage links.** Tapping a passage link in Theology Exams opens
+`https://www.biblegateway.com/...` in an in-app Safari sheet
+(`SFSafariViewController`, via `expo-web-browser`). The request is made by
+Safari, not by app code: it carries the passage reference in the URL and
+whatever Safari itself sends, and nothing about the user's answers. The sheet
+doesn't share cookies or data with the app. Only that host, over `https`, is
+allowed (`src/core/links/passage-url.ts`), and a link is opened only when
+someone taps it. Bible Gateway is its own ad-supported site with its own
+trackers: the app sends it nothing about the user, but someone reading a
+passage there sees Bible Gateway's ads, not the app's.
 
 `EXPO_PUBLIC_API_URL` is configured but no other code calls it yet. When the
 first product request lands, this section gets a second row: the endpoint, what
@@ -135,6 +150,7 @@ submission.
 | `expo-constants`                 | App config, `UserDefaults`                                                       | Yes                                                                           |
 | `expo-file-system` (via `expo`)  | App container files, disk space                                                  | Transitively                                                                  |
 | `expo-splash-screen`             | None                                                                             | Yes                                                                           |
+| `expo-web-browser`               | None — it opens a URL the app hands it in an in-app Safari sheet                 | Yes — Bible Gateway passage links only, from `src/core/links`                 |
 | `@sentry/react-native`           | Whatever the app explicitly forwards — see "Diagnostics" above                   | Yes, gated on `EXPO_PUBLIC_SENTRY_DSN` being non-empty                        |
 | `freerasp-react-native` (Talsec) | Device ID and diagnostic/integrity signals, per its own bundled privacy manifest | Linked, not yet mounted at any screen — see PLATFORM-3 in the MASVS checklist |
 

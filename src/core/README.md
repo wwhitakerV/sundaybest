@@ -19,7 +19,8 @@ monitoring/   logging, crash and error reporting
 providers/    app-wide React providers (AppProviders)
 fonts/        font loading
 haptics/      tap and vibration feedback
-accessibility/ OS accessibility settings (Reduce Motion)
+accessibility/ OS accessibility settings (Reduce Motion) and VoiceOver announcements
+links/        opens allowed outside links (Bible passages) in an in-app Safari sheet
 notifications/ notification permission (stubbed until expo-notifications lands)
 mock-data/    connected mock records for every screen, as `AppData` (see below)
 store/        the app store: state, reducer, selectors, provider (see below)

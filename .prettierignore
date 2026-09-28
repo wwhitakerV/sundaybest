@@ -14,3 +14,7 @@ patches/
 
 # lockfile
 package-lock.json
+
+# exam content, kept byte-for-byte as supplied so it can be diffed against the
+# authored file (src/features/exams/data)
+src/features/exams/data/content/

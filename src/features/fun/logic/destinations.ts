@@ -1,17 +1,17 @@
 import { z } from "zod";
 
+import { theologyExamsHref } from "@/features/exams";
 import type { FunGame } from "../types";
 
 /**
- * Everywhere Fun leads: its games, every game at once, and the invitation to
- * friends. None is built yet; each opens a "Coming soon" page of its own
- * inside Fun's stack, never some other screen.
+ * Where Fun leads that isn't built yet: each opens a "Coming soon" page of its
+ * own inside Fun's stack, never some other screen. Theology Exams is built —
+ * it has its own screen now, and is no longer one of these.
  */
 const funDestinationSchema = z.enum([
   "heads-up",
   "duel",
   "daily-trivia",
-  "theology-exams",
   "verse-builder",
   "all-games",
   "challenge-friends",
@@ -34,8 +34,6 @@ export function getFunDestinationTitle(destination: FunDestination): string {
       return "1v1 Duel";
     case "daily-trivia":
       return "Daily Trivia";
-    case "theology-exams":
-      return "Theology Exams";
     case "verse-builder":
       return "Verse Builder";
     case "all-games":
@@ -45,15 +43,13 @@ export function getFunDestinationTitle(destination: FunDestination): string {
   }
 }
 
-/** Where a Play now game opens. */
-export function getGameDestination(game: FunGame): FunDestination {
+/** The "Coming soon" page a Play now game opens while it isn't built. */
+export function getGameDestination(game: Exclude<FunGame, "exams">): FunDestination {
   switch (game) {
     case "duel":
       return "duel";
     case "trivia":
       return "daily-trivia";
-    case "exams":
-      return "theology-exams";
     case "verse-builder":
       return "verse-builder";
   }
@@ -61,4 +57,9 @@ export function getGameDestination(game: FunGame): FunDestination {
 
 export function funDestinationHref(destination: FunDestination) {
   return { pathname: "/(tabs)/fun/[destination]", params: { destination } } as const;
+}
+
+/** Where a Play now game opens: Theology Exams' own screen, or another game's Coming soon page. */
+export function getGameHref(game: FunGame) {
+  return game === "exams" ? theologyExamsHref : funDestinationHref(getGameDestination(game));
 }

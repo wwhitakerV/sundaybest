@@ -1,6 +1,6 @@
 # Spec: Theology Exams (THEO-01-01)
 
-- **Status:** Draft
+- **Status:** Approved
 - **Owner:** @wwhitakerv
 - **Date:** 2026-09-28
 
@@ -91,8 +91,8 @@ promising something it does not deliver.
 
 8. **An open attempt resumes**
    - **Given** an attempt left before it was finished
-   - **When** the overview opens
-   - **Then** it offers Resume, which returns to the first unanswered question with every earlier response kept, and no second attempt can be open at once
+   - **When** the overview opens with that attempt's mode selected
+   - **Then** it offers Resume, which returns to the first unanswered question (in Study Mode, the first unchecked one) with every earlier response kept, and no second attempt in the same mode can be open at once. An unfinished Study attempt never blocks starting an Exam attempt, or the reverse — otherwise opening Study Mode without checking anything would block the exam (see criterion 35)
 
 ### Every question
 

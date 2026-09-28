@@ -133,6 +133,7 @@ export const MOCK_DATA: AppData = {
   ]),
   quizAttempts: toTable([...BLESSING_QUIZ_ATTEMPTS, ...NEGATIVE_THINKING_QUIZ_ATTEMPTS]),
   quizAnswers: toTable([...BLESSING_QUIZ_ANSWERS, ...NEGATIVE_THINKING_QUIZ_ANSWERS]),
+  examAttempts: {},
   reminders: toTable(MOCK_REMINDERS),
   library: toTable([TEMPTATION_SAVED, ...MOCK_LIBRARY_EXTRAS]),
   generation: null,

@@ -14,7 +14,7 @@ import { ChallengeFriendsCard } from "../components/ChallengeFriendsCard";
 import { PlayNowGrid } from "../components/PlayNowGrid";
 import { QuickPlayHero } from "../components/QuickPlayHero";
 import { useCategoryScroll } from "../hooks/use-category-scroll";
-import { funDestinationHref, getGameDestination, type FunDestination } from "../logic/destinations";
+import { funDestinationHref, getGameHref, type FunDestination } from "../logic/destinations";
 
 /** Room under the content for the floating tab bar. */
 const BOTTOM_CLEARANCE =
@@ -89,7 +89,7 @@ export function FunScreen() {
             testID="fun-games"
             games={games}
             streakDays={streakDays}
-            onOpenGame={(game) => open(getGameDestination(game))}
+            onOpenGame={(game) => router.push(getGameHref(game))}
           />
         </View>
 

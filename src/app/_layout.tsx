@@ -43,6 +43,12 @@ export default function RootLayout() {
            * full-screen modal: it slides up over whatever opened it.
            */}
           <Stack.Screen name="(plan-creation)" options={{ presentation: "fullScreenModal" }} />
+          {/*
+           * A theology exam attempt — the questions, its results, and
+           * Understand why — is another full-screen modal with its own stack,
+           * over the exam's overview in Fun.
+           */}
+          <Stack.Screen name="exam" options={{ presentation: "fullScreenModal" }} />
         </Stack>
       </HeaderArrivalProvider>
     </AppProviders>

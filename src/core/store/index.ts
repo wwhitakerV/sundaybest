@@ -24,6 +24,20 @@ export {
   getSermonById,
   getSermonForPlan,
 } from "./selectors/content";
+export {
+  getExamAttempt,
+  getExamConceptsForReview,
+  getLatestCompletedExamAttempt,
+  getOpenExamAttempt,
+  hasRevealedExamAnswers,
+} from "./selectors/exams";
+export {
+  getExamItemResponse,
+  getMissedConcepts,
+  isExamQuestionRevealed,
+  isExamResponseComplete,
+  isExamResponseValid,
+} from "./exam-responses";
 export { getPlanGeneration, isGeneratingPlan } from "./selectors/generation";
 export { getLibraryItem, getLibraryItems, getLibraryPlans, isSaved } from "./selectors/library";
 export {
