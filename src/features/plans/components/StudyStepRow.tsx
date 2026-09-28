@@ -1,100 +1,85 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Check, ChevronRight, Lock, type LucideIcon } from "lucide-react-native";
+import { ChevronRight, type LucideIcon } from "lucide-react-native";
 
 import { useTheme } from "@/theme";
-import type { DayStepLook } from "../logic/day-rail";
+import type { StudyStepLook } from "../logic/day-rail";
+import { STEP_MARK_GAP, STEP_NODE_SIZE, STEP_ROW_INSET } from "./step-sequence";
+import { StudyStepNode } from "./StudyStepNode";
 
-const ROW_HEIGHT = 64;
-const ICON_SQUARE = 40;
-const ICON_SIZE = 20;
-const LOCK_SIZE = 16;
-const CHECK_SIZE = 18;
-const CHECK_STROKE = 2.5;
-const CHEVRON_SIZE = 16;
-const CHEVRON_STROKE = 1.75;
-/** The next step's edge, in its own colour. */
-const CURRENT_EDGE = 1.5;
-/** How a step answers a press: a soft dim and the slightest give. */
-const PRESSED = { opacity: 0.7, transform: [{ scale: 0.985 }] };
+/** Above and below its words: room enough that each step reads as a thing to tap. */
+const ROW_PADDING = 16;
+const LINE_WIDTH = 1.5;
+/** Between the line and the mark it runs into. */
+const LINE_GAP = 4;
+const CHEVRON_SIZE = 18;
+/** How a step answers a press: a soft dim — no give, so the line it's on stays unbroken. */
+const PRESSED = { opacity: 0.7 };
 
 export type StudyStepRowProps = {
-  look: DayStepLook;
+  look: StudyStepLook;
   icon: LucideIcon;
-  /** The step's own colour, and a soft tint of it (`theme.colors.step*`). */
-  colour: string;
-  tint: string;
-  /** Whether it sits on a white row of its own — the day the plan's on — or straight on the panel. */
-  raised: boolean;
+  /** Whether the line runs up to the step before it, and down to the one after. */
+  joinsPrevious: boolean;
+  joinsNext: boolean;
   onPress: () => void;
   testID: string;
 };
 
 /**
- * One step of a day, as a row to tap: a rounded square in the step's own
- * colour with its icon, its name over what it holds, and where it stands at
- * the right. Done, the square fills with the colour and the step's ticked;
- * next, the row's edged in the colour and tagged "Next"; still to come, the
- * square's tinted and a quiet chevron leads in. A step not open yet waits,
- * with no way in; a locked day's shows a lock in place of its icon, muted.
+ * One study step of a day, a point on the line the day runs down: its mark
+ * (`StudyStepNode`), its name over what it holds, and — for the step you're
+ * on alone — a soft surface and a chevron leading in, so it's the one thing
+ * that stands out. A done step recedes, its words muted; one still to come
+ * is neutral, a step behind. A locked day's are muted, with no way in.
  */
 export function StudyStepRow({
   look,
-  icon: Icon,
-  colour,
-  tint,
-  raised,
+  icon,
+  joinsPrevious,
+  joinsNext,
   onPress,
   testID,
 }: StudyStepRowProps) {
   const theme = useTheme();
   const { status } = look;
-  const locked = status === "locked";
-  const opens = status !== "locked" && status !== "waiting";
-  const square = locked ? theme.colors.surface : status === "done" ? colour : tint;
-  const title = locked
-    ? theme.colors.textMuted
-    : status === "upcoming" || status === "waiting"
+  const current = status === "current";
+  const title = current
+    ? theme.colors.text
+    : status === "upcoming"
       ? theme.colors.textInactive
-      : theme.colors.text;
+      : theme.colors.textMuted;
+  const line = (joins: boolean) => ({
+    backgroundColor: joins ? theme.colors.sequenceLine : "transparent",
+  });
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={look.accessibilityLabel}
-      accessibilityHint={opens ? "Opens it" : undefined}
-      disabled={!opens}
+      accessibilityHint={look.opens ? "Opens it" : undefined}
+      disabled={!look.opens}
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
         {
-          backgroundColor: raised ? theme.colors.background : "transparent",
-          borderColor: status === "current" ? colour : "transparent",
+          backgroundColor: current ? theme.colors.surface : "transparent",
           borderRadius: theme.radii.lg,
         },
         pressed && PRESSED,
       ]}
     >
-      <View
-        testID={`${testID}-icon`}
-        style={[styles.square, { backgroundColor: square, borderRadius: theme.radii.md }]}
-      >
-        {locked ? (
-          // Lucide keeps its own testID from React Native, so this carries it.
-          <View testID={`${testID}-lock`}>
-            <Lock
-              size={LOCK_SIZE}
-              color={theme.colors.textMuted}
-              strokeWidth={theme.icon.strokeWidth}
-            />
-          </View>
-        ) : (
-          <Icon
-            size={ICON_SIZE}
-            color={status === "done" ? theme.colors.background : colour}
-            strokeWidth={theme.icon.strokeWidth}
-          />
-        )}
+      {/* The line runs the row's full height, so it meets its neighbours'. */}
+      <View style={styles.track}>
+        <View
+          testID={`${testID}-line-in`}
+          style={[styles.line, styles.lineIn, line(joinsPrevious)]}
+        />
+        <StudyStepNode testID={`${testID}-node`} status={status} icon={icon} />
+        <View
+          testID={`${testID}-line-out`}
+          style={[styles.line, styles.lineOut, line(joinsNext)]}
+        />
       </View>
 
       <View style={styles.words}>
@@ -102,40 +87,23 @@ export function StudyStepRow({
         {look.detail && (
           <Text
             numberOfLines={1}
-            style={[theme.typography.stepDetail, { color: theme.colors.textMuted }]}
+            style={[
+              theme.typography.stepDetail,
+              { color: current ? theme.colors.textInactive : theme.colors.textMuted },
+            ]}
           >
             {look.detail}
           </Text>
         )}
       </View>
 
-      {status === "done" && (
-        <View testID={`${testID}-done`}>
-          <Check size={CHECK_SIZE} color={colour} strokeWidth={CHECK_STROKE} />
-        </View>
-      )}
-      {status === "current" && (
-        <View
-          testID={`${testID}-next`}
-          style={[styles.next, { backgroundColor: colour, borderRadius: theme.radii.pill }]}
-        >
-          <Text
-            style={[
-              theme.typography.metaEmphasis,
-              styles.nextLabel,
-              { color: theme.colors.background },
-            ]}
-          >
-            Next
-          </Text>
-        </View>
-      )}
-      {status === "upcoming" && (
+      {current && (
+        // Lucide keeps its own testID from React Native, so this carries it.
         <View testID={`${testID}-chevron`}>
           <ChevronRight
             size={CHEVRON_SIZE}
-            color={theme.colors.lightIcon}
-            strokeWidth={CHEVRON_STROKE}
+            color={theme.colors.text}
+            strokeWidth={theme.icon.strokeWidth}
           />
         </View>
       )}
@@ -145,21 +113,21 @@ export function StudyStepRow({
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: ROW_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderWidth: CURRENT_EDGE,
+    gap: STEP_MARK_GAP,
+    paddingHorizontal: STEP_ROW_INSET,
+    paddingVertical: ROW_PADDING,
   },
-  square: {
-    width: ICON_SQUARE,
-    height: ICON_SQUARE,
+  // Out past the row's padding, top and bottom, to its edges.
+  track: {
+    width: STEP_NODE_SIZE,
+    alignSelf: "stretch",
     alignItems: "center",
-    justifyContent: "center",
+    marginVertical: -ROW_PADDING,
   },
-  words: { flex: 1, gap: 1 },
-  next: { paddingHorizontal: 10, paddingVertical: 4 },
-  nextLabel: { textTransform: "uppercase", letterSpacing: 0.8 },
+  line: { flex: 1, width: LINE_WIDTH },
+  lineIn: { marginBottom: LINE_GAP },
+  lineOut: { marginTop: LINE_GAP },
+  words: { flex: 1, gap: 2 },
 });

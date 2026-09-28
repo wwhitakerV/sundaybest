@@ -12,6 +12,10 @@ const palette = {
   slate700: "#171A21",
   accent: "#D62626",
   lightIcon: "#d2d2d0",
+  // A quiet grey that still reads as a line on white — lighter than
+  // `lightIcon`, firmer than the brand's `greyLightest`. Not from the brand
+  // spec: set for Plan Detail's step sequence.
+  greyLight: "#E4E4E7",
   // Brand palette. Fixed values, not theme-dependent — same as `accent`
   // above, these read the same in light and dark. More colours land here as
   // they're specified; this is not yet the full set.
@@ -128,6 +132,13 @@ type ColorTokens = {
   /** Hairline rules between list rows. Lighter than `border`. */
   divider: string;
   accent: string;
+  /** Text and icons set on `accent` — the step you're on, on Plan Detail's day. */
+  onAccent: string;
+  /**
+   * The quiet line a sequence runs along — joining the steps of Plan
+   * Detail's day — and the ring of a step still to come on it.
+   */
+  sequenceLine: string;
   /** Filled primary controls — the button fill, not the page background. */
   controlPrimary: string;
   /** Text and icons sitting on `controlPrimary`. */
@@ -200,7 +211,7 @@ type ColorTokens = {
   inkHaloOnLight: string;
   /**
    * Each study step's colour, and a soft tint of it — its icon, and the
-   * square behind it — on Plan Detail's day: Read, Scripture, Reflect, Pray,
+   * square behind it — on Fun's plan picks: Read, Scripture, Reflect, Pray,
    * and the Quick Check.
    */
   stepRead: string;
@@ -240,6 +251,8 @@ const lightColors: ColorTokens = {
   borderStrong: palette.darkgrey,
   divider: palette.greyLightest,
   accent: palette.accent,
+  onAccent: palette.white,
+  sequenceLine: palette.greyLight,
   controlPrimary: palette.black,
   onControlPrimary: palette.white,
   lightIcon: palette.lightIcon,
@@ -305,6 +318,8 @@ const darkColors: ColorTokens = {
   borderStrong: palette.grey,
   divider: palette.slate700,
   accent: palette.accent,
+  onAccent: palette.white,
+  sequenceLine: palette.ink600,
   controlPrimary: palette.white,
   onControlPrimary: palette.black,
   lightIcon: palette.lightIcon,
@@ -385,7 +400,7 @@ const radii = { sm: 6, md: 10, lg: 16, xl: 24, pill: 999 } as const;
 const typography = {
   masthead: { fontFamily: fonts.masthead, fontSize: 18, fontWeight: "400" },
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
-  /** The editorial face, larger: the title of the day the plan's on. */
+  /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
   editorialBody: { fontFamily: fonts.editorialBody, fontSize: 16, fontWeight: "400" },
   metaLabel: { fontFamily: fonts.metaLabel, fontSize: 13, fontWeight: "500" },
@@ -399,9 +414,9 @@ const typography = {
   /** The number on a small tile (Plan Detail's days): large enough to read at a glance. */
   tileNumber: { fontSize: 22, fontWeight: "600" },
   /** A study step's name on its row (Plan Detail's day): clear, and firm enough to tap. */
-  stepTitle: { fontSize: 17, fontWeight: "600", lineHeight: 22 },
-  /** What the step holds, under its name: small and light. */
-  stepDetail: { fontSize: 14, fontWeight: "400", lineHeight: 18 },
+  stepTitle: { fontSize: 18, fontWeight: "600", lineHeight: 24 },
+  /** What the step holds, under its name: light, and easy to read. */
+  stepDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
   /** The date under it: small, in the hero's mono, set in capitals by the tile. */
   tileDate: { fontFamily: fonts.metaLabel, fontSize: 11, fontWeight: "500", letterSpacing: 0.6 },
 

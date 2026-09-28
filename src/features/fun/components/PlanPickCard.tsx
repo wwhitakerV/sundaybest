@@ -24,7 +24,7 @@ type ActivityLook = {
   tint: (theme: Theme) => string;
 };
 
-/** Each activity's name, and Plan Detail's icon and colours for it. */
+/** Each activity's name, and its icon and colours. */
 const ACTIVITY_LOOKS = new Map<PlanPickActivity, ActivityLook>([
   [
     "read",

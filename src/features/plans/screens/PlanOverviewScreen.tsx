@@ -38,7 +38,7 @@ import { PlanHero } from "../components/PlanHero";
 import { SelectedDay } from "../components/SelectedDay";
 import { usePlanHeroScroll } from "../hooks/use-plan-hero-scroll";
 import {
-  describeDayPanel,
+  describeDayHeader,
   describeDaySteps,
   describeDayTile,
   describeQuickCheckStep,
@@ -71,8 +71,9 @@ const NAV_BUTTON = 49;
  * thumbnail below the nav buttons, held back as the page scrolls, and
  * where the plan stands, its title and church, Continue, and what the day
  * holds sliding up over it — then its days as a row of tiles (`DayRail`),
- * done, today, or locked, and the day picked with its four steps
- * (`SelectedDay`), and what the plan's about. Back and More float over it
+ * done, today, or locked — the one place that says which day's picked —
+ * and the day picked as a study journey: its four steps, then its Quick
+ * Check (`SelectedDay`); and what the plan's about. Back and More float over it
  * all, set for the sermon's colour.
  *
  * There's only ever one Continue: the hero's, until it's scrolled up level
@@ -167,17 +168,14 @@ export function PlanOverviewScreen() {
   );
 
   if (!plan || !progress) return null;
-  // The day picked's steps: its four, and its Quick Check if it has one.
+  // The day picked's four study steps, and — apart from them — its Quick Check if it has one.
+  const selectedSteps =
+    selectedDay && selectedContent
+      ? describeDaySteps(selectedDay, selectedContent, { today: selectedToday })
+      : null;
   const quickCheck =
     selectedDay && selectedContent
       ? describeQuickCheckStep(selectedDay, plan.quickCheckEnabled ? selectedContent.quiz : null)
-      : null;
-  const selectedSteps =
-    selectedDay && selectedContent
-      ? [
-          ...describeDaySteps(selectedDay, selectedContent, { today: selectedToday }),
-          ...(quickCheck ? [quickCheck] : []),
-        ]
       : null;
   const colors = sermon?.thumbnailColors ?? [];
   const light = prefersLightInk(colors.at(0) ?? theme.colors.featureBackdrop);
@@ -243,14 +241,12 @@ export function PlanOverviewScreen() {
                 contentKey={selectedDay.id}
                 stepTestIDPrefix="plan-overview-step"
                 title={selectedDay.reading.title}
-                panel={describeDayPanel(selectedDay, {
-                  today: selectedToday,
+                header={describeDayHeader(selectedDay, {
                   minutes: selectedMinutes,
-                  stepsDone: selectedSteps.filter(({ status }) => status === "done").length,
-                  stepsTotal: selectedSteps.length,
-                  totalDays: progress.totalDays,
+                  steps: selectedSteps,
                 })}
                 steps={selectedSteps}
+                quickCheck={quickCheck}
                 onOpenStep={(key) =>
                   key === "quickCheck"
                     ? router.push(quickCheckHref(planId, selectedDay.dayNumber))

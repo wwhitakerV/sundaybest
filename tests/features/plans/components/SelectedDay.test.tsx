@@ -1,38 +1,47 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 
 import { SelectedDay, type SelectedDayProps } from "@/features/plans/components/SelectedDay";
-import type { DayPanelLook, DayStepLook } from "@/features/plans/logic/day-rail";
+import type { DayHeaderLook, QuickCheckLook, StudyStepLook } from "@/features/plans/logic/day-rail";
 import { lightTheme } from "@/theme/tokens";
 
 const { colors, typography } = lightTheme;
 
-function steps(status: DayStepLook["status"]): DayStepLook[] {
-  return [
-    ["read", "Read"],
-    ["scripture", "Scripture"],
-    ["reflect", "Reflect"],
-    ["pray", "Pray"],
-    ["quickCheck", "Quick Check"],
-  ].map(([key, label]) => ({
-    key: key as DayStepLook["key"],
-    label: label ?? "",
-    detail: null,
-    status,
-    accessibilityLabel: `${label ?? ""}, ${status}`,
-  }));
+const STUDY = [
+  ["read", "Read"],
+  ["scripture", "Scripture"],
+  ["reflect", "Reflect"],
+  ["pray", "Pray"],
+] as const;
+
+type Status = StudyStepLook["status"];
+
+function studySteps(statuses: readonly [Status, Status, Status, Status]): StudyStepLook[] {
+  return STUDY.map(([key, label], index) => {
+    const status = statuses.at(index) ?? "upcoming";
+    return {
+      key,
+      label,
+      detail: null,
+      status,
+      opens: status !== "locked",
+      accessibilityLabel: `${label}, ${status}`,
+    };
+  });
 }
 
-const TODAY: DayPanelLook = {
-  state: "today",
-  eyebrow: "Today · Day 2 of 6",
-  meta: "5 min · 2 of 5 done",
-};
-const DONE: DayPanelLook = {
-  state: "done",
-  eyebrow: "Completed · Day 1 of 6",
-  meta: "5 min · Finished Sep 22",
-};
-const LOCKED: DayPanelLook = { state: "locked", eyebrow: "Locked · Day 3 of 6", meta: "5 min" };
+function quickCheck(status: QuickCheckLook["status"]): QuickCheckLook {
+  return {
+    key: "quickCheck",
+    label: "Quick Check",
+    detail: null,
+    status,
+    opens: status !== "locked" && status !== "waiting",
+    accessibilityLabel: `Quick Check, ${status}`,
+  };
+}
+
+const TODAY: DayHeaderLook = { locked: false, meta: "5 min · 2 of 4 done" };
+const LOCKED: DayHeaderLook = { locked: true, meta: "5 min" };
 
 function renderDay(overrides: Partial<SelectedDayProps> = {}) {
   return render(
@@ -41,8 +50,9 @@ function renderDay(overrides: Partial<SelectedDayProps> = {}) {
       contentKey="day-2"
       stepTestIDPrefix="a-step"
       title="Grace is received"
-      panel={TODAY}
-      steps={steps("upcoming")}
+      header={TODAY}
+      steps={studySteps(["done", "done", "current", "upcoming"])}
+      quickCheck={quickCheck("waiting")}
       onOpenStep={() => undefined}
       {...overrides}
     />,
@@ -50,92 +60,119 @@ function renderDay(overrides: Partial<SelectedDayProps> = {}) {
 }
 
 describe("SelectedDay", () => {
-  describe("the day the plan's on", () => {
-    it("sits on a soft surface, its steps on white rows over it", () => {
-      renderDay();
-
-      expect(screen.getByTestId("a-day")).toHaveStyle({ backgroundColor: colors.surface });
-      expect(screen.getByTestId("a-step-read")).toHaveStyle({
-        backgroundColor: colors.background,
-      });
-    });
-
-    it("leads with today, in SundayBest red, in capitals", () => {
-      renderDay();
-
-      expect(screen.getByText("Today · Day 2 of 6")).toHaveStyle({
-        color: colors.accent,
-        textTransform: "uppercase",
-      });
-    });
-
-    it("sets its title largest", () => {
+  describe("its header", () => {
+    it("heads the day with its title, largest", () => {
       renderDay();
 
       expect(screen.getByRole("header", { name: "Grace is received" })).toHaveStyle(
         typography.editorialTitle,
       );
-      expect(screen.getByText("5 min · 2 of 5 done")).toBeVisible();
     });
-  });
 
-  describe("a finished day", () => {
-    it("sits lighter, on white with a hairline edge", () => {
-      renderDay({ panel: DONE, steps: steps("done") });
+    it("says how long the day takes and how far through it is", () => {
+      renderDay();
 
-      expect(screen.getByTestId("a-day")).toHaveStyle({
-        backgroundColor: colors.background,
-        borderColor: colors.hairline,
-        borderWidth: 1,
+      expect(screen.getByText("5 min · 2 of 4 done")).toBeVisible();
+    });
+
+    it("mutes a locked day's title", () => {
+      renderDay({
+        header: LOCKED,
+        steps: studySteps(["locked", "locked", "locked", "locked"]),
       });
-    });
 
-    it("says it's completed, ticked in green", () => {
-      renderDay({ panel: DONE, steps: steps("done") });
-
-      expect(screen.getByText("Completed · Day 1 of 6")).toHaveStyle({ color: colors.correct });
-      expect(screen.getByTestId("a-day-check")).toBeOnTheScreen();
-    });
-  });
-
-  describe("a locked day", () => {
-    it("has no surface, only a hairline edge", () => {
-      renderDay({ panel: LOCKED, steps: steps("locked") });
-
-      expect(screen.getByTestId("a-day")).toHaveStyle({
-        backgroundColor: "transparent",
-        borderColor: colors.hairline,
-      });
-    });
-
-    it("says it's locked, quietly, under a lock", () => {
-      renderDay({ panel: LOCKED, steps: steps("locked") });
-
-      expect(screen.getByText("Locked · Day 3 of 6")).toHaveStyle({ color: colors.textMuted });
-      expect(screen.getByTestId("a-day-lock")).toBeOnTheScreen();
       expect(screen.getByRole("header", { name: "Grace is received" })).toHaveStyle({
         color: colors.textMuted,
       });
     });
   });
 
-  it("gives each step its own colour", () => {
+  it("sets the day straight on the page, with no surface or edge of its own", () => {
     renderDay();
 
-    expect(screen.getByTestId("a-step-read-icon")).toHaveStyle({
-      backgroundColor: colors.stepReadTint,
-    });
-    expect(screen.getByTestId("a-step-scripture-icon")).toHaveStyle({
-      backgroundColor: colors.stepScriptureTint,
-    });
-    expect(screen.getByTestId("a-step-quickCheck-icon")).toHaveStyle({
-      backgroundColor: colors.stepQuickCheckTint,
+    const day = screen.getByTestId("a-day");
+    expect(day).not.toHaveStyle({ backgroundColor: colors.surface });
+    expect(day).not.toHaveStyle({ backgroundColor: colors.background });
+    expect(day).not.toHaveStyle({ borderColor: colors.hairline });
+  });
+
+  it("runs the four study steps down one line, Read to Pray", () => {
+    renderDay();
+
+    const sequence = within(screen.getByTestId("a-day-steps"));
+    for (const [key] of STUDY) {
+      expect(sequence.getByTestId(`a-step-${key}`)).toBeOnTheScreen();
+    }
+  });
+
+  it("starts the line at Read", () => {
+    renderDay();
+
+    expect(screen.getByTestId("a-step-read-line-in")).toHaveStyle({
+      backgroundColor: "transparent",
     });
   });
 
-  it("opens the step pressed", () => {
+  it("ends the line at Pray", () => {
+    renderDay();
+
+    expect(screen.getByTestId("a-step-pray-line-out")).toHaveStyle({
+      backgroundColor: "transparent",
+    });
+  });
+
+  it("gives every study step still to come the same neutral ring, whichever it is", () => {
+    renderDay({ steps: studySteps(["upcoming", "upcoming", "upcoming", "upcoming"]) });
+
+    for (const [key] of STUDY) {
+      expect(screen.getByTestId(`a-step-${key}-node`)).toHaveStyle({
+        backgroundColor: "transparent",
+        borderColor: colors.sequenceLine,
+      });
+    }
+  });
+
+  it("stands out only the step you're on", () => {
+    renderDay();
+
+    expect(screen.getByTestId("a-step-reflect")).toHaveStyle({ backgroundColor: colors.surface });
+    for (const key of ["read", "scripture", "pray"]) {
+      expect(screen.getByTestId(`a-step-${key}`)).toHaveStyle({ backgroundColor: "transparent" });
+    }
+  });
+
+  it("keeps the Quick Check out of the study's steps", () => {
+    renderDay();
+
+    expect(within(screen.getByTestId("a-day-steps")).queryByTestId("a-step-quickCheck")).toBeNull();
+  });
+
+  it("rules the Quick Check off after the study", () => {
+    renderDay();
+
+    const followUp = screen.getByTestId("a-day-follow-up");
+    expect(within(followUp).getByTestId("a-step-quickCheck")).toBeOnTheScreen();
+    expect(followUp).toHaveStyle({ borderTopColor: colors.divider });
+  });
+
+  it("leaves the follow-up out for a day without a Quick Check", () => {
+    renderDay({ quickCheck: null });
+
+    expect(screen.queryByTestId("a-day-follow-up")).toBeNull();
+  });
+
+  it("opens the study step pressed", () => {
     const onOpenStep = jest.fn();
     renderDay({ onOpenStep });
+
+    fireEvent.press(screen.getByTestId("a-step-reflect"));
+
+    expect(onOpenStep).toHaveBeenCalledWith("reflect");
+  });
+
+  it("opens the Quick Check", () => {
+    const onOpenStep = jest.fn();
+    renderDay({ onOpenStep, quickCheck: quickCheck("current") });
 
     fireEvent.press(screen.getByTestId("a-step-quickCheck"));
 

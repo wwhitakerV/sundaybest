@@ -189,10 +189,14 @@ describe("PlanOverviewScreen", () => {
     expect(screen.getByTestId("plan-overview-day-2")).toHaveProp("accessibilityState", {
       selected: true,
     });
-    expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(
-      /Day 2 of 6.*Grace is received/,
-    );
+    expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(/Grace is received/);
     expect(screen.getByTestId("plan-overview-step-scripture")).toHaveTextContent(/Ephesians 2:8/);
+  });
+
+  it("leaves saying which day is picked to the row of days", () => {
+    renderOverview(ACTIVE);
+
+    expect(screen.getByTestId("plan-overview-selected-day")).not.toHaveTextContent(/Day \d|Today/);
   });
 
   it("ticks the steps of the day that are done", () => {
@@ -206,43 +210,50 @@ describe("PlanOverviewScreen", () => {
     expect(screen.getByTestId("plan-overview-step-pray")).toHaveAccessibleName(/^Pray, not done/);
   });
 
-  it("leads the day the plan's on with today, how long, and how far through", () => {
+  it("heads the day it's on with how long it takes, and how far through its study", () => {
     renderOverview(ACTIVE);
 
-    // Day 2: Read and Scripture done, of four steps and its Quick Check.
+    // Day 2: Read and Scripture done, of its four study steps — the Quick Check's apart.
     expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(
-      /Today · Day 2 of 6.*5 min · 2 of 5 done/,
+      /Grace is received.*5 min · 2 of 4 done/,
     );
   });
 
-  it("says a finished day's completed, and when", () => {
+  it("says when a finished day finished", () => {
     renderOverview(ACTIVE);
 
     fireEvent.press(screen.getByTestId("plan-overview-day-1"));
 
     expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(
-      /Completed · Day 1 of 6.*Finished Sep 2\d/,
+      /Choose today.*5 min · Finished Sep 2\d/,
     );
   });
 
-  it("marks a locked day locked", () => {
+  it("locks every step of a locked day", () => {
     renderOverview(ACTIVE);
 
     fireEvent.press(screen.getByTestId("plan-overview-day-4"));
 
-    expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(
-      /Locked · Day 4 of 6/,
-    );
+    for (const step of ["read", "scripture", "reflect", "pray"]) {
+      expect(screen.getByTestId(`plan-overview-step-${step}`)).toHaveAccessibleName(/, locked/);
+    }
   });
 
-  it("adds a day's Quick Check as its fifth step, with how it went", () => {
+  it("sets a day's Quick Check apart, after its study, with how it went", () => {
     renderOverview(ACTIVE);
 
     fireEvent.press(screen.getByTestId("plan-overview-day-1"));
 
-    expect(screen.getByTestId("plan-overview-step-quickCheck")).toHaveAccessibleName(
-      /^Quick Check, done, 1 of 2 correct/,
-    );
+    expect(
+      within(screen.getByTestId("plan-overview-selected-day-steps")).queryByTestId(
+        "plan-overview-step-quickCheck",
+      ),
+    ).toBeNull();
+    expect(
+      within(screen.getByTestId("plan-overview-selected-day-follow-up")).getByTestId(
+        "plan-overview-step-quickCheck",
+      ),
+    ).toHaveAccessibleName(/^Quick Check, done, 1 of 2 correct/);
   });
 
   it("holds today's Quick Check until the day's steps are done", () => {
@@ -272,11 +283,23 @@ describe("PlanOverviewScreen", () => {
     expect(screen.queryByTestId("plan-overview-step-quickCheck")).toBeNull();
   });
 
-  it("tags the step you're on next", () => {
+  it("leads into the step you're on from its own row, rather than a tag", () => {
     renderOverview(ACTIVE);
 
     // Day 2's Read and Scripture are done: Reflect is next.
-    expect(screen.getByTestId("plan-overview-step-reflect-next")).toBeOnTheScreen();
+    expect(screen.getByTestId("plan-overview-step-reflect-chevron")).toBeOnTheScreen();
+    expect(screen.queryByTestId("plan-overview-step-reflect-next")).toBeNull();
+    expect(
+      within(screen.getByTestId("plan-overview-selected-day")).queryByText(/^Next$/i),
+    ).toBeNull();
+  });
+
+  it("keeps Continue to the page's one — none in the day's panel", () => {
+    renderOverview(ACTIVE);
+
+    expect(
+      within(screen.getByTestId("plan-overview-selected-day")).queryByText(/Continue|Start/),
+    ).toBeNull();
   });
 
   it("gives a light tap as a day's tile is picked", () => {
@@ -302,13 +325,13 @@ describe("PlanOverviewScreen", () => {
     expect(screen.getByTestId("plan-overview-nav-hero")).toHaveProp("pointerEvents", "box-none");
   });
 
-  it("keeps the day's surface in place as another's picked — only what's on it changes", () => {
+  it("keeps the day in place as another's picked — only its words change", () => {
     renderOverview(ACTIVE);
-    const surface = screen.getByTestId("plan-overview-selected-day");
+    const day = screen.getByTestId("plan-overview-selected-day");
 
     fireEvent.press(screen.getByTestId("plan-overview-day-1"));
 
-    expect(screen.getByTestId("plan-overview-selected-day")).toBe(surface);
+    expect(screen.getByTestId("plan-overview-selected-day")).toBe(day);
   });
 
   it("shows another day when its tile's tapped", () => {
@@ -316,9 +339,7 @@ describe("PlanOverviewScreen", () => {
 
     fireEvent.press(screen.getByTestId("plan-overview-day-1"));
 
-    expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(
-      /Day 1 of 6.*Choose today/,
-    );
+    expect(screen.getByTestId("plan-overview-selected-day")).toHaveTextContent(/Choose today/);
     expect(screen.getByTestId("plan-overview-step-pray")).toHaveAccessibleName(/^Pray, done/);
     expect(mockPush).not.toHaveBeenCalled();
   });

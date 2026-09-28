@@ -1,11 +1,12 @@
 import {
-  describeDayPanel,
+  describeDayHeader,
   describeDaySteps,
   describeDayTile,
   describeQuickCheckStep,
   getJourneyLabel,
   getRailScrollOffset,
   getRailTabX,
+  type StudyStepLook,
 } from "@/features/plans/logic/day-rail";
 
 describe("describeDayTile", () => {
@@ -135,6 +136,20 @@ describe("describeDaySteps", () => {
     expect(steps.every(({ status }) => status === "locked")).toBe(true);
   });
 
+  it("opens every step of an open day — done, next, or to come", () => {
+    const steps = describeDaySteps(inProgress, content, { today: true });
+
+    expect(steps.every(({ opens }) => opens)).toBe(true);
+  });
+
+  it("opens no step of a locked day", () => {
+    const steps = describeDaySteps({ status: "locked", completedSteps: [] }, content, {
+      today: false,
+    });
+
+    expect(steps.some(({ opens }) => opens)).toBe(false);
+  });
+
   it("tells VoiceOver each step's name, where it stands, and what it holds", () => {
     const [read, scripture] = describeDaySteps(inProgress, content, { today: true });
 
@@ -169,13 +184,19 @@ describe("describeQuickCheckStep", () => {
   it("waits for the day's steps before it opens", () => {
     const step = describeQuickCheckStep({ status: "inProgress" }, quiz);
 
-    expect(step).toMatchObject({ key: "quickCheck", status: "waiting", detail: "After Pray" });
+    expect(step).toMatchObject({
+      key: "quickCheck",
+      status: "waiting",
+      detail: "After Pray",
+      opens: false,
+    });
   });
 
   it("is next, once the day's done, with how many questions it asks", () => {
     expect(describeQuickCheckStep({ status: "completed" }, quiz)).toMatchObject({
       status: "current",
       detail: "3 questions",
+      opens: true,
     });
   });
 
@@ -194,13 +215,14 @@ describe("describeQuickCheckStep", () => {
         { status: "completed" },
         { ...quiz, status: "completed", answeredCount: 3, correctCount: 2 },
       ),
-    ).toMatchObject({ status: "done", detail: "2 of 3 correct" });
+    ).toMatchObject({ status: "done", detail: "2 of 3 correct", opens: true });
   });
 
   it("is locked on a locked day", () => {
     expect(describeQuickCheckStep({ status: "locked" }, quiz)).toMatchObject({
       status: "locked",
       detail: "3 questions",
+      opens: false,
     });
   });
 
@@ -211,43 +233,52 @@ describe("describeQuickCheckStep", () => {
   });
 });
 
-describe("describeDayPanel", () => {
-  const counts = { minutes: 5, stepsDone: 2, stepsTotal: 5, totalDays: 6 };
+describe("describeDayHeader", () => {
+  const steps = (...statuses: StudyStepLook["status"][]) => statuses.map((status) => ({ status }));
+  const underWay = steps("done", "done", "current", "upcoming");
 
-  it("puts the day the plan's on first: today, how long, and how far through", () => {
+  it("says how long the day takes, and how far through its four steps it is", () => {
     expect(
-      describeDayPanel(
-        { dayNumber: 2, status: "inProgress", completedAt: null },
-        {
-          ...counts,
-          today: true,
-        },
+      describeDayHeader(
+        { status: "inProgress", completedAt: null },
+        { minutes: 5, steps: underWay },
       ),
-    ).toEqual({ state: "today", eyebrow: "Today · Day 2 of 6", meta: "5 min · 2 of 5 done" });
+    ).toEqual({ locked: false, meta: "5 min · 2 of 4 done" });
   });
 
-  it("settles a finished day: completed, and when", () => {
+  it("gives just its length before a step's done", () => {
     expect(
-      describeDayPanel(
-        { dayNumber: 1, status: "completed", completedAt: "2026-09-22T07:10:00.000Z" },
-        { ...counts, today: false },
+      describeDayHeader(
+        { status: "available", completedAt: null },
+        { minutes: 5, steps: steps("current", "upcoming", "upcoming", "upcoming") },
       ),
-    ).toEqual({
-      state: "done",
-      eyebrow: "Completed · Day 1 of 6",
-      meta: "5 min · Finished Sep 22",
-    });
+    ).toEqual({ locked: false, meta: "5 min" });
   });
 
-  it("marks a locked day unavailable, with just its length", () => {
+  it("settles a finished day: when it finished", () => {
     expect(
-      describeDayPanel(
-        { dayNumber: 3, status: "locked", completedAt: null },
-        {
-          ...counts,
-          today: false,
-        },
+      describeDayHeader(
+        { status: "completed", completedAt: "2026-09-22T07:10:00.000Z" },
+        { minutes: 5, steps: steps("done", "done", "done", "done") },
       ),
-    ).toEqual({ state: "locked", eyebrow: "Locked · Day 3 of 6", meta: "5 min" });
+    ).toEqual({ locked: false, meta: "5 min · Finished Sep 22" });
+  });
+
+  it("says a finished day's finished, even without a date", () => {
+    expect(
+      describeDayHeader(
+        { status: "completed", completedAt: null },
+        { minutes: 5, steps: steps("done", "done", "done", "done") },
+      ).meta,
+    ).toBe("5 min · Finished");
+  });
+
+  it("gives a locked day just its length, and marks it locked", () => {
+    expect(
+      describeDayHeader(
+        { status: "locked", completedAt: null },
+        { minutes: 5, steps: steps("locked", "locked", "locked", "locked") },
+      ),
+    ).toEqual({ locked: true, meta: "5 min" });
   });
 });
