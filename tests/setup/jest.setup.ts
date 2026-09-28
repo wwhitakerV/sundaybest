@@ -95,6 +95,16 @@ jest.mock("expo-router/build/link/zoom/link-apple-zoom", () => ({
   LinkAppleZoom: jest.requireActual<typeof SlotModule>("expo-router/build/ui/Slot").Slot,
 }));
 
+// expo-web-browser opens SFSafariViewController, which has no implementation
+// under Jest. Stands in with what iOS reports when the reader closes the sheet
+// (`cancel`); tests of src/core/links override it to exercise `locked` and a
+// rejected open.
+jest.mock("expo-web-browser", () => ({
+  openBrowserAsync: jest.fn().mockResolvedValue({ type: "cancel" }),
+  WebBrowserPresentationStyle: { PAGE_SHEET: "pageSheet" },
+  WebBrowserResultType: { CANCEL: "cancel", DISMISS: "dismiss", LOCKED: "locked" },
+}));
+
 // ---------------------------------------------------------------------------
 // Timer policy
 // ---------------------------------------------------------------------------

@@ -1,0 +1,1134 @@
+{
+  "schemaVersion": 2,
+  "translation": "KJV",
+  "exam": {
+    "id": "THEO-01-01",
+    "version": 4,
+    "domainId": "THEO-01",
+    "domain": "Scripture & Reading",
+    "level": "foundations",
+    "title": "The Scriptures Received",
+    "scope": "Identify the Bible’s major divisions and what New Testament authors claim about Scripture.",
+    "overview": "Identify the Bible’s major divisions and what New Testament authors claim about Scripture. This exam assesses the listed texts in context and distinguishes textual claims from later interpretations.",
+    "questionCount": 15,
+    "durationMinutes": [
+      8,
+      12
+    ],
+    "objectives": [
+      "identify major divisions",
+      "locate a teaching claim",
+      "distinguish text from interpretation",
+      "support a bounded conclusion using the listed source texts"
+    ],
+    "concepts": [
+      "revelation",
+      "inspiration",
+      "authority",
+      "scripture and teaching",
+      "Scripture in apostolic teaching"
+    ],
+    "prerequisites": [],
+    "traditionScope": "Attributed readings only where the item requires comparison.",
+    "contestedBoundary": "Do not treat one modern canon account as directly stated by an apostle.",
+    "completionBehavior": {
+      "examMode": "Answers revealed only after submission.",
+      "studyMode": "Immediate option-specific teaching; not independent blind mastery evidence.",
+      "results": "Score plus concept diagnosis with sample-size threshold; missed concepts enter review."
+    },
+    "sourceScope": {
+      "scripture": [
+        "Luke 24:25-49",
+        "2 Timothy 3:14-17",
+        "Acts 17:10-12"
+      ],
+      "historicalPrimary": [],
+      "scriptureLinks": [
+        {
+          "reference": "Luke 24:25-49",
+          "url": "https://www.biblegateway.com/passage/?search=Luke%2024%3A25-49&version=KJV"
+        },
+        {
+          "reference": "2 Timothy 3:14-17",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A14-17&version=KJV"
+        },
+        {
+          "reference": "Acts 17:10-12",
+          "url": "https://www.biblegateway.com/passage/?search=Acts%2017%3A10-12&version=KJV"
+        }
+      ]
+    },
+    "questionIds": [
+      "THEO-01-01-Q01",
+      "THEO-01-01-Q02",
+      "THEO-01-01-Q03",
+      "THEO-01-01-Q04",
+      "THEO-01-01-Q05",
+      "THEO-01-01-Q06",
+      "THEO-01-01-Q07",
+      "THEO-01-01-Q08",
+      "THEO-01-01-Q09",
+      "THEO-01-01-Q10",
+      "THEO-01-01-Q11",
+      "THEO-01-01-Q12",
+      "THEO-01-01-Q13",
+      "THEO-01-01-Q14",
+      "THEO-01-01-Q15"
+    ],
+    "interactionAllocation": {
+      "single_choice": 8,
+      "true_false": 2,
+      "matching": 1,
+      "multiple_select": 2,
+      "ordering": 2
+    },
+    "experience": {
+      "modes": {
+        "exam": {
+          "feedbackTiming": "after_explicit_submission",
+          "backNavigation": true,
+          "unansweredOnSubmission": "incorrect",
+          "confirmationRequired": true,
+          "resultCountsTowardExamScore": true
+        },
+        "study": {
+          "feedbackTiming": "after_answer_commit",
+          "backNavigation": true,
+          "resultCountsTowardExamScore": false
+        }
+      },
+      "grading": {
+        "single_choice": "exact_choice",
+        "true_false": "exact_choice",
+        "multiple_select": "exact_set",
+        "matching": "exact_mapping",
+        "ordering": "exact_sequence",
+        "partialCredit": false,
+        "answerKeyVisibility": "trusted_grading_service_until_feedback"
+      },
+      "teaching": {
+        "actionLabel": "Understand why",
+        "showOptionRationales": true,
+        "showPassageLinks": true,
+        "showConceptExplanation": true,
+        "showImportantDistinction": true,
+        "showRememberThis": true
+      },
+      "results": {
+        "bands": [
+          {
+            "minPercent": 90,
+            "label": "Mastered"
+          },
+          {
+            "minPercent": 80,
+            "label": "Strong"
+          },
+          {
+            "minPercent": 70,
+            "label": "Developing"
+          },
+          {
+            "minPercent": 0,
+            "label": "Review Recommended"
+          }
+        ],
+        "conceptLabelMinimumIndependentObservations": 3,
+        "showRawScore": true,
+        "showItemReview": true,
+        "queueMissedPrimaryConcepts": true
+      },
+      "retakes": {
+        "sameFormCountsAsIndependentMasteryEvidence": false,
+        "sameFormLabel": "Practice"
+      },
+      "accessibility": {
+        "dynamicType": true,
+        "voiceOverLabels": true,
+        "reducedMotion": true,
+        "feedbackNotColorOnly": true
+      }
+    }
+  },
+  "questions": [
+    {
+      "id": "THEO-01-01-Q01",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scripture_known_in_childhood",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "What had Timothy known since childhood, according to 2 Timothy 3:15?",
+      "passageRefs": [
+        "2 Timothy 3:14-15"
+      ],
+      "whyCorrect": "The text identifies the holy Scriptures Timothy knew from childhood.",
+      "teaching": {
+        "title": "Scripture Known In Childhood",
+        "concept": "The letter appeals to writings Timothy had already learned and connects them to wisdom for salvation through faith in Christ. It does not list the books or settle later questions about the boundaries of a completed Christian canon.",
+        "biblicalGrounding": [
+          "2 Timothy 3:14-15"
+        ],
+        "importantDistinction": "The text identifies the holy Scriptures Timothy knew from childhood.",
+        "rememberThis": "Read what the passage names before drawing a later canon conclusion.",
+        "reviewConceptIds": [
+          "scripture_known_in_childhood"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:14-15",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A14-15&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "A written account of every apostle",
+            "rationale": "No such collection is named here."
+          },
+          {
+            "id": "B",
+            "label": "The completed New Testament canon",
+            "rationale": "The passage does not enumerate a completed New Testament collection."
+          },
+          {
+            "id": "C",
+            "label": "Only Paul’s letters",
+            "rationale": "Paul does not limit the childhood writings to his own letters."
+          },
+          {
+            "id": "D",
+            "label": "The holy Scriptures",
+            "rationale": "This is what the passage explicitly says."
+          }
+        ],
+        "answerKey": "D",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q02",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scripture_and_christ",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "What does the passage say the Scriptures can make Timothy wise for?",
+      "passageRefs": [
+        "2 Timothy 3:15"
+      ],
+      "whyCorrect": "Scripture is connected to salvation through faith in Christ Jesus.",
+      "teaching": {
+        "title": "Scripture And Christ",
+        "concept": "Paul is speaking to Timothy about the usefulness of the sacred writings, not promising that mere exposure to words saves. The clause through faith in Christ Jesus prevents a reading that disconnects Scripture from Christ.",
+        "biblicalGrounding": [
+          "2 Timothy 3:15"
+        ],
+        "importantDistinction": "Scripture is connected to salvation through faith in Christ Jesus.",
+        "rememberThis": "The text joins Scripture, salvation, and faith in Christ.",
+        "reviewConceptIds": [
+          "scripture_and_christ"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:15",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A15&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "Independence from every teacher",
+            "rationale": "The surrounding verses also refer to what Timothy learned and from whom."
+          },
+          {
+            "id": "B",
+            "label": "Salvation through faith in Christ Jesus",
+            "rationale": "This is the stated destination."
+          },
+          {
+            "id": "C",
+            "label": "A faultless memory of biblical dates",
+            "rationale": "The text does not make historical recall its stated goal."
+          },
+          {
+            "id": "D",
+            "label": "Salvation apart from Christ",
+            "rationale": "The text specifically connects salvation with faith in Christ."
+          }
+        ],
+        "answerKey": "B",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q03",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "inspiration",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "True or false: 2 Timothy 3:16 attributes Scripture to God.",
+      "passageRefs": [
+        "2 Timothy 3:16"
+      ],
+      "whyCorrect": "True. The verse says all Scripture is given by inspiration of God.",
+      "teaching": {
+        "title": "Inspiration",
+        "concept": "The verse names God in its claim about Scripture and then lists the ways Scripture is profitable. The question tests that stated claim; it does not ask the learner to adopt a later account of the mechanics of inspiration.",
+        "biblicalGrounding": [
+          "2 Timothy 3:16"
+        ],
+        "importantDistinction": "True. The verse says all Scripture is given by inspiration of God.",
+        "rememberThis": "Read the source claim and the stated uses together.",
+        "reviewConceptIds": [
+          "inspiration"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:16",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A16&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "true_false",
+        "choices": [
+          {
+            "id": "T",
+            "label": "True",
+            "rationale": "The verse attributes Scripture to God."
+          },
+          {
+            "id": "F",
+            "label": "False",
+            "rationale": "The verse explicitly says Scripture is given by inspiration of God."
+          }
+        ],
+        "answerKey": "T",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q04",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scripture_in_context",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "Match each passage with the detail it explicitly reports.",
+      "passageRefs": [
+        "Luke 24:44",
+        "2 Timothy 3:16",
+        "Acts 17:11"
+      ],
+      "whyCorrect": "Luke names the Law of Moses, Prophets, and Psalms; 2 Timothy names Scripture’s profitable uses; Acts describes daily examination of Scripture.",
+      "teaching": {
+        "title": "Scripture In Context",
+        "concept": "These passages make different claims about the Scriptures. Luke describes Jesus relating the Law, Prophets, and Psalms to himself. 2 Timothy lists Scripture’s uses, including correction. Acts shows Bereans receiving a proclamation and testing it daily against Scripture.",
+        "biblicalGrounding": [
+          "Luke 24:44",
+          "2 Timothy 3:16",
+          "Acts 17:11"
+        ],
+        "importantDistinction": "Luke names the Law of Moses, Prophets, and Psalms; 2 Timothy names Scripture’s profitable uses; Acts describes daily examination of Scripture.",
+        "rememberThis": "Keep the claim attached to the passage that actually makes it.",
+        "reviewConceptIds": [
+          "scripture_in_context"
+        ],
+        "matchFeedback": {
+          "P1": "Jesus names these groupings in Luke 24:44.",
+          "P2": "Correction is among the uses in 2 Timothy 3:16.",
+          "P3": "The Bereans examine the Scriptures daily in Acts 17:11."
+        }
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Luke 24:44",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Luke%2024%3A44&version=KJV",
+          "supports": "key_and_explanation"
+        },
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:16",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A16&version=KJV",
+          "supports": "key_and_explanation"
+        },
+        {
+          "kind": "scripture",
+          "reference": "Acts 17:11",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Acts%2017%3A11&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "matching",
+        "prompts": [
+          {
+            "id": "P1",
+            "label": "Luke 24:44"
+          },
+          {
+            "id": "P2",
+            "label": "2 Timothy 3:16"
+          },
+          {
+            "id": "P3",
+            "label": "Acts 17:11"
+          }
+        ],
+        "targets": [
+          {
+            "id": "R1",
+            "label": "Law of Moses, Prophets, and Psalms are named"
+          },
+          {
+            "id": "R2",
+            "label": "Scripture is profitable for correction"
+          },
+          {
+            "id": "R3",
+            "label": "Scripture is examined daily to test a message"
+          }
+        ],
+        "answerKey": {
+          "P1": "R1",
+          "P2": "R2",
+          "P3": "R3"
+        },
+        "scoring": "exact_mapping"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q05",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "good_works",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "What outcome does verse 17 connect to the profitable uses of Scripture in verse 16?",
+      "passageRefs": [
+        "2 Timothy 3:16-17"
+      ],
+      "whyCorrect": "The text speaks of being equipped for good work.",
+      "teaching": {
+        "title": "Good Works",
+        "concept": "The sequence matters: Scripture is profitable in formative ways so that the person of God is furnished for good works. The verse does not present knowledge as an end detached from conduct.",
+        "biblicalGrounding": [
+          "2 Timothy 3:16-17"
+        ],
+        "importantDistinction": "The text speaks of being equipped for good work.",
+        "rememberThis": "Scripture’s teaching aims at a life equipped for good work.",
+        "reviewConceptIds": [
+          "good_works"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:16-17",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A16-17&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "Knowing the exact date of Christ’s return",
+            "rationale": "The verse contains no such date."
+          },
+          {
+            "id": "B",
+            "label": "Being equipped for every good work",
+            "rationale": "This is the stated outcome."
+          },
+          {
+            "id": "C",
+            "label": "Never needing correction again",
+            "rationale": "Correction is part of the preceding verse’s ongoing use."
+          },
+          {
+            "id": "D",
+            "label": "Being excused from obedience",
+            "rationale": "The goal is preparation for good works, not their removal."
+          }
+        ],
+        "answerKey": "B",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q06",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scriptural_divisions",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "In Luke 24:44, which three groupings does Jesus name?",
+      "passageRefs": [
+        "Luke 24:44"
+      ],
+      "whyCorrect": "Jesus names the Law of Moses, the Prophets, and the Psalms.",
+      "teaching": {
+        "title": "Scriptural Divisions",
+        "concept": "The grouping describes the Scriptures Jesus invokes in this scene. It is a useful orientation to the scriptural collection he discusses, but Luke 24 is not itself a later table of contents for every Christian Bible edition.",
+        "biblicalGrounding": [
+          "Luke 24:44"
+        ],
+        "importantDistinction": "Jesus names the Law of Moses, the Prophets, and the Psalms.",
+        "rememberThis": "Use Jesus’ own three terms for this question.",
+        "reviewConceptIds": [
+          "scriptural_divisions"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Luke 24:44",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Luke%2024%3A44&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "Law of Moses, Prophets, and Psalms",
+            "rationale": "All three are named in the verse."
+          },
+          {
+            "id": "B",
+            "label": "History, science, and poetry",
+            "rationale": "This is not the text’s wording."
+          },
+          {
+            "id": "C",
+            "label": "Gospels, Acts, and Revelation",
+            "rationale": "These are not the groupings Jesus names."
+          },
+          {
+            "id": "D",
+            "label": "Paul, Peter, and John",
+            "rationale": "No such author list occurs in the verse."
+          }
+        ],
+        "answerKey": "A",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q07",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scripture_and_christ",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "Whom does Jesus place at the center of his explanation of Moses and the Prophets on the Emmaus road?",
+      "passageRefs": [
+        "Luke 24:25-27"
+      ],
+      "whyCorrect": "Jesus explains the scriptural witness concerning the Messiah.",
+      "teaching": {
+        "title": "Scripture And Christ",
+        "concept": "The Emmaus episode follows confusion about Jesus’ death and reports of his resurrection. Jesus frames the suffering and subsequent glory of the Messiah as a key to understanding the writings he expounds.",
+        "biblicalGrounding": [
+          "Luke 24:25-27"
+        ],
+        "importantDistinction": "Jesus explains the scriptural witness concerning the Messiah.",
+        "rememberThis": "The interpretive center in this scene is the Messiah’s suffering and glory.",
+        "reviewConceptIds": [
+          "scripture_and_christ"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Luke 24:25-27",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Luke%2024%3A25-27&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "The Messiah and his suffering and glory",
+            "rationale": "Jesus relates the writings to the Messiah’s path."
+          },
+          {
+            "id": "B",
+            "label": "A future Roman emperor",
+            "rationale": "No emperor is the center of this explanation."
+          },
+          {
+            "id": "C",
+            "label": "The apostles’ travel plans",
+            "rationale": "The topic is not their itinerary."
+          },
+          {
+            "id": "D",
+            "label": "A complete list of New Testament books",
+            "rationale": "Such a list is not supplied."
+          }
+        ],
+        "answerKey": "A",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q08",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "berean_examination",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "How did the Bereans respond to Paul’s message in Acts 17?",
+      "passageRefs": [
+        "Acts 17:10-12"
+      ],
+      "whyCorrect": "The Bereans combined receptivity with daily examination of Scripture.",
+      "teaching": {
+        "title": "Berean Examination",
+        "concept": "Luke praises a posture that listens and tests what is heard against the Scriptures. The scene does not portray examination as hostility to Paul; it is part of their serious response.",
+        "biblicalGrounding": [
+          "Acts 17:10-12"
+        ],
+        "importantDistinction": "The Bereans combined receptivity with daily examination of Scripture.",
+        "rememberThis": "Eagerness and examination belong together in Acts 17.",
+        "reviewConceptIds": [
+          "berean_examination"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Acts 17:10-12",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Acts%2017%3A10-12&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "They received it eagerly and examined the Scriptures daily",
+            "rationale": "Both actions appear together."
+          },
+          {
+            "id": "B",
+            "label": "They rejected it without listening",
+            "rationale": "The text says they received the word with readiness."
+          },
+          {
+            "id": "C",
+            "label": "They accepted it without examination",
+            "rationale": "The text explicitly includes examination."
+          },
+          {
+            "id": "D",
+            "label": "They wrote a new creed before hearing it",
+            "rationale": "No such action appears."
+          }
+        ],
+        "answerKey": "A",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q09",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scripture_use",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "Select every use of Scripture explicitly named in 2 Timothy 3:16.",
+      "passageRefs": [
+        "2 Timothy 3:16"
+      ],
+      "whyCorrect": "Doctrine, correction, and instruction in righteousness are explicitly named in the KJV.",
+      "teaching": {
+        "title": "Scripture Use",
+        "concept": "The verse also mentions reproof. It names practical, formative uses rather than a promise that Scripture answers every speculative question. A multi-select item tests the actual list without adding functions the verse does not claim.",
+        "biblicalGrounding": [
+          "2 Timothy 3:16"
+        ],
+        "importantDistinction": "Doctrine, correction, and instruction in righteousness are explicitly named in the KJV.",
+        "rememberThis": "Choose functions the verse states, not functions imagined for it.",
+        "reviewConceptIds": [
+          "scripture_use"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:16",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A16&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "multiple_select",
+        "choices": [
+          {
+            "id": "A",
+            "label": "Correction",
+            "rationale": "Correction is listed."
+          },
+          {
+            "id": "B",
+            "label": "Doctrine",
+            "rationale": "Doctrine is named in the KJV text."
+          },
+          {
+            "id": "C",
+            "label": "Instruction in righteousness",
+            "rationale": "Instruction in righteousness is named in the KJV text."
+          },
+          {
+            "id": "D",
+            "label": "Revealing the date of Christ’s return",
+            "rationale": "No such date or function is listed."
+          }
+        ],
+        "answerKey": [
+          "A",
+          "B",
+          "C"
+        ],
+        "scoring": "exact_set"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q10",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "berean_examination",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "Select every action Acts attributes to the Bereans in this scene.",
+      "passageRefs": [
+        "Acts 17:10-12"
+      ],
+      "whyCorrect": "Acts describes ready reception and regular testing against Scripture.",
+      "teaching": {
+        "title": "Berean Examination",
+        "concept": "The three correct options describe one coherent response: hear the message, examine the writings, and assess whether the claim holds. They are not three separate standards of salvation or a claim that every Berean reached the same conclusion.",
+        "biblicalGrounding": [
+          "Acts 17:10-12"
+        ],
+        "importantDistinction": "Acts describes ready reception and regular testing against Scripture.",
+        "rememberThis": "The Bereans listened carefully and checked carefully.",
+        "reviewConceptIds": [
+          "berean_examination"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Acts 17:10-12",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Acts%2017%3A10-12&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "multiple_select",
+        "choices": [
+          {
+            "id": "A",
+            "label": "Writing down every word Paul spoke",
+            "rationale": "Acts describes an examination of Scripture, not a verbatim transcript of Paul’s speech."
+          },
+          {
+            "id": "B",
+            "label": "Examining the Scriptures daily",
+            "rationale": "The narrative states this."
+          },
+          {
+            "id": "C",
+            "label": "Refusing to hear Paul at all",
+            "rationale": "Their receptive response rules this out."
+          },
+          {
+            "id": "D",
+            "label": "Receiving the word with readiness",
+            "rationale": "The narrative states this."
+          }
+        ],
+        "answerKey": [
+          "B",
+          "D"
+        ],
+        "scoring": "exact_set"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q11",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "resurrection_and_witness",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "recognition",
+      "claimClass": "textual_observation",
+      "stem": "Put the claims in the order Jesus gives them in Luke 24:46–48.",
+      "passageRefs": [
+        "Luke 24:46-48"
+      ],
+      "whyCorrect": "Jesus states the Messiah’s suffering, rising on the third day, the proclamation of repentance and remission of sins, and the disciples’ witness in that order.",
+      "teaching": {
+        "title": "Resurrection And Witness",
+        "concept": "The ordering follows Jesus’ own explanation in Luke. His death and resurrection are joined to the message that should be proclaimed among the nations, and the disciples are called witnesses of these things. The question asks for the sequence of the passage, not an invented timeline of later church history.",
+        "biblicalGrounding": [
+          "Luke 24:46-48"
+        ],
+        "importantDistinction": "Jesus states the Messiah’s suffering, rising on the third day, the proclamation of repentance and remission of sins, and the disciples’ witness in that order.",
+        "rememberThis": "Follow the order of the text before building a wider account.",
+        "reviewConceptIds": [
+          "resurrection_and_witness"
+        ],
+        "stepFeedback": {
+          "S1": "Verse 46 first states the Messiah’s suffering.",
+          "S2": "Verse 46 then states his rising on the third day.",
+          "S3": "Verse 47 describes the message preached among the nations.",
+          "S4": "Verse 48 calls the disciples witnesses."
+        }
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Luke 24:46-48",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Luke%2024%3A46-48&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "ordering",
+        "steps": [
+          {
+            "id": "S3",
+            "label": "Repentance and remission of sins are preached among the nations"
+          },
+          {
+            "id": "S1",
+            "label": "The Messiah suffers"
+          },
+          {
+            "id": "S4",
+            "label": "The disciples are witnesses of these things"
+          },
+          {
+            "id": "S2",
+            "label": "The Messiah rises on the third day"
+          }
+        ],
+        "answerKey": [
+          "S1",
+          "S2",
+          "S3",
+          "S4"
+        ],
+        "scoring": "exact_sequence"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q12",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scriptural_divisions",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "passage_in_context",
+      "claimClass": "textual_observation",
+      "stem": "Jesus names the Law of Moses, Prophets, and Psalms, then opens the disciples’ understanding. Which conclusion stays closest to this scene?",
+      "passageRefs": [
+        "Luke 24:44-45"
+      ],
+      "whyCorrect": "The scene connects the named writings to Jesus’ life, death, resurrection, and proclamation.",
+      "teaching": {
+        "title": "Scriptural Divisions",
+        "concept": "Luke 24:44–48 supplies the immediate frame for understanding verse 44. Jesus does not pause to make a later bibliographic statement; he interprets what was written concerning him and the witness that follows.",
+        "biblicalGrounding": [
+          "Luke 24:44-45"
+        ],
+        "importantDistinction": "The scene connects the named writings to Jesus’ life, death, resurrection, and proclamation.",
+        "rememberThis": "Ask what the scene is doing before asking what it might imply elsewhere.",
+        "reviewConceptIds": [
+          "scriptural_divisions"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Luke 24:44-45",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Luke%2024%3A44-45&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "He forbids the disciples from using written Scripture",
+            "rationale": "He directs their understanding toward it."
+          },
+          {
+            "id": "B",
+            "label": "He is listing all 27 books of the New Testament",
+            "rationale": "The text gives no such later list."
+          },
+          {
+            "id": "C",
+            "label": "He is explaining how those writings bear on the events concerning him",
+            "rationale": "This follows the sentence and its context."
+          },
+          {
+            "id": "D",
+            "label": "He says the Psalms alone contain the whole message",
+            "rationale": "He names multiple groupings."
+          }
+        ],
+        "answerKey": "C",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q13",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "berean_examination",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "passage_in_context",
+      "claimClass": "textual_observation",
+      "stem": "A reader says, “The Bereans were commended because they distrusted every teacher.” What does the passage actually support?",
+      "passageRefs": [
+        "Acts 17:10-12"
+      ],
+      "whyCorrect": "Acts describes receptive examination, not blanket distrust.",
+      "teaching": {
+        "title": "Berean Examination",
+        "concept": "The contrast is between accepting or rejecting claims without serious engagement and investigating them in Scripture. Luke reports both readiness and examination in the same sentence, making either extreme an incomplete account.",
+        "biblicalGrounding": [
+          "Acts 17:10-12"
+        ],
+        "importantDistinction": "Acts describes receptive examination, not blanket distrust.",
+        "rememberThis": "Do not separate the Bereans’ openness from their testing.",
+        "reviewConceptIds": [
+          "berean_examination"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "Acts 17:10-12",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=Acts%2017%3A10-12&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "single_choice",
+        "choices": [
+          {
+            "id": "A",
+            "label": "They established that Paul’s words were automatically true",
+            "rationale": "Their examination was precisely to test the claim."
+          },
+          {
+            "id": "B",
+            "label": "They refused to hear Paul’s proclamation",
+            "rationale": "They received the word eagerly."
+          },
+          {
+            "id": "C",
+            "label": "They listened willingly while testing the message against Scripture",
+            "rationale": "The two actions appear together."
+          },
+          {
+            "id": "D",
+            "label": "They were commended for rejecting Scripture",
+            "rationale": "They examined Scripture daily."
+          }
+        ],
+        "answerKey": "C",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q14",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "canon_and_text",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "distinguish_text_from_later_claim",
+      "claimClass": "textual_observation",
+      "stem": "True or false: 2 Timothy 3:14–17 lists every book in a completed New Testament canon.",
+      "passageRefs": [
+        "2 Timothy 3:14-17"
+      ],
+      "whyCorrect": "False. The passage refers to the Scriptures Timothy knew but gives no book list.",
+      "teaching": {
+        "title": "Canon And Text",
+        "concept": "Paul points to writings Timothy knew from childhood and describes their capacity to make one wise for salvation through faith in Christ. The passage does not enumerate the books of a later completed New Testament collection.",
+        "biblicalGrounding": [
+          "2 Timothy 3:14-17"
+        ],
+        "importantDistinction": "False. The passage refers to the Scriptures Timothy knew but gives no book list.",
+        "rememberThis": "Do not turn a statement about Scripture into a book list the passage does not give.",
+        "reviewConceptIds": [
+          "canon_and_text"
+        ]
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:14-17",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A14-17&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "true_false",
+        "choices": [
+          {
+            "id": "T",
+            "label": "True",
+            "rationale": "No list of New Testament books appears in these verses."
+          },
+          {
+            "id": "F",
+            "label": "False",
+            "rationale": "The verses refer to Scripture but do not enumerate a completed New Testament."
+          }
+        ],
+        "answerKey": "F",
+        "scoring": "exact_choice"
+      }
+    },
+    {
+      "id": "THEO-01-01-Q15",
+      "version": 3,
+      "examId": "THEO-01-01",
+      "primaryConceptId": "scripture_purpose",
+      "secondaryConceptIds": [],
+      "level": "foundations",
+      "reasoningSkill": "distinguish_purpose_and_mechanism",
+      "claimClass": "textual_observation",
+      "stem": "Arrange the statements to follow the argument in 2 Timothy 3:15–17.",
+      "passageRefs": [
+        "2 Timothy 3:15-17"
+      ],
+      "whyCorrect": "The passage moves from the Scriptures Timothy knew, to wisdom for salvation through faith in Christ, to Scripture’s profitable uses, to equipment for good work.",
+      "teaching": {
+        "title": "Scripture Purpose",
+        "concept": "The argument begins with the holy Scriptures Timothy had known. It describes their connection to salvation through faith in Christ, names their profitable uses, and concludes with the man of God furnished for good works. The ordering follows the KJV passage while the explanation restates its sense in contemporary language.",
+        "biblicalGrounding": [
+          "2 Timothy 3:15-17"
+        ],
+        "importantDistinction": "The passage moves from the Scriptures Timothy knew, to wisdom for salvation through faith in Christ, to Scripture’s profitable uses, to equipment for good work.",
+        "rememberThis": "Knowledge, faith, formation, and good work are connected in the passage.",
+        "reviewConceptIds": [
+          "scripture_purpose"
+        ],
+        "stepFeedback": {
+          "S1": "Verse 15 begins with the holy Scriptures Timothy knew.",
+          "S2": "Verse 15 connects them to wisdom for salvation through faith in Christ.",
+          "S3": "Verse 16 names Scripture’s profitable uses.",
+          "S4": "Verse 17 ends with equipment for good work."
+        }
+      },
+      "sources": [
+        {
+          "kind": "scripture",
+          "reference": "2 Timothy 3:15-17",
+          "translation": "KJV",
+          "url": "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A15-17&version=KJV",
+          "supports": "key_and_explanation"
+        }
+      ],
+      "interaction": {
+        "kind": "ordering",
+        "steps": [
+          {
+            "id": "S4",
+            "label": "Equipped for every good work"
+          },
+          {
+            "id": "S2",
+            "label": "Wise for salvation through faith in Christ"
+          },
+          {
+            "id": "S1",
+            "label": "The holy Scriptures known from childhood"
+          },
+          {
+            "id": "S3",
+            "label": "Scripture is profitable for doctrine, correction, and instruction in righteousness"
+          }
+        ],
+        "answerKey": [
+          "S1",
+          "S2",
+          "S3",
+          "S4"
+        ],
+        "scoring": "exact_sequence"
+      }
+    }
+  ]
+}

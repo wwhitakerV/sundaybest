@@ -1,5 +1,9 @@
 import type {
   BibleTranslation,
+  ExamAttemptItem,
+  ExamMode,
+  ExamResponse,
+  ExamResult,
   Id,
   IsoDate,
   IsoDateTime,
@@ -92,6 +96,19 @@ export type AppAction =
   | ({ type: "quiz/submitAnswer"; attemptId: Id; answerId: Id } & At)
   | ({ type: "quiz/nextQuestion"; attemptId: Id } & At)
   | ({ type: "quiz/completeAttempt"; attemptId: Id } & At)
+  // Theology exams
+  | ({
+      type: "exam/startAttempt";
+      attemptId: Id;
+      examId: string;
+      examVersion: number;
+      mode: ExamMode;
+      /** The exam's questions as this attempt takes them — never their keys. */
+      items: ExamAttemptItem[];
+    } & At)
+  | ({ type: "exam/recordResponse"; attemptId: Id; questionId: Id; response: ExamResponse } & At)
+  | ({ type: "exam/checkResponse"; attemptId: Id; questionId: Id; correct: boolean } & At)
+  | ({ type: "exam/completeAttempt"; attemptId: Id; result: ExamResult } & At)
   // Settings
   | ({ type: "settings/reminderEnabled"; reminderId: Id; enabled: boolean } & At)
   | ({ type: "settings/reminderTime"; reminderId: Id; time: LocalTime } & At)

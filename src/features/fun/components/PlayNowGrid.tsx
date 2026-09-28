@@ -6,7 +6,6 @@ import DUEL_ART from "../../../../assets/images/fun/duel-boxing-gloves.png";
 import TRIVIA_ART from "../../../../assets/images/fun/daily-trivia-lightbulb.png";
 import EXAMS_ART from "../../../../assets/images/fun/theology-exams-books.png";
 import VERSE_ART from "../../../../assets/images/fun/verse-builder-tiles.png";
-import { getFunDestinationTitle, getGameDestination } from "../logic/destinations";
 import { getStreakLabel } from "../logic/streak-label";
 import type { FunGame } from "../types";
 import { GameTile } from "./GameTile";
@@ -105,7 +104,7 @@ export function PlayNowGrid({ games, streakDays, onOpenGame, testID }: PlayNowGr
               {...(game.key === "trivia" && {
                 badge: { label: getStreakLabel(streakDays), icon: Flame },
               })}
-              accessibilityHint={`Opens ${getFunDestinationTitle(getGameDestination(game.key))}`}
+              accessibilityHint={`Opens ${game.title}`}
               onPress={() => onOpenGame(game.key)}
             />
           ))}

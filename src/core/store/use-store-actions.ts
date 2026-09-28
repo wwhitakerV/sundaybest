@@ -2,6 +2,10 @@ import { useMemo, type Dispatch } from "react";
 
 import type {
   BibleTranslation,
+  ExamAttemptItem,
+  ExamMode,
+  ExamResponse,
+  ExamResult,
   Id,
   LocalTime,
   PlanGenerationError,
@@ -104,6 +108,29 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     },
     completeQuizAttempt: (attemptId: Id) => {
       dispatch({ type: "quiz/completeAttempt", attemptId, at: at() });
+    },
+
+    // Theology exams -----------------------------------------------------------
+
+    /** Starts an attempt. Returns its ID — it exists only if no attempt in that mode was already open. */
+    startExamAttempt: (input: {
+      examId: string;
+      examVersion: number;
+      mode: ExamMode;
+      items: ExamAttemptItem[];
+    }): Id => {
+      const attemptId = createId("exam-attempt");
+      dispatch({ type: "exam/startAttempt", attemptId, ...input, at: at() });
+      return attemptId;
+    },
+    recordExamResponse: (attemptId: Id, questionId: Id, response: ExamResponse) => {
+      dispatch({ type: "exam/recordResponse", attemptId, questionId, response, at: at() });
+    },
+    checkExamResponse: (attemptId: Id, questionId: Id, correct: boolean) => {
+      dispatch({ type: "exam/checkResponse", attemptId, questionId, correct, at: at() });
+    },
+    completeExamAttempt: (attemptId: Id, result: ExamResult) => {
+      dispatch({ type: "exam/completeAttempt", attemptId, result, at: at() });
     },
 
     // Settings -----------------------------------------------------------------

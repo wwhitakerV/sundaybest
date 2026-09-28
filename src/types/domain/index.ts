@@ -5,6 +5,7 @@
 export type * from "./app-data";
 export type * from "./common";
 export type * from "./devotion";
+export type * from "./exam";
 export type * from "./generation";
 export type * from "./library";
 export type * from "./plan";

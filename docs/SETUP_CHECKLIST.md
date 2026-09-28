@@ -249,6 +249,11 @@ carries a literal value for any of them.
       Plan's Paste button. It's a native module: until the dev client is
       rebuilt, tapping Paste throws "Cannot find native module
       'ExpoClipboard'".
+- [ ] **Rebuild the development client again for `expo-web-browser`**, which
+      Theology Exams uses to open Bible passages in an in-app Safari sheet
+      ([ADR 0014](./adr/0014-expo-web-browser-for-passage-links.md)). It's a
+      native module too: until the dev client is rebuilt, tapping a passage
+      link fails. One rebuild covers this and `expo-clipboard` together.
 
 ## Per developer
 

@@ -31,9 +31,9 @@ describe("ComingSoonScreen", () => {
   });
 
   it("names the game it's standing in for, and says it's coming soon", () => {
-    renderFor("theology-exams");
+    renderFor("daily-trivia");
 
-    expect(screen.getByRole("header", { name: "Theology Exams" })).toBeVisible();
+    expect(screen.getByRole("header", { name: "Daily Trivia" })).toBeVisible();
     expect(screen.getByText("Coming soon")).toBeVisible();
   });
 

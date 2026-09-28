@@ -171,6 +171,12 @@ type ColorTokens = {
   /** The edge of a wrong answer. */
   incorrectBorder: string;
   /**
+   * A wrong answer in a theology exam: ink, never red — a wrong answer there
+   * is a teachable moment, and red is kept for what's selected. Always paired
+   * with a ✕ and the word "Incorrect", never colour alone.
+   */
+  feedbackIncorrect: string;
+  /**
    * Type and marks on a colour of the content's own — a featured sermon's —
    * whatever the app's theme: `inkOnDark*` on a dark one, `inkOnLight*` on a
    * light one (`prefersLightInk` picks). Full, muted, and faint.
@@ -243,6 +249,7 @@ const lightColors: ColorTokens = {
   incorrect: palette.red,
   incorrectSurface: palette.incorrectMist,
   incorrectBorder: palette.incorrectLine,
+  feedbackIncorrect: palette.black,
   inkOnDark: palette.white,
   inkOnDarkMuted: palette.whiteMuted,
   inkOnDarkFaint: palette.whiteFaint,
@@ -302,6 +309,7 @@ const darkColors: ColorTokens = {
   incorrect: palette.red,
   incorrectSurface: palette.incorrectMistOnDark,
   incorrectBorder: palette.incorrectLineOnDark,
+  feedbackIncorrect: palette.white,
   inkOnDark: palette.white,
   inkOnDarkMuted: palette.whiteMuted,
   inkOnDarkFaint: palette.whiteFaint,
@@ -417,6 +425,13 @@ const typography = {
   reading: { fontSize: 17, fontWeight: "400", lineHeight: 30 },
   /** A Scripture passage set as the page's centrepiece. Bodoni, generously leaded. */
   scripture: { fontFamily: fonts.editorialBody, fontSize: 24, fontWeight: "400", lineHeight: 36 },
+  /**
+   * A question set as the page's centrepiece (a theology exam's): the
+   * editorial face, a step over `editorialTitle`, leaded for several lines.
+   */
+  question: { fontFamily: fonts.editorialHeading, fontSize: 26, fontWeight: "500", lineHeight: 34 },
+  /** A line to keep, set apart on a reading page: the editorial face, leaded. */
+  pullLine: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500", lineHeight: 28 },
 } as const;
 
 /**
