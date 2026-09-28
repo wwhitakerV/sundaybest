@@ -30,14 +30,16 @@ import {
   isGeneratingPlan,
   type AppState,
 } from "@/core/store";
+import { SAMPLE_PLAN_ID } from "@/core/mock-data";
+import { DRAFT_PLAN_ID, withDraftPlan, withPlanBeingBuilt } from "@tests/factories/pending-plans";
 
 // The store's own starting data: one active 6-day plan (day 1 done, day 2
 // under way), a completed 7-day plan (30 Aug – 5 Sep), two ready plans (one
 // saved), a draft, and one being built. "Today" is 2026-09-23.
 const state: AppState = INITIAL_STATE;
-const ACTIVE = "plan-choose-whom-you-will-serve";
-const COMPLETED = "plan-give-thanks";
-const SAVED = "plan-come-to-me-and-rest";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
+const COMPLETED = "plan-break-the-cycle-of-negative-thinking";
+const SAVED = "plan-overcome-temptation";
 const TODAY = "2026-09-23";
 
 describe("plan selectors", () => {
@@ -55,9 +57,10 @@ describe("plan selectors", () => {
     const ids = getUserPlans(state).map((plan) => plan.id);
 
     expect(ids).toEqual(expect.arrayContaining([ACTIVE, COMPLETED, SAVED]));
-    expect(ids).not.toContain("sample-plan");
-    expect(ids).not.toContain("plan-salt-and-light");
-    expect(ids).not.toContain("plan-who-is-my-neighbor");
+    expect(ids).not.toContain(SAMPLE_PLAN_ID);
+    expect(getUserPlans(withPlanBeingBuilt(withDraftPlan(state))).map((plan) => plan.id)).toEqual(
+      ids,
+    );
   });
 
   it("estimates a day's minutes from its content, with time to reflect and pray", () => {
@@ -142,7 +145,7 @@ describe("getPlanProgress", () => {
   });
 
   it("shows a plan with no days yet at 0%, on day 1", () => {
-    expect(getPlanProgress(state, "plan-salt-and-light")).toMatchObject({
+    expect(getPlanProgress(withDraftPlan(state), DRAFT_PLAN_ID)).toMatchObject({
       completedDayCount: 0,
       currentDayNumber: 1,
       completionPercentage: 0,
@@ -153,7 +156,7 @@ describe("getPlanProgress", () => {
 describe("quiz selectors", () => {
   const day1 = getPlanDay(state, ACTIVE, 1)?.id ?? "";
   const day2 = getPlanDay(state, ACTIVE, 2)?.id ?? "";
-  // Give Thanks' day 6: its Quick Check left half-way.
+  // Break the Cycle's day 6: its Quick Check left half-way.
   const halfway = getPlanDay(state, COMPLETED, 6)?.id ?? "";
   const finished = getQuizAttempt(state, getQuizForDay(state, day1)?.id ?? "");
   const underway = getQuizAttempt(state, getQuizForDay(state, halfway)?.id ?? "");
@@ -301,13 +304,22 @@ describe("progress over time", () => {
 });
 
 describe("isGeneratingPlan", () => {
+  const building = withPlanBeingBuilt(state);
+
+  it("is false with nothing being built", () => {
+    expect(isGeneratingPlan(state)).toBe(false);
+  });
+
   it("is true while a plan is being built", () => {
-    expect(isGeneratingPlan(state)).toBe(true);
+    expect(isGeneratingPlan(building)).toBe(true);
   });
 
   it("is false once the build has settled", () => {
-    const generation = state.generation && { ...state.generation, status: "completed" as const };
+    const generation = building.generation && {
+      ...building.generation,
+      status: "completed" as const,
+    };
 
-    expect(isGeneratingPlan({ ...state, generation })).toBe(false);
+    expect(isGeneratingPlan({ ...building, generation })).toBe(false);
   });
 });

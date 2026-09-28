@@ -14,16 +14,24 @@ import {
   type AppState,
   type GeneratedPlanContent,
 } from "@/core/store";
+import {
+  BUILDING_PLAN_ID,
+  DRAFT_PLAN_ID,
+  PENDING_PLAN_DAYS,
+  withDraftPlan,
+  withPlanBeingBuilt,
+} from "@tests/factories/pending-plans";
 
 // Starting data: an active 6-day plan (day 1 done, day 2 under way, its quiz
 // on question 2), a completed 7-day plan, a ready 3-day plan, a saved 1-day
-// plan, a draft, and a plan being built.
-const state: AppState = INITIAL_STATE;
-const ACTIVE = "plan-choose-whom-you-will-serve";
-const COMPLETED = "plan-give-thanks";
-const READY = "plan-faith-through-the-storm";
-const DRAFT = "plan-salt-and-light";
-const BUILDING = "plan-who-is-my-neighbor";
+// plan, and the sample — plus, made the way New Plan makes them, a draft and a
+// plan being built.
+const state: AppState = withPlanBeingBuilt(withDraftPlan(INITIAL_STATE));
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
+const COMPLETED = "plan-break-the-cycle-of-negative-thinking";
+const READY = "plan-still-praying";
+const DRAFT = DRAFT_PLAN_ID;
+const BUILDING = BUILDING_PLAN_ID;
 const AT = "2026-09-23T07:00:00.000Z";
 const TODAY = "2026-09-23";
 
@@ -251,7 +259,7 @@ describe("reflections", () => {
 });
 
 describe("quizzes", () => {
-  // Give Thanks' day 6 Quick Check: left half-way, its second question picked, not submitted.
+  // Break the Cycle's day 6 Quick Check: left half-way, its second question picked, not submitted.
   const quizId = `${COMPLETED}-day-6-quiz`;
   const open = getQuizAttempt(state, quizId)?.id ?? "";
   const q2 = `${quizId}-q2`;
@@ -350,9 +358,9 @@ describe("plan generation", () => {
   const template = getPlanDay(state, READY, 1);
   if (!template) throw new Error("The mock data's ready plan has a first day.");
   const content = (lengthDays: number): GeneratedPlanContent => ({
-    title: "Who Is My Neighbor?",
+    title: "Still Praying",
     sermon: {
-      title: "Who Is My Neighbor?",
+      title: "Still Praying",
       church: "Harbor Light Church",
       thumbnailUrl: null,
       thumbnailColors: [],
@@ -384,7 +392,11 @@ describe("plan generation", () => {
   });
 
   it("completes into a ready plan, first day open, the rest locked", () => {
-    const next = run({ type: "generation/complete", content: content(4), at: AT });
+    const next = run({
+      type: "generation/complete",
+      content: content(PENDING_PLAN_DAYS),
+      at: AT,
+    });
 
     expect(getPlanById(next, BUILDING)?.status).toBe("ready");
     expect(isGeneratingPlan(next)).toBe(false);
@@ -395,7 +407,9 @@ describe("plan generation", () => {
   });
 
   it("refuses content that doesn't fit the plan", () => {
-    expect(run({ type: "generation/complete", content: content(3), at: AT })).toBe(state);
+    expect(
+      run({ type: "generation/complete", content: content(PENDING_PLAN_DAYS - 1), at: AT }),
+    ).toBe(state);
   });
 
   it("fails back to a draft, and retries from there", () => {

@@ -22,18 +22,18 @@ const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 // The mock history, with "today" Wednesday 23 September 2026: the active
 // plan's day 1 done yesterday (Tue 22), day 2 open today; a seven-day plan
 // done every day from Sun 30 Aug to Sat 5 Sep; day 1's Quick Check 1 of 2.
-const ACTIVE = "plan-choose-whom-you-will-serve";
-const REST_QUIZ = "plan-come-to-me-and-rest-quiz";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
+const TEMPTATION_QUIZ = "plan-overcome-temptation-quiz";
 
 /** Stand-ins for finishing a day, and taking a quiz, elsewhere in the app. */
 function Elsewhere() {
   const actions = useStoreActions();
-  const attempt = useAppSelector((state) => getQuizAttempt(state, REST_QUIZ));
+  const attempt = useAppSelector((state) => getQuizAttempt(state, TEMPTATION_QUIZ));
   const attemptId = attempt?.id ?? "";
   return (
     <>
       <Pressable testID="finish-day" onPress={() => actions.completePlanDay(`${ACTIVE}-day-2`)} />
-      <Pressable testID="quiz-start" onPress={() => actions.startQuizAttempt(REST_QUIZ)} />
+      <Pressable testID="quiz-start" onPress={() => actions.startQuizAttempt(TEMPTATION_QUIZ)} />
       <Pressable
         testID="quiz-answer-b"
         onPress={() => {

@@ -1,7 +1,7 @@
 import type { ScripturePassage, ScriptureVerse } from "@/types/domain";
 
-import { CHOOSE_SCRIPTURE } from "./plan-choose";
-import { SAMPLE_SCRIPTURE } from "./plan-sample";
+import { BLESSING_SCRIPTURE } from "./plan-today-i-choose-to-be-a-blessing";
+import { CHURCH_AND_WORLD_SCRIPTURE } from "./plan-the-church-must-not-partner-with-the-world";
 
 /**
  * The King James text (public domain) of the active plan's and the sample
@@ -88,8 +88,8 @@ const KJV: Readonly<Record<string, ScriptureVerse[]>> = {
  * with: same reference and verses, `-kjv` on the ID.
  */
 export const SCRIPTURE_VARIANTS: ScripturePassage[] = [
-  ...CHOOSE_SCRIPTURE,
-  ...SAMPLE_SCRIPTURE,
+  ...BLESSING_SCRIPTURE,
+  ...CHURCH_AND_WORLD_SCRIPTURE,
 ].flatMap((passage) => {
   const verses = KJV[passage.reference];
   return verses

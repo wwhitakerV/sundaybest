@@ -1,26 +1,27 @@
 import type { Plan } from "@/types/domain";
 
 import { makeDayRecords, type MockDayInput } from "./plan-day-records";
-import { SERMON_SAMPLE } from "./sermons";
+import { SERMON_CHURCH_AND_WORLD } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /** The sample plan's ID — what Welcome's "See a sample plan" and an empty Home open. */
-export const SAMPLE_PLAN_ID = "sample-plan";
+export const SAMPLE_PLAN_ID = "plan-the-church-must-not-partner-with-the-world";
 
 /**
- * The sample plan: five days from "God Won't Leave You", ready for anyone to
- * try — it starts the first time a day of it is studied. No Quick Check.
+ * The sample plan: five days from "The Church Must Not Partner with the
+ * World", ready for anyone to try — it starts the first time a day of it is
+ * studied. No Quick Check.
  */
 
 const BUILT_AT = "2026-08-01T12:01:00.000Z";
 
-export const PLAN_SAMPLE: Plan = {
+export const PLAN_CHURCH_AND_WORLD: Plan = {
   id: SAMPLE_PLAN_ID,
   createdAt: "2026-08-01T12:00:00.000Z",
   updatedAt: BUILT_AT,
   userId: MOCK_USER.id,
-  sermonId: SERMON_SAMPLE.id,
-  title: "God Won't Leave You",
+  sermonId: SERMON_CHURCH_AND_WORLD.id,
+  title: "The Church Must Not Partner with the World",
   status: "ready",
   lengthDays: 5,
   quickCheckEnabled: false,
@@ -186,10 +187,10 @@ const DAYS: MockDayInput[] = [
 ];
 
 const RECORDS = DAYS.map((input) =>
-  makeDayRecords(PLAN_SAMPLE, BUILT_AT, MOCK_SETTINGS.bibleTranslation, input),
+  makeDayRecords(PLAN_CHURCH_AND_WORLD, BUILT_AT, MOCK_SETTINGS.bibleTranslation, input),
 );
 
-export const SAMPLE_DAYS = RECORDS.map((records) => records.day);
-export const SAMPLE_SCRIPTURE = RECORDS.map((records) => records.scripture);
-export const SAMPLE_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
-export const SAMPLE_PRAYERS = RECORDS.map((records) => records.prayer);
+export const CHURCH_AND_WORLD_DAYS = RECORDS.map((records) => records.day);
+export const CHURCH_AND_WORLD_SCRIPTURE = RECORDS.map((records) => records.scripture);
+export const CHURCH_AND_WORLD_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
+export const CHURCH_AND_WORLD_PRAYERS = RECORDS.map((records) => records.prayer);

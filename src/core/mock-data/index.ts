@@ -2,22 +2,21 @@
  * Mock data for every screen — one connected set of records, as `AppData`,
  * standing in for the local database until it holds real data.
  *
- * "Today" is `MOCK_TODAY` (Wednesday 23 September 2026). The plans cover
- * every state a plan can be in:
+ * "Today" is `MOCK_TODAY` (Wednesday 23 September 2026). There is one plan
+ * per image in `assets/images/mock/`, each built from a sermon named, titled,
+ * and pictured after the same file:
  *
- * | Plan                         | Status     | Days | Shows                                  |
- * | ---------------------------- | ---------- | ---- | -------------------------------------- |
- * | Today I Choose to Be a Blessing | active  | 6    | day 1 done (its quiz taken, one wrong), day 2 under way; a quiz every day |
- * | Break the Cycle of Negative Thinking | completed | 7 | every day done, a quiz each: day 6's half-way, day 7's perfect |
- * | Still Praying                | ready      | 3    | not started, no Quick Check            |
- * | Overcome Temptation          | ready      | 1    | saved to the library, quiz untaken     |
- * | God Won't Leave You (sample) | ready      | 5    | the sample anyone can try              |
- * | The Church Must Not Partner with the World | draft | — | newly created in New Plan         |
- * | Who Is My Neighbor?          | generating | —    | being built (`MOCK_DATA.generation`)   |
+ * | Plan                                       | Status    | Days | Shows                                                                     |
+ * | ------------------------------------------ | --------- | ---- | ------------------------------------------------------------------------- |
+ * | Today I Choose to Be a Blessing            | active    | 6    | day 1 done (its quiz taken, one wrong), day 2 under way; a quiz every day |
+ * | Break the Cycle of Negative Thinking       | completed | 7    | every day done, a quiz each: day 6's half-way, day 7's perfect            |
+ * | Still Praying                              | ready     | 3    | not started, no Quick Check                                               |
+ * | Overcome Temptation                        | ready     | 1    | saved to the library, quiz untaken                                        |
+ * | The Church Must Not Partner with the World | ready     | 5    | the sample anyone can try                                                 |
  *
- * Every plan but the sample and the one being built shows a thumbnail bundled
- * from `assets/images/mock/`, and is titled after its file's name. Their
- * sermons keep their own titles and words: only the plans' titles changed.
+ * Their days, readings, and Scripture are placeholders until the real
+ * database is connected. Nothing is being built at launch: a plan is drafted
+ * and built only when one is made in New Plan.
  *
  * The active and sample plans' passages are also there in the King James
  * Version (`SCRIPTURE_VARIANTS`), for a user who picks it.
@@ -28,59 +27,58 @@
 import type { AppData, EntityTable, Id } from "@/types/domain";
 
 import {
-  CHOOSE_DAYS,
-  CHOOSE_PRAYERS,
-  CHOOSE_QUIZ_ANSWERS,
-  CHOOSE_QUIZ_ATTEMPTS,
-  CHOOSE_QUIZ_QUESTIONS,
-  CHOOSE_QUIZZES,
-  CHOOSE_REFLECTIONS,
-  CHOOSE_SCRIPTURE,
-  PLAN_CHOOSE,
-} from "./plan-choose";
+  BLESSING_DAYS,
+  BLESSING_PRAYERS,
+  BLESSING_QUIZ_ANSWERS,
+  BLESSING_QUIZ_ATTEMPTS,
+  BLESSING_QUIZ_QUESTIONS,
+  BLESSING_QUIZZES,
+  BLESSING_REFLECTIONS,
+  BLESSING_SCRIPTURE,
+  PLAN_BLESSING,
+} from "./plan-today-i-choose-to-be-a-blessing";
 import {
-  GRATITUDE_DAYS,
-  GRATITUDE_PRAYERS,
-  GRATITUDE_QUIZ_ANSWERS,
-  GRATITUDE_QUIZ_ATTEMPTS,
-  GRATITUDE_QUIZ_QUESTIONS,
-  GRATITUDE_QUIZZES,
-  GRATITUDE_REFLECTIONS,
-  GRATITUDE_SCRIPTURE,
-  PLAN_GRATITUDE,
-} from "./plan-gratitude";
+  NEGATIVE_THINKING_DAYS,
+  NEGATIVE_THINKING_PRAYERS,
+  NEGATIVE_THINKING_QUIZ_ANSWERS,
+  NEGATIVE_THINKING_QUIZ_ATTEMPTS,
+  NEGATIVE_THINKING_QUIZ_QUESTIONS,
+  NEGATIVE_THINKING_QUIZZES,
+  NEGATIVE_THINKING_REFLECTIONS,
+  NEGATIVE_THINKING_SCRIPTURE,
+  PLAN_NEGATIVE_THINKING,
+} from "./plan-break-the-cycle-of-negative-thinking";
 import {
-  PLAN_REST,
-  REST_DAYS,
-  REST_PRAYERS,
-  REST_QUIZ_QUESTIONS,
-  REST_QUIZZES,
-  REST_REFLECTIONS,
-  REST_SAVED,
-  REST_SCRIPTURE,
-} from "./plan-rest";
+  PLAN_TEMPTATION,
+  TEMPTATION_DAYS,
+  TEMPTATION_PRAYERS,
+  TEMPTATION_QUIZ_QUESTIONS,
+  TEMPTATION_QUIZZES,
+  TEMPTATION_REFLECTIONS,
+  TEMPTATION_SAVED,
+  TEMPTATION_SCRIPTURE,
+} from "./plan-overcome-temptation";
 import {
-  PLAN_STORM,
-  STORM_DAYS,
-  STORM_PRAYERS,
-  STORM_REFLECTIONS,
-  STORM_SCRIPTURE,
-} from "./plan-storm";
+  PLAN_STILL_PRAYING,
+  STILL_PRAYING_DAYS,
+  STILL_PRAYING_PRAYERS,
+  STILL_PRAYING_REFLECTIONS,
+  STILL_PRAYING_SCRIPTURE,
+} from "./plan-still-praying";
 import {
-  PLAN_SAMPLE,
-  SAMPLE_DAYS,
-  SAMPLE_PRAYERS,
-  SAMPLE_REFLECTIONS,
-  SAMPLE_SCRIPTURE,
-} from "./plan-sample";
-import { MOCK_GENERATION, PLAN_NEIGHBOR, PLAN_SALT } from "./plans-pending";
+  PLAN_CHURCH_AND_WORLD,
+  CHURCH_AND_WORLD_DAYS,
+  CHURCH_AND_WORLD_PRAYERS,
+  CHURCH_AND_WORLD_REFLECTIONS,
+  CHURCH_AND_WORLD_SCRIPTURE,
+} from "./plan-the-church-must-not-partner-with-the-world";
 import { MOCK_LIBRARY_EXTRAS } from "./library";
 import { SCRIPTURE_VARIANTS } from "./scripture-variants";
 import { MOCK_SERMONS } from "./sermons";
 import { MOCK_REMINDERS, MOCK_SETTINGS, MOCK_USER } from "./user";
 
 export { MOCK_TODAY } from "./user";
-export { SAMPLE_PLAN_ID } from "./plan-sample";
+export { SAMPLE_PLAN_ID } from "./plan-the-church-must-not-partner-with-the-world";
 
 /** Records keyed by ID. */
 function toTable<T extends { id: Id }>(records: readonly T[]): EntityTable<T> {
@@ -92,52 +90,50 @@ export const MOCK_DATA: AppData = {
   settings: MOCK_SETTINGS,
   sermons: toTable(MOCK_SERMONS),
   plans: toTable([
-    PLAN_CHOOSE,
-    PLAN_GRATITUDE,
-    PLAN_STORM,
-    PLAN_REST,
-    PLAN_SALT,
-    PLAN_NEIGHBOR,
-    PLAN_SAMPLE,
+    PLAN_BLESSING,
+    PLAN_NEGATIVE_THINKING,
+    PLAN_STILL_PRAYING,
+    PLAN_TEMPTATION,
+    PLAN_CHURCH_AND_WORLD,
   ]),
   planDays: toTable([
-    ...CHOOSE_DAYS,
-    ...GRATITUDE_DAYS,
-    ...STORM_DAYS,
-    ...REST_DAYS,
-    ...SAMPLE_DAYS,
+    ...BLESSING_DAYS,
+    ...NEGATIVE_THINKING_DAYS,
+    ...STILL_PRAYING_DAYS,
+    ...TEMPTATION_DAYS,
+    ...CHURCH_AND_WORLD_DAYS,
   ]),
   scripture: toTable([
-    ...CHOOSE_SCRIPTURE,
-    ...GRATITUDE_SCRIPTURE,
-    ...STORM_SCRIPTURE,
-    ...REST_SCRIPTURE,
-    ...SAMPLE_SCRIPTURE,
+    ...BLESSING_SCRIPTURE,
+    ...NEGATIVE_THINKING_SCRIPTURE,
+    ...STILL_PRAYING_SCRIPTURE,
+    ...TEMPTATION_SCRIPTURE,
+    ...CHURCH_AND_WORLD_SCRIPTURE,
     ...SCRIPTURE_VARIANTS,
   ]),
   reflections: toTable([
-    ...CHOOSE_REFLECTIONS,
-    ...GRATITUDE_REFLECTIONS,
-    ...STORM_REFLECTIONS,
-    ...REST_REFLECTIONS,
-    ...SAMPLE_REFLECTIONS,
+    ...BLESSING_REFLECTIONS,
+    ...NEGATIVE_THINKING_REFLECTIONS,
+    ...STILL_PRAYING_REFLECTIONS,
+    ...TEMPTATION_REFLECTIONS,
+    ...CHURCH_AND_WORLD_REFLECTIONS,
   ]),
   prayers: toTable([
-    ...CHOOSE_PRAYERS,
-    ...GRATITUDE_PRAYERS,
-    ...STORM_PRAYERS,
-    ...REST_PRAYERS,
-    ...SAMPLE_PRAYERS,
+    ...BLESSING_PRAYERS,
+    ...NEGATIVE_THINKING_PRAYERS,
+    ...STILL_PRAYING_PRAYERS,
+    ...TEMPTATION_PRAYERS,
+    ...CHURCH_AND_WORLD_PRAYERS,
   ]),
-  quizzes: toTable([...CHOOSE_QUIZZES, ...GRATITUDE_QUIZZES, ...REST_QUIZZES]),
+  quizzes: toTable([...BLESSING_QUIZZES, ...NEGATIVE_THINKING_QUIZZES, ...TEMPTATION_QUIZZES]),
   quizQuestions: toTable([
-    ...CHOOSE_QUIZ_QUESTIONS,
-    ...GRATITUDE_QUIZ_QUESTIONS,
-    ...REST_QUIZ_QUESTIONS,
+    ...BLESSING_QUIZ_QUESTIONS,
+    ...NEGATIVE_THINKING_QUIZ_QUESTIONS,
+    ...TEMPTATION_QUIZ_QUESTIONS,
   ]),
-  quizAttempts: toTable([...CHOOSE_QUIZ_ATTEMPTS, ...GRATITUDE_QUIZ_ATTEMPTS]),
-  quizAnswers: toTable([...CHOOSE_QUIZ_ANSWERS, ...GRATITUDE_QUIZ_ANSWERS]),
+  quizAttempts: toTable([...BLESSING_QUIZ_ATTEMPTS, ...NEGATIVE_THINKING_QUIZ_ATTEMPTS]),
+  quizAnswers: toTable([...BLESSING_QUIZ_ANSWERS, ...NEGATIVE_THINKING_QUIZ_ANSWERS]),
   reminders: toTable(MOCK_REMINDERS),
-  library: toTable([REST_SAVED, ...MOCK_LIBRARY_EXTRAS]),
-  generation: MOCK_GENERATION,
+  library: toTable([TEMPTATION_SAVED, ...MOCK_LIBRARY_EXTRAS]),
+  generation: null,
 };

@@ -28,9 +28,9 @@ const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, []>();
 
 // Three days: day 1 just finished, days 2 and 3 to go.
-const STORM = "plan-faith-through-the-storm";
+const STILL_PRAYING = "plan-still-praying";
 // One day: finishing it finishes the plan.
-const REST = "plan-come-to-me-and-rest";
+const TEMPTATION = "plan-overcome-temptation";
 
 /** The store once `dayNumber` of `planId` has been finished. */
 function finished(planId: string, dayNumber: number): AppState {
@@ -74,31 +74,31 @@ beforeEach(() => {
 
 describe("DayCompleteScreen", () => {
   it("is addressable as day-complete-screen", () => {
-    renderDayComplete(STORM, 1);
+    renderDayComplete(STILL_PRAYING, 1);
 
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
   });
 
   it("shows placeholder body text", () => {
-    renderDayComplete(STORM, 1);
+    renderDayComplete(STILL_PRAYING, 1);
 
     expect(screen.getByText("...")).toBeVisible();
   });
 
   it("offers the day's Quick Check, when it has one", () => {
-    renderDayComplete(REST, 1);
+    renderDayComplete(TEMPTATION, 1);
 
     expect(screen.getByTestId("day-complete-quick-check-button")).toBeVisible();
   });
 
   it("offers no Quick Check for a day without one", () => {
-    renderDayComplete(STORM, 1);
+    renderDayComplete(STILL_PRAYING, 1);
 
     expect(screen.queryByTestId("day-complete-quick-check-button")).toBeNull();
   });
 
   it("starts the day's Quick Check and opens it", () => {
-    renderDayComplete(REST, 1);
+    renderDayComplete(TEMPTATION, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
 
@@ -107,13 +107,13 @@ describe("DayCompleteScreen", () => {
       expect.objectContaining({
         pathname: "/study/[planId]/quick-check",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: REST, day: "1" }),
+        params: expect.objectContaining({ planId: TEMPTATION, day: "1" }),
       }),
     );
   });
 
   it("navigates to Plans when the Plans action is pressed", () => {
-    renderDayComplete(STORM, 1);
+    renderDayComplete(STILL_PRAYING, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-plans-button"));
 
@@ -122,7 +122,7 @@ describe("DayCompleteScreen", () => {
   });
 
   it("navigates to Home when the Home action is pressed", () => {
-    renderDayComplete(STORM, 1);
+    renderDayComplete(STILL_PRAYING, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-home-button"));
 
@@ -131,7 +131,7 @@ describe("DayCompleteScreen", () => {
   });
 
   it("offers the next day, now open, when days remain in the plan", () => {
-    renderDayComplete(STORM, 1);
+    renderDayComplete(STILL_PRAYING, 1);
 
     fireEvent.press(screen.getByTestId("day-complete-next-day-button"));
 
@@ -139,13 +139,13 @@ describe("DayCompleteScreen", () => {
       expect.objectContaining({
         pathname: "/study/[planId]",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: STORM, day: "2" }),
+        params: expect.objectContaining({ planId: STILL_PRAYING, day: "2" }),
       }),
     );
   });
 
   it("offers no next day once every day in the plan is complete", () => {
-    renderDayComplete(REST, 1);
+    renderDayComplete(TEMPTATION, 1);
 
     expect(screen.queryByTestId("day-complete-next-day-button")).toBeNull();
   });

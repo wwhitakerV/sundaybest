@@ -1,22 +1,22 @@
 import type { Plan } from "@/types/domain";
 
 import { makeDayRecords, type MockDayInput } from "./plan-day-records";
-import { SERMON_STORM } from "./sermons";
+import { SERMON_STILL_PRAYING } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
- * A ready plan: three days from "Faith Through the Storm", built on Sunday
+ * A ready plan: three days from "Still Praying", built on Sunday
  * and not started. Day 1 is open; the rest wait their turn. No Quick Check.
  */
 
 const BUILT_AT = "2026-09-20T15:01:20.000Z";
 
-export const PLAN_STORM: Plan = {
-  id: "plan-faith-through-the-storm",
+export const PLAN_STILL_PRAYING: Plan = {
+  id: "plan-still-praying",
   createdAt: "2026-09-20T15:00:00.000Z",
   updatedAt: BUILT_AT,
   userId: MOCK_USER.id,
-  sermonId: SERMON_STORM.id,
+  sermonId: SERMON_STILL_PRAYING.id,
   title: "Still Praying",
   status: "ready",
   lengthDays: 3,
@@ -121,10 +121,10 @@ const DAYS: MockDayInput[] = [
 ];
 
 const RECORDS = DAYS.map((input) =>
-  makeDayRecords(PLAN_STORM, BUILT_AT, MOCK_SETTINGS.bibleTranslation, input),
+  makeDayRecords(PLAN_STILL_PRAYING, BUILT_AT, MOCK_SETTINGS.bibleTranslation, input),
 );
 
-export const STORM_DAYS = RECORDS.map((records) => records.day);
-export const STORM_SCRIPTURE = RECORDS.map((records) => records.scripture);
-export const STORM_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
-export const STORM_PRAYERS = RECORDS.map((records) => records.prayer);
+export const STILL_PRAYING_DAYS = RECORDS.map((records) => records.day);
+export const STILL_PRAYING_SCRIPTURE = RECORDS.map((records) => records.scripture);
+export const STILL_PRAYING_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
+export const STILL_PRAYING_PRAYERS = RECORDS.map((records) => records.prayer);

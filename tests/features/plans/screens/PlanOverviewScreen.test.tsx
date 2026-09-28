@@ -22,9 +22,9 @@ jest.mock("expo-router", () => ({
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockBack = jest.fn<void, []>();
 // Under way: six days, day 1 done, day 2 today, days 3–6 locked.
-const ACTIVE = "plan-choose-whom-you-will-serve";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
 // Ready and not started: three days, day 1 open.
-const READY = "plan-faith-through-the-storm";
+const READY = "plan-still-praying";
 
 function renderOverview(planId: string, state?: AppState) {
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId });

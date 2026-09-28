@@ -2,22 +2,22 @@ import type { LibraryItem, Plan, Quiz, QuizQuestion } from "@/types/domain";
 
 import { makeDayRecords } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
-import { SERMON_REST } from "./sermons";
+import { SERMON_TEMPTATION } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
- * A saved plan: a single day from "Come to Me and Rest", built and saved to
+ * A saved plan: a single day from "Overcome Temptation", built and saved to
  * the library for later. Not started; its Quick Check hasn't been taken.
  */
 
 const BUILT_AT = "2026-09-19T21:11:00.000Z";
 
-export const PLAN_REST: Plan = {
-  id: "plan-come-to-me-and-rest",
+export const PLAN_TEMPTATION: Plan = {
+  id: "plan-overcome-temptation",
   createdAt: "2026-09-19T21:10:00.000Z",
   updatedAt: BUILT_AT,
   userId: MOCK_USER.id,
-  sermonId: SERMON_REST.id,
+  sermonId: SERMON_TEMPTATION.id,
   title: "Overcome Temptation",
   status: "ready",
   lengthDays: 1,
@@ -29,7 +29,7 @@ export const PLAN_REST: Plan = {
   isSample: false,
 };
 
-const RECORDS = makeDayRecords(PLAN_REST, BUILT_AT, MOCK_SETTINGS.bibleTranslation, {
+const RECORDS = makeDayRecords(PLAN_TEMPTATION, BUILT_AT, MOCK_SETTINGS.bibleTranslation, {
   dayNumber: 1,
   title: "Come and rest",
   status: "available",
@@ -65,19 +65,19 @@ const RECORDS = makeDayRecords(PLAN_REST, BUILT_AT, MOCK_SETTINGS.bibleTranslati
   completedAt: null,
 });
 
-export const REST_DAYS = [RECORDS.day];
-export const REST_SCRIPTURE = [RECORDS.scripture];
-export const REST_REFLECTIONS = RECORDS.reflections;
-export const REST_PRAYERS = [RECORDS.prayer];
+export const TEMPTATION_DAYS = [RECORDS.day];
+export const TEMPTATION_SCRIPTURE = [RECORDS.scripture];
+export const TEMPTATION_REFLECTIONS = RECORDS.reflections;
+export const TEMPTATION_PRAYERS = [RECORDS.prayer];
 
 /** Saved for later — the Plans tab's "Saved". */
-export const REST_SAVED: LibraryItem = {
-  id: `library-${PLAN_REST.id}`,
+export const TEMPTATION_SAVED: LibraryItem = {
+  id: `library-${PLAN_TEMPTATION.id}`,
   createdAt: "2026-09-19T21:12:00.000Z",
   updatedAt: "2026-09-19T21:12:00.000Z",
   userId: MOCK_USER.id,
   kind: "plan",
-  itemId: PLAN_REST.id,
+  itemId: PLAN_TEMPTATION.id,
   savedAt: "2026-09-19T21:12:00.000Z",
   note: "For a Sunday afternoon.",
 };
@@ -87,19 +87,19 @@ export const REST_SAVED: LibraryItem = {
 // ---------------------------------------------------------------------------
 
 const QUIZ: Quiz = {
-  id: `${PLAN_REST.id}-quiz`,
+  id: `${PLAN_TEMPTATION.id}-quiz`,
   createdAt: BUILT_AT,
   updatedAt: BUILT_AT,
-  planId: PLAN_REST.id,
+  planId: PLAN_TEMPTATION.id,
   planDayId: RECORDS.day.id,
-  title: "Come and Rest quick check",
+  title: "Overcome Temptation quick check",
 };
 
 const Q1 = `${QUIZ.id}-q1`;
 const Q2 = `${QUIZ.id}-q2`;
 
-export const REST_QUIZZES: Quiz[] = [QUIZ];
-export const REST_QUIZ_QUESTIONS: QuizQuestion[] = [
+export const TEMPTATION_QUIZZES: Quiz[] = [QUIZ];
+export const TEMPTATION_QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: Q1,
     createdAt: BUILT_AT,

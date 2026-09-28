@@ -3,23 +3,23 @@ import type { Plan, Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "@/types/
 import { ALL_STEPS, makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
 import { makeAttempt, makeDayQuiz, type WrittenQuestion } from "./quiz-builders";
-import { SERMON_GRATITUDE } from "./sermons";
+import { SERMON_NEGATIVE_THINKING } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
- * The completed plan: seven days from "Give Thanks in All Things", one each
- * morning from 30 August to 5 September, every reflection answered and every
- * prayer prayed, then a Quick Check finished with a perfect score.
+ * The completed plan: seven days from "Break the Cycle of Negative Thinking",
+ * one each morning from 30 August to 5 September, every reflection answered
+ * and every prayer prayed, then a Quick Check finished with a perfect score.
  */
 
 const BUILT_AT = "2026-08-29T20:16:10.000Z";
 
-export const PLAN_GRATITUDE: Plan = {
-  id: "plan-give-thanks",
+export const PLAN_NEGATIVE_THINKING: Plan = {
+  id: "plan-break-the-cycle-of-negative-thinking",
   createdAt: "2026-08-29T20:15:00.000Z",
   updatedAt: "2026-09-05T07:05:00.000Z",
   userId: MOCK_USER.id,
-  sermonId: SERMON_GRATITUDE.id,
+  sermonId: SERMON_NEGATIVE_THINKING.id,
   title: "Break the Cycle of Negative Thinking",
   status: "completed",
   lengthDays: 7,
@@ -256,7 +256,7 @@ const WRITTEN: Written[] = [
 
 const RECORDS = WRITTEN.map(({ question, answer, prayer, on, minute, ...content }) => {
   const { answeredAt, prayedAt, ...timing } = finishedOn(on, minute);
-  return makeDayRecords(PLAN_GRATITUDE, BUILT_AT, MOCK_SETTINGS.bibleTranslation, {
+  return makeDayRecords(PLAN_NEGATIVE_THINKING, BUILT_AT, MOCK_SETTINGS.bibleTranslation, {
     ...content,
     ...timing,
     reflections: [{ question, answer, answeredAt }],
@@ -264,22 +264,22 @@ const RECORDS = WRITTEN.map(({ question, answer, prayer, on, minute, ...content 
   });
 });
 
-export const GRATITUDE_DAYS = RECORDS.map((records) => records.day);
-export const GRATITUDE_SCRIPTURE = RECORDS.map((records) => records.scripture);
-export const GRATITUDE_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
-export const GRATITUDE_PRAYERS = RECORDS.map((records) => records.prayer);
+export const NEGATIVE_THINKING_DAYS = RECORDS.map((records) => records.day);
+export const NEGATIVE_THINKING_SCRIPTURE = RECORDS.map((records) => records.scripture);
+export const NEGATIVE_THINKING_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
+export const NEGATIVE_THINKING_PRAYERS = RECORDS.map((records) => records.prayer);
 
 // ---------------------------------------------------------------------------
 // Day 7's Quick Check — the last day's, finished with every answer right
 // ---------------------------------------------------------------------------
 
 const QUIZ: Quiz = {
-  id: `${PLAN_GRATITUDE.id}-quiz`,
+  id: `${PLAN_NEGATIVE_THINKING.id}-quiz`,
   createdAt: BUILT_AT,
   updatedAt: BUILT_AT,
-  planId: PLAN_GRATITUDE.id,
-  planDayId: GRATITUDE_DAYS.at(-1)?.id ?? null,
-  title: "Give Thanks quick check",
+  planId: PLAN_NEGATIVE_THINKING.id,
+  planDayId: NEGATIVE_THINKING_DAYS.at(-1)?.id ?? null,
+  title: "Break the Cycle quick check",
 };
 
 const Q1 = `${QUIZ.id}-q1`;
@@ -577,8 +577,8 @@ const EARLIER: {
 ];
 
 const DAILY = EARLIER.map(({ questions: written, picks, pending }, index) => {
-  const day = GRATITUDE_DAYS.at(index);
-  const { quiz, questions } = makeDayQuiz(PLAN_GRATITUDE, day, BUILT_AT, written);
+  const day = NEGATIVE_THINKING_DAYS.at(index);
+  const { quiz, questions } = makeDayQuiz(PLAN_NEGATIVE_THINKING, day, BUILT_AT, written);
   const { attempt, answers } = makeAttempt(
     quiz,
     questions,
@@ -589,16 +589,16 @@ const DAILY = EARLIER.map(({ questions: written, picks, pending }, index) => {
   return { quiz, questions, attempt, answers };
 });
 
-export const GRATITUDE_QUIZZES: Quiz[] = [...DAILY.map(({ quiz }) => quiz), QUIZ];
-export const GRATITUDE_QUIZ_QUESTIONS: QuizQuestion[] = [
+export const NEGATIVE_THINKING_QUIZZES: Quiz[] = [...DAILY.map(({ quiz }) => quiz), QUIZ];
+export const NEGATIVE_THINKING_QUIZ_QUESTIONS: QuizQuestion[] = [
   ...DAILY.flatMap(({ questions }) => questions),
   ...QUESTIONS,
 ];
-export const GRATITUDE_QUIZ_ATTEMPTS: QuizAttempt[] = [
+export const NEGATIVE_THINKING_QUIZ_ATTEMPTS: QuizAttempt[] = [
   ...DAILY.map(({ attempt }) => attempt),
   ATTEMPT,
 ];
-export const GRATITUDE_QUIZ_ANSWERS: QuizAnswer[] = [
+export const NEGATIVE_THINKING_QUIZ_ANSWERS: QuizAnswer[] = [
   ...DAILY.flatMap(({ answers }) => answers),
   ...ANSWERS,
 ];

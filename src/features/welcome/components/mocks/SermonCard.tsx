@@ -31,7 +31,7 @@ export function SermonCard() {
       </View>
       <View style={styles.text}>
         <Text numberOfLines={1} style={[theme.typography.listItem, { color: theme.colors.text }]}>
-          Choose Whom You Will Serve
+          Today I Choose to Be a Blessing
         </Text>
         <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>VOUS Church</Text>
       </View>

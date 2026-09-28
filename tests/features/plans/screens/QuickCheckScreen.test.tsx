@@ -25,18 +25,18 @@ const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockDismissTo = jest.fn<void, [ExpoRouter.Href]>();
 
 // One day, and a two-question Quick Check not yet taken — B is right both times.
-const REST = "plan-come-to-me-and-rest";
-const REST_QUIZ = `${REST}-quiz`;
+const TEMPTATION = "plan-overcome-temptation";
+const TEMPTATION_QUIZ = `${TEMPTATION}-quiz`;
 // Six days. Day 1's Quick Check is done (one right, one wrong); day 2's is
 // under way — its first question answered, the second (finish the verse) on
 // screen with a choice picked.
-const ACTIVE = "plan-choose-whom-you-will-serve";
-const GRATITUDE = "plan-give-thanks";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
+const NEGATIVE_THINKING = "plan-break-the-cycle-of-negative-thinking";
 
 /** The store with the Rest plan's Quick Check started. */
 const STARTED: AppState = appReducer(INITIAL_STATE, {
   type: "quiz/startAttempt",
-  quizId: REST_QUIZ,
+  quizId: TEMPTATION_QUIZ,
   attemptId: "attempt-test",
   at: "2026-09-23T07:00:00.000Z",
 });
@@ -54,7 +54,7 @@ function AttemptProbe({ quizId }: { quizId: string }) {
 }
 
 function quickCheckTree(planId: string, day: number, state: AppState, open = true) {
-  const quizId = planId === REST ? REST_QUIZ : `${planId}-day-${day}-quiz`;
+  const quizId = planId === TEMPTATION ? TEMPTATION_QUIZ : `${planId}-day-${day}-quiz`;
   return (
     <AppStoreProvider initialState={state}>
       {open && <QuickCheckScreen />}
@@ -89,27 +89,27 @@ beforeEach(() => {
 
 describe("QuickCheckScreen", () => {
   it("is addressable as quick-check-screen", () => {
-    renderQuickCheck(REST, 1, STARTED);
+    renderQuickCheck(TEMPTATION, 1, STARTED);
 
     expect(screen.getByTestId("quick-check-screen")).toBeVisible();
   });
 
   it("shows nothing for a day with no Quick Check", () => {
-    renderQuickCheck("plan-faith-through-the-storm", 1);
+    renderQuickCheck("plan-still-praying", 1);
 
     expect(screen.queryByTestId("quick-check-screen")).toBeNull();
   });
 
   describe("not started", () => {
     it("offers to start a quiz not yet taken", () => {
-      renderQuickCheck(REST, 1);
+      renderQuickCheck(TEMPTATION, 1);
 
       expect(screen.getByTestId("quick-check-start-button")).toBeVisible();
       expect(screen.getByTestId("attempt-probe")).toHaveTextContent("no attempt");
     });
 
     it("starts an attempt on its first question", async () => {
-      renderQuickCheck(REST, 1);
+      renderQuickCheck(TEMPTATION, 1);
 
       press("quick-check-start-button");
 
@@ -123,8 +123,8 @@ describe("QuickCheckScreen", () => {
 
   describe("resuming", () => {
     it("picks up an attempt under way on its unanswered question, the choice still picked", () => {
-      // Give Thanks' day 6: the first answered, the second's “seasons” picked, not submitted.
-      renderQuickCheck(GRATITUDE, 6);
+      // Break the Cycle's day 6: the first answered, the second's “seasons” picked, not submitted.
+      renderQuickCheck(NEGATIVE_THINKING, 6);
 
       expect(screen.getByText("2 of 3")).toBeVisible();
       expect(screen.getByText("Finish the verse")).toBeVisible();
@@ -136,7 +136,7 @@ describe("QuickCheckScreen", () => {
 
   describe("a question", () => {
     it("shows the question, where it's from, and every choice", () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       expect(screen.getByText("From Scripture")).toBeVisible();
       expect(screen.getByText("Who does Jesus invite in Matthew 11:28?")).toBeVisible();
@@ -146,13 +146,13 @@ describe("QuickCheckScreen", () => {
     });
 
     it("won't check an answer until one is picked", () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       expect(screen.getByTestId("quick-check-check-button")).toBeDisabled();
     });
 
     it("holds one choice at a time", () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       pick("a");
       pick("c");
@@ -162,7 +162,7 @@ describe("QuickCheckScreen", () => {
     });
 
     it("says so, and why, when the answer is right", async () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       await answer("b");
 
@@ -177,7 +177,7 @@ describe("QuickCheckScreen", () => {
     });
 
     it("says so, shows the right answer, and why, when the answer is wrong", async () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       await answer("a");
 
@@ -193,7 +193,7 @@ describe("QuickCheckScreen", () => {
     });
 
     it("can't be answered twice", async () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
       await answer("a");
 
       pick("b");
@@ -204,7 +204,7 @@ describe("QuickCheckScreen", () => {
     });
 
     it("moves on to the next question", async () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
       await answer("b");
 
       press("quick-check-next-button");
@@ -225,7 +225,7 @@ describe("QuickCheckScreen", () => {
     }
 
     it("scores a perfect run", async () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       await takeQuiz("b", "b");
 
@@ -238,7 +238,7 @@ describe("QuickCheckScreen", () => {
     });
 
     it("scores a run with a wrong answer, and marks which one", async () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       await takeQuiz("a", "b");
 
@@ -258,11 +258,11 @@ describe("QuickCheckScreen", () => {
     });
 
     it("keeps the finished attempt's answers, to look back on", async () => {
-      const view = renderQuickCheck(REST, 1, STARTED);
+      const view = renderQuickCheck(TEMPTATION, 1, STARTED);
       await takeQuiz("a", "b");
 
-      view.rerender(quickCheckTree(REST, 1, STARTED, false));
-      view.rerender(quickCheckTree(REST, 1, STARTED, true));
+      view.rerender(quickCheckTree(TEMPTATION, 1, STARTED, false));
+      view.rerender(quickCheckTree(TEMPTATION, 1, STARTED, true));
 
       expect(screen.getByText("1/2")).toBeVisible();
       expect(screen.getByTestId("quick-check-result-1")).toHaveProp(
@@ -289,11 +289,11 @@ describe("QuickCheckScreen", () => {
     }
 
     it("returns to Day Complete when Close is pressed", () => {
-      renderQuickCheck(REST, 1, STARTED);
+      renderQuickCheck(TEMPTATION, 1, STARTED);
 
       press("quick-check-close-button");
 
-      expect(mockDismissTo).toHaveBeenCalledWith(dayCompleteRoute(REST, "1"));
+      expect(mockDismissTo).toHaveBeenCalledWith(dayCompleteRoute(TEMPTATION, "1"));
     });
 
     it("returns to Day Complete when Done is pressed on the score", () => {

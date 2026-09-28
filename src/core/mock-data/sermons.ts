@@ -1,29 +1,29 @@
 import { Image } from "react-native";
 
 import type { SermonSource } from "@/types/domain";
-import BLESSING_THUMBNAIL from "../../../assets/images/mock/sermon-today-i-choose-to-be-a-blessing.jpg";
+import BLESSING_THUMBNAIL from "../../../assets/images/mock/today-i-choose-to-be-a-blessing.jpg";
 import NEGATIVE_THINKING_THUMBNAIL from "../../../assets/images/mock/break-the-cycle-of-negative-thinking.jpg";
 import STILL_PRAYING_THUMBNAIL from "../../../assets/images/mock/still-praying.jpg";
 import TEMPTATION_THUMBNAIL from "../../../assets/images/mock/overcome-temptation.jpg";
 import CHURCH_AND_WORLD_THUMBNAIL from "../../../assets/images/mock/the-church-must-not-partner-with-the-world.jpg";
 
-// Most churches are invented for the mocks; the VOUS Church sermon is the
-// active plan's, with its real thumbnail bundled until the backend sends it.
-// The other built plans' sermons borrow a real sermon's thumbnail too, and
-// each plan is titled after its thumbnail's file.
+// One sermon per image in `assets/images/mock/`, each named, titled, and
+// pictured after its file — bundled until the backend sends the video's own
+// thumbnail. The churches, links, and transcripts are placeholders. Each
+// sermon's colours are worked out from its thumbnail and deepened for white
+// type: its main colour, an accent, and a deep anchor.
 
-export const SERMON_CHOOSE: SermonSource = {
-  id: "sermon-choose-whom-you-will-serve",
+export const SERMON_BLESSING: SermonSource = {
+  id: "sermon-today-i-choose-to-be-a-blessing",
   createdAt: "2026-09-21T19:40:00.000Z",
   updatedAt: "2026-09-21T19:41:30.000Z",
   url: "https://youtube.com/watch?v=Qm81xRz4",
   platform: "youtube",
   title: "Today I Choose to Be a Blessing",
   church: "VOUS Church",
-  // Bundled for now; the backend will send the video's own thumbnail URL.
   thumbnailUrl: Image.resolveAssetSource(BLESSING_THUMBNAIL).uri,
-  // From the thumbnail, deepened for white type: the grey paper panel's
-  // graphite, the cyan band's teal, and the blazer's warm near-black.
+  // The grey paper panel's graphite, the cyan band's teal, and the blazer's
+  // warm near-black.
   thumbnailColors: ["#3D403F", "#1F5A6E", "#1C1D20"],
   durationSeconds: 2_874,
   publishedOn: "2026-09-20",
@@ -53,16 +53,17 @@ export const SERMON_CHOOSE: SermonSource = {
   ],
 };
 
-export const SERMON_GRATITUDE: SermonSource = {
-  id: "sermon-give-thanks",
+export const SERMON_NEGATIVE_THINKING: SermonSource = {
+  id: "sermon-break-the-cycle-of-negative-thinking",
   createdAt: "2026-08-29T20:15:00.000Z",
   updatedAt: "2026-08-29T20:16:10.000Z",
-  url: "https://youtube.com/watch?v=Gt7hanks22",
+  url: "https://youtube.com/watch?v=Br3akCyc1e",
   platform: "youtube",
-  title: "Give Thanks in All Things",
+  title: "Break the Cycle of Negative Thinking",
   church: "Grace Street Fellowship",
   thumbnailUrl: Image.resolveAssetSource(NEGATIVE_THINKING_THUMBNAIL).uri,
-  thumbnailColors: [],
+  // The lettering's warm grey, the teal haze behind it, and the near-black.
+  thumbnailColors: ["#47443E", "#444F4F", "#0E0C0A"],
   durationSeconds: 2_406,
   publishedOn: "2026-08-23",
   transcriptStatus: "autoCaptions",
@@ -77,16 +78,17 @@ export const SERMON_GRATITUDE: SermonSource = {
   ],
 };
 
-export const SERMON_STORM: SermonSource = {
-  id: "sermon-faith-through-the-storm",
+export const SERMON_STILL_PRAYING: SermonSource = {
+  id: "sermon-still-praying",
   createdAt: "2026-09-20T15:00:00.000Z",
   updatedAt: "2026-09-20T15:01:20.000Z",
-  url: "https://youtube.com/watch?v=St0rmF4ith",
+  url: "https://youtube.com/watch?v=St1llPr4y",
   platform: "youtube",
-  title: "Faith Through the Storm",
+  title: "Still Praying",
   church: "Harbor Light Church",
   thumbnailUrl: Image.resolveAssetSource(STILL_PRAYING_THUMBNAIL).uri,
-  thumbnailColors: [],
+  // The plaster wall's grey, the lamp's warm brown, and the jacket's ink.
+  thumbnailColors: ["#48443F", "#654F46", "#111117"],
   durationSeconds: 2_152,
   publishedOn: "2026-09-13",
   transcriptStatus: "available",
@@ -103,16 +105,17 @@ export const SERMON_STORM: SermonSource = {
   ],
 };
 
-export const SERMON_REST: SermonSource = {
-  id: "sermon-come-to-me-and-rest",
+export const SERMON_TEMPTATION: SermonSource = {
+  id: "sermon-overcome-temptation",
   createdAt: "2026-09-19T21:10:00.000Z",
   updatedAt: "2026-09-19T21:11:00.000Z",
   url: "https://vimeo.com/881240517",
   platform: "vimeo",
-  title: "Come to Me and Rest",
+  title: "Overcome Temptation",
   church: "Northside Community Church",
   thumbnailUrl: Image.resolveAssetSource(TEMPTATION_THUMBNAIL).uri,
-  thumbnailColors: [],
+  // The crowd's navy, the lettering's plum red, and the deep night blue.
+  thumbnailColors: ["#232E4C", "#704357", "#0A0A15"],
   durationSeconds: 1_845,
   publishedOn: "2026-09-06",
   transcriptStatus: "available",
@@ -125,59 +128,18 @@ export const SERMON_REST: SermonSource = {
   ],
 };
 
-/** Pasted into New Plan just now; the plan is still being set up. */
-export const SERMON_SALT: SermonSource = {
-  id: "sermon-salt-and-light",
-  createdAt: "2026-09-23T12:05:00.000Z",
-  updatedAt: "2026-09-23T12:05:40.000Z",
-  url: "https://youtube.com/watch?v=S4ltL1ght9",
-  platform: "youtube",
-  title: "Salt and Light",
-  church: "Riverside Chapel",
-  thumbnailUrl: Image.resolveAssetSource(CHURCH_AND_WORLD_THUMBNAIL).uri,
-  thumbnailColors: [],
-  durationSeconds: 2_590,
-  publishedOn: "2026-09-20",
-  transcriptStatus: "available",
-  transcript: [
-    { startSeconds: 0, text: "Matthew five, verse thirteen. You are the salt of the earth." },
-  ],
-};
-
-/** Its plan is being built right now: the transcript is in, the days are being written. */
-export const SERMON_NEIGHBOR: SermonSource = {
-  id: "sermon-who-is-my-neighbor",
-  createdAt: "2026-09-23T12:20:00.000Z",
-  updatedAt: "2026-09-23T12:21:00.000Z",
-  url: "https://youtube.com/watch?v=N3ighb0rLk",
-  platform: "youtube",
-  title: "Who Is My Neighbor?",
-  church: "Harbor Light Church",
-  thumbnailUrl: "https://i.ytimg.com/vi/N3ighb0rLk/hqdefault.jpg",
-  thumbnailColors: [],
-  durationSeconds: 2_233,
-  publishedOn: "2026-09-20",
-  transcriptStatus: "available",
-  transcript: [
-    { startSeconds: 0, text: "Luke ten. A lawyer stands up to test Jesus." },
-    {
-      startSeconds: 1_204,
-      text: "The question isn't who qualifies as my neighbor. It's who I'll be a neighbor to.",
-    },
-  ],
-};
-
 /** The sermon behind the sample plan anyone can try from Welcome or an empty Home. */
-export const SERMON_SAMPLE: SermonSource = {
-  id: "sermon-god-wont-leave-you",
+export const SERMON_CHURCH_AND_WORLD: SermonSource = {
+  id: "sermon-the-church-must-not-partner-with-the-world",
   createdAt: "2026-08-01T12:00:00.000Z",
   updatedAt: "2026-08-01T12:00:00.000Z",
-  url: "https://youtube.com/watch?v=S4mpl3Pl4n",
+  url: "https://youtube.com/watch?v=Ch4rchW0rld",
   platform: "youtube",
-  title: "God Won't Leave You",
-  church: "Harbor Light Church",
-  thumbnailUrl: null,
-  thumbnailColors: [],
+  title: "The Church Must Not Partner with the World",
+  church: "Riverside Chapel",
+  thumbnailUrl: Image.resolveAssetSource(CHURCH_AND_WORLD_THUMBNAIL).uri,
+  // The parchment's sepia, a warmer umber, and the skyline's charcoal.
+  thumbnailColors: ["#4F4237", "#605143", "#212121"],
   durationSeconds: 2_310,
   publishedOn: "2026-07-26",
   transcriptStatus: "available",
@@ -191,11 +153,9 @@ export const SERMON_SAMPLE: SermonSource = {
 };
 
 export const MOCK_SERMONS: readonly SermonSource[] = [
-  SERMON_CHOOSE,
-  SERMON_GRATITUDE,
-  SERMON_STORM,
-  SERMON_REST,
-  SERMON_SALT,
-  SERMON_NEIGHBOR,
-  SERMON_SAMPLE,
+  SERMON_BLESSING,
+  SERMON_NEGATIVE_THINKING,
+  SERMON_STILL_PRAYING,
+  SERMON_TEMPTATION,
+  SERMON_CHURCH_AND_WORLD,
 ];

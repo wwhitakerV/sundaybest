@@ -14,10 +14,10 @@ jest.mock("expo-router", () => ({
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 
-const ACTIVE = "plan-choose-whom-you-will-serve";
-const GRATITUDE = "plan-give-thanks";
-const STORM = "plan-faith-through-the-storm";
-const REST = "plan-come-to-me-and-rest";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
+const NEGATIVE_THINKING = "plan-break-the-cycle-of-negative-thinking";
+const STILL_PRAYING = "plan-still-praying";
+const TEMPTATION = "plan-overcome-temptation";
 
 /** A stand-in for finishing a day elsewhere in the app, beside the screen. */
 function FinishDay({ dayId }: { dayId: string }) {
@@ -101,7 +101,7 @@ describe("PlansScreen", () => {
     const ids = screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID));
 
     expect([...ids].sort()).toEqual(
-      [ACTIVE, STORM, REST, GRATITUDE].map((id) => `plans-item-${id}`).sort(),
+      [ACTIVE, STILL_PRAYING, TEMPTATION, NEGATIVE_THINKING].map((id) => `plans-item-${id}`).sort(),
     );
   });
 
@@ -110,13 +110,13 @@ describe("PlansScreen", () => {
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
     expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
-      `plans-item-${GRATITUDE}`,
+      `plans-item-${NEGATIVE_THINKING}`,
     ]);
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
     expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
-      `plans-item-${REST}`,
-      `plans-item-${GRATITUDE}`,
+      `plans-item-${TEMPTATION}`,
+      `plans-item-${NEGATIVE_THINKING}`,
     ]);
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-In progress"));
@@ -137,7 +137,7 @@ describe("PlansScreen", () => {
   it("shows a plan not started with how long it runs", () => {
     render(<PlansScreen />);
 
-    const card = screen.getByTestId(`plans-item-${STORM}`);
+    const card = screen.getByTestId(`plans-item-${STILL_PRAYING}`);
     expect(card).toHaveTextContent(/Still Praying/);
     expect(card).toHaveTextContent(/Not started · 3 days/);
   });
@@ -145,7 +145,7 @@ describe("PlansScreen", () => {
   it("shows a finished plan as done, with when it finished", () => {
     render(<PlansScreen />);
 
-    const card = screen.getByTestId(`plans-item-${GRATITUDE}`);
+    const card = screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`);
     expect(card).toHaveTextContent(/Done/);
     expect(card).toHaveTextContent(/Finished Sep 5/);
   });
@@ -153,13 +153,13 @@ describe("PlansScreen", () => {
   it("opens the plan pressed", () => {
     render(<PlansScreen />);
 
-    fireEvent.press(screen.getByTestId(`plans-item-${GRATITUDE}`));
+    fireEvent.press(screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`));
 
     expect(mockPush).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: "/(tabs)/plans/[planId]",
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: GRATITUDE }),
+        params: expect.objectContaining({ planId: NEGATIVE_THINKING }),
       }),
     );
   });
@@ -175,7 +175,7 @@ describe("PlansScreen", () => {
   it("shows each plan's thumbnail at 16:9", () => {
     render(<PlansScreen />);
 
-    for (const id of [ACTIVE, GRATITUDE, STORM, REST]) {
+    for (const id of [ACTIVE, NEGATIVE_THINKING, STILL_PRAYING, TEMPTATION]) {
       expect(screen.getByTestId(`plans-thumbnail-${id}`)).toHaveStyle({
         aspectRatio: 16 / 9,
       });

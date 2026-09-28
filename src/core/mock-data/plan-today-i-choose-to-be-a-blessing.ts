@@ -3,7 +3,7 @@ import type { Plan, Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "@/types/
 import { ALL_STEPS, makeDayRecords, type MockDayInput } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
 import { makeDayQuiz } from "./quiz-builders";
-import { SERMON_CHOOSE } from "./sermons";
+import { SERMON_BLESSING } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
@@ -16,12 +16,12 @@ import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 const BUILT_AT = "2026-09-21T19:41:30.000Z";
 
-export const PLAN_CHOOSE: Plan = {
-  id: "plan-choose-whom-you-will-serve",
+export const PLAN_BLESSING: Plan = {
+  id: "plan-today-i-choose-to-be-a-blessing",
   createdAt: "2026-09-21T19:40:00.000Z",
   updatedAt: "2026-09-23T06:40:00.000Z",
   userId: MOCK_USER.id,
-  sermonId: SERMON_CHOOSE.id,
+  sermonId: SERMON_BLESSING.id,
   title: "Today I Choose to Be a Blessing",
   status: "active",
   lengthDays: 6,
@@ -233,34 +233,34 @@ const DAYS: MockDayInput[] = [
 ];
 
 const RECORDS = DAYS.map((input) =>
-  makeDayRecords(PLAN_CHOOSE, BUILT_AT, MOCK_SETTINGS.bibleTranslation, input),
+  makeDayRecords(PLAN_BLESSING, BUILT_AT, MOCK_SETTINGS.bibleTranslation, input),
 );
 
-export const CHOOSE_DAYS = RECORDS.map((records) => records.day);
-export const CHOOSE_SCRIPTURE = RECORDS.map((records) => records.scripture);
-export const CHOOSE_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
-export const CHOOSE_PRAYERS = RECORDS.map((records) => records.prayer);
+export const BLESSING_DAYS = RECORDS.map((records) => records.day);
+export const BLESSING_SCRIPTURE = RECORDS.map((records) => records.scripture);
+export const BLESSING_REFLECTIONS = RECORDS.flatMap((records) => records.reflections);
+export const BLESSING_PRAYERS = RECORDS.map((records) => records.prayer);
 
-const [DAY_1, DAY_2, DAY_3, DAY_4, DAY_5, DAY_6] = CHOOSE_DAYS;
+const [DAY_1, DAY_2, DAY_3, DAY_4, DAY_5, DAY_6] = BLESSING_DAYS;
 
 // ---------------------------------------------------------------------------
 // Quick Checks
 // ---------------------------------------------------------------------------
 
 const QUIZ_DAY_1: Quiz = {
-  id: `${PLAN_CHOOSE.id}-day-1-quiz`,
+  id: `${PLAN_BLESSING.id}-day-1-quiz`,
   createdAt: BUILT_AT,
   updatedAt: BUILT_AT,
-  planId: PLAN_CHOOSE.id,
+  planId: PLAN_BLESSING.id,
   planDayId: DAY_1?.id ?? null,
   title: "Day 1 quick check",
 };
 
 const QUIZ_DAY_2: Quiz = {
-  id: `${PLAN_CHOOSE.id}-day-2-quiz`,
+  id: `${PLAN_BLESSING.id}-day-2-quiz`,
   createdAt: BUILT_AT,
   updatedAt: BUILT_AT,
-  planId: PLAN_CHOOSE.id,
+  planId: PLAN_BLESSING.id,
   planDayId: DAY_2?.id ?? null,
   title: "Day 2 quick check",
 };
@@ -407,7 +407,7 @@ const ANSWERS: QuizAnswer[] = [
 
 // Days 3–6: written, not yet taken.
 const LATER = [
-  makeDayQuiz(PLAN_CHOOSE, DAY_3, BUILT_AT, [
+  makeDayQuiz(PLAN_BLESSING, DAY_3, BUILT_AT, [
     {
       kind: "multipleChoice",
       source: "scripture",
@@ -441,7 +441,7 @@ const LATER = [
       scriptureReference: null,
     },
   ]),
-  makeDayQuiz(PLAN_CHOOSE, DAY_4, BUILT_AT, [
+  makeDayQuiz(PLAN_BLESSING, DAY_4, BUILT_AT, [
     {
       kind: "finishTheVerse",
       source: "scripture",
@@ -475,7 +475,7 @@ const LATER = [
       scriptureReference: "Psalm 90:12",
     },
   ]),
-  makeDayQuiz(PLAN_CHOOSE, DAY_5, BUILT_AT, [
+  makeDayQuiz(PLAN_BLESSING, DAY_5, BUILT_AT, [
     {
       kind: "multipleChoice",
       source: "scripture",
@@ -509,7 +509,7 @@ const LATER = [
       scriptureReference: null,
     },
   ]),
-  makeDayQuiz(PLAN_CHOOSE, DAY_6, BUILT_AT, [
+  makeDayQuiz(PLAN_BLESSING, DAY_6, BUILT_AT, [
     {
       kind: "multipleChoice",
       source: "scripture",
@@ -550,10 +550,10 @@ const LATER = [
   ]),
 ];
 
-export const CHOOSE_QUIZZES: Quiz[] = [QUIZ_DAY_1, QUIZ_DAY_2, ...LATER.map(({ quiz }) => quiz)];
-export const CHOOSE_QUIZ_QUESTIONS: QuizQuestion[] = [
+export const BLESSING_QUIZZES: Quiz[] = [QUIZ_DAY_1, QUIZ_DAY_2, ...LATER.map(({ quiz }) => quiz)];
+export const BLESSING_QUIZ_QUESTIONS: QuizQuestion[] = [
   ...QUESTIONS,
   ...LATER.flatMap(({ questions }) => questions),
 ];
-export const CHOOSE_QUIZ_ATTEMPTS: QuizAttempt[] = [ATTEMPT_DAY_1];
-export const CHOOSE_QUIZ_ANSWERS = ANSWERS;
+export const BLESSING_QUIZ_ATTEMPTS: QuizAttempt[] = [ATTEMPT_DAY_1];
+export const BLESSING_QUIZ_ANSWERS = ANSWERS;

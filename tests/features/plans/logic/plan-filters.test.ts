@@ -24,9 +24,12 @@ describe("getPlansForFilter", () => {
   const ids = (filter: string) => getPlansForFilter(INITIAL_STATE, filter).map((plan) => plan.id);
 
   it("reads each filter's plans from the store", () => {
-    expect(ids("In progress")).toEqual(["plan-choose-whom-you-will-serve"]);
-    expect(ids("Done")).toEqual(["plan-give-thanks"]);
-    expect(ids("Saved")).toEqual(["plan-come-to-me-and-rest", "plan-give-thanks"]);
+    expect(ids("In progress")).toEqual(["plan-today-i-choose-to-be-a-blessing"]);
+    expect(ids("Done")).toEqual(["plan-break-the-cycle-of-negative-thinking"]);
+    expect(ids("Saved")).toEqual([
+      "plan-overcome-temptation",
+      "plan-break-the-cycle-of-negative-thinking",
+    ]);
     expect(ids("All")).toHaveLength(4);
   });
 

@@ -2,6 +2,7 @@ import { act, renderApp, screen, fireEvent } from "@tests/helpers/render";
 import { hasHeaderEntrance } from "@tests/helpers/header-entrance";
 
 import { BUILD_STAGE_MS, MOCK_TEST_LINKS } from "@/core/plan-builder";
+import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 
 // Welcome stays mounted under every other screen, and its intro story would
 // keep ticking through the fake timers these flows advance. Reduce Motion
@@ -127,7 +128,7 @@ describe("navigation", () => {
     // Pushed onto Home's stack (not the Plans tab's), so iOS's zoom
     // transition can run from the card.
     fireEvent.press(screen.getByTestId("home-tab-active-plan"));
-    expect(view.getPathname()).toBe("/home/plan-choose-whom-you-will-serve");
+    expect(view.getPathname()).toBe("/home/plan-today-i-choose-to-be-a-blessing");
     expect(screen.getByTestId("plan-overview-title")).toHaveTextContent(
       "Today I Choose to Be a Blessing",
     );
@@ -136,7 +137,7 @@ describe("navigation", () => {
     expect(view.getPathname()).toBe("/home");
 
     fireEvent.press(screen.getByTestId("home-tab-active-plan"));
-    expect(view.getPathname()).toBe("/home/plan-choose-whom-you-will-serve");
+    expect(view.getPathname()).toBe("/home/plan-today-i-choose-to-be-a-blessing");
   });
 
   it("walks Welcome -> Plan Overview for the sample plan", () => {
@@ -144,7 +145,7 @@ describe("navigation", () => {
 
     fireEvent.press(screen.getByTestId("welcome-sample-plan-button"));
 
-    expect(view.getPathname()).toBe("/plans/sample-plan");
+    expect(view.getPathname()).toBe(`/plans/${SAMPLE_PLAN_ID}`);
     expect(screen.getByTestId("plan-overview-screen")).toBeVisible();
   });
 
@@ -155,7 +156,7 @@ describe("navigation", () => {
     expect(screen.getByTestId("plan-overview-screen")).toBeVisible();
 
     fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
-    expect(view.getPathname()).toBe("/study/sample-plan");
+    expect(view.getPathname()).toBe(`/study/${SAMPLE_PLAN_ID}`);
     expect(screen.getByTestId("study-read-body")).toBeVisible();
 
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -168,7 +169,7 @@ describe("navigation", () => {
     await screen.findByTestId("study-pray-body");
 
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
-    expect(view.getPathname()).toBe("/study/sample-plan/day-complete");
+    expect(view.getPathname()).toBe(`/study/${SAMPLE_PLAN_ID}/day-complete`);
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
   });
 
@@ -205,10 +206,10 @@ describe("navigation", () => {
     "takes a day's Quick Check after finishing it, scores it, and returns to Day Complete",
     async () => {
       const view = renderApp();
-      const REST = "plan-come-to-me-and-rest";
+      const TEMPTATION = "plan-overcome-temptation";
       fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
       fireEvent.press(screen.getByTestId("tab-plans"));
-      fireEvent.press(screen.getByTestId(`plans-item-${REST}`));
+      fireEvent.press(screen.getByTestId(`plans-item-${TEMPTATION}`));
       fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
       for (const next of ["scripture", "reflect", "pray"]) {
         fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -218,7 +219,7 @@ describe("navigation", () => {
       expect(screen.getByTestId("day-complete-screen")).toBeVisible();
 
       fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
-      expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
+      expect(view.getPathname()).toBe(`/study/${TEMPTATION}/quick-check`);
 
       // One question right, one wrong — all in place; the route never changes.
       fireEvent.press(screen.getByTestId("quick-check-choice-b"));
@@ -232,10 +233,10 @@ describe("navigation", () => {
       fireEvent.press(screen.getByTestId("quick-check-finish-button"));
       await screen.findByTestId("quick-check-score");
       expect(screen.getByText("1/2")).toBeVisible();
-      expect(view.getPathname()).toBe(`/study/${REST}/quick-check`);
+      expect(view.getPathname()).toBe(`/study/${TEMPTATION}/quick-check`);
 
       fireEvent.press(screen.getByTestId("quick-check-done-button"));
-      expect(view.getPathname()).toBe(`/study/${REST}/day-complete`);
+      expect(view.getPathname()).toBe(`/study/${TEMPTATION}/day-complete`);
     },
     // A long walk — Plans, a whole study day, and a whole Quick Check.
     BUILD_FLOW_TIMEOUT_MS,

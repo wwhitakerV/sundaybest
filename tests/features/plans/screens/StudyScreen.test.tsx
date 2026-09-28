@@ -28,9 +28,9 @@ const mockExitSession = jest.fn<void, []>();
 const mockBack = jest.fn<void, []>();
 
 // Ready, not started: three days, day 1 open.
-const STORM = "plan-faith-through-the-storm";
+const STILL_PRAYING = "plan-still-praying";
 // Under way: six days, day 1 done, day 2 today (Read and Scripture done, one answer written).
-const ACTIVE = "plan-choose-whom-you-will-serve";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
 
 /** What the store holds for a plan: each day's status, and how many are done. */
 function PlanProbe({ planId }: { planId: string }) {
@@ -92,26 +92,26 @@ beforeEach(() => {
 
 describe("StudyScreen", () => {
   it("is addressable as study-screen", () => {
-    renderStudy(STORM, 1);
+    renderStudy(STILL_PRAYING, 1);
 
     expect(screen.getByTestId("study-screen")).toBeVisible();
   });
 
   it("shows nothing for a day the plan doesn't have", () => {
-    renderStudy(STORM, 9);
+    renderStudy(STILL_PRAYING, 9);
 
     expect(screen.queryByTestId("study-screen")).toBeNull();
   });
 
   it("shows the day context in the header", () => {
-    renderStudy(STORM, 1);
+    renderStudy(STILL_PRAYING, 1);
 
     expect(screen.getByText("Day 1 of 3")).toBeVisible();
   });
 
   describe("Read", () => {
     it("starts on the day's reading", () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       expect(screen.getByTestId("study-read-body")).toBeVisible();
       expect(screen.getByText("Asleep in the boat")).toBeVisible();
@@ -123,7 +123,7 @@ describe("StudyScreen", () => {
     });
 
     it("points to where the reading comes from in the sermon", () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       expect(screen.getByText("Hear this part of the sermon")).toBeVisible();
       expect(screen.getByText("Starts at 10:40")).toBeVisible();
@@ -132,7 +132,7 @@ describe("StudyScreen", () => {
 
   describe("Scripture", () => {
     it("shows the day's passage: its reference, translation, and verses", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       await goToStep("scripture");
 
@@ -224,7 +224,7 @@ describe("StudyScreen", () => {
     });
 
     it("keeps an answer typed, moving between steps", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("reflect");
 
       fireEvent.changeText(screen.getByTestId("study-reflect-answer-1"), "The move, mostly.");
@@ -237,7 +237,7 @@ describe("StudyScreen", () => {
     });
 
     it("saves the answer to the day on leaving the step", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("reflect");
 
       fireEvent.changeText(screen.getByTestId("study-reflect-answer-1"), "The move, mostly.");
@@ -247,14 +247,14 @@ describe("StudyScreen", () => {
     });
 
     it("still has the answer after leaving the study and coming back", async () => {
-      const view = renderStudy(STORM, 1);
+      const view = renderStudy(STILL_PRAYING, 1);
       await goToStep("reflect");
       fireEvent.changeText(screen.getByTestId("study-reflect-answer-1"), "The move, mostly.");
       fireEvent.press(screen.getByTestId("study-close-button"));
 
       // The study closes and opens again; the store stays.
-      view.rerender(studyTree(STORM, 1, INITIAL_STATE, false));
-      view.rerender(studyTree(STORM, 1, INITIAL_STATE, true));
+      view.rerender(studyTree(STILL_PRAYING, 1, INITIAL_STATE, false));
+      view.rerender(studyTree(STILL_PRAYING, 1, INITIAL_STATE, true));
       await goToStep("reflect");
 
       expect(screen.getByTestId("study-reflect-answer-1").props.value).toBe("The move, mostly.");
@@ -263,7 +263,7 @@ describe("StudyScreen", () => {
 
   describe("Pray", () => {
     it("shows the day's prayer", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       await goToStep("pray");
 
@@ -281,7 +281,7 @@ describe("StudyScreen", () => {
 
   describe("working through the day", () => {
     it("records each step as it's done, starting the day", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       await goToStep("scripture");
 
@@ -291,7 +291,7 @@ describe("StudyScreen", () => {
     });
 
     it("doesn't complete the day by reaching the last step — only Finish does", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       await goToStep("pray");
 
@@ -299,7 +299,7 @@ describe("StudyScreen", () => {
     });
 
     it("completes the day on Finish: done, progress moved on, and the next day open", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("pray");
 
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -310,7 +310,7 @@ describe("StudyScreen", () => {
     });
 
     it("marks the prayer prayed on Finish", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("pray");
 
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -319,7 +319,7 @@ describe("StudyScreen", () => {
     });
 
     it("opens Day Complete for the same day on Finish", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("pray");
 
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -328,7 +328,7 @@ describe("StudyScreen", () => {
         expect.objectContaining({
           pathname: "/study/[planId]/day-complete",
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-          params: expect.objectContaining({ planId: STORM, day: "1" }),
+          params: expect.objectContaining({ planId: STILL_PRAYING, day: "1" }),
         }),
       );
     });
@@ -336,7 +336,7 @@ describe("StudyScreen", () => {
 
   describe("navigation", () => {
     it("keeps the header mounted across a step change", () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       const header = screen.getByTestId("study");
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -345,7 +345,7 @@ describe("StudyScreen", () => {
     });
 
     it("keeps the nav mounted across a step change", () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       const nav = screen.getByTestId("study-nav");
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -354,7 +354,7 @@ describe("StudyScreen", () => {
     });
 
     it("goes back a step when Previous is pressed after Scripture", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("scripture");
 
       fireEvent.press(screen.getByTestId("study-nav-prev-button"));
@@ -364,7 +364,7 @@ describe("StudyScreen", () => {
     });
 
     it("dismisses the whole flow when the close button is pressed", async () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
       await goToStep("scripture");
 
       fireEvent.press(screen.getByTestId("study-close-button"));
@@ -373,7 +373,7 @@ describe("StudyScreen", () => {
     });
 
     it("exits when Previous is pressed on Read", () => {
-      renderStudy(STORM, 1);
+      renderStudy(STILL_PRAYING, 1);
 
       fireEvent.press(screen.getByTestId("study-nav-prev-button"));
 

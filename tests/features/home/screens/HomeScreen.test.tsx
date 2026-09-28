@@ -10,6 +10,7 @@ import {
   getSermonForPlan,
   type AppState,
 } from "@/core/store";
+import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 import { HomeScreen } from "@/features/home/screens/HomeScreen";
 
 jest.mock("expo-router", () => ({
@@ -22,7 +23,7 @@ jest.mock("expo-router", () => ({
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 // The store's starting data has "Today I Choose to Be a Blessing" under way: six
 // days, day 1 done, day 2 today.
-const ACTIVE = "plan-choose-whom-you-will-serve";
+const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
 
 /** A store with only the sample plan in it — nothing of the user's own. */
 const NO_PLANS: AppState = {
@@ -106,12 +107,12 @@ describe("HomeScreen", () => {
     it("offers the sample plan to try", () => {
       renderHome(NO_PLANS);
 
-      expect(screen.getByText("God Won't Leave You")).toBeVisible();
+      expect(screen.getByText("The Church Must Not Partner with the World")).toBeVisible();
       expect(screen.getByText("Sample plan, 5 days")).toBeVisible();
       fireEvent.press(screen.getByTestId("home-tab-sample-plan"));
       expect(mockPush).toHaveBeenCalledWith({
         pathname: "/(tabs)/plans/[planId]",
-        params: { planId: "sample-plan" },
+        params: { planId: SAMPLE_PLAN_ID },
       });
     });
   });
@@ -210,9 +211,9 @@ describe("HomeScreen", () => {
     it("lists the user's plans, with a finished one marked when it finished", () => {
       renderHome();
 
-      expect(screen.getByTestId("home-tab-plan-plan-give-thanks")).toHaveTextContent(
-        /Finished Sep 5/,
-      );
+      expect(
+        screen.getByTestId("home-tab-plan-plan-break-the-cycle-of-negative-thinking"),
+      ).toHaveTextContent(/Finished Sep 5/);
     });
 
     it("reads the day from the store, so a finished day moves it on", () => {

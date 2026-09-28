@@ -15,7 +15,7 @@ const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitModal = jest.fn<void, []>();
 // A ready plan in the mock data: three days, not started.
-const PLAN_ID = "plan-faith-through-the-storm";
+const PLAN_ID = "plan-still-praying";
 
 beforeEach(() => {
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId: PLAN_ID });

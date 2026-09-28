@@ -2,8 +2,15 @@ import { act, render, screen, fireEvent } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { BUILD_STAGE_MS } from "@/core/plan-builder";
+import { BUILD_STAGE_MS, PlanBuilder } from "@/core/plan-builder";
+import { AppStoreProvider, INITIAL_STATE } from "@/core/store";
 import { PreparingPlanScreen } from "@/features/plan-creation/screens/PreparingPlanScreen";
+import {
+  BUILDING_PLAN_ID,
+  PENDING_PLAN_DAYS,
+  PENDING_PLAN_TITLE,
+  withPlanBeingBuilt,
+} from "@tests/factories/pending-plans";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -15,8 +22,18 @@ jest.mock("expo-router", () => ({
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockBack = jest.fn<void, []>();
 const mockExitModal = jest.fn<void, []>();
-// The mock data's plan being built: four days with a Quick Check, writing its days.
-const PLAN_ID = "plan-who-is-my-neighbor";
+// A plan made in New Plan and being built: four days with a Quick Check, writing its days.
+const PLAN_ID = BUILDING_PLAN_ID;
+
+/** Preparing, over a store with that plan being built — and the builder that moves it on. */
+function renderPreparing() {
+  return render(
+    <AppStoreProvider initialState={withPlanBeingBuilt(INITIAL_STATE)}>
+      <PlanBuilder />
+      <PreparingPlanScreen />
+    </AppStoreProvider>,
+  );
+}
 
 beforeEach(() => {
   jest.useFakeTimers({ advanceTimers: true });
@@ -36,22 +53,22 @@ afterEach(() => {
 
 describe("PreparingPlanScreen", () => {
   it("is addressable as preparing-plan-screen", () => {
-    render(<PreparingPlanScreen />);
+    renderPreparing();
 
     expect(screen.getByTestId("preparing-plan-screen")).toBeVisible();
   });
 
   it("shows the plan being built, and where the build is", () => {
-    render(<PreparingPlanScreen />);
+    renderPreparing();
 
     expect(screen.getByText("Preparing your plan")).toBeVisible();
-    expect(screen.getByText("Who Is My Neighbor?")).toBeVisible();
-    expect(screen.getByText("Writing your 4 days")).toBeVisible();
+    expect(screen.getByText(PENDING_PLAN_TITLE)).toBeVisible();
+    expect(screen.getByText(`Writing your ${PENDING_PLAN_DAYS} days`)).toBeVisible();
     expect(screen.getByTestId("preparing-plan-stages-writingDays")).toBeBusy();
   });
 
   it("leaves the flow when Close is pressed", () => {
-    render(<PreparingPlanScreen />);
+    renderPreparing();
 
     fireEvent.press(screen.getByTestId("preparing-plan-close-button"));
 
@@ -59,7 +76,7 @@ describe("PreparingPlanScreen", () => {
   });
 
   it("moves on to Plan Ready once the plan is built", async () => {
-    render(<PreparingPlanScreen />);
+    renderPreparing();
 
     // Writing the days, then the quiz, then done.
     for (let stage = 0; stage < 3; stage += 1) {

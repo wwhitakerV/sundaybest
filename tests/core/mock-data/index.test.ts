@@ -1,9 +1,9 @@
-import { MOCK_DATA } from "@/core/mock-data";
+import { MOCK_DATA, SAMPLE_PLAN_ID } from "@/core/mock-data";
 
 // Under Jest every image is the same stub; these name their file instead, so a
 // test can tell which picture a sermon shows.
-jest.mock("../../../assets/images/mock/sermon-today-i-choose-to-be-a-blessing.jpg", () => ({
-  uri: "sermon-today-i-choose-to-be-a-blessing.jpg",
+jest.mock("../../../assets/images/mock/today-i-choose-to-be-a-blessing.jpg", () => ({
+  uri: "today-i-choose-to-be-a-blessing.jpg",
 }));
 jest.mock("../../../assets/images/mock/break-the-cycle-of-negative-thinking.jpg", () => ({
   uri: "break-the-cycle-of-negative-thinking.jpg",
@@ -19,27 +19,22 @@ jest.mock("../../../assets/images/mock/the-church-must-not-partner-with-the-worl
 const data = MOCK_DATA;
 const all = <T>(table: Record<string, T>) => Object.values(table);
 
-/** Each bundled thumbnail, the plan whose sermon shows it, and that plan's title — its file's name. */
-const TITLED_AFTER_THUMBNAIL = [
+// Node's own `fs`, read for real: the test lists the image folder itself. Jest
+// runs from the repository root, so the path is relative to it.
+const { readdirSync } = jest.requireActual<{ readdirSync: (path: string) => string[] }>("fs");
+const MOCK_IMAGES_DIR = "assets/images/mock";
+
+/**
+ * The mock images, and the title each one's sermon and plan carry — its file
+ * name. Every sermon and plan in the mocks is one of these; nothing else.
+ */
+const MOCK_IMAGES = [
+  { slug: "today-i-choose-to-be-a-blessing", title: "Today I Choose to Be a Blessing" },
+  { slug: "break-the-cycle-of-negative-thinking", title: "Break the Cycle of Negative Thinking" },
+  { slug: "still-praying", title: "Still Praying" },
+  { slug: "overcome-temptation", title: "Overcome Temptation" },
   {
-    planId: "plan-choose-whom-you-will-serve",
-    file: "sermon-today-i-choose-to-be-a-blessing.jpg",
-    title: "Today I Choose to Be a Blessing",
-  },
-  {
-    planId: "plan-give-thanks",
-    file: "break-the-cycle-of-negative-thinking.jpg",
-    title: "Break the Cycle of Negative Thinking",
-  },
-  { planId: "plan-faith-through-the-storm", file: "still-praying.jpg", title: "Still Praying" },
-  {
-    planId: "plan-come-to-me-and-rest",
-    file: "overcome-temptation.jpg",
-    title: "Overcome Temptation",
-  },
-  {
-    planId: "plan-salt-and-light",
-    file: "the-church-must-not-partner-with-the-world.jpg",
+    slug: "the-church-must-not-partner-with-the-world",
     title: "The Church Must Not Partner with the World",
   },
 ];
@@ -149,30 +144,64 @@ describe("MOCK_DATA", () => {
     }
   });
 
-  it.each(TITLED_AFTER_THUMBNAIL)(
-    "shows $file on the plan titled after it",
-    ({ planId, file, title }) => {
-      const plan = all(data.plans).find(({ id }) => id === planId);
+  it("has an image in the mock folder for each entry, and no other", () => {
+    const files = readdirSync(MOCK_IMAGES_DIR).filter((file) => file.endsWith(".jpg"));
 
-      expect(plan?.title).toBe(title);
-      expect(plan && data.sermons[plan.sermonId]?.thumbnailUrl).toBe(file);
-    },
-  );
+    expect(files.sort()).toEqual(MOCK_IMAGES.map(({ slug }) => `${slug}.jpg`).sort());
+  });
 
-  it("bundles a thumbnail for every plan the Plans tab lists", () => {
-    const listed = all(data.plans).filter(
-      (plan) => !plan.isSample && ["ready", "active", "completed"].includes(plan.status),
-    );
-
-    expect(TITLED_AFTER_THUMBNAIL.map(({ planId }) => planId)).toEqual(
-      expect.arrayContaining(listed.map((plan) => plan.id)),
+  it("has one sermon per image, named, titled, and pictured after its file", () => {
+    expect(
+      all(data.sermons)
+        .map(({ id, title, thumbnailUrl }) => ({ id, title, thumbnailUrl }))
+        .sort((a, b) => a.id.localeCompare(b.id)),
+    ).toEqual(
+      MOCK_IMAGES.map(({ slug, title }) => ({
+        id: `sermon-${slug}`,
+        title,
+        thumbnailUrl: `${slug}.jpg`,
+      })).sort((a, b) => a.id.localeCompare(b.id)),
     );
   });
 
-  it("is building a plan that exists, from its sermon", () => {
-    const { generation } = data;
+  it("has one plan per image, named and titled after its file, built from its sermon", () => {
+    expect(
+      all(data.plans)
+        .map(({ id, title, sermonId }) => ({ id, title, sermonId }))
+        .sort((a, b) => a.id.localeCompare(b.id)),
+    ).toEqual(
+      MOCK_IMAGES.map(({ slug, title }) => ({
+        id: `plan-${slug}`,
+        title,
+        sermonId: `sermon-${slug}`,
+      })).sort((a, b) => a.id.localeCompare(b.id)),
+    );
+  });
 
-    expect(generation?.planId && data.plans[generation.planId]?.status).toBe("generating");
-    expect(generation?.sermonId && data.sermons[generation.sermonId]).toBeDefined();
+  it("gives every sermon three colours from its thumbnail, as hex", () => {
+    for (const sermon of all(data.sermons)) {
+      expect(sermon.thumbnailColors).toEqual([
+        expect.stringMatching(/^#[0-9A-F]{6}$/),
+        expect.stringMatching(/^#[0-9A-F]{6}$/),
+        expect.stringMatching(/^#[0-9A-F]{6}$/),
+      ]);
+    }
+  });
+
+  it("names a church for every sermon", () => {
+    for (const sermon of all(data.sermons)) expect(sermon.church).toEqual(expect.any(String));
+  });
+
+  it("makes The Church Must Not Partner with the World the one sample plan", () => {
+    expect(
+      all(data.plans)
+        .filter((plan) => plan.isSample)
+        .map((plan) => plan.id),
+    ).toEqual(["plan-the-church-must-not-partner-with-the-world"]);
+    expect(SAMPLE_PLAN_ID).toBe("plan-the-church-must-not-partner-with-the-world");
+  });
+
+  it("starts with no plan being built", () => {
+    expect(data.generation).toBeNull();
   });
 });

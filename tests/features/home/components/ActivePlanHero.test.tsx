@@ -7,10 +7,10 @@ import {
 
 function renderHero(overrides: Partial<ActivePlanHeroProps> = {}) {
   const props: ActivePlanHeroProps = {
-    title: "Faith Through the Storm",
-    church: "Hillside Chapel",
-    thumbnailUrl: "https://i.ytimg.com/vi/St0rmF4ith/hqdefault.jpg",
-    colors: ["#1F5A6E", "#3D403F"],
+    title: "Still Praying",
+    church: "Harbor Light Church",
+    thumbnailUrl: "still-praying.jpg",
+    colors: ["#48443F", "#654F46", "#111117"],
     words: {
       status: "IN PROGRESS · DAY 2 OF 6",
       action: "Continue Day 2",
