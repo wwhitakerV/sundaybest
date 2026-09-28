@@ -8,6 +8,10 @@
 > exam version 4). Design and behavior authority: the "THEO-01-01
 > implementation prompt (schema v2)". Where this spec and the JSON disagree
 > about content, the JSON wins.
+>
+> Field paths are written in full: `exam.…` for fields of the whole exam,
+> `questions[].…` for fields of each question. Inside a criterion about one
+> question, `interaction.…` and `teaching.…` are that question's.
 
 ## Problem
 
@@ -66,24 +70,24 @@ promising something it does not deliver.
    - **Then** it yields 15 questions in `exam.questionIds` order, with 8 single choice, 2 true/false, 1 matching, 2 multiple select, and 2 ordering
 
 4. **Content fails closed**
-   - **Given** exam content where any of these is wrong: a question ID missing or out of order, `questionCount` or `interactionAllocation` not matching the questions, a question from another exam, a duplicate ID, an answer key naming a choice/prompt/target/step that does not exist, a matching key that does not pair every prompt with a distinct target, an ordering key that is not a permutation of the steps, a choice without a rationale, missing `matchFeedback` or `stepFeedback` for any prompt or step, a missing `whyCorrect` or teaching field, a scoring rule that disagrees with `experience.grading`, an unknown `interaction.kind`, a passage reference with no source link, a link that is not `https://www.biblegateway.com/…`, or bands not descending to 0
+   - **Given** exam content where any of these is wrong: a question ID missing from or out of order with `exam.questionIds`, `exam.questionCount` or `exam.interactionAllocation` not matching `questions`, a `questions[].examId` other than `exam.id`, a duplicate ID, a `questions[].interaction.answerKey` naming a choice, prompt, target, or step that does not exist, a matching key that does not pair every prompt with a distinct target, an ordering key that is not a permutation of the steps, a `questions[].interaction.choices[]` entry without a `rationale`, a missing `questions[].teaching.matchFeedback` or `questions[].teaching.stepFeedback` entry for any prompt or step, a missing `questions[].whyCorrect` or `questions[].teaching` field, a `questions[].interaction.scoring` that disagrees with `exam.experience.grading`, an unknown `questions[].interaction.kind`, a `questions[].passageRefs` entry with no matching `questions[].sources[]` link, a link that is not `https://www.biblegateway.com/…`, or `exam.experience.results.bands` not descending to 0
    - **When** it is loaded
    - **Then** the overview shows an internal content error naming the failing field paths (never their values), and offers no way to start
 
 5. **The question screen never receives a key**
    - **Given** the loaded exam
    - **When** the items for the question screen are produced
-   - **Then** none contains `answerKey`, a rationale, `whyCorrect`, `teaching`, `matchFeedback`, or `stepFeedback`
+   - **Then** none carries `questions[].interaction.answerKey`, any `questions[].interaction.choices[].rationale`, `questions[].whyCorrect`, or `questions[].teaching` (and so no `matchFeedback` or `stepFeedback`)
 
 ### Overview
 
 6. **The overview describes the exam**
    - **Given** the overview
-   - **Then** it shows the domain, level, title, "15 questions", "8–12 min", what the learner will do (`objectives`), the areas covered (`concepts`), the source scope with a link per passage, and a note that the score measures performance on these questions — not spiritual standing, and not a credential
+   - **Then** it shows `exam.domain`, `exam.level`, `exam.title`, "15 questions" (`exam.questionCount`), "8–12 min" (`exam.durationMinutes`), what the learner will do (`exam.objectives`), the areas covered (`exam.concepts`), the source scope with a link per passage (`exam.sourceScope.scriptureLinks`), and a note that the score measures performance on these questions — not spiritual standing, and not a credential
 
 7. **The modes are explained before starting**
    - **Given** the overview
-   - **Then** Exam Mode and Study Mode are offered with their descriptions from `completionBehavior`, Exam Mode is selected, and Start begins an attempt in the selected mode
+   - **Then** Exam Mode and Study Mode are offered with their descriptions from `exam.completionBehavior.examMode` and `exam.completionBehavior.studyMode`, Exam Mode is selected, and Start begins an attempt in the selected mode
 
 8. **An open attempt resumes**
    - **Given** an attempt left before it was finished
@@ -94,21 +98,21 @@ promising something it does not deliver.
 
 9. **One question at a time, in context**
    - **Given** an attempt in either mode
-   - **Then** the screen shows "Question N of 15", the instruction for its kind, the stem, and a link for each `passageRefs` entry directly beneath the stem
+   - **Then** the screen shows "Question N of 15", the instruction for its kind, the stem (`questions[].stem`), and a link for each `questions[].passageRefs` entry (its URL from `questions[].sources[]`) directly beneath the stem
 
 10. **The control matches the kind**
     - **Given** a question
-    - **Then** single choice and true/false show one-answer rows; multiple select shows several-answer rows with the instruction "Select all that apply" and never a count; matching shows each prompt with its own choice of target; ordering shows the steps to number in order
+    - **Then** single choice and true/false show one-answer rows; multiple select shows several-answer rows with the instruction "Select all that apply" and never a count; matching shows each prompt with its own choice of target, and a target already paired shows which prompt it is used for; ordering shows the steps to number in order
 
 11. **Ordering numbers steps in the order tapped**
     - **Given** an ordering question
     - **When** the user taps steps
     - **Then** each tapped step takes the next number; tapping a numbered step removes it and renumbers the rest; "Clear order" removes every number; the response is complete only when every step is numbered
 
-12. **Matching takes one target per prompt**
+12. **Matching uses each target once**
     - **Given** a matching question
     - **When** the user picks a target for a prompt
-    - **Then** that prompt shows it, picking another replaces it, and the response is complete only when every prompt has one
+    - **Then** that prompt shows it, and picking another replaces it; if the target was already paired with another prompt, it moves to this prompt and the other prompt becomes unanswered (never swapped), and VoiceOver announces the move; no target is ever paired with two prompts — a response that would pair one twice is refused by the store, not only prevented by the control; and the response is complete only when every prompt has its own target
 
 13. **Moving between questions keeps responses**
     - **Given** responses to several questions
@@ -125,7 +129,7 @@ promising something it does not deliver.
 15. **No correctness before submitting**
     - **Given** an Exam Mode attempt
     - **When** the user answers any question
-    - **Then** the response saves ("Answer saved") and nothing shows whether it is correct: no verdict, rationale, `whyCorrect`, or teaching
+    - **Then** the response saves ("Answer saved") and nothing shows whether it is correct: no verdict, rationale, `questions[].whyCorrect`, or teaching
 
 16. **Progress counts answered questions**
     - **Given** an Exam Mode attempt
@@ -159,23 +163,23 @@ promising something it does not deliver.
 22. **Checking reveals the answer**
     - **Given** a complete Study Mode response
     - **When** the user taps Check answer
-    - **Then** the response locks, and the screen shows ✓ "Correct" or ✕ "Incorrect", `whyCorrect`, and "Understand why" (label from `teaching.actionLabel`)
+    - **Then** the response locks, and the screen shows ✓ "Correct" or ✕ "Incorrect", `questions[].whyCorrect`, and "Understand why" (label from `exam.experience.teaching.actionLabel`)
 
 23. **Choice feedback**
     - **Given** a checked single choice or true/false question
-    - **Then** the correct choice is marked "Correct answer", a wrong pick is marked "Your answer · Incorrect", and each marked choice shows its `rationale`
+    - **Then** the correct choice is marked "Correct answer", a wrong pick is marked "Your answer · Incorrect", and each marked choice shows its `interaction.choices[].rationale`
 
 24. **Multiple select feedback**
     - **Given** a checked multiple select question
-    - **Then** every keyed choice is shown as correct, each wrongly selected choice and each missed correct choice shows its `rationale`, and missed choices are marked "Missed"
+    - **Then** every keyed choice is shown as correct, each wrongly selected choice and each missed correct choice shows its `interaction.choices[].rationale`, and missed choices are marked "Missed"
 
 25. **Matching feedback**
     - **Given** a checked matching question
-    - **Then** each prompt shows its correct target, whether the user's pairing was right, and its `teaching.matchFeedback` line
+    - **Then** each prompt shows its correct target, whether the user's pairing was right, and its `questions[].teaching.matchFeedback` line
 
 26. **Ordering feedback**
     - **Given** a checked ordering question
-    - **Then** the correct sequence is shown with each step's `teaching.stepFeedback` line, and each of the user's positions is marked right or wrong
+    - **Then** the correct sequence is shown with each step's `questions[].teaching.stepFeedback` line, and each of the user's positions is marked right or wrong
 
 27. **A Study attempt ends with a recap**
     - **Given** every question checked
@@ -187,7 +191,7 @@ promising something it does not deliver.
 28. **The reading sheet teaches**
     - **Given** a question whose answer has been revealed
     - **When** the user opens Understand why
-    - **Then** it shows the teaching title, the concept explanation, biblical grounding with a link per passage, the important distinction, and `rememberThis` — and no passage text
+    - **Then** it shows `questions[].teaching.title`, `.concept`, `.biblicalGrounding` with a link per passage (from `questions[].sources[]`), `.importantDistinction`, and `.rememberThis` — and no passage text
 
 29. **The reading sheet stays locked until reveal**
     - **Given** an Exam Mode question before submission, or a Study Mode question not yet checked
@@ -198,19 +202,19 @@ promising something it does not deliver.
 
 30. **The score**
     - **Given** a submitted Exam Mode attempt
-    - **Then** results show "N of 15", the percentage rounded to a whole number, and the band from `experience.results.bands` (at 90, 80, 70, and 0)
+    - **Then** results show "N of 15", the percentage rounded to a whole number, and the band from `exam.experience.results.bands` (at 90, 80, 70, and 0)
 
 31. **Every question reviewed**
     - **Given** results
-    - **Then** each question shows the user's answer (or "No answer"), the correct answer, ✓/✕ with words, `whyCorrect`, and Understand why
+    - **Then** each question shows the user's answer (or "No answer"), the correct answer, ✓/✕ with words, `questions[].whyCorrect`, and Understand why
 
 32. **Concept labels follow the evidence rule**
     - **Given** a first Exam Mode attempt
-    - **Then** each primary concept shows correct over total, labelled Strength (3+ observations, ≥ 80%), Needs review (3+, < 80%), or Not enough evidence (fewer than 3)
+    - **Then** each primary concept (`questions[].primaryConceptId`) shows correct over total, labelled Strength (at least `exam.experience.results.conceptLabelMinimumIndependentObservations` — 3 — observations, ≥ 80%), Needs review (at least 3, < 80%), or Not enough evidence (fewer than 3). The 80% cut is the owner's decision of 2026-09-28; the JSON does not carry it
 
 33. **Missed concepts go to review**
     - **Given** any attempt with a missed question
-    - **Then** its primary concept is listed under "For review" on the results and on the overview
+    - **Then** its `questions[].primaryConceptId` is listed under "For review" on the results and on the overview
 
 ### Retakes
 
@@ -226,7 +230,7 @@ promising something it does not deliver.
 
 36. **An attempt is a snapshot**
     - **Given** a submitted attempt
-    - **Then** it keeps the exam ID and version, each item's ID and version, the mode, whether it is Practice, every response with its time, start and submit times, and the graded result — and a later content version does not change it
+    - **Then** it keeps `exam.id` and `exam.version`, each item's `questions[].id` and `questions[].version`, the mode, whether it is Practice, every response with its time, start and submit times, and the graded result — and a later content version does not change it
 
 ### Links
 
