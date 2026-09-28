@@ -7,6 +7,9 @@ import { AppStoreProvider, INITIAL_STATE, appReducer, type AppState } from "@/co
 import { PlanOverviewScreen } from "@/features/plans/screens/PlanOverviewScreen";
 
 jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
+// Under Jest a bundled image resolves to no URI; the ready plan's sermon needs
+// one, as it has on a device, for the hero to show its still.
+jest.mock("../../../../assets/images/mock/still-praying.jpg", () => ({ uri: "still-praying.jpg" }));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),

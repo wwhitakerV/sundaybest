@@ -8,12 +8,16 @@
  * | Plan                         | Status     | Days | Shows                                  |
  * | ---------------------------- | ---------- | ---- | -------------------------------------- |
  * | Today I Choose to Be a Blessing | active  | 6    | day 1 done (its quiz taken, one wrong), day 2 under way; a quiz every day |
- * | Give Thanks in All Things    | completed  | 7    | every day done, a quiz each: day 6's half-way, day 7's perfect |
- * | Faith Through the Storm      | ready      | 3    | not started, no Quick Check            |
- * | Come to Me and Rest          | ready      | 1    | saved to the library, quiz untaken     |
+ * | Break the Cycle of Negative Thinking | completed | 7 | every day done, a quiz each: day 6's half-way, day 7's perfect |
+ * | Still Praying                | ready      | 3    | not started, no Quick Check            |
+ * | Overcome Temptation          | ready      | 1    | saved to the library, quiz untaken     |
  * | God Won't Leave You (sample) | ready      | 5    | the sample anyone can try              |
- * | Salt and Light               | draft      | —    | newly created in New Plan              |
+ * | The Church Must Not Partner with the World | draft | — | newly created in New Plan         |
  * | Who Is My Neighbor?          | generating | —    | being built (`MOCK_DATA.generation`)   |
+ *
+ * Every plan but the sample and the one being built shows a thumbnail bundled
+ * from `assets/images/mock/`, and is titled after its file's name. Their
+ * sermons keep their own titles and words: only the plans' titles changed.
  *
  * The active and sample plans' passages are also there in the King James
  * Version (`SCRIPTURE_VARIANTS`), for a user who picks it.

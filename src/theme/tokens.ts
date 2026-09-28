@@ -132,8 +132,13 @@ type ColorTokens = {
   /** Hairline rules between list rows. Lighter than `border`. */
   divider: string;
   accent: string;
-  /** Text and icons set on `accent` — the step you're on, on Plan Detail's day. */
+  /**
+   * Text and icons set on `accent` — the step you're on, on Plan Detail's day,
+   * and the filter pill picked on Plans.
+   */
   onAccent: string;
+  /** A filter pill not picked (Plans' All/In progress/Done/Saved): a soft off-white. */
+  pillBackground: string;
   /**
    * The quiet line a sequence runs along — joining the steps of Plan
    * Detail's day — and the ring of a step still to come on it.
@@ -252,6 +257,7 @@ const lightColors: ColorTokens = {
   divider: palette.greyLightest,
   accent: palette.accent,
   onAccent: palette.white,
+  pillBackground: palette.greyLightest,
   sequenceLine: palette.greyLight,
   controlPrimary: palette.black,
   onControlPrimary: palette.white,
@@ -319,6 +325,7 @@ const darkColors: ColorTokens = {
   divider: palette.slate700,
   accent: palette.accent,
   onAccent: palette.white,
+  pillBackground: palette.slate700,
   sequenceLine: palette.ink600,
   controlPrimary: palette.white,
   onControlPrimary: palette.black,

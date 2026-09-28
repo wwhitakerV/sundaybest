@@ -20,7 +20,7 @@ export const PLAN_GRATITUDE: Plan = {
   updatedAt: "2026-09-05T07:05:00.000Z",
   userId: MOCK_USER.id,
   sermonId: SERMON_GRATITUDE.id,
-  title: "Give Thanks in All Things",
+  title: "Break the Cycle of Negative Thinking",
   status: "completed",
   lengthDays: 7,
   quickCheckEnabled: true,

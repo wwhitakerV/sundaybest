@@ -39,7 +39,7 @@ describe("PlanReadyScreen", () => {
     render(<PlanReadyScreen />);
 
     expect(screen.getByText("Your plan is ready")).toBeVisible();
-    expect(screen.getByText("3 days from Faith Through the Storm")).toBeVisible();
+    expect(screen.getByText("3 days from Still Praying")).toBeVisible();
   });
 
   it("sets the morning reminder to the time picked", () => {

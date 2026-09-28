@@ -1,7 +1,48 @@
 import { MOCK_DATA } from "@/core/mock-data";
 
+// Under Jest every image is the same stub; these name their file instead, so a
+// test can tell which picture a sermon shows.
+jest.mock("../../../assets/images/mock/sermon-today-i-choose-to-be-a-blessing.jpg", () => ({
+  uri: "sermon-today-i-choose-to-be-a-blessing.jpg",
+}));
+jest.mock("../../../assets/images/mock/break-the-cycle-of-negative-thinking.jpg", () => ({
+  uri: "break-the-cycle-of-negative-thinking.jpg",
+}));
+jest.mock("../../../assets/images/mock/still-praying.jpg", () => ({ uri: "still-praying.jpg" }));
+jest.mock("../../../assets/images/mock/overcome-temptation.jpg", () => ({
+  uri: "overcome-temptation.jpg",
+}));
+jest.mock("../../../assets/images/mock/the-church-must-not-partner-with-the-world.jpg", () => ({
+  uri: "the-church-must-not-partner-with-the-world.jpg",
+}));
+
 const data = MOCK_DATA;
 const all = <T>(table: Record<string, T>) => Object.values(table);
+
+/** Each bundled thumbnail, the plan whose sermon shows it, and that plan's title — its file's name. */
+const TITLED_AFTER_THUMBNAIL = [
+  {
+    planId: "plan-choose-whom-you-will-serve",
+    file: "sermon-today-i-choose-to-be-a-blessing.jpg",
+    title: "Today I Choose to Be a Blessing",
+  },
+  {
+    planId: "plan-give-thanks",
+    file: "break-the-cycle-of-negative-thinking.jpg",
+    title: "Break the Cycle of Negative Thinking",
+  },
+  { planId: "plan-faith-through-the-storm", file: "still-praying.jpg", title: "Still Praying" },
+  {
+    planId: "plan-come-to-me-and-rest",
+    file: "overcome-temptation.jpg",
+    title: "Overcome Temptation",
+  },
+  {
+    planId: "plan-salt-and-light",
+    file: "the-church-must-not-partner-with-the-world.jpg",
+    title: "The Church Must Not Partner with the World",
+  },
+];
 
 describe("MOCK_DATA", () => {
   it("files every record under its own ID", () => {
@@ -106,6 +147,26 @@ describe("MOCK_DATA", () => {
     for (const item of all(data.library)) {
       expect(tableFor[item.kind][item.itemId]).toBeDefined();
     }
+  });
+
+  it.each(TITLED_AFTER_THUMBNAIL)(
+    "shows $file on the plan titled after it",
+    ({ planId, file, title }) => {
+      const plan = all(data.plans).find(({ id }) => id === planId);
+
+      expect(plan?.title).toBe(title);
+      expect(plan && data.sermons[plan.sermonId]?.thumbnailUrl).toBe(file);
+    },
+  );
+
+  it("bundles a thumbnail for every plan the Plans tab lists", () => {
+    const listed = all(data.plans).filter(
+      (plan) => !plan.isSample && ["ready", "active", "completed"].includes(plan.status),
+    );
+
+    expect(TITLED_AFTER_THUMBNAIL.map(({ planId }) => planId)).toEqual(
+      expect.arrayContaining(listed.map((plan) => plan.id)),
+    );
   });
 
   it("is building a plan that exists, from its sermon", () => {

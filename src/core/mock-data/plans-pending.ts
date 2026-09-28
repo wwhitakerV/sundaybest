@@ -15,7 +15,7 @@ export const PLAN_SALT: Plan = {
   updatedAt: "2026-09-23T12:05:40.000Z",
   userId: MOCK_USER.id,
   sermonId: SERMON_SALT.id,
-  title: "Salt and Light",
+  title: "The Church Must Not Partner with the World",
   status: "draft",
   lengthDays: 5,
   quickCheckEnabled: true,

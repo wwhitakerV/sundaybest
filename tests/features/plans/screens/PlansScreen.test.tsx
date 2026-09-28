@@ -5,7 +5,6 @@ import type * as ExpoRouter from "expo-router";
 import { Pressable } from "react-native";
 
 import { useStoreActions } from "@/core/store";
-import { planOverviewHref, studyHref } from "@/features/plans/logic/routes";
 import { PlansScreen } from "@/features/plans/screens/PlansScreen";
 
 jest.mock("expo-router", () => ({
@@ -59,24 +58,41 @@ describe("PlansScreen", () => {
     expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings");
   });
 
-  it("shows the filter tabs", () => {
+  it("shows the filters as pills", () => {
     render(<PlansScreen />);
 
-    expect(screen.getByTestId("plans-filter-tabs")).toBeVisible();
+    expect(screen.getByTestId("plans-filter-pills")).toBeVisible();
     for (const label of ["All", "In progress", "Done", "Saved"]) {
-      expect(screen.getByTestId(`plans-filter-tabs-option-${label}`)).toBeVisible();
+      expect(screen.getByTestId(`plans-filter-pills-option-${label}`)).toBeVisible();
     }
   });
 
   it("counts each filter's plans", () => {
     render(<PlansScreen />);
 
-    expect(screen.getByTestId("plans-filter-tabs-option-All")).toHaveTextContent("All4");
-    expect(screen.getByTestId("plans-filter-tabs-option-In progress")).toHaveTextContent(
+    expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveTextContent("All4");
+    expect(screen.getByTestId("plans-filter-pills-option-In progress")).toHaveTextContent(
       "In progress1",
     );
-    expect(screen.getByTestId("plans-filter-tabs-option-Done")).toHaveTextContent("Done1");
-    expect(screen.getByTestId("plans-filter-tabs-option-Saved")).toHaveTextContent("Saved2");
+    expect(screen.getByTestId("plans-filter-pills-option-Done")).toHaveTextContent("Done1");
+    expect(screen.getByTestId("plans-filter-pills-option-Saved")).toHaveTextContent("Saved2");
+  });
+
+  it("fills the filter picked in the brand red", () => {
+    render(<PlansScreen />);
+
+    expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveStyle({
+      backgroundColor: "#D62626",
+    });
+
+    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
+
+    expect(screen.getByTestId("plans-filter-pills-option-Done")).toHaveStyle({
+      backgroundColor: "#D62626",
+    });
+    expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveStyle({
+      backgroundColor: "#F7F1F1",
+    });
   });
 
   it("lists every plan under All", () => {
@@ -92,18 +108,18 @@ describe("PlansScreen", () => {
   it("shows only the plans a filter holds", () => {
     render(<PlansScreen />);
 
-    fireEvent.press(screen.getByTestId("plans-filter-tabs-option-Done"));
+    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
     expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
       `plans-item-${GRATITUDE}`,
     ]);
 
-    fireEvent.press(screen.getByTestId("plans-filter-tabs-option-Saved"));
+    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
     expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
       `plans-item-${REST}`,
       `plans-item-${GRATITUDE}`,
     ]);
 
-    fireEvent.press(screen.getByTestId("plans-filter-tabs-option-In progress"));
+    fireEvent.press(screen.getByTestId("plans-filter-pills-option-In progress"));
     expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
       `plans-item-${ACTIVE}`,
     ]);
@@ -116,7 +132,14 @@ describe("PlansScreen", () => {
     expect(card).toHaveTextContent(/In progress/);
     expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
     expect(card).toHaveTextContent(/Day 2 of 6/);
-    expect(card).toHaveTextContent(/Continue/);
+  });
+
+  it("shows a plan not started with how long it runs", () => {
+    render(<PlansScreen />);
+
+    const card = screen.getByTestId(`plans-item-${STORM}`);
+    expect(card).toHaveTextContent(/Still Praying/);
+    expect(card).toHaveTextContent(/Not started · 3 days/);
   });
 
   it("shows a finished plan as done, with when it finished", () => {
@@ -149,32 +172,28 @@ describe("PlansScreen", () => {
     }
   });
 
-  it("shapes each plan 3:4", () => {
+  it("shows each plan's thumbnail at 16:9", () => {
     render(<PlansScreen />);
 
-    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveStyle({ aspectRatio: 3 / 4 });
+    for (const id of [ACTIVE, GRATITUDE, STORM, REST]) {
+      expect(screen.getByTestId(`plans-thumbnail-${id}`)).toHaveStyle({
+        aspectRatio: 16 / 9,
+      });
+    }
   });
 
-  it("sets each plan in its sermon's colours", () => {
+  it("gives a plan no button of its own: the plan itself opens", () => {
     render(<PlansScreen />);
 
-    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveStyle({ backgroundColor: "#3D403F" });
+    expect(screen.queryByTestId(`plans-action-${ACTIVE}`)).toBeNull();
+    expect(screen.queryByText("Continue")).toBeNull();
   });
 
-  it("continues a plan under way from its card's button, on the day it's on", () => {
+  it("separates the plans with a thin line, with none after the last", () => {
     render(<PlansScreen />);
 
-    fireEvent.press(screen.getByTestId(`plans-action-${ACTIVE}`));
-
-    expect(mockPush).toHaveBeenCalledWith(studyHref(ACTIVE, 2));
-  });
-
-  it("opens a finished plan to review from its card's button", () => {
-    render(<PlansScreen />);
-
-    fireEvent.press(screen.getByTestId(`plans-action-${GRATITUDE}`));
-
-    expect(mockPush).toHaveBeenCalledWith(planOverviewHref(GRATITUDE));
+    const plans = screen.getAllByTestId(/^plans-item-/);
+    expect(screen.getAllByTestId("plans-divider")).toHaveLength(plans.length - 1);
   });
 
   it("shows a plan's progress moving as soon as a day of it is finished", () => {

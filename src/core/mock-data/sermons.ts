@@ -2,9 +2,15 @@ import { Image } from "react-native";
 
 import type { SermonSource } from "@/types/domain";
 import BLESSING_THUMBNAIL from "../../../assets/images/mock/sermon-today-i-choose-to-be-a-blessing.jpg";
+import NEGATIVE_THINKING_THUMBNAIL from "../../../assets/images/mock/break-the-cycle-of-negative-thinking.jpg";
+import STILL_PRAYING_THUMBNAIL from "../../../assets/images/mock/still-praying.jpg";
+import TEMPTATION_THUMBNAIL from "../../../assets/images/mock/overcome-temptation.jpg";
+import CHURCH_AND_WORLD_THUMBNAIL from "../../../assets/images/mock/the-church-must-not-partner-with-the-world.jpg";
 
 // Most churches are invented for the mocks; the VOUS Church sermon is the
 // active plan's, with its real thumbnail bundled until the backend sends it.
+// The other built plans' sermons borrow a real sermon's thumbnail too, and
+// each plan is titled after its thumbnail's file.
 
 export const SERMON_CHOOSE: SermonSource = {
   id: "sermon-choose-whom-you-will-serve",
@@ -55,7 +61,7 @@ export const SERMON_GRATITUDE: SermonSource = {
   platform: "youtube",
   title: "Give Thanks in All Things",
   church: "Grace Street Fellowship",
-  thumbnailUrl: "https://i.ytimg.com/vi/Gt7hanks22/hqdefault.jpg",
+  thumbnailUrl: Image.resolveAssetSource(NEGATIVE_THINKING_THUMBNAIL).uri,
   thumbnailColors: [],
   durationSeconds: 2_406,
   publishedOn: "2026-08-23",
@@ -79,7 +85,7 @@ export const SERMON_STORM: SermonSource = {
   platform: "youtube",
   title: "Faith Through the Storm",
   church: "Harbor Light Church",
-  thumbnailUrl: "https://i.ytimg.com/vi/St0rmF4ith/hqdefault.jpg",
+  thumbnailUrl: Image.resolveAssetSource(STILL_PRAYING_THUMBNAIL).uri,
   thumbnailColors: [],
   durationSeconds: 2_152,
   publishedOn: "2026-09-13",
@@ -105,7 +111,7 @@ export const SERMON_REST: SermonSource = {
   platform: "vimeo",
   title: "Come to Me and Rest",
   church: "Northside Community Church",
-  thumbnailUrl: null,
+  thumbnailUrl: Image.resolveAssetSource(TEMPTATION_THUMBNAIL).uri,
   thumbnailColors: [],
   durationSeconds: 1_845,
   publishedOn: "2026-09-06",
@@ -128,7 +134,7 @@ export const SERMON_SALT: SermonSource = {
   platform: "youtube",
   title: "Salt and Light",
   church: "Riverside Chapel",
-  thumbnailUrl: "https://i.ytimg.com/vi/S4ltL1ght9/hqdefault.jpg",
+  thumbnailUrl: Image.resolveAssetSource(CHURCH_AND_WORLD_THUMBNAIL).uri,
   thumbnailColors: [],
   durationSeconds: 2_590,
   publishedOn: "2026-09-20",

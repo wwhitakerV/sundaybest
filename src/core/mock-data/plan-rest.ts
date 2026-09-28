@@ -18,7 +18,7 @@ export const PLAN_REST: Plan = {
   updatedAt: BUILT_AT,
   userId: MOCK_USER.id,
   sermonId: SERMON_REST.id,
-  title: "Come to Me and Rest",
+  title: "Overcome Temptation",
   status: "ready",
   lengthDays: 1,
   quickCheckEnabled: true,

@@ -17,7 +17,7 @@ export const PLAN_STORM: Plan = {
   updatedAt: BUILT_AT,
   userId: MOCK_USER.id,
   sermonId: SERMON_STORM.id,
-  title: "Faith Through the Storm",
+  title: "Still Praying",
   status: "ready",
   lengthDays: 3,
   quickCheckEnabled: false,
