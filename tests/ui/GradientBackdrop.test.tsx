@@ -1,4 +1,4 @@
-import { render, screen } from "@tests/helpers/render";
+import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { GradientBackdrop } from "@/ui/GradientBackdrop";
 
@@ -20,6 +20,17 @@ describe("GradientBackdrop", () => {
     });
   });
 
+  it("fills its box, however that box's size changes — never redrawing as it animates", () => {
+    render(<GradientBackdrop testID="a-backdrop" stops={STOPS} />);
+
+    fireEvent(screen.getByTestId("a-backdrop"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 170, height: 250 } },
+    });
+
+    expect(screen.getByTestId("a-backdrop-drawing")).toHaveProp("width", "100%");
+    expect(screen.getByTestId("a-backdrop-drawing")).toHaveProp("height", "100%");
+  });
+
   it("never takes touches", () => {
     render(<GradientBackdrop testID="a-backdrop" stops={STOPS} />);
 
@@ -36,6 +47,26 @@ describe("GradientBackdrop", () => {
     render(<GradientBackdrop testID="a-backdrop" stops={STOPS} reveal={{ from: 240, to: 280 }} />);
 
     expect(screen.getByTestId("a-backdrop-fill").props.mask).toMatch(/^gradient-backdrop-mask-/);
+  });
+
+  it("reveals down from its line by default", () => {
+    render(<GradientBackdrop testID="a-backdrop" stops={STOPS} reveal={{ from: 240, to: 280 }} />);
+
+    const fade = screen.UNSAFE_getByProps({ gradientUnits: "userSpaceOnUse" });
+    expect(fade.props).toMatchObject({ x1: "0", y1: 240, x2: "0", y2: 280 });
+  });
+
+  it("can reveal across instead: clear at one line, solid by the other", () => {
+    render(
+      <GradientBackdrop
+        testID="a-backdrop"
+        stops={STOPS}
+        reveal={{ from: 260, to: 170, axis: "x" }}
+      />,
+    );
+
+    const fade = screen.UNSAFE_getByProps({ gradientUnits: "userSpaceOnUse" });
+    expect(fade.props).toMatchObject({ x1: 260, y1: "0", x2: 170, y2: "0" });
   });
 
   it("has no image over it unless given one", () => {

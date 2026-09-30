@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import { useIsFocused, useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 // Not re-exported from the top-level `expo-router` module, but this is the
@@ -11,6 +11,7 @@ import { Plus } from "lucide-react-native";
 
 import { useTheme } from "@/theme";
 import { BottomFade } from "../BottomFade";
+import { FloatingButton } from "../FloatingButton";
 import {
   FLOATING_NAV_BAR,
   getFloatingNavBarBottom,
@@ -40,8 +41,6 @@ const TAB_HEIGHT = CAPSULE_HEIGHT - CAPSULE_V_PADDING * 2;
 const TAB_PILL_RADIUS = CAPSULE_RADIUS - CAPSULE_H_PADDING;
 const TAB_ICON_SIZE = 23;
 const CAPSULE_BORDER_WIDTH = 1;
-/** Heavier than the capsule's hairline, so the screen's button carries more weight. */
-const ACCESSORY_BORDER_WIDTH = 1;
 // The icon sits centred in its tab, so this is how far its top edge is
 // below the capsule's outer top edge — what the burst must climb to clear.
 const ICON_TOP_TO_BAR_TOP =
@@ -299,31 +298,12 @@ export function TabBar({ state, descriptors, navigation, insets, onPress }: TabB
           pointerEvents={accessory ? "auto" : "none"}
           style={[styles.accessorySlot, slotStyle, buttonStyle]}
         >
-          <Pressable
+          <FloatingButton
             testID={lastAccessory.testID}
-            accessibilityRole="button"
-            accessibilityLabel={lastAccessory.label}
+            label={lastAccessory.label}
+            {...(lastAccessory.icon && { icon: lastAccessory.icon })}
             onPress={lastAccessory.onPress}
-            style={[
-              styles.accessory,
-              // A heavier edge than the capsule's: the screen's own call to action, not another tab.
-              {
-                backgroundColor: theme.colors.background,
-                borderColor: theme.colors.borderStrong,
-              },
-            ]}
-          >
-            {lastAccessory.icon && (
-              <lastAccessory.icon
-                size={20}
-                color={theme.colors.chromeIcon}
-                strokeWidth={theme.icon.strokeWidth}
-              />
-            )}
-            <Text numberOfLines={1} style={[theme.typography.button, { color: theme.colors.text }]}>
-              {lastAccessory.label}
-            </Text>
-          </Pressable>
+          />
         </Animated.View>
       )}
 
@@ -401,16 +381,6 @@ const styles = StyleSheet.create({
   accessorySlot: {
     position: "absolute",
     height: CAPSULE_HEIGHT,
-  },
-  accessory: {
-    flex: 1,
-    borderRadius: CAPSULE_RADIUS,
-    borderWidth: ACCESSORY_BORDER_WIDTH,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 20,
   },
   // Pinned, out of the row's flow, so nothing the capsule does moves it —
   // only its own shrink beside the raised button.

@@ -7,9 +7,12 @@ import { DayStrip } from "@/ui/DayStrip";
 import { useTheme } from "@/theme";
 import { SAMPLE_PLAN_ID, planOverviewHref } from "@/features/plans";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
+import { tapFeedback } from "@/core/haptics/haptics";
+import { getUserPlans, useAppSelector } from "@/core/store";
 import { IntroStory } from "../components/IntroStory";
 import { WelcomeSteps } from "../components/WelcomeSteps";
 import { useVisit } from "../hooks/use-visit";
+import { getStartRoutes } from "../logic/start";
 
 export function WelcomeScreen() {
   const theme = useTheme();
@@ -21,6 +24,7 @@ export function WelcomeScreen() {
   // visit: once covered it's unmounted (its timers and animations with it),
   // and it mounts fresh once the screen has come back and settled.
   const visit = useVisit();
+  const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
 
   return (
     <Screen testID="welcome-screen">
@@ -84,7 +88,10 @@ export function WelcomeScreen() {
           <Button
             testID="welcome-get-a-plan-now-button"
             label="Get a plan now"
-            onPress={() => router.push("/(tabs)/home")}
+            onPress={() => {
+              tapFeedback();
+              for (const route of getStartRoutes(hasPlans)) router.push(route);
+            }}
           />
           <View style={styles.secondaryAction}>
             <Button

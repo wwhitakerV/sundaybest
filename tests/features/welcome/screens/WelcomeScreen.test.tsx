@@ -3,7 +3,11 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
+import { tapFeedback } from "@/core/haptics/haptics";
 import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
+
+jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -16,6 +20,7 @@ const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 beforeEach(() => {
   // Welcome listens for its own transitions to restart the intro on each visit.
   jest.mocked(useNavigation).mockReturnValue({ addListener: () => () => undefined });
+  mockPush.mockClear();
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
@@ -124,12 +129,31 @@ describe("WelcomeScreen", () => {
     expect(screen.getByText("Free. No account needed.")).toBeVisible();
   });
 
-  it("navigates to the Home tab when Get a plan now is pressed", () => {
+  it("taps, and goes to the Home tab, when Get a plan now is pressed by someone with plans", () => {
     render(<WelcomeScreen />);
 
     fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
 
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/home");
+    expect(tapFeedback).toHaveBeenCalledTimes(1);
+    expect(mockPush.mock.calls).toEqual([["/(tabs)/home"]]);
+  });
+
+  it("goes Home and straight on to paste a sermon for someone with no plans", () => {
+    const noPlans: AppState = {
+      ...INITIAL_STATE,
+      plans: Object.fromEntries(
+        Object.entries(INITIAL_STATE.plans).filter(([, plan]) => plan.isSample),
+      ),
+    };
+    render(
+      <AppStoreProvider initialState={noPlans}>
+        <WelcomeScreen />
+      </AppStoreProvider>,
+    );
+
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+    expect(mockPush.mock.calls).toEqual([["/(tabs)/home"], ["/(plan-creation)/paste-sermon"]]);
   });
 
   it("navigates to Plan Overview with the sample plan when See a sample plan is pressed", () => {

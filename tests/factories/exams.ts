@@ -110,6 +110,10 @@ export type TheologyExamContent = {
       };
       retakes: Record<string, unknown>;
       accessibility: Record<string, unknown>;
+      overview?: {
+        question: string;
+        explore: { title: string; passage: string; icon: string }[];
+      };
     };
   };
   questions: TheologyExamQuestion[];

@@ -36,9 +36,9 @@ export function formatConceptLabel(label: ExamConceptLabel): string {
   }
 }
 
-/** The overview's kicker: "Scripture & Reading · Foundations". */
+/** An exam's kicker: "Scripture & Reading / Foundations". */
 export function formatDomainAndLevel(domain: string, level: string): string {
-  return `${domain} · ${level.charAt(0).toUpperCase()}${level.slice(1)}`;
+  return `${domain} / ${level.charAt(0).toUpperCase()}${level.slice(1)}`;
 }
 
 /** "15 questions", "1 question". */
@@ -50,4 +50,14 @@ export function formatQuestionCount(count: number): string {
 export function formatModeLabel(mode: ExamMode, practice: boolean): string {
   const name = mode === "study" ? "Study Mode" : "Exam Mode";
   return practice ? `${name} · Practice` : name;
+}
+
+/** "3 passages", "1 passage". */
+export function formatPassageCount(count: number): string {
+  return `${count} ${count === 1 ? "passage" : "passages"}`;
+}
+
+/** Passages on one line: "Luke 24:25-49 • 2 Timothy 3:14-17 • Acts 17:10-12". */
+export function formatPassageList(references: readonly string[]): string {
+  return references.join(" • ");
 }

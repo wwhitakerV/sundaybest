@@ -1,6 +1,7 @@
 import { Text } from "react-native";
 
 import { useTheme } from "@/theme";
+import { StudyDriftIn } from "./StudyDriftIn";
 
 export type StudyKickerProps = {
   dayNumber: number;
@@ -13,9 +14,11 @@ export function StudyKicker({ dayNumber, label }: StudyKickerProps) {
   const theme = useTheme();
 
   return (
-    <Text style={[theme.typography.metaLabel, { color: theme.colors.text }]}>
-      {`Day ${dayNumber}  `}
-      <Text style={{ color: theme.colors.textMuted }}>{label}</Text>
-    </Text>
+    <StudyDriftIn order={0}>
+      <Text style={[theme.typography.metaLabel, { color: theme.colors.text }]}>
+        {`Day ${dayNumber}  `}
+        <Text style={{ color: theme.colors.textMuted }}>{label}</Text>
+      </Text>
+    </StudyDriftIn>
   );
 }

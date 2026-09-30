@@ -5,6 +5,7 @@ import { useTheme } from "@/theme";
 import { SermonClipCard } from "./SermonClipCard";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
+import { StudyDriftIn } from "./StudyDriftIn";
 
 export type ReadStepProps = {
   dayNumber: number;
@@ -20,7 +21,11 @@ export function ReadStep({ dayNumber, reading, followStyle }: ReadStepProps) {
   return (
     <View testID="study-read-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label="Read" />
-      <Text style={[theme.typography.display, { color: theme.colors.text }]}>{reading.title}</Text>
+      <StudyDriftIn order={1}>
+        <Text style={[theme.typography.display, { color: theme.colors.text }]}>
+          {reading.title}
+        </Text>
+      </StudyDriftIn>
       <StudyFollow style={followStyle}>
         {reading.paragraphs.map((paragraph) => (
           <Text

@@ -44,20 +44,6 @@ describe("PlansScreen", () => {
     expect(screen.getByText("Plans")).toBeVisible();
   });
 
-  it("shows the account icon", () => {
-    render(<PlansScreen />);
-
-    expect(screen.getByTestId("plans-account-button")).toBeVisible();
-  });
-
-  it("navigates to Settings when the account icon is pressed", () => {
-    render(<PlansScreen />);
-
-    fireEvent.press(screen.getByTestId("plans-account-button"));
-
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings");
-  });
-
   it("shows the filters as pills", () => {
     render(<PlansScreen />);
 

@@ -14,3 +14,17 @@ export function getTheologyExam(): ParsedExam {
   theologyExam ??= parseExamContent(theologyExamContent);
   return theologyExam;
 }
+
+/** Every exam bundled with the app, parsed — each failing closed on its own. */
+export function listBundledExams(): ParsedExam[] {
+  return [getTheologyExam()];
+}
+
+/** A bundled exam by its ID, parsed, or null when there's none by that ID. */
+export function getBundledExam(examId: string): ParsedExam | null {
+  return (
+    listBundledExams().find((parsed) =>
+      parsed.ok ? parsed.exam.summary.id === examId : parsed.examId === examId,
+    ) ?? null
+  );
+}

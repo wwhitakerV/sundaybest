@@ -79,7 +79,9 @@ export function FilterPills<Option extends FilterTabOption>({
 }
 
 const styles = StyleSheet.create({
-  // A horizontal ScrollView grows to fill a column by default; this row keeps to its pills' height.
-  row: { flexGrow: 0 },
+  // A horizontal ScrollView grows, and shrinks, with the column it's in by
+  // default; this row keeps to its pills' height — never squeezed by a list
+  // below it, which cut the pills off at their foot.
+  row: { flexGrow: 0, flexShrink: 0 },
   pill: { height: HEIGHT, flexDirection: "row", alignItems: "center" },
 });

@@ -10,12 +10,15 @@ export type TitleHeaderProps = {
   actions?: ReactNode;
 };
 
+/** A header button's height: the row keeps it, with or without one, so the page below never shifts. */
+const MIN_HEIGHT = 44;
+
 /** A tab root's header row: large left-aligned title, actions on the right. */
 export function TitleHeader({ title, actions }: TitleHeaderProps) {
   const theme = useTheme();
 
   return (
-    <View style={styles.row}>
+    <View testID="title-header" style={styles.row}>
       <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>{title}</Text>
       {actions}
     </View>
@@ -23,5 +26,10 @@ export function TitleHeader({ title, actions }: TitleHeaderProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  row: {
+    minHeight: MIN_HEIGHT,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
 });

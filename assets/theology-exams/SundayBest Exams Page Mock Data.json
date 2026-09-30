@@ -1,0 +1,117 @@
+{
+  "kind": "ui_fixture",
+  "purpose": "Exams landing and overview screen development only; never treat scenario values as real user progress.",
+  "contentSource": "SundayBest THEO-01-01 v2 2026-09-28.json",
+  "availableExams": [
+    {
+      "examId": "THEO-01-01",
+      "examVersion": 6,
+      "title": "The Scriptures Received",
+      "domain": "Scripture & Reading",
+      "level": "foundations",
+      "questionCount": 15,
+      "durationMinutes": [
+        8,
+        12
+      ],
+      "overview": "Identify the Bible’s major divisions and what New Testament authors claim about Scripture. This exam assesses the listed texts in context and distinguishes textual claims from later interpretations.",
+      "objectives": [
+        "identify major divisions",
+        "locate a teaching claim",
+        "distinguish text from interpretation",
+        "support a bounded conclusion using the listed source texts"
+      ],
+      "concepts": [
+        "revelation",
+        "inspiration",
+        "authority",
+        "scripture and teaching",
+        "Scripture in apostolic teaching"
+      ],
+      "passages": [
+        "Luke 24:25-49",
+        "2 Timothy 3:14-17",
+        "Acts 17:10-12"
+      ],
+      "availability": "available"
+    }
+  ],
+  "levels": [
+    "foundations",
+    "intermediate",
+    "advanced",
+    "scholar"
+  ],
+  "scenarios": [
+    {
+      "id": "first_visit",
+      "label": "First visit",
+      "examId": "THEO-01-01",
+      "state": "not_started",
+      "attempt": null,
+      "primaryAction": "View exam",
+      "overviewActions": [
+        "Begin exam",
+        "Begin study"
+      ]
+    },
+    {
+      "id": "unfinished_exam",
+      "label": "Unfinished exam",
+      "examId": "THEO-01-01",
+      "state": "in_progress",
+      "attempt": {
+        "id": "fixture-attempt-in-progress",
+        "mode": "exam",
+        "examVersion": 6,
+        "answeredCount": 6,
+        "questionCount": 15,
+        "nextQuestionNumber": 7,
+        "practice": false
+      },
+      "primaryAction": "Resume",
+      "overviewActions": [
+        "Resume"
+      ]
+    },
+    {
+      "id": "completed_exam",
+      "label": "Completed first exam",
+      "examId": "THEO-01-01",
+      "state": "completed",
+      "attempt": {
+        "id": "fixture-attempt-completed",
+        "mode": "exam",
+        "examVersion": 6,
+        "correctCount": 12,
+        "questionCount": 15,
+        "percent": 80,
+        "band": "Strong",
+        "practice": false
+      },
+      "primaryAction": "View results",
+      "overviewActions": [
+        "View results",
+        "Practice again"
+      ]
+    },
+    {
+      "id": "studied_before_exam",
+      "label": "Study answer already checked",
+      "examId": "THEO-01-01",
+      "state": "study_exposed",
+      "attempt": {
+        "id": "fixture-study-exposed",
+        "mode": "study",
+        "examVersion": 6,
+        "checkedAnswerCount": 1
+      },
+      "primaryAction": "View exam",
+      "overviewActions": [
+        "Begin practice exam",
+        "Continue study"
+      ],
+      "examAttemptLabel": "Practice"
+    }
+  ]
+}

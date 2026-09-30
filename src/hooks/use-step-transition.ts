@@ -48,7 +48,7 @@ export function useStepTransition(step: number, options: StepTransitionOptions =
   // A calm body's fade is a dissolve, kept even with Reduce Motion on; a
   // brisk one leaves it to the system, which skips it.
   const fadeMotion = timing.fadeWithReducedMotion ? ReduceMotion.Never : ReduceMotion.System;
-  const inEasing = profile === "calm" ? Easing.out(Easing.cubic) : Easing.inOut(Easing.quad);
+  const inEasing = profile !== "brisk" ? Easing.out(Easing.cubic) : Easing.inOut(Easing.quad);
 
   const [rendered, setRendered] = useState<Rendered>({ step, swaps: 0 });
   const progress = useSharedValue(1);

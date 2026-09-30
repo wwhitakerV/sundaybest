@@ -5,6 +5,7 @@ import {
   getExamConceptsForReview,
   getExamItemResponse,
   getLatestCompletedExamAttempt,
+  getLatestOpenExamAttempt,
   getOpenExamAttempt,
   type AppAction,
   type AppState,
@@ -763,6 +764,30 @@ describe("getOpenExamAttempt", () => {
   });
 });
 
+describe("getLatestOpenExamAttempt", () => {
+  it("finds the attempt begun most recently that's still under way, in any exam or mode", () => {
+    const next = run(
+      start({ attemptId: "attempt-exam", mode: "exam" }),
+      start({ attemptId: "attempt-study", mode: "study", at: AT2 }),
+    );
+
+    expect(getLatestOpenExamAttempt(next)?.id).toBe("attempt-study");
+  });
+
+  it("passes over one that's been completed", () => {
+    const next = appReducer(
+      run(start({ attemptId: "attempt-1" })),
+      completeAttemptAction({ attemptId: "attempt-1", result: anExamResult(), at: AT }),
+    );
+
+    expect(getLatestOpenExamAttempt(next)).toBeNull();
+  });
+
+  it("is null before any exam's been begun", () => {
+    expect(getLatestOpenExamAttempt(state)).toBeNull();
+  });
+});
+
 describe("getLatestCompletedExamAttempt", () => {
   it("returns the attempt completed most recently", () => {
     const firstCompleted = appReducer(
@@ -782,6 +807,32 @@ describe("getLatestCompletedExamAttempt", () => {
     const next = run(start({ attemptId: "attempt-1" }));
 
     expect(getLatestCompletedExamAttempt(next, EXAM_ID)).toBeNull();
+  });
+
+  it("finds only the latest finished in the mode asked for — an exam, not a later study", () => {
+    const examDone = appReducer(
+      run(start({ attemptId: "attempt-exam", mode: "exam" })),
+      completeAttemptAction({ attemptId: "attempt-exam", result: anExamResult(), at: AT }),
+    );
+    const studying = appReducer(examDone, start({ attemptId: "attempt-study", mode: "study" }));
+    const study = studying.examAttempts["attempt-study"];
+    // A Study attempt finishes once every answer's checked; here it simply has, later.
+    const studyDone: AppState = {
+      ...studying,
+      examAttempts: {
+        ...studying.examAttempts,
+        ...(study && {
+          "attempt-study": {
+            ...study,
+            status: "completed",
+            completedAt: AT3,
+            result: anExamResult(),
+          },
+        }),
+      },
+    };
+
+    expect(getLatestCompletedExamAttempt(studyDone, EXAM_ID, "exam")?.id).toBe("attempt-exam");
   });
 });
 

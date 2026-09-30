@@ -1,50 +1,72 @@
-import { useState } from "react";
+import { useContext, useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ArrowLeft } from "lucide-react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
+import { ArrowLeft, BookOpen, Clock, Info, ListChecks } from "lucide-react-native";
 
 import type { ExamMode } from "@/types/domain";
-import { Button } from "@/ui/Button";
+import { Divider } from "@/ui/Divider";
+import { FactRow } from "@/ui/FactRow";
+import { FloatingBar } from "@/ui/FloatingBar";
+import { FloatingButton } from "@/ui/FloatingButton";
+import { getFloatingNavBarClearance } from "@/ui/floatingNavBar";
 import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { LinkButton } from "@/ui/LinkButton";
+import { PillButton } from "@/ui/PillButton";
 import { PAGE_INSET, Screen } from "@/ui/Screen";
 import { ScreenHeader } from "@/ui/ScreenHeader";
 import { useTheme } from "@/theme";
-import {
-  getExamConceptsForReview,
-  getOpenExamAttempt,
-  hasRevealedExamAnswers,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
-import { openPassageLink } from "@/core/links/open-passage-link";
+import { getExamConceptsForReview, useAppSelector } from "@/core/store";
 import { ContentError } from "../components/ContentError";
-import { ModeOption } from "../components/ModeOption";
-import { getTheologyExam, THEOLOGY_EXAM_ID } from "../data/bundled-exams";
+import { ExamUnavailable } from "../components/ExamUnavailable";
+import { ModeChoice } from "../components/ModeChoice";
+import { StandingPanel } from "../components/StandingPanel";
+import { getBundledExam } from "../data/bundled-exams";
 import { getConceptTitle } from "../data/exam-grading";
-import { toAttemptItems } from "../logic/attempt";
-import { formatDomainAndLevel, formatDuration, formatQuestionCount } from "../logic/labels";
-import { examSessionHref } from "../logic/routes";
+import { useExamRouteParams } from "../hooks/use-exam-route";
+import { useExamStanding } from "../hooks/use-exam-standing";
+import { useStartAttempt } from "../hooks/use-start-attempt";
+import {
+  formatDomainAndLevel,
+  formatDuration,
+  formatPassageCount,
+  formatQuestionCount,
+} from "../logic/labels";
+import { describeReview, getReviewQuestions } from "../logic/course";
+import {
+  examPassagesHref,
+  examResultsHref,
+  examSessionHref,
+  examTopicsHref,
+} from "../logic/routes";
+import { describeBeginAction, getStartingMode, type ExamAction } from "../logic/standing";
 
-const SCORE_NOTE =
-  "Your score shows how you did on these questions. It doesn't measure spiritual standing, and it isn't a credential.";
+const PRACTICE_NOTE =
+  "You've seen these answers, so a new exam is Practice: it's scored, but it doesn't count toward concept strengths.";
 
 /**
- * Theology Exams, from Fun: the exam, what it covers and asks, its sources,
- * and the two ways to take it. Start begins an attempt in the mode picked;
- * an unfinished one in that mode is resumed instead. Content that failed its
- * checks shows why, and can't be started.
+ * An exam's full overview, pushed above the tabs. Its topic and level, its
+ * title in the editorial face and the question it asks, and its questions,
+ * time, and passages on one line; where the learner stands, once they've
+ * begun; then how to begin — Exam or Study side by side, one picked, and
+ * what it's like under them — and, pinned to the foot of the screen, its
+ * topics and its passages, each opening in a half-height sheet. Its
+ * action floats where every bar in the app does, the page fading out behind
+ * it: it follows the pick and the learner's history
+ * (`describeBeginAction`), with View results beside it once an exam's been
+ * submitted. Content that failed its checks shows why, and can't be begun;
+ * an exam that isn't bundled shows as unavailable.
  */
 export function ExamOverviewScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const actions = useStoreActions();
-  const parsed = getTheologyExam();
-  const examId = parsed.ok ? parsed.exam.summary.id : THEOLOGY_EXAM_ID;
-  const [mode, setMode] = useState<ExamMode>("exam");
-  const open = useAppSelector((state) => getOpenExamAttempt(state, examId, mode));
-  const practice = useAppSelector((state) => hasRevealedExamAnswers(state, examId));
-  const review = useAppSelector((state) => getExamConceptsForReview(state, examId));
+  const start = useStartAttempt();
+  const { examId } = useExamRouteParams();
+  const parsed = examId ? getBundledExam(examId) : null;
+  const { standing, history, openExam, openStudy, latestExam } = useExamStanding(examId ?? "");
+  const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
+  const review = useAppSelector((state) => getExamConceptsForReview(state, examId ?? ""));
+  // Unpicked, it's whichever the learner's history starts on.
+  const [picked, setPicked] = useState<ExamMode | null>(null);
 
   const header = (
     <View style={styles.inset}>
@@ -62,6 +84,22 @@ export function ExamOverviewScreen() {
     </View>
   );
 
+  if (!parsed) {
+    return (
+      <Screen testID="exam-overview-screen" padded="vertical">
+        {header}
+        <View style={[styles.inset, styles.fill]}>
+          <ExamUnavailable
+            testID="exam-overview-unavailable"
+            message="This exam isn't available yet."
+            actionLabel="Back to exams"
+            onAction={() => router.back()}
+          />
+        </View>
+      </Screen>
+    );
+  }
+
   if (!parsed.ok) {
     return (
       <Screen testID="exam-overview-screen" padded="vertical">
@@ -73,23 +111,44 @@ export function ExamOverviewScreen() {
     );
   }
 
-  const { summary } = parsed.exam;
-  const sectionLabel = [theme.typography.metaLabel, { color: theme.colors.textMuted }];
-  const body = [theme.typography.body, { color: theme.colors.text }];
+  const { exam } = parsed;
+  const { summary, questions } = exam;
+  const mode = picked ?? getStartingMode(history);
+  const action = describeBeginAction(history, mode);
+  const tracked = [theme.typography.kicker, { color: theme.colors.textMuted }];
 
-  function start() {
-    if (open) {
-      router.push(examSessionHref(open.id));
-      return;
-    }
-    const attemptId = actions.startExamAttempt({
-      examId: summary.id,
-      examVersion: summary.version,
-      mode,
-      items: toAttemptItems(parsed.ok ? parsed.exam.questions : []),
-    });
-    router.push(examSessionHref(attemptId));
+  function begin(chosen: ExamMode, only?: typeof questions) {
+    router.push(examSessionHref(start(exam, chosen, only)));
   }
+
+  const reviewLabel = describeReview(review.length, openStudy !== null);
+
+  function act({ kind }: ExamAction) {
+    switch (kind) {
+      case "resumeExam":
+        if (openExam) router.push(examSessionHref(openExam.id));
+        return;
+      case "continueStudy":
+        if (openStudy) router.push(examSessionHref(openStudy.id));
+        return;
+      case "beginStudy":
+        begin("study");
+        return;
+      case "beginExam":
+      case "beginPractice":
+        begin("exam");
+        return;
+    }
+  }
+
+  const section = (label: string, content: ReactNode, testID?: string) => (
+    <View testID={testID} style={{ gap: theme.spacing.md }}>
+      <Text accessibilityRole="header" style={tracked}>
+        {label}
+      </Text>
+      {content}
+    </View>
+  );
 
   return (
     <Screen testID="exam-overview-screen" padded="vertical">
@@ -98,118 +157,120 @@ export function ExamOverviewScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.inset,
-          { gap: theme.spacing.xl, paddingBottom: theme.spacing.xl },
+          {
+            // Fills the screen at least, so what's pinned to its foot sits there.
+            flexGrow: 1,
+            gap: theme.spacing.lg,
+            paddingTop: theme.spacing.md,
+            // Clear of the floating bar, and the fade above it.
+            paddingBottom: getFloatingNavBarClearance(insetBottom) + theme.spacing.lg,
+          },
         ]}
       >
         <View style={{ gap: theme.spacing.sm }}>
-          <Text style={sectionLabel}>{formatDomainAndLevel(summary.domain, summary.level)}</Text>
+          <Text style={tracked}>{formatDomainAndLevel(summary.domain, summary.level)}</Text>
           <Text
             accessibilityRole="header"
-            style={[theme.typography.question, { color: theme.colors.text }]}
+            style={[theme.typography.editorialDisplay, { color: theme.colors.text }]}
           >
             {summary.title}
           </Text>
-          <View style={[styles.facts, { gap: theme.spacing.md }]}>
-            <Text style={sectionLabel}>{formatQuestionCount(summary.questionCount)}</Text>
-            <Text style={sectionLabel}>{formatDuration(summary.durationMinutes)}</Text>
-          </View>
-          <Text style={[theme.typography.reading, { color: theme.colors.textInactive }]}>
-            {summary.overview}
+          <Text style={[theme.typography.editorialLead, { color: theme.colors.textInactive }]}>
+            {summary.question ?? summary.overview}
           </Text>
-        </View>
-
-        <View style={{ gap: theme.spacing.sm }}>
-          <Text accessibilityRole="header" style={sectionLabel}>
-            What you&apos;ll do
-          </Text>
-          {summary.objectives.map((objective) => (
-            <Text key={objective} style={body}>
-              {objective}
-            </Text>
-          ))}
-        </View>
-
-        <View style={{ gap: theme.spacing.sm }}>
-          <Text accessibilityRole="header" style={sectionLabel}>
-            Areas covered
-          </Text>
-          {summary.concepts.map((concept) => (
-            <Text key={concept} style={body}>
-              {concept}
-            </Text>
-          ))}
-        </View>
-
-        <View style={{ gap: theme.spacing.md }}>
-          <Text accessibilityRole="header" style={sectionLabel}>
-            Sources
-          </Text>
-          {summary.sourceLinks.map((link, index) => (
-            <LinkButton
-              key={link.reference}
-              testID={`exam-overview-source-link-${index}`}
-              label={link.reference}
-              accessibilityHint="Opens the passage in Safari"
-              onPress={() => void openPassageLink(link.url)}
+          <View style={{ marginTop: theme.spacing.md }}>
+            <FactRow
+              testID="exam-overview-facts"
+              facts={[
+                {
+                  key: "questions",
+                  icon: ListChecks,
+                  label: formatQuestionCount(summary.questionCount),
+                },
+                { key: "duration", icon: Clock, label: formatDuration(summary.durationMinutes) },
+                {
+                  key: "passages",
+                  icon: BookOpen,
+                  label: formatPassageCount(summary.sourceLinks.length),
+                },
+              ]}
             />
-          ))}
+          </View>
         </View>
 
-        {review.length > 0 && (
-          <View style={{ gap: theme.spacing.sm }}>
-            <Text accessibilityRole="header" style={sectionLabel}>
-              For review
-            </Text>
-            {review.map((conceptId) => (
-              <Text key={conceptId} style={body}>
-                {getConceptTitle(summary.id, conceptId)}
-              </Text>
-            ))}
-          </View>
+        {standing.status && (
+          <StandingPanel
+            testID="exam-overview-standing"
+            status={standing.status}
+            active={standing.state === "inProgress"}
+            review={review.map((conceptId) => getConceptTitle(summary.id, conceptId))}
+            reviewAction={
+              reviewLabel
+                ? {
+                    testID: "exam-overview-review-button",
+                    label: reviewLabel,
+                    onPress: () => begin("study", getReviewQuestions(questions, review)),
+                  }
+                : null
+            }
+          />
         )}
 
-        <View style={{ gap: theme.spacing.sm }} accessibilityRole="radiogroup">
-          <Text accessibilityRole="header" style={sectionLabel}>
-            Choose a mode
-          </Text>
-          <ModeOption
-            testID="exam-overview-mode-exam"
-            title="Exam Mode"
-            description={summary.modeDescriptions.exam}
-            selected={mode === "exam"}
-            onPress={() => setMode("exam")}
-          />
-          <ModeOption
-            testID="exam-overview-mode-study"
-            title="Study Mode"
-            description={summary.modeDescriptions.study}
-            selected={mode === "study"}
-            onPress={() => setMode("study")}
-          />
-          {mode === "exam" && practice && !open && (
-            <Text style={[theme.typography.cardDetail, { color: theme.colors.textInactive }]}>
-              You&apos;ve seen these answers, so this attempt is Practice: it&apos;s scored, but it
-              doesn&apos;t count toward concept strengths.
-            </Text>
-          )}
-        </View>
+        <Divider />
+        {section(
+          "Choose how to begin",
+          <>
+            <ModeChoice testID="exam-overview-mode" selected={mode} onSelect={setPicked} />
+            {action.kind === "beginPractice" && (
+              <Text style={[theme.typography.cardDetail, { color: theme.colors.textInactive }]}>
+                {PRACTICE_NOTE}
+              </Text>
+            )}
+          </>,
+          "exam-overview-begin",
+        )}
 
-        <Text style={[theme.typography.supporting, { color: theme.colors.textMuted }]}>
-          {SCORE_NOTE}
-        </Text>
+        <View testID="exam-overview-more" style={[styles.more, { gap: theme.spacing.sm }]}>
+          {summary.explore.length > 0 && (
+            <PillButton
+              testID="exam-overview-topics-button"
+              icon={Info}
+              label="Topics covered"
+              onPress={() => router.push(examTopicsHref(summary.id))}
+            />
+          )}
+          <PillButton
+            testID="exam-overview-passages-button"
+            icon={BookOpen}
+            label="Passages"
+            onPress={() => router.push(examPassagesHref(summary.id))}
+          />
+        </View>
       </ScrollView>
-      <View style={[styles.inset, { paddingTop: theme.spacing.sm }]}>
-        <Button
+
+      <FloatingBar testID="exam-overview-bar">
+        {latestExam && (
+          <FloatingButton
+            testID="exam-overview-secondary-button"
+            label="View results"
+            quiet
+            onPress={() => router.push(examResultsHref(latestExam.id))}
+          />
+        )}
+        <FloatingButton
           testID="exam-overview-start-button"
-          label={open ? "Resume" : "Start"}
-          onPress={start}
+          label={action.label}
+          primary
+          onPress={() => act(action)}
         />
-      </View>
+      </FloatingBar>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   inset: { paddingHorizontal: PAGE_INSET },
-  facts: { flexDirection: "row" },
+  fill: { flex: 1 },
+  // Pinned to the foot of the screen, above the floating bar — or after the rest, when there's more.
+  more: { flexDirection: "row", marginTop: "auto" },
 });

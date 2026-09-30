@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { UserRound } from "lucide-react-native";
 
 import { Screen } from "@/ui/Screen";
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { TitleHeader } from "@/ui/TitleHeader";
 import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
 import { useTheme } from "@/theme";
@@ -26,7 +24,8 @@ import { StatCard } from "../components/StatCard";
 import { UpNextCard } from "../components/UpNextCard";
 import { WeekDays } from "../components/WeekDays";
 import { WeekNavigator } from "../components/WeekNavigator";
-import { describeDate, formatTime, getWeekTitle } from "../logic/week";
+import { formatClockTime } from "@/utils/time/formatClockTime";
+import { describeDate, getWeekTitle } from "../logic/week";
 
 /** Room under the content for the floating tab bar. */
 const BOTTOM_CLEARANCE =
@@ -69,18 +68,7 @@ export function ProgressScreen() {
 
   return (
     <Screen testID="progress-screen" padded>
-      <TitleHeader
-        title="Progress"
-        actions={
-          <HeaderIconButton
-            testID="progress-account-button"
-            icon={UserRound}
-            accessibilityLabel="Account"
-            bordered={false}
-            onPress={() => router.push("/(tabs)/settings")}
-          />
-        }
-      />
+      <TitleHeader title="Progress" />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <WeekNavigator
@@ -107,7 +95,7 @@ export function ProgressScreen() {
               dayNumber={upNext.day.dayNumber}
               minutes={upNextDetail.minutes}
               percent={upNextDetail.percent}
-              reminderTime={reminder?.enabled ? formatTime(reminder.time) : null}
+              reminderTime={reminder?.enabled ? formatClockTime(reminder.time) : null}
               onPress={() => router.push(planOverviewHref(upNext.plan.id))}
             />
           </>

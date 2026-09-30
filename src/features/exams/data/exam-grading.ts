@@ -3,7 +3,7 @@ import type { ExamAttempt, ExamResponse, ExamResult, Id } from "@/types/domain";
 import { buildExamResult } from "../logic/build-result";
 import { isResponseCorrect } from "../logic/grade-response";
 import type { QuestionReveal } from "../types";
-import { getTheologyExam, THEOLOGY_EXAM_ID } from "./bundled-exams";
+import { getBundledExam } from "./bundled-exams";
 
 /**
  * The grading seam: the only code that reads answer keys. It grades on the
@@ -14,7 +14,7 @@ import { getTheologyExam, THEOLOGY_EXAM_ID } from "./bundled-exams";
 
 /** A bundled exam that parsed, by its ID — or null. */
 function bundledExam(examId: string) {
-  const parsed = examId === THEOLOGY_EXAM_ID ? getTheologyExam() : null;
+  const parsed = getBundledExam(examId);
   return parsed?.ok ? parsed : null;
 }
 

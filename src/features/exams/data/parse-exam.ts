@@ -24,6 +24,7 @@ export type ParsedExam =
   | { ok: true; exam: Exam; reveals: QuestionReveal[] }
   | { ok: false; examId: string | null; issues: string[] };
 
+const EXPLORE_ICONS = ["scripture", "people", "letter"] as const;
 const KINDS = ["single_choice", "true_false", "multiple_select", "matching", "ordering"] as const;
 
 /** The one scoring rule this app implements for each kind. */
@@ -102,6 +103,12 @@ const contentSchema = z.object({
         partialCredit: z.literal(false),
       }),
       teaching: z.object({ actionLabel: text }),
+      overview: z
+        .object({
+          question: text,
+          explore: z.array(z.object({ title: text, passage: text, icon: z.enum(EXPLORE_ICONS) })),
+        })
+        .optional(),
       results: z.object({
         bands: z.array(z.object({ minPercent: z.number().min(0).max(100), label: text })).min(1),
         conceptLabelMinimumIndependentObservations: z.number().int().positive(),
@@ -299,6 +306,11 @@ function examIssues(content: Content): string[] {
     if (!isAllowedPassageUrl(entry.url))
       issues.push(`exam.sourceScope.scriptureLinks[${index}].url`);
   });
+
+  const scope = new Set(exam.sourceScope.scriptureLinks.map((entry) => entry.reference));
+  exam.experience.overview?.explore.forEach((item, index) => {
+    if (!scope.has(item.passage)) issues.push(`exam.experience.overview.explore[${index}].passage`);
+  });
   return issues;
 }
 
@@ -400,14 +412,20 @@ export function parseExamContent(raw: unknown): ParsedExam {
         level: exam.level,
         title: exam.title,
         overview: exam.overview,
+        question: exam.experience.overview?.question ?? null,
         questionCount: exam.questionCount,
         durationMinutes: exam.durationMinutes,
         objectives: exam.objectives,
-        concepts: exam.concepts,
-        modeDescriptions: {
-          exam: exam.completionBehavior.examMode,
-          study: exam.completionBehavior.studyMode,
-        },
+        explore: (exam.experience.overview?.explore ?? []).map(({ title, icon, passage }) => ({
+          title,
+          icon,
+          passage: {
+            reference: passage,
+            url:
+              exam.sourceScope.scriptureLinks.find((entry) => entry.reference === passage)?.url ??
+              "",
+          },
+        })),
         sourceLinks: exam.sourceScope.scriptureLinks,
       },
       rules: {

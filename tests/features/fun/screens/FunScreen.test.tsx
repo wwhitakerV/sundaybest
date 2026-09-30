@@ -12,6 +12,12 @@ jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
 }));
 
+// A phone at the default text size: the test environment's own reads as twice that.
+jest.mock("react-native/Libraries/Utilities/useWindowDimensions", () => ({
+  __esModule: true,
+  default: () => ({ width: 393, height: 852, scale: 3, fontScale: 1 }),
+}));
+
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 
 const GAMES = ["duel", "trivia", "exams", "verse-builder"] as const;
@@ -40,20 +46,6 @@ describe("FunScreen", () => {
     render(<FunScreen />);
 
     expect(screen.getByText("Fun")).toBeVisible();
-  });
-
-  it("shows the account icon", () => {
-    render(<FunScreen />);
-
-    expect(screen.getByTestId("fun-account-button")).toBeVisible();
-  });
-
-  it("navigates to Settings when the account icon is pressed", () => {
-    render(<FunScreen />);
-
-    fireEvent.press(screen.getByTestId("fun-account-button"));
-
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings");
   });
 
   describe("intro", () => {
@@ -97,6 +89,30 @@ describe("FunScreen", () => {
       fireEvent.press(screen.getByTestId("fun-quick-play-play"));
 
       expect(mockPush).toHaveBeenCalledWith(funDestinationHref("heads-up"));
+    });
+
+    it("leaves its art uncovered on a card wide enough for the words", () => {
+      render(<FunScreen />);
+
+      fireEvent(screen.getByTestId("fun-quick-play"), "layout", {
+        nativeEvent: { layout: { x: 0, y: 0, width: 354, height: 208 } },
+      });
+
+      expect(
+        screen.queryByTestId("fun-quick-play-cover", { includeHiddenElements: true }),
+      ).toBeNull();
+    });
+
+    it("covers the art behind the words, in its own gradient, on a narrow card", () => {
+      render(<FunScreen />);
+
+      fireEvent(screen.getByTestId("fun-quick-play"), "layout", {
+        nativeEvent: { layout: { x: 0, y: 0, width: 300, height: 208 } },
+      });
+
+      expect(
+        screen.getByTestId("fun-quick-play-cover", { includeHiddenElements: true }),
+      ).toHaveStyle({ opacity: 1 });
     });
 
     it("keeps its landscape and cards out of VoiceOver's way", () => {
@@ -181,12 +197,12 @@ describe("FunScreen", () => {
       expect(screen.getByTestId("fun-games-trivia-badge")).toHaveTextContent(/^\d+ day streak$/);
     });
 
-    it("gives each game a 20 pt-rounded card at least 100 pt tall", () => {
+    it("gives each game a 20 pt-rounded card at least 250 pt tall — words first, then its art, large", () => {
       render(<FunScreen />);
 
       expect(screen.getByTestId("fun-games-duel")).toHaveStyle({
         borderRadius: 20,
-        minHeight: 100,
+        minHeight: 250,
       });
     });
 

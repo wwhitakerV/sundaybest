@@ -7,6 +7,7 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { useTheme } from "@/theme";
 import { DotPagination } from "@/ui/DotPagination";
 import { BottomFade } from "@/ui/BottomFade";
+import { tapFeedback } from "@/core/haptics/haptics";
 import {
   FLOATING_NAV_BAR,
   getFloatingNavBarBottom,
@@ -93,7 +94,10 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           testID={testID ? `${testID}-prev-button` : undefined}
           accessibilityRole="button"
           accessibilityLabel="Previous"
-          onPress={onPrevious}
+          onPress={() => {
+            tapFeedback();
+            onPrevious();
+          }}
           style={[styles.side, styles.sideStart]}
         >
           <ArrowLeft
@@ -129,7 +133,10 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           testID={testID ? `${testID}-next-button` : undefined}
           accessibilityRole="button"
           accessibilityLabel={finishLabel ?? "Next"}
-          onPress={onNext}
+          onPress={() => {
+            tapFeedback();
+            onNext();
+          }}
           style={[styles.side, styles.sideEnd]}
         >
           <Text

@@ -242,11 +242,33 @@ describe("navigation", () => {
     BUILD_FLOW_TIMEOUT_MS,
   );
 
-  it("round-trips a Settings subpage back to Settings", () => {
+  it("sets the tabs as Home, Plans, Progress, then Settings — Fun hidden for now", () => {
+    renderApp();
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+    expect(
+      screen
+        .getAllByTestId(/^tab-(home|plans|fun|progress|settings)$/)
+        .map((tab) => String(tab.props.testID)),
+    ).toEqual(["tab-home", "tab-plans", "tab-progress", "tab-settings"]);
+  });
+
+  it("carries no account icon in a tab's header, now Settings is a tab", () => {
+    renderApp();
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+    expect(screen.queryByTestId("home-tab-account-button")).toBeNull();
+    fireEvent.press(screen.getByTestId("tab-plans"));
+    expect(screen.queryByTestId("plans-account-button")).toBeNull();
+    fireEvent.press(screen.getByTestId("tab-progress"));
+    expect(screen.queryByTestId("progress-account-button")).toBeNull();
+  });
+
+  it("round-trips a Settings subpage back to Settings, from its tab", () => {
     const view = renderApp();
 
     fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-    fireEvent.press(screen.getByTestId("home-tab-account-button"));
+    fireEvent.press(screen.getByTestId("tab-settings"));
     expect(view.getPathname()).toBe("/settings");
 
     fireEvent.press(screen.getByTestId("settings-daily-reminder-row"));
@@ -257,41 +279,6 @@ describe("navigation", () => {
   });
 
   describe("header icons arriving", () => {
-    const TABS = [
-      ["tab-home", "home-tab-account-button"],
-      ["tab-plans", "plans-account-button"],
-      ["tab-fun", "fun-account-button"],
-      ["tab-progress", "progress-account-button"],
-    ] as const;
-
-    it("never animates a tab root's header icon going between tab roots, first visits included", () => {
-      renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-
-      for (const [tab, button] of [...TABS.slice(1), ...TABS]) {
-        fireEvent.press(screen.getByTestId(tab));
-        expect(hasHeaderEntrance(button)).toBe(false);
-      }
-    });
-
-    it("animates Home's header icon arriving from Welcome", () => {
-      renderApp();
-
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-
-      expect(hasHeaderEntrance("home-tab-account-button")).toBe(true);
-    });
-
-    it("animates Home's header icon coming back from Plan Detail", () => {
-      renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-
-      fireEvent.press(screen.getByTestId("home-tab-active-plan"));
-      fireEvent.press(screen.getByTestId("plan-overview-back-button"));
-
-      expect(hasHeaderEntrance("home-tab-account-button")).toBe(true);
-    });
-
     it("animates Plan Detail's header buttons as it's pushed", () => {
       renderApp();
       fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
@@ -299,38 +286,6 @@ describe("navigation", () => {
       fireEvent.press(screen.getByTestId("home-tab-active-plan"));
 
       expect(hasHeaderEntrance("plan-overview-back-button")).toBe(true);
-    });
-
-    it("animates Home's header icon coming back from Settings", () => {
-      renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-
-      fireEvent.press(screen.getByTestId("home-tab-account-button"));
-      fireEvent.press(screen.getByTestId("tab-home"));
-
-      expect(hasHeaderEntrance("home-tab-account-button")).toBe(true);
-    });
-
-    it("animates another tab root's header icon going to it from Settings", () => {
-      renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-      fireEvent.press(screen.getByTestId("tab-fun"));
-      fireEvent.press(screen.getByTestId("tab-home"));
-
-      fireEvent.press(screen.getByTestId("home-tab-account-button"));
-      fireEvent.press(screen.getByTestId("tab-fun"));
-
-      expect(hasHeaderEntrance("fun-account-button")).toBe(true);
-    });
-
-    it("animates a tab root's header icon arriving from a screen in another tab's stack", () => {
-      renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-
-      fireEvent.press(screen.getByTestId("home-tab-active-plan"));
-      fireEvent.press(screen.getByTestId("tab-plans"));
-
-      expect(hasHeaderEntrance("plans-account-button")).toBe(true);
     });
   });
 });

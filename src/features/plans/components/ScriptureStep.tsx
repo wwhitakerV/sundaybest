@@ -4,6 +4,7 @@ import type { ScripturePassage } from "@/types/domain";
 import { useTheme } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
+import { StudyDriftIn } from "./StudyDriftIn";
 
 export type ScriptureStepProps = {
   dayNumber: number;
@@ -19,23 +20,25 @@ export function ScriptureStep({ dayNumber, passage, followStyle }: ScriptureStep
   return (
     <View testID="study-scripture-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label="Scripture" />
-      <View style={styles.titleRow}>
-        <Text
-          style={[theme.typography.screenTitle, styles.reference, { color: theme.colors.text }]}
-        >
-          {passage.reference}
-        </Text>
-        <View
-          style={[
-            styles.pill,
-            { borderColor: theme.colors.divider, borderRadius: theme.radii.pill },
-          ]}
-        >
-          <Text style={[theme.typography.label, { color: theme.colors.textInactive }]}>
-            {passage.translation}
+      <StudyDriftIn order={1}>
+        <View style={styles.titleRow}>
+          <Text
+            style={[theme.typography.screenTitle, styles.reference, { color: theme.colors.text }]}
+          >
+            {passage.reference}
           </Text>
+          <View
+            style={[
+              styles.pill,
+              { borderColor: theme.colors.divider, borderRadius: theme.radii.pill },
+            ]}
+          >
+            <Text style={[theme.typography.label, { color: theme.colors.textInactive }]}>
+              {passage.translation}
+            </Text>
+          </View>
         </View>
-      </View>
+      </StudyDriftIn>
       <StudyFollow style={followStyle}>
         <View
           style={[

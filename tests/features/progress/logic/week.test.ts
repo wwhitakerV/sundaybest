@@ -1,4 +1,4 @@
-import { describeDate, formatTime, getWeekTitle } from "@/features/progress/logic/week";
+import { describeDate, getWeekTitle } from "@/features/progress/logic/week";
 
 describe("getWeekTitle", () => {
   it("names the month once for a week inside it", () => {
@@ -18,14 +18,5 @@ describe("describeDate", () => {
 
   it("gives any other day its weekday", () => {
     expect(describeDate("2026-09-26", "2026-09-23")).toBe("Sat, Sep 26");
-  });
-});
-
-describe("formatTime", () => {
-  it("reads a 24-hour time the way a clock does", () => {
-    expect(formatTime("06:30")).toBe("6:30 AM");
-    expect(formatTime("19:00")).toBe("7:00 PM");
-    expect(formatTime("00:05")).toBe("12:05 AM");
-    expect(formatTime("12:00")).toBe("12:00 PM");
   });
 });

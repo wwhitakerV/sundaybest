@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, within } from "@tests/helpers/render";
+import { lightTheme } from "@/theme/tokens";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
@@ -78,14 +79,6 @@ describe("HomeScreen", () => {
     const scroll = screen.getByTestId("home-tab-scroll");
     expect(scroll).toHaveProp("snapToStart", false);
     expect(scroll).toHaveProp("snapToEnd", false);
-  });
-
-  it("navigates to Settings when the account icon is pressed", () => {
-    renderHome();
-
-    fireEvent.press(screen.getByTestId("home-tab-account-button"));
-
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings");
   });
 
   describe("with no plan under way", () => {
@@ -235,5 +228,12 @@ describe("HomeScreen", () => {
         "Today I Choose to Be a Blessing, day 3 of 6. 2 of 6 days done.",
       );
     });
+  });
+
+  it("dates its header beside the masthead, as 09.30.26 in the mono", () => {
+    renderHome();
+
+    expect(screen.getByTestId("home-tab-date")).toHaveTextContent(/^\d{2}\.\d{2}\.\d{2}$/);
+    expect(screen.getByTestId("home-tab-date")).toHaveStyle(lightTheme.typography.dayStrip);
   });
 });

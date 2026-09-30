@@ -32,11 +32,26 @@ export function getOpenExamAttempt(
   );
 }
 
-/** The attempt at an exam finished most recently, or null. */
-export function getLatestCompletedExamAttempt(state: AppState, examId: string): ExamAttempt | null {
+/** The attempt begun most recently that's still under way — in any exam, either mode — or null. */
+export function getLatestOpenExamAttempt(state: AppState): ExamAttempt | null {
+  return (
+    listAll(state.examAttempts)
+      .filter((attempt) => attempt.status === "inProgress")
+      .sort((a, b) => compareIso(b.startedAt, a.startedAt))
+      .at(0) ?? null
+  );
+}
+
+/** The attempt at an exam finished most recently — in `mode`, when given — or null. */
+export function getLatestCompletedExamAttempt(
+  state: AppState,
+  examId: string,
+  mode?: ExamMode,
+): ExamAttempt | null {
   return (
     attemptsAt(state, examId)
       .filter((attempt) => attempt.status === "completed")
+      .filter((attempt) => mode === undefined || attempt.mode === mode)
       .sort((a, b) => compareIso(b.completedAt ?? "", a.completedAt ?? ""))
       .at(0) ?? null
   );

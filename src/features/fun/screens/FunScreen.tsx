@@ -1,9 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { UserRound } from "lucide-react-native";
 
 import { Screen } from "@/ui/Screen";
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { SectionHeader } from "@/ui/SectionHeader";
 import { TitleHeader } from "@/ui/TitleHeader";
 import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
@@ -39,18 +37,7 @@ export function FunScreen() {
   return (
     <Screen testID="fun-screen" padded="vertical">
       <View testID="fun-intro" style={[inset, { gap: theme.spacing.xs }]}>
-        <TitleHeader
-          title="Fun"
-          actions={
-            <HeaderIconButton
-              testID="fun-account-button"
-              icon={UserRound}
-              accessibilityLabel="Account"
-              bordered={false}
-              onPress={() => router.push("/(tabs)/settings")}
-            />
-          }
-        />
+        <TitleHeader title="Fun" />
         <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>
           Play, compete, and master Scripture.
         </Text>

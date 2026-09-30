@@ -1,42 +1,69 @@
+import { useContext } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
+import { ArrowRight, RotateCcw } from "lucide-react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { Button } from "@/ui/Button";
+import { FloatingBar } from "@/ui/FloatingBar";
+import { FloatingButton } from "@/ui/FloatingButton";
+import { getFloatingNavBarClearance } from "@/ui/floatingNavBar";
 import { Divider } from "@/ui/Divider";
+import { LinkRow } from "@/ui/LinkRow";
+import { PillButton } from "@/ui/PillButton";
 import { PAGE_INSET, Screen } from "@/ui/Screen";
 import { useTheme } from "@/theme";
 import {
   getExamAttempt,
   getExamItemResponse,
   getMissedConcepts,
+  getOpenExamAttempt,
   useAppSelector,
 } from "@/core/store";
 import { ConceptRow } from "../components/ConceptRow";
 import { ExamUnavailable } from "../components/ExamUnavailable";
 import { ResultItem } from "../components/ResultItem";
-import { getTheologyExam } from "../data/bundled-exams";
+import { getBundledExam } from "../data/bundled-exams";
+import { SUBJECTS } from "../data/catalog";
 import { getConceptTitle, getQuestionReveal } from "../data/exam-grading";
 import { useExamRouteParams } from "../hooks/use-exam-route";
+import { useStartAttempt } from "../hooks/use-start-attempt";
 import { describeAnswer } from "../logic/attempt";
+import { formatLevelName } from "../logic/catalog";
+import { describeReview, findNextExam, getReviewQuestions } from "../logic/course";
 import { formatModeLabel } from "../logic/labels";
-import { theologyExamsHref, understandWhyHref } from "../logic/routes";
+import {
+  examOverviewHref,
+  examSessionHref,
+  theologyExamsHref,
+  understandWhyHref,
+} from "../logic/routes";
 
 /**
  * A finished attempt's results, as recorded when it finished. Exam Mode: the
  * score, its percentage, and its band. Study Mode: how many were right, and
  * that it isn't scored. Then each concept's evidence, what's for review, and
  * every question — the user's answer, the right one, why, and Understand why.
+ * What's next, before the questions: a short study of just what was missed,
+ * and the next level up in the course.
  * No celebration: plain type and divided lists.
  */
 export function ExamResultsScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { attemptId } = useExamRouteParams();
+  const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   const attempt = useAppSelector((state) => (attemptId ? getExamAttempt(state, attemptId) : null));
-  const parsed = getTheologyExam();
-  const done = () => router.dismissTo(theologyExamsHref);
+  const start = useStartAttempt();
+  const studyOpen = useAppSelector(
+    (state) => attempt !== null && getOpenExamAttempt(state, attempt.examId, "study") !== null,
+  );
+  // The attempt's own exam — unavailable when it isn't bundled, or fails its checks.
+  const parsed = attempt ? getBundledExam(attempt.examId) : null;
+  // Back to the exam's overview — where its concepts for review wait — or, with no attempt, the exams page.
+  const done = () =>
+    router.dismissTo(attempt ? examOverviewHref(attempt.examId) : theologyExamsHref);
 
-  if (!attempt?.result || !parsed.ok) {
+  if (!attempt?.result || !parsed?.ok) {
     return (
       <Screen testID="exam-results-screen" padded>
         <ExamUnavailable
@@ -51,9 +78,11 @@ export function ExamResultsScreen() {
 
   const { result } = attempt;
   const study = attempt.mode === "study";
-  const label = [theme.typography.metaLabel, { color: theme.colors.textMuted }];
+  const label = [theme.typography.kicker, { color: theme.colors.textMuted }];
   const kicker = formatModeLabel(attempt.mode, attempt.practice);
   const missed = getMissedConcepts(attempt);
+  const reviewLabel = describeReview(missed.length, studyOpen);
+  const next = findNextExam(SUBJECTS, attempt.examId);
 
   return (
     <Screen testID="exam-results-screen" padded="vertical">
@@ -61,7 +90,12 @@ export function ExamResultsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.inset,
-          { gap: theme.spacing.xl, paddingVertical: theme.spacing.lg },
+          {
+            gap: theme.spacing.xl,
+            paddingTop: theme.spacing.lg,
+            // Clear of the floating bar, and the fade above it.
+            paddingBottom: getFloatingNavBarClearance(insetBottom) + theme.spacing.lg,
+          },
         ]}
       >
         <View style={{ gap: theme.spacing.sm }}>
@@ -135,6 +169,43 @@ export function ExamResultsScreen() {
           </View>
         )}
 
+        {(reviewLabel || next) && (
+          <View testID="exam-results-whats-next" style={{ gap: theme.spacing.md }}>
+            <Text accessibilityRole="header" style={label}>
+              What&apos;s next
+            </Text>
+            {reviewLabel && (
+              <View style={styles.action}>
+                <PillButton
+                  testID="exam-results-review-button"
+                  icon={RotateCcw}
+                  label={reviewLabel}
+                  onPress={() =>
+                    router.replace(
+                      examSessionHref(
+                        start(
+                          parsed.exam,
+                          "study",
+                          getReviewQuestions(parsed.exam.questions, missed),
+                        ),
+                      ),
+                    )
+                  }
+                />
+              </View>
+            )}
+            {next && (
+              <LinkRow
+                testID="exam-results-next"
+                icon={ArrowRight}
+                label={`${next.title} · ${formatLevelName(next.level)}`}
+                accessibilityHint="Opens the next exam in the course"
+                onPress={() => router.dismissTo(examOverviewHref(next.examId))}
+              />
+            )}
+          </View>
+        )}
+
         <View>
           <Text accessibilityRole="header" style={label}>
             Questions
@@ -167,9 +238,9 @@ export function ExamResultsScreen() {
           })}
         </View>
       </ScrollView>
-      <View style={[styles.inset, { paddingTop: theme.spacing.sm }]}>
-        <Button testID="exam-results-done-button" label="Done" onPress={done} />
-      </View>
+      <FloatingBar testID="exam-results-bar">
+        <FloatingButton testID="exam-results-done-button" label="Done" primary onPress={done} />
+      </FloatingBar>
     </Screen>
   );
 }
@@ -177,4 +248,5 @@ export function ExamResultsScreen() {
 const styles = StyleSheet.create({
   inset: { paddingHorizontal: PAGE_INSET },
   row: { flexDirection: "row", alignItems: "baseline" },
+  action: { flexDirection: "row" },
 });

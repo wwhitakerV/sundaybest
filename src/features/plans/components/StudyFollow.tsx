@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 
+import { StudyDriftIn } from "./StudyDriftIn";
+
 /** The animated style for a study page's second beat (`useStepTransition`'s `followStyle`). */
 export type FollowStyle = StyleProp<AnimatedStyle<ViewStyle>>;
 
@@ -15,7 +17,11 @@ export type StudyFollowProps = {
  * the verses, the question, the prayer — which comes in a beat after them.
  */
 export function StudyFollow({ style, children }: StudyFollowProps) {
-  return <Animated.View style={[styles.follow, style]}>{children}</Animated.View>;
+  return (
+    <StudyDriftIn order={2}>
+      <Animated.View style={[styles.follow, style]}>{children}</Animated.View>
+    </StudyDriftIn>
+  );
 }
 
 const styles = StyleSheet.create({

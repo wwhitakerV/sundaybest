@@ -6,8 +6,11 @@
  *   gets out of the way just as fast, but the new one fades up more slowly
  *   and in two beats — its title, then the rest a moment later — so the
  *   words arrive rather than snap in.
+ * - `drift` — calm's fade, without the rise or the second beat: the page's
+ *   parts drift in instead, each down and a touch right into place
+ *   (`DriftIn`) — the Daily Study.
  */
-export type StepTransitionProfile = "brisk" | "calm";
+export type StepTransitionProfile = "brisk" | "calm" | "drift";
 
 export type StepTransitionTiming = {
   /** The outgoing body's fade and drop. */
@@ -36,6 +39,9 @@ export function getStepTransitionTiming(
 ): StepTransitionTiming {
   if (profile === "brisk") {
     return { outMs: OUT_MS, inMs: 150, rise: RISE, staggerMs: 0, fadeWithReducedMotion: false };
+  }
+  if (profile === "drift") {
+    return { outMs: OUT_MS, inMs: 240, rise: 0, staggerMs: 0, fadeWithReducedMotion: true };
   }
   return {
     outMs: OUT_MS,

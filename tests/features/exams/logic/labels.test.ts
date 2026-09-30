@@ -1,8 +1,11 @@
 import {
+  formatDomainAndLevel,
   formatDuration,
   formatModeLabel,
   formatQuestionCount,
   getInstruction,
+  formatPassageCount,
+  formatPassageList,
 } from "@/features/exams/logic/labels";
 
 describe("getInstruction", () => {
@@ -62,5 +65,28 @@ describe("formatModeLabel", () => {
 
   it("marks a Practice attempt after its mode", () => {
     expect(formatModeLabel("exam", true)).toBe("Exam Mode · Practice");
+  });
+});
+
+describe("formatPassageCount", () => {
+  it("counts the passages an exam draws from", () => {
+    expect(formatPassageCount(3)).toBe("3 passages");
+    expect(formatPassageCount(1)).toBe("1 passage");
+  });
+});
+
+describe("formatDomainAndLevel", () => {
+  it("sets the domain before the level, capitalised, with a slash between", () => {
+    expect(formatDomainAndLevel("Scripture & Reading", "foundations")).toBe(
+      "Scripture & Reading / Foundations",
+    );
+  });
+});
+
+describe("formatPassageList", () => {
+  it("runs the passages together on one line, with a dot between each", () => {
+    expect(formatPassageList(["Luke 24:25-49", "2 Timothy 3:14-17", "Acts 17:10-12"])).toBe(
+      "Luke 24:25-49 • 2 Timothy 3:14-17 • Acts 17:10-12",
+    );
   });
 });

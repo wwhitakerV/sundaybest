@@ -5,6 +5,7 @@ import type { Reflection } from "@/types/domain";
 import { useTheme } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
+import { StudyDriftIn } from "./StudyDriftIn";
 
 export type ReflectStepProps = {
   dayNumber: number;
@@ -38,7 +39,9 @@ export function ReflectStep({
   return (
     <View testID="study-reflect-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label={`Question ${reflection.order} of ${total}`} />
-      <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>{title}</Text>
+      <StudyDriftIn order={1}>
+        <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>{title}</Text>
+      </StudyDriftIn>
       <StudyFollow style={followStyle}>
         <View
           style={[

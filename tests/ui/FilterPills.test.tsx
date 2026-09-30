@@ -83,4 +83,17 @@ describe("FilterPills", () => {
 
     expect(screen.getByTestId("a-filter-pills")).toHaveStyle({ marginHorizontal: -24 });
   });
+
+  it("never gives up its pills' height to a list below it", () => {
+    render(
+      <FilterPills
+        testID="a-row"
+        options={[{ label: "All", count: 3 }]}
+        selected="All"
+        onSelect={() => undefined}
+      />,
+    );
+
+    expect(screen.getByTestId("a-row")).toHaveStyle({ flexGrow: 0, flexShrink: 0 });
+  });
 });

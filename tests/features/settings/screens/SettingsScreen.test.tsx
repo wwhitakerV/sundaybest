@@ -2,7 +2,13 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { INITIAL_STATE } from "@/core/store";
 import { SettingsScreen } from "@/features/settings/screens/SettingsScreen";
+
+jest.mock("expo-constants", () => ({
+  __esModule: true,
+  default: { expoConfig: { version: "1.0.0" } },
+}));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -30,10 +36,36 @@ describe("SettingsScreen", () => {
     expect(screen.getByText("Settings")).toBeVisible();
   });
 
-  it("shows placeholder body text", () => {
+  it("groups its rows under Your routine, About, and For churches", () => {
     render(<SettingsScreen />);
 
-    expect(screen.getByText("...")).toBeVisible();
+    for (const title of ["Your routine", "About", "For churches"]) {
+      expect(screen.getByText(title)).toBeVisible();
+    }
+  });
+
+  it("says each routine setting's value beside it", () => {
+    render(<SettingsScreen />);
+
+    expect(screen.getByTestId("settings-bible-translation-row")).toHaveTextContent(
+      INITIAL_STATE.settings.bibleTranslation,
+      { exact: false },
+    );
+    expect(screen.getByTestId("settings-text-size-row")).toHaveTextContent(/Text size/);
+  });
+
+  it("offers churches a way to ask for a sermon's removal", () => {
+    render(<SettingsScreen />);
+
+    expect(screen.getByTestId("settings-sermon-removal-row")).toHaveTextContent(
+      "Request sermon removal",
+    );
+  });
+
+  it("says which version of SundayBest this is, at its foot", () => {
+    render(<SettingsScreen />);
+
+    expect(screen.getByTestId("settings-version")).toHaveTextContent("SundayBest 1.0");
   });
 
   it("navigates to Daily Reminder when pressed", () => {

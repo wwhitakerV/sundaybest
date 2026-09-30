@@ -55,12 +55,58 @@ describe("parseExamContent: the supplied exam loads (criterion 3)", () => {
       title: "The Scriptures Received",
       questionCount: 15,
       durationMinutes: [8, 12],
-      modeDescriptions: {
-        exam: "Answers revealed only after submission.",
-        study: "Immediate option-specific teaching; not independent blind mastery evidence.",
-      },
+      question: "What did Jesus and the apostles say about Scripture?",
+      objectives: [
+        "identify major divisions",
+        "locate a teaching claim",
+        "distinguish text from interpretation",
+        "support a bounded conclusion using the listed source texts",
+      ],
     });
     expect(result.exam.summary.sourceLinks).toHaveLength(3);
+  });
+
+  it("builds what the overview explores, each with its passage's link", () => {
+    const result = parseExamContent(theologyExamContent());
+    if (!result.ok) throw new Error("expected the real content to parse");
+
+    expect(result.exam.summary.explore).toEqual([
+      {
+        title: "How Jesus reads the Scriptures",
+        icon: "scripture",
+        passage: {
+          reference: "Luke 24:25-49",
+          url: "https://www.biblegateway.com/passage/?search=Luke%2024%3A25-49&version=KJV",
+        },
+      },
+      {
+        title: "Why the Bereans examined what they heard",
+        icon: "people",
+        passage: {
+          reference: "Acts 17:10-12",
+          url: "https://www.biblegateway.com/passage/?search=Acts%2017%3A10-12&version=KJV",
+        },
+      },
+      {
+        title: "What Paul says Scripture is for",
+        icon: "letter",
+        passage: {
+          reference: "2 Timothy 3:14-17",
+          url: "https://www.biblegateway.com/passage/?search=2%20Timothy%203%3A14-17&version=KJV",
+        },
+      },
+    ]);
+  });
+
+  it("leaves the overview's question and what it explores out when the content has none", () => {
+    const content = theologyExamContent();
+    delete content.exam.experience.overview;
+
+    const result = parseExamContent(content);
+    if (!result.ok) throw new Error("expected content without an overview to parse");
+
+    expect(result.exam.summary.question).toBeNull();
+    expect(result.exam.summary.explore).toEqual([]);
   });
 
   it("builds the rules from exam.experience", () => {
@@ -97,6 +143,20 @@ type FailureCase = {
 };
 
 const FAILURE_CASES: FailureCase[] = [
+  {
+    name: "an explored passage isn't in the exam's source scope",
+    mutate: (content) => {
+      content.exam.experience.overview!.explore[0]!.passage = "John 5:39";
+    },
+    pathPrefix: "exam.experience.overview.explore[0].passage",
+  },
+  {
+    name: "an explored item names an icon the app doesn't draw",
+    mutate: (content) => {
+      content.exam.experience.overview!.explore[1]!.icon = "sparkles";
+    },
+    pathPrefix: "exam.experience.overview.explore[1].icon",
+  },
   {
     name: "a question id is missing from exam.questionIds",
     mutate: (content) => {

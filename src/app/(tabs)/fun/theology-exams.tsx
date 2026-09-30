@@ -1,1 +1,1 @@
-export { ExamOverviewScreen as default } from "@/features/exams";
+export { ExamsScreen as default } from "@/features/exams";

@@ -1,12 +1,10 @@
 import { StatusBar, StyleSheet, Text, View } from "react-native";
 import { useIsFocused, useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
-import { UserRound } from "lucide-react-native";
-
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { PAGE_INSET, Screen } from "@/ui/Screen";
 import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
 import { useTheme } from "@/theme";
+import { formatDotDate } from "@/utils/dates/formatDotDate";
 import { planOverviewHref, studyHref } from "@/features/plans";
 import {
   getActivePlan,
@@ -17,6 +15,7 @@ import {
   getSermonForPlan,
   getUserPlans,
   useAppSelector,
+  useToday,
 } from "@/core/store";
 import { ActivePlanBar } from "../components/ActivePlanBar";
 import { ActivePlanHero } from "../components/ActivePlanHero";
@@ -28,6 +27,9 @@ import { StartHereCard } from "../components/StartHereCard";
 import { describeActivePlan } from "../logic/active-plan-hero";
 import { describePlan } from "../logic/describe-plan";
 import { homePlanOverviewHref } from "../logic/routes";
+
+/** A header button's height — the masthead row keeps it. */
+const HEADER_HEIGHT = 44;
 
 /** Room under the content for the floating tab bar. */
 const BOTTOM_CLEARANCE =
@@ -49,7 +51,8 @@ export function HomeScreen() {
   const active = useAppSelector(getActivePlan);
   const progress = useAppSelector((state) => (active ? getPlanProgress(state, active.id) : null));
   const sermon = useAppSelector((state) => (active ? getSermonForPlan(state, active.id) : null));
-  const today = useAppSelector((state) => {
+  const today = useToday();
+  const todayStudy = useAppSelector((state) => {
     const day = active ? getCurrentPlanDay(state, active.id) : null;
     return day ? { day, minutes: getDayMinutes(state, day.id) } : null;
   });
@@ -79,12 +82,12 @@ export function HomeScreen() {
     phase,
   } = useHeroCollapse();
   const words =
-    progress && today
+    progress && todayStudy
       ? describeActivePlan({
           currentDay: progress.currentDayNumber,
           totalDays: progress.totalDays,
-          dayTitle: today.day.reading.title,
-          minutes: today.minutes,
+          dayTitle: todayStudy.day.reading.title,
+          minutes: todayStudy.minutes,
         })
       : null;
 
@@ -105,13 +108,13 @@ export function HomeScreen() {
           style={[styles.header, headerStyle]}
         >
           <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
-          <HeaderIconButton
-            testID="home-tab-account-button"
-            icon={UserRound}
-            accessibilityLabel="Account"
-            bordered={false}
-            onPress={() => router.push("/(tabs)/settings")}
-          />
+          <Text
+            testID="home-tab-date"
+            numberOfLines={1}
+            style={[theme.typography.dayStrip, { color: theme.colors.textMuted }]}
+          >
+            {formatDotDate(today)}
+          </Text>
         </Animated.View>
 
         <Animated.ScrollView
@@ -202,7 +205,10 @@ export function HomeScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  // As tall as a header button, though it holds none now Settings is a tab —
+  // so the featured plan below keeps its place.
   header: {
+    minHeight: HEADER_HEIGHT,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

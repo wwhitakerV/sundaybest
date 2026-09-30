@@ -9,6 +9,7 @@ import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
 import { StudyHeader } from "../components/StudyHeader";
 import { StudyNav } from "../components/StudyNav";
 import { StudyStepBody } from "../components/StudyStepBody";
+import { StudyDriftProvider } from "../components/StudyDriftIn";
 import { useStudyRoute } from "../hooks/use-study-route";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
@@ -78,7 +79,7 @@ export function StudyScreen() {
     renderedStep: renderedPage,
     bodyStyle,
     followStyle,
-  } = useStepTransition(toPageIndex(position, pages), { profile: "calm", reduceMotion });
+  } = useStepTransition(toPageIndex(position, pages), { profile: "drift", reduceMotion });
 
   if (!plan || !day) return null;
   const studyDay = day;
@@ -138,14 +139,16 @@ export function StudyScreen() {
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets
         >
-          <StudyStepBody
-            stepKey={bodyStep.key}
-            page={rendered.page}
-            content={{ day, scripture, reflections, prayer }}
-            answerFor={answerFor}
-            onAnswerChange={changeAnswer}
-            followStyle={followStyle}
-          />
+          <StudyDriftProvider revealKey={renderedPage} still={reduceMotion}>
+            <StudyStepBody
+              stepKey={bodyStep.key}
+              page={rendered.page}
+              content={{ day, scripture, reflections, prayer }}
+              answerFor={answerFor}
+              onAnswerChange={changeAnswer}
+              followStyle={followStyle}
+            />
+          </StudyDriftProvider>
         </ScrollView>
       </Animated.View>
 

@@ -35,3 +35,18 @@ const TINT_ABOVE_CAPSULE = 16;
 export function getFloatingNavBarTintHeight(capsuleBottom: number): number {
   return capsuleBottom + FLOATING_NAV_BAR.capsuleHeight + TINT_ABOVE_CAPSULE;
 }
+
+/**
+ * How much room a screen's scrolling content leaves at its foot for a
+ * floating bar, measured up from the safe area's bottom edge (where a
+ * `Screen`'s content ends): the bar, and the tint above it, so the last line
+ * can scroll clear of both.
+ */
+export function getFloatingNavBarClearance(insetBottom: number): number {
+  return (
+    getFloatingNavBarBottom(insetBottom) -
+    insetBottom +
+    FLOATING_NAV_BAR.capsuleHeight +
+    TINT_ABOVE_CAPSULE
+  );
+}

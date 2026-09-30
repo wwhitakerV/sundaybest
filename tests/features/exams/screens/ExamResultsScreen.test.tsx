@@ -3,7 +3,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
-import { ExamResultsScreen, theologyExamsHref } from "@/features/exams";
+import { lightTheme } from "@/theme/tokens";
+import { ExamResultsScreen, examOverviewHref } from "@/features/exams";
 import {
   correctResponseFor,
   theologyExamResult,
@@ -22,6 +23,7 @@ const qid = (n: number) => `THEO-01-01-Q${String(n).padStart(2, "0")}`;
 
 const mockDismissTo = jest.fn<void, [ExpoRouter.Href]>();
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
+const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 
 function hrefText(href: unknown): string {
   if (typeof href === "string") return href;
@@ -34,11 +36,11 @@ function hrefText(href: unknown): string {
 
 beforeEach(() => {
   jest.mocked(useLocalSearchParams).mockReturnValue({ attemptId: ATTEMPT_ID });
-  jest
-    .mocked(useRouter)
-    .mockReturnValue({ dismissTo: mockDismissTo, push: mockPush } as unknown as ReturnType<
-      typeof useRouter
-    >);
+  jest.mocked(useRouter).mockReturnValue({
+    dismissTo: mockDismissTo,
+    push: mockPush,
+    replace: mockReplace,
+  } as unknown as ReturnType<typeof useRouter>);
 });
 
 function renderResults(state: AppState) {
@@ -280,11 +282,54 @@ describe("ExamResultsScreen", () => {
     });
   });
 
+  it("floats Done, the black primary, in the bar every screen's actions float in", () => {
+    renderResults(elevenOfFifteen());
+
+    expect(
+      within(screen.getByTestId("exam-results-bar")).getByTestId("exam-results-done-button"),
+    ).toHaveStyle({ backgroundColor: lightTheme.colors.controlPrimary });
+  });
+
+  describe("what's next", () => {
+    it("offers the next level up in the course", () => {
+      renderResults(elevenOfFifteen());
+
+      expect(screen.getByTestId("exam-results-next")).toHaveTextContent(
+        /Reading in Context.*Intermediate/,
+      );
+      fireEvent.press(screen.getByTestId("exam-results-next"));
+
+      expect(mockDismissTo).toHaveBeenCalledWith(examOverviewHref("THEO-01-02"));
+    });
+
+    it("offers to review what was missed, in a short study of just those questions", () => {
+      renderResults(elevenOfFifteen());
+
+      expect(screen.getByTestId("exam-results-review-button")).toHaveTextContent(
+        /Review \d+ concepts?/,
+      );
+      fireEvent.press(screen.getByTestId("exam-results-review-button"));
+
+      expect(hrefText(mockReplace.mock.calls.at(-1)?.[0])).toContain("/exam/[attemptId]");
+    });
+
+    it("offers no review once nothing was missed", () => {
+      renderResults(
+        withExamAttempt(INITIAL_STATE, {
+          attemptId: ATTEMPT_ID,
+          completedResult: theologyExamResult({}),
+        }),
+      );
+
+      expect(screen.queryByTestId("exam-results-review-button")).toBeNull();
+    });
+  });
+
   it("dismisses to the exam overview when Done is pressed", () => {
     renderResults(elevenOfFifteen());
 
     fireEvent.press(screen.getByTestId("exam-results-done-button"));
 
-    expect(mockDismissTo).toHaveBeenCalledWith(theologyExamsHref);
+    expect(mockDismissTo).toHaveBeenCalledWith(examOverviewHref("THEO-01-01"));
   });
 });

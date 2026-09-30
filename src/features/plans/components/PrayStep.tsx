@@ -5,6 +5,7 @@ import type { Prayer } from "@/types/domain";
 import { useTheme } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
+import { StudyDriftIn } from "./StudyDriftIn";
 
 const BADGE_SIZE = 52;
 
@@ -22,18 +23,20 @@ export function PrayStep({ dayNumber, prayer, followStyle }: PrayStepProps) {
   return (
     <View testID="study-pray-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label="Pray" />
-      <View style={styles.titleRow}>
-        <View style={[styles.badge, { backgroundColor: theme.colors.controlPrimary }]}>
-          <HandHeart
-            size={24}
-            color={theme.colors.onControlPrimary}
-            strokeWidth={theme.icon.strokeWidth}
-          />
+      <StudyDriftIn order={1}>
+        <View style={styles.titleRow}>
+          <View style={[styles.badge, { backgroundColor: theme.colors.controlPrimary }]}>
+            <HandHeart
+              size={24}
+              color={theme.colors.onControlPrimary}
+              strokeWidth={theme.icon.strokeWidth}
+            />
+          </View>
+          <Text style={[theme.typography.screenTitle, styles.title, { color: theme.colors.text }]}>
+            {prayer.title}
+          </Text>
         </View>
-        <Text style={[theme.typography.screenTitle, styles.title, { color: theme.colors.text }]}>
-          {prayer.title}
-        </Text>
-      </View>
+      </StudyDriftIn>
       <StudyFollow style={followStyle}>
         <Text style={[theme.typography.scripture, { color: theme.colors.text }]}>
           {prayer.text}

@@ -97,6 +97,14 @@ describe("StudyScreen", () => {
     expect(screen.getByTestId("study-screen")).toBeVisible();
   });
 
+  it("drifts a page in, part by part: its kicker, its title, then the rest", () => {
+    renderStudy(STILL_PRAYING, 1);
+
+    for (const order of [0, 1, 2]) {
+      expect(screen.getByTestId(`study-drift-${order}`)).toBeOnTheScreen();
+    }
+  });
+
   it("shows nothing for a day the plan doesn't have", () => {
     renderStudy(STILL_PRAYING, 9);
 

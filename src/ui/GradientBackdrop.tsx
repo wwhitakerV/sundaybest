@@ -21,11 +21,13 @@ export type GradientBackdropProps = {
   /** The gradient's colours, first to last (`getBackdropStops`). */
   stops: readonly BackdropStop[];
   /**
-   * Shows it only from a line down (points from its top): clear above
-   * `from`, fading in to solid by `to`. Laid over the same gradient, it's
-   * seamless — and covers whatever passes under that line.
+   * Shows it only past a line (points from its top): clear above `from`,
+   * fading in to solid by `to`. Laid over the same gradient, it's seamless —
+   * and covers whatever passes under that line. Across (`axis: "x"`, points
+   * from its left), it runs sideways instead: `to` left of `from` keeps it
+   * solid on the left, clearing to the right.
    */
-  reveal?: { from: number; to: number };
+  reveal?: { from: number; to: number; axis?: "x" | "y" };
   /** An image washed over the gradient at `opacity`, filling it edge to edge. */
   underlay?: { uri: string; opacity: number };
   testID?: string;
@@ -33,7 +35,10 @@ export type GradientBackdropProps = {
 
 /**
  * A smooth diagonal gradient filling whatever it's placed in — top left to
- * bottom right — behind its container's content. Never takes touches.
+ * bottom right — behind its container's content. Never takes touches. It
+ * draws at 100% of its box and never measures it: a box that animates (a
+ * collapsing hero) is followed natively, with no redraw from JavaScript on
+ * each frame.
  */
 export function GradientBackdrop({ stops, reveal, underlay, testID }: GradientBackdropProps) {
   // Unique per instance: SVG gradient ids are document-global on some renderers.
@@ -44,7 +49,7 @@ export function GradientBackdrop({ stops, reveal, underlay, testID }: GradientBa
 
   return (
     <View testID={testID} pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Svg width="100%" height="100%">
+      <Svg {...(testID && { testID: `${testID}-drawing` })} width="100%" height="100%">
         <Defs>
           <LinearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
             {stops.map(({ offset, color }) => (
@@ -56,10 +61,9 @@ export function GradientBackdrop({ stops, reveal, underlay, testID }: GradientBa
               {/* A mask's own shades, not a colour of the app's: white shows, clear hides. */}
               <LinearGradient
                 id={fadeId}
-                x1="0"
-                y1={reveal.from}
-                x2="0"
-                y2={reveal.to}
+                {...(reveal.axis === "x"
+                  ? { x1: reveal.from, y1: "0", x2: reveal.to, y2: "0" }
+                  : { x1: "0", y1: reveal.from, x2: "0", y2: reveal.to })}
                 gradientUnits="userSpaceOnUse"
               >
                 {FADE_STOPS.map(({ offset, opacity }) => (

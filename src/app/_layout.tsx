@@ -5,6 +5,7 @@ import { ErrorBoundary, SuspenseFallback } from "@/core/monitoring/error-boundar
 import { LoadingScreen } from "@/ui/LoadingScreen";
 import { HeaderArrivalProvider } from "@/ui/HeaderArrivalProvider";
 import { headerEntranceLayout } from "@/ui/HeaderEntranceScope";
+import { HALF_SHEET_OPTIONS } from "@/ui/SheetLayout";
 
 /**
  * The tab bar's root screens. Header buttons animate in whenever the app
@@ -19,6 +20,8 @@ const TAB_ROOTS = [
   "(tabs)/fun/index",
   "(tabs)/fun",
   "(tabs)/progress",
+  "(tabs)/settings/index",
+  "(tabs)/settings",
 ];
 
 export default function RootLayout() {
@@ -46,9 +49,17 @@ export default function RootLayout() {
           {/*
            * A theology exam attempt — the questions, its results, and
            * Understand why — is another full-screen modal with its own stack,
-           * over the exam's overview in Fun.
+           * over the exam's overview. The overview itself (`exams/[examId]/index`)
+           * is an ordinary push above the tabs, so the tab bar steps aside.
            */}
           <Stack.Screen name="exam" options={{ presentation: "fullScreenModal" }} />
+          {/*
+           * An exam's topics and passages open over its overview as native
+           * half-height sheets: iOS draws the grabber, and a drag down or a
+           * tap on the dimmed overview above closes them.
+           */}
+          <Stack.Screen name="exams/[examId]/topics" options={HALF_SHEET_OPTIONS} />
+          <Stack.Screen name="exams/[examId]/passages" options={HALF_SHEET_OPTIONS} />
         </Stack>
       </HeaderArrivalProvider>
     </AppProviders>

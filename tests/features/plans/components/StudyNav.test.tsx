@@ -1,7 +1,10 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
+import { tapFeedback } from "@/core/haptics/haptics";
 import { StudyNav } from "@/features/plans/components/StudyNav";
 import { getFloatingNavBarBottom } from "@/ui/floatingNavBar";
+
+jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
 
 // StudyNav fades in from opacity 0 on mount (useStudyNavEntrance). Jest's
 // Reanimated mock never runs that animation, so everything inside the nav
@@ -69,6 +72,15 @@ describe("StudyNav", () => {
 
     expect(screen.getByText("Previous")).toBeOnTheScreen();
     expect(screen.getByText("Next")).toBeOnTheScreen();
+  });
+
+  it("taps as Previous and Next are pressed", () => {
+    render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
+
+    fireEvent.press(screen.getByTestId("study-nav-prev-button"));
+    fireEvent.press(screen.getByTestId("study-nav-next-button"));
+
+    expect(tapFeedback).toHaveBeenCalledTimes(2);
   });
 
   it("calls onPrevious when the previous control is pressed", () => {

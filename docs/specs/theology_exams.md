@@ -35,27 +35,34 @@ promising something it does not deliver.
 
 ## Decisions already made (2026-09-28)
 
-| Topic           | Decision                                                                                                                                                                                                                                           |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Answer keys     | Bundled in the app in every build and graded on the device. There is no backend yet. Grading goes through one seam a trusted service can replace later (ADR 0013).                                                                                 |
-| Entry point     | The Fun tab's Theology Exams tile opens this exam in place of its "Coming soon" page. The other Fun destinations keep theirs.                                                                                                                      |
-| Incorrect state | Monochrome: an ink ✕ and the word "Incorrect". Never red — a wrong answer is a teachable moment. Correct keeps the existing green with ✓ and "Correct answer".                                                                                     |
-| Selected state  | SundayBest red (`accent`) marks what is selected or active, and nothing else.                                                                                                                                                                      |
-| Concept labels  | Fewer than 3 independent scored observations of a concept: **Not enough evidence**. 3 or more at 80% correct or better: **Strength**. 3 or more below 80%: **Needs review**. Only Exam Mode first attempts are independent scored observations.    |
-| Practice        | After any attempt that revealed answers — a submitted Exam Mode attempt, or a Study Mode attempt with at least one checked answer — every later Exam Mode attempt at the same exam is **Practice**: raw score and explanations, no concept labels. |
-| Review queue    | Every missed primary concept goes to review, whatever its label.                                                                                                                                                                                   |
-| Passage links   | Open in an in-app Safari sheet (`expo-web-browser`), so the exam stays in the foreground. Needs one new development build.                                                                                                                         |
-| Design source   | The brief's Design direction. Not the Quick Check format.                                                                                                                                                                                          |
-| Catalog         | None yet. One exam, so the tile opens it directly. A catalog comes with the second exam.                                                                                                                                                           |
+| Topic           | Decision                                                                                                                                                                                                                                                                            |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Answer keys     | Bundled in the app in every build and graded on the device. There is no backend yet. Grading goes through one seam a trusted service can replace later (ADR 0013).                                                                                                                  |
+| Entry point     | The Fun tab's Theology Exams tile opens the exams page (in Fun's stack, tab bar showing). An exam there opens its full overview, pushed above the tabs so its actions own the bottom of the screen (changed 2026-09-28). The other Fun destinations keep their "Coming soon" pages. |
+| Incorrect state | Monochrome: an ink ✕ and the word "Incorrect". Never red — a wrong answer is a teachable moment. Correct keeps the existing green with ✓ and "Correct answer".                                                                                                                      |
+| Selected state  | SundayBest red (`accent`) marks what is selected or active, and nothing else.                                                                                                                                                                                                       |
+| Concept labels  | Fewer than 3 independent scored observations of a concept: **Not enough evidence**. 3 or more at 80% correct or better: **Strength**. 3 or more below 80%: **Needs review**. Only Exam Mode first attempts are independent scored observations.                                     |
+| Practice        | After any attempt that revealed answers — a submitted Exam Mode attempt, or a Study Mode attempt with at least one checked answer — every later Exam Mode attempt at the same exam is **Practice**: raw score and explanations, no concept labels.                                  |
+| Review queue    | Every missed primary concept goes to review, whatever its label.                                                                                                                                                                                                                    |
+| Passage links   | Open in an in-app Safari sheet (`expo-web-browser`), so the exam stays in the foreground. Needs one new development build.                                                                                                                                                          |
+| Design source   | The brief's Design direction. Not the Quick Check format.                                                                                                                                                                                                                           |
+| Catalog         | The exams page lists every bundled exam whose content can be taken — one for now — with the four levels (Foundations, Intermediate, Advanced, Scholar) as depth of study, never ranks. No unavailable entries (changed 2026-09-28).                                                 |
 
 ## Acceptance criteria
 
 ### Entry
 
-1. **The tile opens the exam**
+1. **The tile opens the exams page, and an exam its overview**
    - **Given** the Fun tab
-   - **When** the user taps the Theology Exams tile
-   - **Then** the overview of _The Scriptures Received_ appears, not "Coming soon"
+   - **When** the user taps the Theology Exams tile, then Scripture & Reading's book, then _The Scriptures Received_
+   - **Then** the exams page appears (not "Coming soon"), and tapping an exam opens its full overview — not a half-height sheet, and not the first question — with the tab bar out of the way
+
+1a. **The exams page is a shelf of subjects** (changed 2026-09-28, per the exams-page mock)
+
+- **Given** the exams page
+- **Then** it never scrolls up and down: it's headed "Theology Exams" with "12 subjects · 48 exams" under it; then, when an attempt is under way, a way straight back into it ("Continue exam · The Scriptures Received", "6 of 15 answered" — the attempt begun most recently); then "Subject 01 / 12" with an icon-only **All subjects** button, then the subjects as a carousel of books filling the rest of the page down to the tab bar. Every book is made in full — a dark cloth cover with its number and name, its title, how many exams it holds ("Four exams"), and each exam's level (Foundations, Intermediate, Advanced, Scholar — depth of study, never a rank) above its title — so a swipe only slides them. On a shorter screen the books set a smaller title and one line an exam, so they still fit. The exams on a book aren't buttons; the book is, and says so ("Open subject →" at its foot). A book's print grows with the reader's text size only a little (1.2×), and is never smaller than 11 pt: pressing the one in view opens its subject's page, and pressing the one beside it brings it into view. **All subjects** opens a native half-height sheet listing every subject; picking one closes it with the page on that subject
+- **And** a subject's page is set out as a syllabus: its place ("Subject 01 / 12"), its name, "Four exams · taken in order, each going deeper", and a row per exam — its level, its title, its questions, time, and passages (or "Not available yet"), and where the learner stands with it (in progress, or the last score) — each opening that exam's overview. The next exam to take — the first that can be taken and isn't finished — is marked **Start here**, or **Continue** when it's under way; nothing is marked once every one that can be taken is done. Below the exams: "You'll be able to" — each exam's `exam.objectives`, as sentences, under its level and title — and a reading list of their passages, each once, opening in Safari
+- **And** the subjects and their exams come from a catalog (`src/features/exams/data/catalog.ts`) that is a placeholder until the curriculum is supplied: only subject 01's titles and subject 02's name are real. Every exam is listed alike; one without content (all but THEO-01-01) opens an overview saying it isn't available yet
 
 2. **Other destinations are unchanged**
    - **Given** the Fun tab
@@ -83,16 +90,18 @@ promising something it does not deliver.
 
 6. **The overview describes the exam**
    - **Given** the overview
-   - **Then** it shows `exam.domain`, `exam.level`, `exam.title`, "15 questions" (`exam.questionCount`), "8–12 min" (`exam.durationMinutes`), what the learner will do (`exam.objectives`), the areas covered (`exam.concepts`), the source scope with a link per passage (`exam.sourceScope.scriptureLinks`), and a note that the score measures performance on these questions — not spiritual standing, and not a credential
+   - **Then** it shows `exam.domain` / `exam.level` as its kicker, `exam.title`, the question it asks (`exam.experience.overview.question`, or `exam.overview` when the content sets none), and "15 questions" (`exam.questionCount`), "8–12 min" (`exam.durationMinutes`), and "3 passages" set plainly on one line, parted by thin grey rules — never as buttons; then how to begin (criterion 7) and, pinned to the foot of the screen above the floating bar, **Topics covered** and **Passages**, each opening a native half-height sheet over the overview (grabber shown; a drag down or a tap outside closes it). Topics covered lists what the learner will explore, a row each opening its passage (`exam.experience.overview.explore[]` — `title`, `icon` of `scripture` / `people` / `letter`, and a `passage` that must be one of `exam.sourceScope.scriptureLinks[].reference`, or the content fails closed; the button is left out when the content has none); Passages lists a link per passage (`exam.sourceScope.scriptureLinks`). (Changed 2026-09-29: the overview no longer carries the note on scores.) The action (and View results beside it, after a submitted exam) floats in the app's floating bar, where the tab bar and study pager float, with the page fading out behind it (changed 2026-09-28: laid out per the overview mock; `exam.objectives` and `exam.concepts` are still validated but no longer shown)
 
-7. **The modes are explained before starting**
+7. **The two ways in are explained, then offered by next action**
    - **Given** the overview
-   - **Then** Exam Mode and Study Mode are offered with their descriptions from `exam.completionBehavior.examMode` and `exam.completionBehavior.studyMode`, Exam Mode is selected, and Start begins an attempt in the selected mode
+   - **Then** under "Choose how to begin", Study ("Learn after each answer." / "Check each answer as you go, and learn why it's right.") and Exam ("See answers after you submit." / "Answer every question, then submit. Scored."), in that order, are offered as two options side by side — rounded squares with their icons and radio marks, the picked one in the selection's colours — with the picked one's explanation under them (each option also tells VoiceOver its own), one picked, and a single action below follows the pick and the learner's history (changed 2026-09-28): Exam offers **Begin exam** on a first visit, **Resume exam** for one left unfinished, **Practice again** after one's submitted, and **Begin practice exam** once Study has revealed answers (with a note that it won't count toward concept strengths); Study offers **Begin study**, or **Continue study** for one already begun. The overview starts on Study — the gentler way in — unless an exam is under way, when it starts on Exam (changed 2026-09-29). After a submitted exam, **View results** sits beside the action, with the last score and the concepts for review shown near the top
 
 8. **An open attempt resumes**
-   - **Given** an attempt left before it was finished
-   - **When** the overview opens with that attempt's mode selected
-   - **Then** it offers Resume, which returns to the first unanswered question (in Study Mode, the first unchecked one) with every earlier response kept, and no second attempt in the same mode can be open at once. An unfinished Study attempt never blocks starting an Exam attempt, or the reverse — otherwise opening Study Mode without checking anything would block the exam (see criterion 35)
+   - **Given** an Exam attempt left before it was finished
+   - **When** the overview opens
+   - **Then** it starts on Exam and offers Resume exam, says how many are answered, and Resume which returns to the first unanswered question (in Study Mode, the first unchecked one) with every earlier response kept, and no second attempt in the same mode can be open at once. An unfinished Study attempt never blocks starting an Exam attempt, or the reverse — otherwise opening Study Mode without checking anything would block the exam (see criterion 35)
+
+8a. **A fresh attempt opens on its preface** (added 2026-09-29) - **Given** an attempt with no answer given yet - **When** its session opens - **Then** before question 1 it sets out the conditions it's sat under — its mode and title, how many questions, about how long (a whole exam only), how answers are shown (after submitting, in an exam; as each is checked, in a study), and that it can be left and resumed — with a black floating **Start the exam** / **Start studying**; an attempt already begun goes straight to its questions
 
 ### Every question
 
@@ -158,7 +167,7 @@ promising something it does not deliver.
 
 21. **Check needs a complete response**
     - **Given** a Study Mode question
-    - **Then** Check answer is disabled until the response is complete
+    - **Then** Check answer, set under the answers (Previous and Next float in the app's floating bar, Next the black primary), is disabled until the response is complete
 
 22. **Checking reveals the answer**
     - **Given** a complete Study Mode response
@@ -214,7 +223,11 @@ promising something it does not deliver.
 
 33. **Missed concepts go to review**
     - **Given** any attempt with a missed question
-    - **Then** its `questions[].primaryConceptId` is listed under "For review" on the results and on the overview
+    - **Then** its `questions[].primaryConceptId` is listed under "For review" on the results and on the overview, and "Review due · N concepts" shows on its subject page (changed 2026-09-29)
+
+33a. **Review is a short study of what was missed** (added 2026-09-29) - **Given** concepts for review, and no Study attempt already open - **When** the user taps "Review N concepts" — in the overview's panel, or under "What's next" on the results - **Then** a Study attempt begins over only the questions whose `primaryConceptId` is for review; once it's finished it's the latest attempt, so what was answered right leaves "For review" on its own
+
+33b. **What's next** (added 2026-09-29) - **Given** the results - **Then** "What's next" offers the review above, when there's something to review, and the next level up in the subject's course (from the catalog), which opens that exam's overview
 
 ### Retakes
 
@@ -298,39 +311,63 @@ promising something it does not deliver.
 
 ## testIDs
 
-| Element                                   | testID                                                     |
-| ----------------------------------------- | ---------------------------------------------------------- |
-| Fun's Theology Exams tile (existing)      | `fun-games-exams`                                          |
-| Overview screen                           | `exam-overview-screen`                                     |
-| Overview back button                      | `exam-overview-back-button`                                |
-| Mode option                               | `exam-overview-mode-{exam\|study}`                         |
-| Start / Resume button                     | `exam-overview-start-button`                               |
-| Overview source link                      | `exam-overview-source-link-{index}`                        |
-| Content error                             | `exam-content-error`                                       |
-| Session screen                            | `exam-session-screen`                                      |
-| Session close button                      | `exam-session-close-button`                                |
-| Progress line                             | `exam-progress`                                            |
-| Question stem                             | `exam-question-stem`                                       |
-| Passage link under the stem               | `exam-passage-link-{index}`                                |
-| Choice row (single, true/false, multiple) | `exam-choice-{choiceId}`                                   |
-| Matching target for a prompt              | `exam-match-{promptId}-{targetId}`                         |
-| Ordering step                             | `exam-order-step-{stepId}`                                 |
-| Clear order                               | `exam-order-clear-button`                                  |
-| Previous / Next                           | `exam-previous-button` / `exam-next-button`                |
-| Check answer                              | `exam-check-button`                                        |
-| Study feedback                            | `exam-study-feedback`                                      |
-| Understand why (any screen)               | `exam-understand-why-button`                               |
-| Review row                                | `exam-review-row-{questionId}`                             |
-| Submit exam                               | `exam-submit-button`                                       |
-| Confirm submit / keep working             | `exam-submit-confirm-button` / `exam-submit-cancel-button` |
-| Results screen                            | `exam-results-screen`                                      |
-| Score / band                              | `exam-results-score` / `exam-results-band`                 |
-| Concept row                               | `exam-results-concept-{conceptId}`                         |
-| Result item                               | `exam-results-item-{questionId}`                           |
-| Results done                              | `exam-results-done-button`                                 |
-| Understand why screen                     | `exam-why-screen`                                          |
-| Understand why passage link               | `exam-why-passage-link-{index}`                            |
-| Locked Understand why                     | `exam-why-locked`                                          |
+| Element                                        | testID                                                                            |
+| ---------------------------------------------- | --------------------------------------------------------------------------------- |
+| Fun's Theology Exams tile (existing)           | `fun-games-exams`                                                                 |
+| Overview screen                                | `exam-overview-screen`                                                            |
+| Overview back button                           | `exam-overview-back-button`                                                       |
+| Mode choice (a radio card)                     | `exam-overview-mode-{exam\|study}`                                                |
+| Facts / one fact                               | `exam-overview-facts` / `exam-overview-facts-{questions\|duration\|passages}`     |
+| Topics covered / Passages buttons              | `exam-overview-topics-button` / `exam-overview-passages-button`                   |
+| Topics sheet / one topic                       | `exam-topics-sheet` / `exam-topics-{index}`                                       |
+| Passages sheet                                 | `exam-passages-sheet`                                                             |
+| Floating bar                                   | `exam-overview-bar`                                                               |
+| Action (Begin exam, Resume exam, …)            | `exam-overview-start-button`                                                      |
+| View results                                   | `exam-overview-secondary-button`                                                  |
+| Where the learner stands                       | `exam-overview-standing`                                                          |
+| Unknown exam                                   | `exam-overview-unavailable`                                                       |
+| Exams page                                     | `exams-screen`                                                                    |
+| Exams page back button                         | `exams-back-button`                                                               |
+| Exam on a subject's book (print, not a button) | `exams-item-{examId}`                                                             |
+| Count / subject in view                        | `exams-count` / `exams-position`                                                  |
+| All subjects (icon button)                     | `exams-all-subjects-button`                                                       |
+| Shelf / its scroller / one subject's book      | `exams-carousel` / `exams-carousel-scroller` / `exams-folio-{subjectId}`          |
+| Continue an attempt under way                  | `exams-continue`                                                                  |
+| A book's "Open subject" line                   | `exams-folio-{subjectId}-open`                                                    |
+| The next exam to take, on a subject page       | `exam-subject-item-{examId}-next`                                                 |
+| Session preface / its Start                    | `exam-session-preface` / `exam-session-start-button`                              |
+| Review what was missed                         | `exam-overview-review-button` / `exam-results-review-button`                      |
+| What's next / the next level                   | `exam-results-whats-next` / `exam-results-next`                                   |
+| Subject syllabus / one reading                 | `exam-subject-objectives` / `exam-subject-reading-{index}`                        |
+| Session's / results' floating bar              | `exam-session-bar` / `exam-results-bar`                                           |
+| Subjects sheet / one subject                   | `exam-subjects-sheet` / `exam-subjects-{subjectId}`                               |
+| Subject page / back / one exam                 | `exam-subject-screen` / `exam-subject-back-button` / `exam-subject-item-{examId}` |
+| Passage link (in the Passages sheet)           | `exam-overview-source-link-{index}`                                               |
+| Content error                                  | `exam-content-error`                                                              |
+| Session screen                                 | `exam-session-screen`                                                             |
+| Session close button                           | `exam-session-close-button`                                                       |
+| Progress line                                  | `exam-progress`                                                                   |
+| Question stem                                  | `exam-question-stem`                                                              |
+| Passage link under the stem                    | `exam-passage-link-{index}`                                                       |
+| Choice row (single, true/false, multiple)      | `exam-choice-{choiceId}`                                                          |
+| Matching target for a prompt                   | `exam-match-{promptId}-{targetId}`                                                |
+| Ordering step                                  | `exam-order-step-{stepId}`                                                        |
+| Clear order                                    | `exam-order-clear-button`                                                         |
+| Previous / Next                                | `exam-previous-button` / `exam-next-button`                                       |
+| Check answer                                   | `exam-check-button`                                                               |
+| Study feedback                                 | `exam-study-feedback`                                                             |
+| Understand why (any screen)                    | `exam-understand-why-button`                                                      |
+| Review row                                     | `exam-review-row-{questionId}`                                                    |
+| Submit exam                                    | `exam-submit-button`                                                              |
+| Confirm submit / keep working                  | `exam-submit-confirm-button` / `exam-submit-cancel-button`                        |
+| Results screen                                 | `exam-results-screen`                                                             |
+| Score / band                                   | `exam-results-score` / `exam-results-band`                                        |
+| Concept row                                    | `exam-results-concept-{conceptId}`                                                |
+| Result item                                    | `exam-results-item-{questionId}`                                                  |
+| Results done                                   | `exam-results-done-button`                                                        |
+| Understand why screen                          | `exam-why-screen`                                                                 |
+| Understand why passage link                    | `exam-why-passage-link-{index}`                                                   |
+| Locked Understand why                          | `exam-why-locked`                                                                 |
 
 ## Out of scope
 

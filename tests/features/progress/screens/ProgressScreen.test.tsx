@@ -77,14 +77,6 @@ describe("ProgressScreen", () => {
     expect(screen.getByText("Progress")).toBeVisible();
   });
 
-  it("navigates to Settings when the account icon is pressed", () => {
-    renderProgress();
-
-    press("progress-account-button");
-
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings");
-  });
-
   describe("the week", () => {
     it("opens on this week", () => {
       renderProgress();

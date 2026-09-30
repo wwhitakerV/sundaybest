@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Brain, Flame, House, LibraryBig } from "lucide-react-native";
+import { Flame, House, LibraryBig, UserRound } from "lucide-react-native";
 
 import { TabBar } from "@/ui/tab-bar/TabBar";
 import { TabIcon } from "@/ui/tab-bar/TabIcon";
@@ -35,14 +35,6 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="fun"
-          options={{
-            title: "Fun",
-            tabBarButtonTestID: "tab-fun",
-            tabBarIcon: ({ color, size }) => <TabIcon icon={Brain} color={color} size={size} />,
-          }}
-        />
-        <Tabs.Screen
           name="progress"
           options={{
             title: "Progress",
@@ -50,8 +42,16 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => <TabIcon icon={Flame} color={color} size={size} />,
           }}
         />
-        {/* Reachable only via the header's account icon, not a tab. */}
-        <Tabs.Screen name="settings" options={{ href: null }} />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: "Settings",
+            tabBarButtonTestID: "tab-settings",
+            tabBarIcon: ({ color, size }) => <TabIcon icon={UserRound} color={color} size={size} />,
+          }}
+        />
+        {/* Hidden for now (MVP): its routes stay, it just has no tab. */}
+        <Tabs.Screen name="fun" options={{ href: null }} />
       </Tabs>
     </TabBarAccessoryProvider>
   );

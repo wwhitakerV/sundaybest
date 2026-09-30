@@ -147,6 +147,26 @@
         "voiceOverLabels": true,
         "reducedMotion": true,
         "feedbackNotColorOnly": true
+      },
+      "overview": {
+        "question": "What did Jesus and the apostles say about Scripture?",
+        "explore": [
+          {
+            "title": "How Jesus reads the Scriptures",
+            "passage": "Luke 24:25-49",
+            "icon": "scripture"
+          },
+          {
+            "title": "Why the Bereans examined what they heard",
+            "passage": "Acts 17:10-12",
+            "icon": "people"
+          },
+          {
+            "title": "What Paul says Scripture is for",
+            "passage": "2 Timothy 3:14-17",
+            "icon": "letter"
+          }
+        ]
       }
     }
   },

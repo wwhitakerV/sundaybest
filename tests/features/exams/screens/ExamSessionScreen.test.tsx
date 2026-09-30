@@ -4,8 +4,9 @@ import type * as ExpoRouter from "expo-router";
 
 import { announce } from "@/core/accessibility/announce";
 import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
+import { lightTheme } from "@/theme/tokens";
 import { openPassageLink } from "@/core/links/open-passage-link";
-import { ExamSessionScreen, theologyExamsHref } from "@/features/exams";
+import { ExamSessionScreen, examOverviewHref } from "@/features/exams";
 import { examResultsHref, understandWhyHref } from "@/features/exams/logic/routes";
 import type { ExamMode } from "@/types/domain";
 import {
@@ -70,7 +71,16 @@ function q04PromptLabel(promptId: string): string {
   return prompt.label;
 }
 
+/** Renders the session, past its preface to its questions — as a learner who's pressed Start. */
 function renderSession(state: AppState) {
+  const view = renderPreface(state);
+  const start = screen.queryByTestId("exam-session-start-button");
+  if (start) fireEvent.press(start);
+  return view;
+}
+
+/** Renders the session as it first opens: a fresh attempt on its preface. */
+function renderPreface(state: AppState) {
   return render(
     <AppStoreProvider initialState={state}>
       <ExamSessionScreen />
@@ -97,7 +107,63 @@ describe("ExamSessionScreen", () => {
 
     fireEvent.press(screen.getByTestId("exam-session-close-button"));
 
-    expect(mockDismissTo).toHaveBeenCalledWith(theologyExamsHref);
+    expect(mockDismissTo).toHaveBeenCalledWith(examOverviewHref("THEO-01-01"));
+  });
+
+  it("floats Previous and Next in the bar every screen's actions float in, Next the black primary", () => {
+    renderSession(freshAttempt());
+
+    const bar = within(screen.getByTestId("exam-session-bar"));
+    expect(bar.getByTestId("exam-previous-button")).toBeDisabled();
+    expect(bar.getByTestId("exam-next-button")).toHaveStyle({
+      backgroundColor: lightTheme.colors.controlPrimary,
+    });
+  });
+
+  it("sets Check answer under the answers, in Study, not in the bar", () => {
+    renderSession(freshAttempt("study"));
+
+    expect(screen.getByTestId("exam-check-button")).toBeOnTheScreen();
+    expect(
+      within(screen.getByTestId("exam-session-bar")).queryByTestId("exam-check-button"),
+    ).toBeNull();
+  });
+
+  describe("before the first question", () => {
+    it("sets out an exam's conditions, then starts it", () => {
+      renderPreface(freshAttempt());
+
+      expect(screen.getByTestId("exam-session-preface")).toHaveTextContent(
+        /15 questions.*About 8–12 min.*Answers are revealed after you submit/,
+      );
+      expect(screen.queryByTestId("exam-question-stem")).toBeNull();
+
+      fireEvent.press(screen.getByTestId("exam-session-start-button"));
+
+      expect(screen.getByTestId("exam-question-stem")).toBeVisible();
+    });
+
+    it("says a study is checked as it goes", () => {
+      renderPreface(freshAttempt("study"));
+
+      expect(screen.getByTestId("exam-session-start-button")).toHaveTextContent("Start studying");
+      expect(screen.getByTestId("exam-session-preface")).toHaveTextContent(
+        /Check each answer as you go/,
+      );
+    });
+
+    it("goes straight to the questions of an attempt already begun", () => {
+      const [first] = theologyExam().exam.questions;
+      renderPreface(
+        withExamAttempt(INITIAL_STATE, {
+          attemptId: ATTEMPT_ID,
+          responses: first ? { [first.id]: correctResponseFor(first.id) } : {},
+        }),
+      );
+
+      expect(screen.queryByTestId("exam-session-preface")).toBeNull();
+      expect(screen.getByTestId("exam-question-stem")).toBeVisible();
+    });
   });
 
   describe("every question", () => {

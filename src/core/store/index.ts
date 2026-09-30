@@ -28,6 +28,7 @@ export {
   getExamAttempt,
   getExamConceptsForReview,
   getLatestCompletedExamAttempt,
+  getLatestOpenExamAttempt,
   getOpenExamAttempt,
   hasRevealedExamAnswers,
 } from "./selectors/exams";

@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { UserRound } from "lucide-react-native";
 
 import { PAGE_INSET, Screen } from "@/ui/Screen";
 import { Divider } from "@/ui/Divider";
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
 import { FilterPills } from "@/ui/FilterPills";
 import { TitleHeader } from "@/ui/TitleHeader";
 import { useTheme } from "@/theme";
@@ -55,18 +53,7 @@ export function PlansScreen() {
 
   return (
     <Screen testID="plans-screen" padded>
-      <TitleHeader
-        title="Plans"
-        actions={
-          <HeaderIconButton
-            testID="plans-account-button"
-            icon={UserRound}
-            accessibilityLabel="Account"
-            bordered={false}
-            onPress={() => router.push("/(tabs)/settings")}
-          />
-        }
-      />
+      <TitleHeader title="Plans" />
 
       <FilterPills
         testID="plans-filter-pills"

@@ -54,6 +54,26 @@ const palette = {
   correctMistOnDark: "#16261E",
   correctLineOnDark: "#2F5A44",
   incorrectMistOnDark: "#2A1616",
+  // An exam subject's folio, a bound book: a near-black cloth cover with
+  // warm paper-white ink on it, and the same paper for a cover not in view.
+  folioCloth: "#171717",
+  folioClothEdge: "#292929",
+  folioPaper: "#F4F1EB",
+  folioPaperMuted: "#C6C2BB",
+  folioPaperFaint: "#BBB7B1",
+  folioPaperRule: "rgba(244, 241, 235, 0.65)",
+  folioPaperRuleFaint: "rgba(244, 241, 235, 0.38)",
+  folioPaperEdgeStrong: "rgba(244, 241, 235, 0.8)",
+  folioPressed: "rgba(255, 255, 255, 0.07)",
+  folioPaperEdge: "#E4DFD6",
+  // A choice that's picked, on a card of its own (an exam's way in): the
+  // accent, softened to a wash, an edge, and a badge between the two.
+  selectionMist: "#FEF5F5",
+  selectionEdge: "#F4CFCF",
+  selectionBlush: "#FBE4E4",
+  selectionMistOnDark: "#241415",
+  selectionEdgeOnDark: "#5A2626",
+  selectionBlushOnDark: "#3A1C1D",
   incorrectLineOnDark: "#6B2A2A",
   // Type and marks on a colour of the content's own (a featured sermon's):
   // white on a dark one, black on a light one, each full, muted, and faint.
@@ -78,10 +98,11 @@ const palette = {
   stepLabelInactive: "#A1A1AA",
   // Pastels matched to the backdrops baked into Fun's illustrations, so each
   // one dissolves into the card it's set on: a hazy dawn (light, mid, deep),
-  // blush, butter, lilac, and sky.
+  // rose, blush, butter, lilac, and sky.
   dawnLight: "#F8F5F1",
   dawn: "#F5EBDD",
   dawnDeep: "#F1D7A9",
+  rose: "#FBDDE5",
   blush: "#FDF1F6",
   butter: "#FDF6E5",
   lilac: "#F5ECFA",
@@ -171,6 +192,32 @@ type ColorTokens = {
   /** The edge of a wrong answer. */
   incorrectBorder: string;
   /**
+   * An exam subject's folio — a bound book, the same in either theme: its
+   * cloth cover and edge, and the paper-white ink on it (full, muted,
+   * faint), its rules (the heading's, and the fainter one between exams),
+   * an exam's arrow box, and the lift under a pressed row. A cover not in
+   * view is the paper itself, edged, with cloth-dark ink.
+   */
+  folioCloth: string;
+  folioClothEdge: string;
+  /** The black spine binding a cover's left edge, up to its accent rule. */
+  folioSpine: string;
+  folioInk: string;
+  folioInkMuted: string;
+  folioInkFaint: string;
+  folioRule: string;
+  folioRuleFaint: string;
+  folioArrowEdge: string;
+  folioPressed: string;
+  folioPaper: string;
+  folioPaperEdge: string;
+  /** Behind a choice that's picked, on a card of its own (an exam's way in). */
+  selectionSurface: string;
+  /** Its edge — the accent itself runs down its leading side. */
+  selectionBorder: string;
+  /** A round badge on it, a step deeper than its surface. */
+  selectionBadge: string;
+  /**
    * A wrong answer in a theology exam: ink, never red — a wrong answer there
    * is a teachable moment, and red is kept for what's selected. Always paired
    * with a ✕ and the word "Incorrect", never colour alone.
@@ -201,11 +248,13 @@ type ColorTokens = {
    * Behind an illustration that carries a light backdrop of its own (Fun's
    * games): a pastel matched to it, so the art dissolves into its card. The
    * same in either theme, as the art's backdrop is; words and marks on one
-   * are `inkOnLight*`. Dawn is a gradient — light, mid, deep.
+   * are `inkOnLight*`. Dawn is a gradient — light, mid, deep. Rose is blush
+   * with more red.
    */
   illustrationDawnLight: string;
   illustrationDawn: string;
   illustrationDawnDeep: string;
+  illustrationRose: string;
   illustrationBlush: string;
   illustrationButter: string;
   illustrationLilac: string;
@@ -248,6 +297,21 @@ const lightColors: ColorTokens = {
   correctBorder: palette.correctLine,
   incorrect: palette.red,
   incorrectSurface: palette.incorrectMist,
+  folioCloth: palette.folioCloth,
+  folioClothEdge: palette.folioClothEdge,
+  folioSpine: palette.pureBlack,
+  folioInk: palette.folioPaper,
+  folioInkMuted: palette.folioPaperMuted,
+  folioInkFaint: palette.folioPaperFaint,
+  folioRule: palette.folioPaperRule,
+  folioRuleFaint: palette.folioPaperRuleFaint,
+  folioArrowEdge: palette.folioPaperEdgeStrong,
+  folioPressed: palette.folioPressed,
+  folioPaper: palette.folioPaper,
+  folioPaperEdge: palette.folioPaperEdge,
+  selectionSurface: palette.selectionMist,
+  selectionBorder: palette.selectionEdge,
+  selectionBadge: palette.selectionBlush,
   incorrectBorder: palette.incorrectLine,
   feedbackIncorrect: palette.black,
   inkOnDark: palette.white,
@@ -264,6 +328,7 @@ const lightColors: ColorTokens = {
   illustrationDawnLight: palette.dawnLight,
   illustrationDawn: palette.dawn,
   illustrationDawnDeep: palette.dawnDeep,
+  illustrationRose: palette.rose,
   illustrationBlush: palette.blush,
   illustrationButter: palette.butter,
   illustrationLilac: palette.lilac,
@@ -308,6 +373,21 @@ const darkColors: ColorTokens = {
   correctBorder: palette.correctLineOnDark,
   incorrect: palette.red,
   incorrectSurface: palette.incorrectMistOnDark,
+  folioCloth: palette.folioCloth,
+  folioClothEdge: palette.folioClothEdge,
+  folioSpine: palette.pureBlack,
+  folioInk: palette.folioPaper,
+  folioInkMuted: palette.folioPaperMuted,
+  folioInkFaint: palette.folioPaperFaint,
+  folioRule: palette.folioPaperRule,
+  folioRuleFaint: palette.folioPaperRuleFaint,
+  folioArrowEdge: palette.folioPaperEdgeStrong,
+  folioPressed: palette.folioPressed,
+  folioPaper: palette.folioPaper,
+  folioPaperEdge: palette.folioPaperEdge,
+  selectionSurface: palette.selectionMistOnDark,
+  selectionBorder: palette.selectionEdgeOnDark,
+  selectionBadge: palette.selectionBlushOnDark,
   incorrectBorder: palette.incorrectLineOnDark,
   feedbackIncorrect: palette.white,
   inkOnDark: palette.white,
@@ -325,6 +405,7 @@ const darkColors: ColorTokens = {
   illustrationDawnLight: palette.dawnLight,
   illustrationDawn: palette.dawn,
   illustrationDawnDeep: palette.dawnDeep,
+  illustrationRose: palette.rose,
   illustrationBlush: palette.blush,
   illustrationButter: palette.butter,
   illustrationLilac: palette.lilac,
@@ -356,8 +437,71 @@ const typography = {
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
   /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
+  /** The editorial face at its largest: a page's own title (a theology exam's overview). */
+  editorialDisplay: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 34,
+    fontWeight: "500",
+    lineHeight: 43,
+    letterSpacing: -0.3,
+  },
+  /**
+   * The editorial face at its grandest: a page named like a book (Theology
+   * Exams). Bodoni's line is kept 1.25× its size: set any tighter, iOS
+   * keeps the room below the baseline and trims the tops of its capitals
+   * (0.75× its size) and ascenders.
+   */
+  editorialHero: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 52,
+    fontWeight: "500",
+    lineHeight: 65,
+    letterSpacing: -1.6,
+  },
+  /** A subject's name on its book's cover: set close, never so close it clips (1.25×). */
+  folioTitle: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 40,
+    fontWeight: "500",
+    lineHeight: 50,
+    letterSpacing: -1.6,
+  },
+  /** …and on a book made shorter to fit a shorter screen. */
+  folioTitleCompact: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 30,
+    fontWeight: "500",
+    lineHeight: 38,
+    letterSpacing: -1.2,
+  },
+  /** An exam's title in a book's list. */
+  folioItem: { fontFamily: fonts.editorialBody, fontSize: 17, fontWeight: "400", lineHeight: 22 },
+  /** A folio's small print — its kicker, its section — in the mono, capitals, tracked. */
+  folioMeta: { fontFamily: fonts.metaLabel, fontSize: 11, fontWeight: "500", letterSpacing: 1.1 },
+  /** A level above an exam in a folio — no smaller than iOS reads comfortably. */
+  folioLevel: { fontFamily: fonts.metaLabel, fontSize: 11, fontWeight: "500", letterSpacing: 1 },
+  /** The line under such a title: the editorial reading face, a size over body. */
+  editorialLead: {
+    fontFamily: fonts.editorialBody,
+    fontSize: 19,
+    fontWeight: "400",
+    lineHeight: 26,
+  },
   editorialBody: { fontFamily: fonts.editorialBody, fontSize: 16, fontWeight: "400" },
   metaLabel: { fontFamily: fonts.metaLabel, fontSize: 13, fontWeight: "500" },
+  /**
+   * A label set above what it names — a page's kicker ("Subject 01 / 12",
+   * "Scripture & Reading / Foundations"), a section's name, an exam's level:
+   * the mono, in capitals, tracked wide. One style, so every such label in
+   * the app reads the same.
+   */
+  kicker: {
+    fontFamily: fonts.metaLabel,
+    fontSize: 13,
+    fontWeight: "500",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+  },
   metaBody: { fontFamily: fonts.metaBody, fontSize: 13, fontWeight: "400" },
   metaEmphasis: { fontFamily: fonts.metaEmphasis, fontSize: 11, fontWeight: "600" },
   body: { fontSize: 17, fontWeight: "400" },
@@ -402,6 +546,10 @@ const typography = {
   tileTitle: { fontSize: 17, fontWeight: "700", lineHeight: 22 },
   /** Supporting copy on a card, under its title: a line or two, quiet. */
   cardDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
+  /** A line of facts under a page's title ("12 subjects · 48 exams"): the system face, firm and easy to read. */
+  summaryStrong: { fontSize: 15, fontWeight: "600", lineHeight: 20 },
+  /** A fact set plainly in a row ("15 questions", "8–12 min"): the system face, small and firm enough to read. */
+  factLabel: { fontSize: 13, fontWeight: "600", lineHeight: 18 },
   /** A tag's label — a small pill naming a kind or a count ("Quiz", "12 day streak"). */
   tag: { fontSize: 12, fontWeight: "600", lineHeight: 16 },
 
@@ -441,6 +589,8 @@ const typography = {
 const elevation = {
   /** A floating card, e.g. the Welcome screen's fanned phone mocks. */
   card: { shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 16 },
+  /** A book lying on the page: an exam subject's folio. */
+  folio: { shadowOffset: { width: 0, height: 18 }, shadowOpacity: 0.14, shadowRadius: 16 },
 } as const;
 
 /**

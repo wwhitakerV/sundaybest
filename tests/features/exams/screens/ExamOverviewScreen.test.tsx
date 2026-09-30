@@ -1,14 +1,20 @@
 import type { ReactNode } from "react";
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
-import { openPassageLink } from "@/core/links/open-passage-link";
-import { getTheologyExam } from "@/features/exams/data/bundled-exams";
+import { lightTheme } from "@/theme/tokens";
+import { getBundledExam } from "@/features/exams/data/bundled-exams";
 import type * as BundledExams from "@/features/exams/data/bundled-exams";
 import { ExamOverviewScreen, ExamSessionScreen } from "@/features/exams";
-import { theologyExam, withExamAttempt, theologyExamResult } from "@tests/factories/exam-state";
+import { examPassagesHref, examTopicsHref } from "@/features/exams/logic/routes";
+import {
+  correctResponseFor,
+  theologyExam,
+  withExamAttempt,
+  theologyExamResult,
+} from "@tests/factories/exam-state";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -22,7 +28,7 @@ jest.mock("@/core/links/open-passage-link", () => ({
 
 jest.mock("@/features/exams/data/bundled-exams", () => ({
   ...jest.requireActual<typeof BundledExams>("@/features/exams/data/bundled-exams"),
-  getTheologyExam: jest.fn(),
+  getBundledExam: jest.fn(),
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
@@ -72,7 +78,8 @@ beforeEach(() => {
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush, back: mockBack } as unknown as ReturnType<typeof useRouter>);
-  jest.mocked(getTheologyExam).mockReturnValue({ ok: true, ...theologyExam() });
+  jest.mocked(getBundledExam).mockReturnValue({ ok: true, ...theologyExam() });
+  jest.mocked(useLocalSearchParams).mockReturnValue({ examId: "THEO-01-01" });
 });
 
 describe("ExamOverviewScreen", () => {
@@ -82,159 +89,285 @@ describe("ExamOverviewScreen", () => {
     expect(screen.getByTestId("exam-overview-screen")).toBeVisible();
   });
 
-  it("shows the exam's title", () => {
+  it("shows the exam's domain and level, its title, and the question it asks", () => {
     render(overviewTree(INITIAL_STATE));
 
+    expect(screen.getByText("Scripture & Reading / Foundations")).toBeVisible();
     expect(screen.getByText(exam.summary.title)).toBeVisible();
+    expect(screen.getByText("What did Jesus and the apostles say about Scripture?")).toBeVisible();
   });
 
-  it("shows the exam's domain and level", () => {
+  it("shows how many questions, how long, and how many passages, on one line", () => {
     render(overviewTree(INITIAL_STATE));
 
-    expect(screen.getByText("Scripture & Reading · Foundations")).toBeVisible();
+    expect(screen.getByTestId("exam-overview-facts-questions")).toHaveTextContent("15 questions");
+    expect(screen.getByTestId("exam-overview-facts-duration")).toHaveTextContent("8–12 min");
+    expect(screen.getByTestId("exam-overview-facts-passages")).toHaveTextContent("3 passages");
   });
 
-  it("shows the question count", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    expect(screen.getByText("15 questions")).toBeVisible();
-  });
-
-  it("shows the expected duration", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    expect(screen.getByText("8–12 min")).toBeVisible();
-  });
-
-  it("shows what the learner will do", () => {
+  it("falls back to the exam's overview when the content asks no question of its own", () => {
+    const { exam: plain, reveals } = theologyExam();
+    jest.mocked(getBundledExam).mockReturnValue({
+      ok: true,
+      reveals,
+      exam: { ...plain, summary: { ...plain.summary, question: null, explore: [] } },
+    });
     render(overviewTree(INITIAL_STATE));
 
     expect(screen.getByText(exam.summary.overview)).toBeVisible();
   });
 
-  it.each(exam.summary.objectives)("shows the objective: %s", (objective) => {
-    render(overviewTree(INITIAL_STATE));
+  describe("what more it covers", () => {
+    it("opens its topics in a sheet", () => {
+      render(overviewTree(INITIAL_STATE));
 
-    expect(screen.getByText(objective)).toBeVisible();
-  });
+      fireEvent.press(screen.getByTestId("exam-overview-topics-button"));
 
-  it.each(exam.summary.concepts)("shows the concept covered: %s", (concept) => {
-    render(overviewTree(INITIAL_STATE));
+      expect(mockPush).toHaveBeenCalledWith(examTopicsHref("THEO-01-01"));
+    });
 
-    expect(screen.getByText(concept)).toBeVisible();
-  });
+    it("opens its passages in a sheet", () => {
+      render(overviewTree(INITIAL_STATE));
 
-  it("shows a source link for every passage in the exam's source scope", () => {
-    render(overviewTree(INITIAL_STATE));
+      fireEvent.press(screen.getByTestId("exam-overview-passages-button"));
 
-    exam.summary.sourceLinks.forEach((_link, index) => {
-      expect(screen.getByTestId(`exam-overview-source-link-${index}`)).toBeVisible();
+      expect(mockPush).toHaveBeenCalledWith(examPassagesHref("THEO-01-01"));
+    });
+
+    it("offers no topics when the content names none", () => {
+      const { exam: plain, reveals } = theologyExam();
+      jest.mocked(getBundledExam).mockReturnValue({
+        ok: true,
+        reveals,
+        exam: { ...plain, summary: { ...plain.summary, explore: [] } },
+      });
+      render(overviewTree(INITIAL_STATE));
+
+      expect(screen.queryByTestId("exam-overview-topics-button")).toBeNull();
+      expect(screen.getByTestId("exam-overview-passages-button")).toBeVisible();
     });
   });
 
-  it("opens a source link's passage when pressed", () => {
+  it("makes its action the black primary button", () => {
     render(overviewTree(INITIAL_STATE));
 
-    fireEvent.press(screen.getByTestId("exam-overview-source-link-0"));
-
-    expect(openPassageLink).toHaveBeenCalledWith(exam.summary.sourceLinks[0]!.url);
+    expect(screen.getByTestId("exam-overview-start-button")).toHaveStyle({
+      backgroundColor: lightTheme.colors.controlPrimary,
+    });
   });
 
-  it("says the score measures performance on these questions, not spiritual standing or a credential", () => {
+  it("floats its action where every bar in the app floats", () => {
     render(overviewTree(INITIAL_STATE));
 
     expect(
-      screen.getByText(
-        "Your score shows how you did on these questions. It doesn't measure spiritual standing, and it isn't a credential.",
-      ),
+      within(screen.getByTestId("exam-overview-bar")).getByTestId("exam-overview-start-button"),
+    ).toHaveTextContent("Begin study");
+  });
+
+  describe("choosing how to begin", () => {
+    it("sets Study and Exam side by side, Study first, as a choice of two", () => {
+      render(overviewTree(INITIAL_STATE));
+
+      const options = screen.getByTestId("exam-overview-mode-options");
+      expect(options).toHaveStyle({ flexDirection: "row" });
+      expect(
+        within(options)
+          .getAllByRole("radio")
+          .map((option) => String(option.props.testID)),
+      ).toEqual(["exam-overview-mode-study", "exam-overview-mode-exam"]);
+      expect(screen.getByTestId("exam-overview-mode-exam")).toHaveTextContent(/Exam/);
+      expect(screen.getByTestId("exam-overview-mode-study")).toHaveTextContent(/Study/);
+    });
+
+    it("starts on Study, explaining it under the choice", () => {
+      render(overviewTree(INITIAL_STATE));
+
+      expect(screen.getByTestId("exam-overview-mode-study")).toBeChecked();
+      expect(screen.getByTestId("exam-overview-mode-exam")).not.toBeChecked();
+      expect(screen.getByTestId("exam-overview-mode-description")).toHaveTextContent(
+        /Learn after each answer\..*Check each answer as you go, and learn why it's right\./,
+      );
+    });
+
+    it("picks Exam when it's pressed — its explanation, and the action, follow", () => {
+      render(overviewTree(INITIAL_STATE));
+
+      fireEvent.press(screen.getByTestId("exam-overview-mode-exam"));
+
+      expect(screen.getByTestId("exam-overview-mode-exam")).toBeChecked();
+      expect(screen.getByTestId("exam-overview-mode-study")).not.toBeChecked();
+      expect(screen.getByTestId("exam-overview-mode-description")).toHaveTextContent(
+        /See answers after you submit\..*Answer every question, then submit\. Scored\./,
+      );
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Begin exam");
+    });
+
+    it("tells VoiceOver what each way in is like, on the choice itself", () => {
+      render(overviewTree(INITIAL_STATE));
+
+      expect(screen.getByTestId("exam-overview-mode-study")).toHaveAccessibleName(
+        /Study\. Learn after each answer\./,
+      );
+    });
+  });
+
+  it("pins Topics covered and Passages to the foot of the screen, apart from the choice", () => {
+    render(overviewTree(INITIAL_STATE));
+
+    expect(screen.getByTestId("exam-overview-more")).toHaveStyle({ marginTop: "auto" });
+    const begin = within(screen.getByTestId("exam-overview-begin"));
+    expect(begin.queryByTestId("exam-overview-topics-button")).toBeNull();
+    expect(
+      within(screen.getByTestId("exam-overview-more")).getByTestId("exam-overview-passages-button"),
     ).toBeVisible();
   });
 
-  it("describes Exam Mode from the content's own completion behavior", () => {
-    render(overviewTree(INITIAL_STATE));
+  describe("a first visit", () => {
+    it("offers Begin study, alone", () => {
+      render(overviewTree(INITIAL_STATE));
 
-    const mode = screen.getByTestId("exam-overview-mode-exam");
-    expect(mode).toHaveTextContent("Exam Mode", { exact: false });
-    expect(mode).toHaveTextContent(exam.summary.modeDescriptions.exam, { exact: false });
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Begin study");
+      expect(screen.queryByTestId("exam-overview-secondary-button")).toBeNull();
+    });
+
+    it("begins an exam — no answer shown before it's submitted", () => {
+      const view = render(overviewTree(INITIAL_STATE));
+
+      fireEvent.press(screen.getByTestId("exam-overview-mode-exam"));
+      fireEvent.press(screen.getByTestId("exam-overview-start-button"));
+      const attemptId = pushedAttemptId();
+      jest.mocked(useLocalSearchParams).mockReturnValue({ attemptId });
+      view.rerender(overviewTree(INITIAL_STATE, <ExamSessionScreen />));
+      fireEvent.press(screen.getByTestId("exam-session-start-button"));
+
+      expect(screen.queryByTestId("exam-check-button")).toBeNull();
+    });
+
+    it("begins study — feedback after each question", () => {
+      const view = render(overviewTree(INITIAL_STATE));
+
+      fireEvent.press(screen.getByTestId("exam-overview-start-button"));
+      const attemptId = pushedAttemptId();
+      jest.mocked(useLocalSearchParams).mockReturnValue({ attemptId });
+      view.rerender(overviewTree(INITIAL_STATE, <ExamSessionScreen />));
+      fireEvent.press(screen.getByTestId("exam-session-start-button"));
+
+      // Study Mode's Check answer button only exists in a Study attempt.
+      expect(screen.getByTestId("exam-check-button")).toBeVisible();
+    });
   });
 
-  it("describes Study Mode from the content's own completion behavior", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    const mode = screen.getByTestId("exam-overview-mode-study");
-    expect(mode).toHaveTextContent("Study Mode", { exact: false });
-    expect(mode).toHaveTextContent(exam.summary.modeDescriptions.study, { exact: false });
-  });
-
-  it("selects Exam Mode by default", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    expect(screen.getByTestId("exam-overview-mode-exam")).toBeSelected();
-    expect(screen.getByTestId("exam-overview-mode-study")).not.toBeSelected();
-  });
-
-  it("reports each mode option with the radio role", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    expect(screen.getByTestId("exam-overview-mode-exam")).toHaveProp("accessibilityRole", "radio");
-    expect(screen.getByTestId("exam-overview-mode-study")).toHaveProp("accessibilityRole", "radio");
-  });
-
-  it("selects Study Mode once it's pressed", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    fireEvent.press(screen.getByTestId("exam-overview-mode-study"));
-
-    expect(screen.getByTestId("exam-overview-mode-study")).toBeSelected();
-    expect(screen.getByTestId("exam-overview-mode-exam")).not.toBeSelected();
-  });
-
-  it("labels the button Start when no attempt is open", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Start");
-  });
-
-  it("starts an attempt and moves to its session when Start is pressed", () => {
-    render(overviewTree(INITIAL_STATE));
-
-    fireEvent.press(screen.getByTestId("exam-overview-start-button"));
-
-    expect(mockPush).toHaveBeenCalledTimes(1);
-    expect(lastPush()).toContain("/exam/");
-  });
-
-  it("begins the attempt in the mode last picked, not always Exam Mode", () => {
-    const view = render(overviewTree(INITIAL_STATE));
-    jest.mocked(useLocalSearchParams).mockReturnValue({});
-
-    fireEvent.press(screen.getByTestId("exam-overview-mode-study"));
-    fireEvent.press(screen.getByTestId("exam-overview-start-button"));
-    const attemptId = pushedAttemptId();
-
-    jest.mocked(useLocalSearchParams).mockReturnValue({ attemptId });
-    view.rerender(overviewTree(INITIAL_STATE, <ExamSessionScreen />));
-
-    // Study Mode's Check answer button only exists in a Study attempt — Exam
-    // Mode never shows correctness before submission (criterion 15).
-    expect(screen.getByTestId("exam-check-button")).toBeVisible();
-  });
-
-  it("labels the button Resume when an attempt is already open", () => {
+  describe("an exam left unfinished", () => {
     const opened = withExamAttempt(INITIAL_STATE, { attemptId: "attempt-open-1" });
 
-    render(overviewTree(opened));
+    it("offers Resume exam", () => {
+      render(overviewTree(opened));
 
-    expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Resume");
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Resume exam");
+      expect(screen.queryByTestId("exam-overview-secondary-button")).toBeNull();
+    });
+
+    it("resumes the open attempt's own session", () => {
+      render(overviewTree(opened));
+      fireEvent.press(screen.getByTestId("exam-overview-start-button"));
+
+      expect(lastPush()).toContain("attempt-open-1");
+    });
+
+    it("still lets study begin beside it", () => {
+      render(overviewTree(opened));
+
+      fireEvent.press(screen.getByTestId("exam-overview-mode-study"));
+
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Begin study");
+    });
+
+    it("says how far through it is", () => {
+      render(overviewTree(opened));
+
+      expect(screen.getByTestId("exam-overview-standing")).toHaveTextContent(
+        /In progress · 0 of 15 answered/,
+      );
+    });
   });
 
-  it("resumes the open attempt's own session when Resume is pressed", () => {
-    const opened = withExamAttempt(INITIAL_STATE, { attemptId: "attempt-open-1" });
+  describe("an exam submitted", () => {
+    const submitted = withExamAttempt(INITIAL_STATE, {
+      attemptId: "attempt-done-1",
+      completedResult: theologyExamResult({ incorrectQuestionIds: ["THEO-01-01-Q08"] }),
+    });
 
-    render(overviewTree(opened));
-    fireEvent.press(screen.getByTestId("exam-overview-start-button"));
+    it("offers practising again, as an exam", () => {
+      render(overviewTree(submitted));
 
-    expect(lastPush()).toContain("attempt-open-1");
+      fireEvent.press(screen.getByTestId("exam-overview-mode-exam"));
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Practice again");
+      fireEvent.press(screen.getByTestId("exam-overview-start-button"));
+
+      expect(lastPush()).toContain("/exam/");
+    });
+
+    it("leads to its results beside it, in the same bar", () => {
+      render(overviewTree(submitted));
+
+      expect(
+        within(screen.getByTestId("exam-overview-bar")).getByTestId(
+          "exam-overview-secondary-button",
+        ),
+      ).toHaveTextContent("View results");
+      fireEvent.press(screen.getByTestId("exam-overview-secondary-button"));
+
+      expect(lastPush()).toContain("/exam/[attemptId]/results");
+      expect(lastPush()).toContain("attempt-done-1");
+    });
+
+    it("gives the last score", () => {
+      render(overviewTree(submitted));
+
+      expect(screen.getByTestId("exam-overview-standing")).toHaveTextContent(
+        /Last score · 14 of 15/,
+      );
+    });
+  });
+
+  describe("answers already seen in Study", () => {
+    const [first] = exam.questions;
+    const studied = withExamAttempt(INITIAL_STATE, {
+      attemptId: "attempt-study-1",
+      mode: "study",
+      responses: first ? { [first.id]: correctResponseFor(first.id) } : {},
+      checks: first ? { [first.id]: { at: "2026-09-28T07:05:00.000Z", correct: true } } : {},
+    });
+
+    it("starts on Study, continuing the one already begun", () => {
+      render(overviewTree(studied));
+
+      expect(screen.getByTestId("exam-overview-mode-study")).toBeChecked();
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent("Continue study");
+      fireEvent.press(screen.getByTestId("exam-overview-start-button"));
+
+      expect(lastPush()).toContain("attempt-study-1");
+    });
+
+    it("makes an exam a practice one, and says so", () => {
+      render(overviewTree(studied));
+
+      fireEvent.press(screen.getByTestId("exam-overview-mode-exam"));
+
+      expect(screen.getByTestId("exam-overview-start-button")).toHaveTextContent(
+        "Begin practice exam",
+      );
+      expect(screen.getByText(/a new exam is Practice/)).toBeVisible();
+    });
+  });
+
+  it("shows an exam it doesn't have as unavailable", () => {
+    jest.mocked(getBundledExam).mockReturnValue(null);
+    jest.mocked(useLocalSearchParams).mockReturnValue({ examId: "THEO-99-99" });
+    render(overviewTree(INITIAL_STATE));
+
+    expect(screen.getByTestId("exam-overview-unavailable")).toBeVisible();
+    expect(screen.queryByTestId("exam-overview-start-button")).toBeNull();
   });
 
   it("goes back when the back button is pressed", () => {
@@ -247,7 +380,7 @@ describe("ExamOverviewScreen", () => {
 
   describe("when the bundled content fails closed", () => {
     beforeEach(() => {
-      jest.mocked(getTheologyExam).mockReturnValue({
+      jest.mocked(getBundledExam).mockReturnValue({
         ok: false,
         examId: "THEO-01-01",
         issues: ["questions[0].interaction.answerKey"],
@@ -283,6 +416,25 @@ describe("ExamOverviewScreen", () => {
     expect(screen.getByText("Berean Examination")).toBeVisible();
   });
 
+  it("reviews what was missed in a short study of just those questions", () => {
+    // Q08's concept, berean_examination, is also Q10's and Q13's: three questions to review.
+    const completed = withExamAttempt(INITIAL_STATE, {
+      attemptId: "attempt-missed-1",
+      completedResult: theologyExamResult({ incorrectQuestionIds: ["THEO-01-01-Q08"] }),
+    });
+    const view = render(overviewTree(completed));
+
+    expect(screen.getByTestId("exam-overview-review-button")).toHaveTextContent("Review 1 concept");
+    fireEvent.press(screen.getByTestId("exam-overview-review-button"));
+    const attemptId = pushedAttemptId();
+    jest.mocked(useLocalSearchParams).mockReturnValue({ attemptId });
+    view.rerender(overviewTree(completed, <ExamSessionScreen />));
+    fireEvent.press(screen.getByTestId("exam-session-start-button"));
+
+    expect(screen.getByText("1 of 3")).toBeVisible();
+    expect(screen.getByTestId("exam-check-button")).toBeOnTheScreen();
+  });
+
   it("shows a Practice notice once a prior Exam Mode attempt has already been submitted", () => {
     const priorAttempt = withExamAttempt(INITIAL_STATE, {
       attemptId: "attempt-prior-1",
@@ -290,7 +442,8 @@ describe("ExamOverviewScreen", () => {
     });
 
     render(overviewTree(priorAttempt));
+    fireEvent.press(screen.getByTestId("exam-overview-mode-exam"));
 
-    expect(screen.getByText(/Practice/)).toBeVisible();
+    expect(screen.getByText(/a new exam is Practice/)).toBeVisible();
   });
 });

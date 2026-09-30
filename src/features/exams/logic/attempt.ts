@@ -91,3 +91,8 @@ export function describeAnswer(
     }
   }
 }
+
+/** Whether any answer's been given in an attempt — before then, it opens on its preface. */
+export function hasBegun(attempt: { responses: readonly unknown[] }): boolean {
+  return attempt.responses.length > 0;
+}
