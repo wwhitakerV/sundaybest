@@ -26,7 +26,7 @@ back. Someone else makes them pass.
    behavior. A criterion that needs two assertions with different failure
    reasons becomes two tests.
 4. **Place them correctly:** under `tests/`, mirroring the unit's path in
-   `src/` (`src/ui/Screen.tsx` → `tests/ui/Screen.test.tsx`), importing it via
+   `src/` (`src/ui/organisms/Screen.tsx` → `tests/ui/organisms/Screen.test.tsx`), importing it via
    `@/`; `tests/integration/` for anything crossing routes or providers. Never
    anywhere in `src/`.
 5. **Run them and confirm they fail** with `npm run test:related <files>`.

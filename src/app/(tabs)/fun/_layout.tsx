@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import { headerEntranceLayout } from "@/ui/HeaderEntranceScope";
+import { headerEntranceLayout } from "@/ui/header-entrance/HeaderEntranceScope";
 import { HALF_SHEET_OPTIONS } from "@/ui/SheetLayout";
 
 export default function FunLayout() {

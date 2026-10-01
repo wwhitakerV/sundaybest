@@ -1,19 +1,20 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ALargeSmall, X } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { StepProgress } from "@/ui/StepProgress";
-import { useTheme } from "@/theme";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { StepProgress } from "@/ui/atoms/StepProgress";
 import { getStepState } from "@/utils/steps/getStepState";
 import { STUDY_STEPS, STUDY_STEP_COUNT } from "../logic/study-steps";
+import { space } from "@/theme";
+import { SFProLabel } from "@/ui/typography/SFProLabel";
 
 const TEXT_SIZE_ICON_SIZE = 20;
-const STEP_LABEL_TOP_GAP = 8;
+const STEP_LABEL_TOP_GAP = space[8];
 // Mirrors `StepProgress`'s own segment gap so each label's flex-1
 // container lines up under its corresponding progress segment — read
 // only, `StepProgress` itself is untouched.
-const STEP_PROGRESS_SEGMENT_GAP = 4;
+const STEP_PROGRESS_SEGMENT_GAP = space[4];
 
 export type StudyHeaderProps = {
   day: number;
@@ -47,8 +48,6 @@ export function StudyHeader({
   page,
   testID,
 }: StudyHeaderProps) {
-  const theme = useTheme();
-
   return (
     <View style={styles.container}>
       <ScreenHeader
@@ -83,24 +82,18 @@ export function StudyHeader({
           />
           <View style={styles.labelRow}>
             {STUDY_STEPS.map(({ key, label, labelAlign }, index) => (
-              <Text
+              <SFProLabel
+                variant="stepLabel"
+                tone={
+                  getStepState(index, step) === "active" ? "stepLabelActive" : "stepLabelInactive"
+                }
+                style={[styles.label, { textAlign: labelAlign }]}
                 key={key}
                 testID={`${testID}-progress-label-${index}`}
                 numberOfLines={1}
-                style={[
-                  theme.typography.stepLabel,
-                  styles.label,
-                  {
-                    textAlign: labelAlign,
-                    color:
-                      getStepState(index, step) === "active"
-                        ? theme.colors.stepLabelActive
-                        : theme.colors.stepLabelInactive,
-                  },
-                ]}
               >
                 {label}
-              </Text>
+              </SFProLabel>
             ))}
           </View>
         </View>
@@ -110,7 +103,7 @@ export function StudyHeader({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 16 },
+  container: { gap: space[16] },
   labelRow: {
     flexDirection: "row",
     gap: STEP_PROGRESS_SEGMENT_GAP,

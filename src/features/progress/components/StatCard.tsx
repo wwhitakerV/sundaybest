@@ -1,6 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { useTheme } from "@/theme";
+import { space } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { DisplayTitle } from "@/ui/typography/DisplayTitle";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 export type StatCardProps = {
   value: string;
@@ -10,24 +13,16 @@ export type StatCardProps = {
 
 /** One total on Progress: the number, large, over what it counts. */
 export function StatCard({ value, label, testID }: StatCardProps) {
-  const theme = useTheme();
-
   return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-      ]}
-    >
-      <Text style={[theme.typography.display, { color: theme.colors.text }]}>{value}</Text>
-      <Text numberOfLines={1} style={[theme.typography.body, { color: theme.colors.textMuted }]}>
+    <Card testID={testID} style={styles.card}>
+      <DisplayTitle>{value}</DisplayTitle>
+      <SFProBody tone="textMuted" numberOfLines={1}>
         {label}
-      </Text>
-    </View>
+      </SFProBody>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, borderWidth: 1, borderRadius: 28, padding: 18, gap: 6 },
+  card: { flex: 1, padding: space[18], gap: space[6] },
 });

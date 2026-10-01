@@ -5,7 +5,7 @@ import Animated from "react-native-reanimated";
 import { useTheme } from "@/theme";
 import { useLiftMotion } from "../../hooks/use-lift-motion";
 import type { DesignRect, LiftBacking, LiftLayout } from "../../logic/lift";
-import type { LiftPieceProps } from "../lifts/lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
 
 export type StageLiftProps = {
   /** The piece to lift, and how far into its scene the story is. */

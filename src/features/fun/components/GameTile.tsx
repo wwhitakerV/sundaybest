@@ -11,7 +11,7 @@ import {
 import type { LucideIcon } from "lucide-react-native";
 
 import { ChevronBadge } from "@/ui/ChevronBadge";
-import { GradientBackdrop } from "@/ui/GradientBackdrop";
+import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
 import { Tag } from "@/ui/Tag";
 import { useTheme } from "@/theme";
 import { getBackdropStops } from "@/utils/color/getBackdropStops";

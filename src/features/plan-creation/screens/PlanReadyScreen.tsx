@@ -1,16 +1,18 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Flame } from "lucide-react-native";
 
 import type { LocalTime } from "@/types/domain";
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
+import { space, useTheme } from "@/theme";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { SAMPLE_PLAN_ID, studyHref } from "@/features/plans";
 import { requestNotificationPermission } from "@/core/notifications/request-notification-permission";
 import { getPlanById, getReminder, useAppSelector, useStoreActions } from "@/core/store";
 import { ReminderTimes } from "../components/ReminderTimes";
+import { DisplayTitle } from "@/ui/typography/DisplayTitle";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const ICON_RING = 160;
 
@@ -49,20 +51,13 @@ export function PlanReadyScreen() {
           <Flame size={56} color={theme.colors.accent} strokeWidth={theme.icon.strokeWidth} />
         </View>
         <View style={styles.titles}>
-          <Text
-            testID="plan-ready-title"
-            accessibilityRole="header"
-            style={[theme.typography.display, styles.centred, { color: theme.colors.text }]}
-          >
+          <DisplayTitle style={styles.centred} testID="plan-ready-title" accessibilityRole="header">
             Your plan is ready
-          </Text>
+          </DisplayTitle>
           {plan && (
-            <Text
-              testID="plan-ready-summary"
-              style={[theme.typography.body, styles.centred, { color: theme.colors.textMuted }]}
-            >
+            <SFProBody tone="textMuted" style={styles.centred} testID="plan-ready-summary">
               {plan.lengthDays} {plan.lengthDays === 1 ? "day" : "days"} from {plan.title}
-            </Text>
+            </SFProBody>
           )}
         </View>
         <ReminderTimes
@@ -90,7 +85,7 @@ export function PlanReadyScreen() {
 }
 
 const styles = StyleSheet.create({
-  centre: { flex: 1, alignItems: "center", justifyContent: "center", gap: 28 },
+  centre: { flex: 1, alignItems: "center", justifyContent: "center", gap: space[28] },
   ring: {
     width: ICON_RING,
     height: ICON_RING,
@@ -99,7 +94,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  titles: { alignItems: "center", gap: 8 },
+  titles: { alignItems: "center", gap: space[8] },
   centred: { textAlign: "center" },
-  actions: { gap: 12, paddingBottom: 8 },
+  actions: { gap: space[12], paddingBottom: space[8] },
 });

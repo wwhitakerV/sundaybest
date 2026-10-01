@@ -1,10 +1,9 @@
 import { useEffect } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
 import { useModalSession } from "@/hooks/use-modal-session";
 import {
   getPlanById,
@@ -13,9 +12,14 @@ import {
   useAppSelector,
   useStoreActions,
 } from "@/core/store";
-import { ProgressRing } from "@/ui/ProgressRing";
+import { ProgressRing } from "@/ui/atoms/ProgressRing";
 import { PreparingStages } from "../components/PreparingStages";
 import { getPreparingPercent, getPreparingRows } from "../logic/preparing-stages";
+import { controlHeight, space } from "@/theme";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProLabel } from "@/ui/typography/SFProLabel";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 /**
  * Preparing: the plan being built, stage by stage — a ring filling up and a
@@ -27,7 +31,6 @@ import { getPreparingPercent, getPreparingRows } from "../logic/preparing-stages
  * here, with Try again restarting the build.
  */
 export function PreparingPlanScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const session = useModalSession();
   const { planId = "" } = useLocalSearchParams<{ planId: string }>();
@@ -59,18 +62,12 @@ export function PreparingPlanScreen() {
     return (
       <Screen testID="preparing-plan-screen" padded>
         <View style={styles.centre}>
-          <Text
-            accessibilityRole="header"
-            style={[theme.typography.screenTitle, styles.centred, { color: theme.colors.text }]}
-          >
+          <SFProTitle style={styles.centred} accessibilityRole="header">
             We couldn&apos;t finish your plan
-          </Text>
-          <Text
-            testID="preparing-plan-error"
-            style={[theme.typography.body, styles.centred, { color: theme.colors.textMuted }]}
-          >
+          </SFProTitle>
+          <SFProBody tone="textMuted" style={styles.centred} testID="preparing-plan-error">
             {failure.message} Nothing&apos;s lost — try again, or come back later.
-          </Text>
+          </SFProBody>
         </View>
         <View style={styles.actions}>
           <Button
@@ -94,18 +91,13 @@ export function PreparingPlanScreen() {
       <View style={styles.centre}>
         <ProgressRing testID="preparing-plan-progress" percent={getPreparingPercent(status)} />
         <View style={styles.titles}>
-          <Text
-            accessibilityRole="header"
-            style={[theme.typography.screenTitle, styles.centred, { color: theme.colors.text }]}
-          >
+          <SFProTitle style={styles.centred} accessibilityRole="header">
             Preparing your plan
-          </Text>
+          </SFProTitle>
           {plan?.title ? (
-            <Text
-              style={[theme.typography.body, styles.centred, { color: theme.colors.textMuted }]}
-            >
+            <SFProBody tone="textMuted" style={styles.centred}>
               {plan.title}
-            </Text>
+            </SFProBody>
           ) : null}
         </View>
         {plan && (
@@ -117,11 +109,9 @@ export function PreparingPlanScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text
-          style={[theme.typography.supporting, styles.centred, { color: theme.colors.textMuted }]}
-        >
+        <MonoBody variant="supporting" tone="textMuted" style={styles.centred}>
           Takes a few seconds.{"\n"}You can leave this screen.
-        </Text>
+        </MonoBody>
         <Pressable
           testID="preparing-plan-close-button"
           accessibilityRole="button"
@@ -129,7 +119,7 @@ export function PreparingPlanScreen() {
           onPress={session.exit}
           style={styles.close}
         >
-          <Text style={[theme.typography.button, { color: theme.colors.text }]}>Close</Text>
+          <SFProLabel>Close</SFProLabel>
         </Pressable>
       </View>
     </Screen>
@@ -137,10 +127,14 @@ export function PreparingPlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  centre: { flex: 1, alignItems: "center", justifyContent: "center", gap: 28 },
-  titles: { alignItems: "center", gap: 8 },
+  centre: { flex: 1, alignItems: "center", justifyContent: "center", gap: space[28] },
+  titles: { alignItems: "center", gap: space[8] },
   centred: { textAlign: "center" },
-  footer: { alignItems: "center", gap: 16, paddingBottom: 8 },
-  close: { minHeight: 44, justifyContent: "center", paddingHorizontal: 24 },
-  actions: { gap: 12, paddingBottom: 8 },
+  footer: { alignItems: "center", gap: space[16], paddingBottom: space[8] },
+  close: {
+    minHeight: controlHeight.hitTarget,
+    justifyContent: "center",
+    paddingHorizontal: space[24],
+  },
+  actions: { gap: space[12], paddingBottom: space[8] },
 });

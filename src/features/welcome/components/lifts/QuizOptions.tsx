@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Check } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import { useFadeTo, usePopIn } from "../../hooks/use-tap-feedback";
 import { getQuizScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 // Short enough to sit on one line each, at real size, without truncating.
 const OPTIONS = [
@@ -17,7 +18,7 @@ const ANSWER = "B";
 /** Once the answer is shown, the wrong options step back. */
 const DIMMED_OPACITY = 0.35;
 /** An option's corners — shared with the floating card they lift onto. */
-export const QUIZ_OPTION_RADIUS = 24;
+export const QUIZ_OPTION_RADIUS = radius[24];
 /** The picked outline's weight — drawn over the 1pt border, never in layout. */
 const PICKED_OUTLINE = 2;
 
@@ -71,22 +72,14 @@ function Option({
             <Check size={16} color={theme.colors.onControlPrimary} strokeWidth={3} />
           </Animated.View>
         ) : (
-          <Text
-            style={[
-              theme.typography.label,
-              { color: picked ? theme.colors.onControlPrimary : theme.colors.textMuted },
-            ]}
-          >
+          <SFProBody variant="label" tone={picked ? "onControlPrimary" : "textMuted"}>
             {letter}
-          </Text>
+          </SFProBody>
         )}
       </View>
-      <Text
-        numberOfLines={1}
-        style={[theme.typography.body, styles.text, { color: theme.colors.text }]}
-      >
+      <SFProBody style={styles.text} numberOfLines={1}>
         {text}
-      </Text>
+      </SFProBody>
     </Animated.View>
   );
 }
@@ -118,15 +111,15 @@ export function QuizOptions({ elapsedMs }: LiftPieceProps) {
 }
 
 const styles = StyleSheet.create({
-  options: { gap: 8 },
+  options: { gap: space[8] },
   option: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: space[14],
     borderWidth: 1,
     borderRadius: QUIZ_OPTION_RADIUS,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: space[16],
+    paddingVertical: space[10],
   },
   // Sits exactly over the 1pt border (outset by it), heavier.
   outline: {
@@ -141,7 +134,7 @@ const styles = StyleSheet.create({
   letter: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius[16],
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",

@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Flame } from "lucide-react-native";
 
 import type { DayActivity } from "@/core/store";
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { describeWeekDay, getWeekdayLabel } from "../logic/week";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const RING = 46;
 const RING_WIDTH = 3;
@@ -34,14 +35,9 @@ export function WeekDays({ days, today }: WeekDaysProps) {
             accessibilityLabel={describeWeekDay(date, today, studied)}
             style={styles.day}
           >
-            <Text
-              style={[
-                theme.typography.body,
-                { color: date === today ? theme.colors.text : theme.colors.textMuted },
-              ]}
-            >
+            <SFProBody tone={date === today ? "text" : "textMuted"}>
               {getWeekdayLabel(date)}
-            </Text>
+            </SFProBody>
             <View
               style={[
                 styles.ring,
@@ -61,7 +57,7 @@ export function WeekDays({ days, today }: WeekDaysProps) {
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between" },
-  day: { alignItems: "center", gap: 12 },
+  day: { alignItems: "center", gap: space[12] },
   ring: {
     width: RING,
     height: RING,

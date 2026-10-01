@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, useTheme } from "@/theme";
 
 const SIZE = 32;
 const ICON_SIZE = 16;
@@ -25,7 +25,7 @@ export function ChevronBadge({ testID }: ChevronBadgeProps) {
       pointerEvents="none"
       style={[
         styles.badge,
-        { backgroundColor: theme.colors.overlayButtonLight, borderRadius: theme.radii.pill },
+        { backgroundColor: theme.colors.overlayButtonLight, borderRadius: radius.pill },
       ]}
     >
       <ChevronRight

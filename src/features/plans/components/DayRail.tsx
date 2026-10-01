@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
-import { PAGE_INSET } from "@/ui/Screen";
-import { useTheme } from "@/theme";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { radius, space, useTheme } from "@/theme";
 import { getRailScrollOffset, getRailTabX, type DayTileLook } from "../logic/day-rail";
 import { DAY_TILE_HEIGHT, DAY_TILE_WIDTH, DayTile } from "./DayTile";
 
 /** Between one day and the next — room enough that each reads as a point on a journey. */
-const DAY_GAP = 6;
+const DAY_GAP = space[6];
 /** A day's pitch along the row: where each sits, and what the row snaps to. */
 const PITCH = DAY_TILE_WIDTH + DAY_GAP;
 const TAB_BORDER = 2;
@@ -77,7 +77,7 @@ export function DayRail({ tiles, selected, onSelect, testID, tileTestIDPrefix }:
           styles.tab,
           {
             borderColor: theme.colors.text,
-            borderRadius: theme.radii.lg,
+            borderRadius: radius[16],
           },
           tabStyle,
         ]}

@@ -57,4 +57,10 @@ describe("getFocusedRoute", () => {
   it("finds nothing when the focused route has no key yet", () => {
     expect(getFocusedRoute({ index: 0, routes: [{ name: "home" }] })).toBeUndefined();
   });
+
+  it("finds nothing when the focused index points past the routes", () => {
+    expect(
+      getFocusedRoute({ index: 2, routes: [{ key: "home-1", name: "home" }] }),
+    ).toBeUndefined();
+  });
 });

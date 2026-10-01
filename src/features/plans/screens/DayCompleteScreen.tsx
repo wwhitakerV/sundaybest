@@ -1,10 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import {
   getPlanProgress,
   getQuizForDay,
@@ -16,6 +15,8 @@ import { useStudyRoute } from "../hooks/use-study-route";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { getNextDayToStudy } from "../logic/next-day";
 import { quickCheckHref, studyHref } from "../logic/routes";
+import { space } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 /**
  * Where the Daily Study session lands after Finish. Quick Check pushes on top
@@ -29,7 +30,6 @@ import { quickCheckHref, studyHref } from "../logic/routes";
  * or on the results of one finished.
  */
 export function DayCompleteScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const session = useModalSession();
   const { planId, dayNumber, day } = useStudyRoute();
@@ -51,7 +51,7 @@ export function DayCompleteScreen() {
     <Screen testID="day-complete-screen" padded>
       <ScreenHeader testID="day-complete" title="Day complete" />
 
-      <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
+      <SFProBody>...</SFProBody>
 
       {quiz && (
         <Button
@@ -89,5 +89,5 @@ export function DayCompleteScreen() {
 }
 
 const styles = StyleSheet.create({
-  tabActions: { flexDirection: "row", gap: 12 },
+  tabActions: { flexDirection: "row", gap: space[12] },
 });

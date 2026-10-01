@@ -1,7 +1,7 @@
 import type { ReactNode, RefObject } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { BUILD_HEIGHT, BUILD_WIDTH, TOP_PAD } from "./fan-geometry";
+import { BUILD_HEIGHT, BUILD_WIDTH, TOP_PAD } from "../logic/fan-geometry";
 import { PhoneCardBody } from "./PhoneCardBody";
 
 export type StagePhoneProps = {

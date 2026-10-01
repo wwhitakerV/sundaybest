@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Check, X } from "lucide-react-native";
 
 import type { QuestionResult, QuizScore } from "@/core/store";
 import type { QuizQuestion } from "@/types/domain";
-import { ProgressRing } from "@/ui/ProgressRing";
-import { useTheme } from "@/theme";
+import { ProgressRing } from "@/ui/atoms/ProgressRing";
+import { space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { getScoreHeadline } from "../logic/quick-check";
+import { DisplayTitle } from "@/ui/typography/DisplayTitle";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const MARK_SIZE = 32;
 
@@ -31,20 +34,13 @@ export function QuickCheckScore({ score, results }: QuickCheckScoreProps) {
           percent={score.percentage}
           label={`${score.correct}/${score.total}`}
         />
-        <Text style={[theme.typography.display, styles.centred, { color: theme.colors.text }]}>
-          {getScoreHeadline(score)}
-        </Text>
-        <Text style={[theme.typography.body, styles.centred, { color: theme.colors.textMuted }]}>
+        <DisplayTitle style={styles.centred}>{getScoreHeadline(score)}</DisplayTitle>
+        <SFProBody tone="textMuted" style={styles.centred}>
           {`${score.percentage}% right`}
-        </Text>
+        </SFProBody>
       </View>
 
-      <View
-        style={[
-          styles.list,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-        ]}
-      >
+      <Card radius={32} style={styles.list}>
         {results.map(({ question, result }, position) => {
           const right = result === "correct";
           return (
@@ -70,31 +66,28 @@ export function QuickCheckScore({ score, results }: QuickCheckScoreProps) {
                   <X size={16} color={theme.colors.onControlPrimary} strokeWidth={3} />
                 )}
               </View>
-              <Text
-                numberOfLines={1}
-                style={[theme.typography.body, styles.prompt, { color: theme.colors.text }]}
-              >
+              <SFProBody style={styles.prompt} numberOfLines={1}>
                 {question.prompt}
-              </Text>
+              </SFProBody>
             </View>
           );
         })}
-      </View>
+      </Card>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 32, paddingTop: 32 },
-  summary: { alignItems: "center", gap: 12 },
+  body: { gap: space[32], paddingTop: space[32] },
+  summary: { alignItems: "center", gap: space[12] },
   centred: { textAlign: "center" },
-  list: { borderWidth: 1, borderRadius: 32, overflow: "hidden" },
+  list: { overflow: "hidden" },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    gap: space[16],
+    paddingVertical: space[20],
+    paddingHorizontal: space[20],
   },
   mark: {
     width: MARK_SIZE,

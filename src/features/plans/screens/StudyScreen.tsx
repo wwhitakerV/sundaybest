@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 
 import type { Id } from "@/types/domain";
-import { Screen } from "@/ui/Screen";
-import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
+import { Screen } from "@/ui/organisms/Screen";
+import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { StudyHeader } from "../components/StudyHeader";
 import { StudyNav } from "../components/StudyNav";
 import { StudyStepBody } from "../components/StudyStepBody";
@@ -34,9 +34,7 @@ import {
   type StudyNavAction,
   type StudyPosition,
 } from "../logic/study-steps";
-
-const BOTTOM_NAV_CLEARANCE =
-  FLOATING_NAV_BAR.capsuleHeight + FLOATING_NAV_BAR.bottomMargin + FLOATING_NAV_BAR.sideMargin;
+import { space } from "@/theme";
 
 /**
  * Read, Scripture, Reflect, and Pray as one screen with internal step state.
@@ -164,7 +162,7 @@ export function StudyScreen() {
 }
 
 const styles = StyleSheet.create({
-  clearBottomNav: { paddingBottom: BOTTOM_NAV_CLEARANCE },
+  clearBottomNav: { paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
   body: { flex: 1 },
-  bodyContent: { paddingBottom: 24 },
+  bodyContent: { paddingBottom: space[24] },
 });

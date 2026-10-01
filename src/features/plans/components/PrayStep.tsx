@@ -1,11 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { HandHeart } from "lucide-react-native";
 
 import type { Prayer } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SerifBody } from "@/ui/typography/SerifBody";
 
 const BADGE_SIZE = 52;
 
@@ -32,23 +34,19 @@ export function PrayStep({ dayNumber, prayer, followStyle }: PrayStepProps) {
               strokeWidth={theme.icon.strokeWidth}
             />
           </View>
-          <Text style={[theme.typography.screenTitle, styles.title, { color: theme.colors.text }]}>
-            {prayer.title}
-          </Text>
+          <SFProTitle style={styles.title}>{prayer.title}</SFProTitle>
         </View>
       </StudyDriftIn>
       <StudyFollow style={followStyle}>
-        <Text style={[theme.typography.scripture, { color: theme.colors.text }]}>
-          {prayer.text}
-        </Text>
+        <SerifBody>{prayer.text}</SerifBody>
       </StudyFollow>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 16 },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  body: { gap: space[16] },
+  titleRow: { flexDirection: "row", alignItems: "center", gap: space[14] },
   title: { flexShrink: 1 },
   badge: {
     width: BADGE_SIZE,

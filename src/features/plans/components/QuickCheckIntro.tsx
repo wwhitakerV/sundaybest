@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { space } from "@/theme";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 export type QuickCheckIntroProps = {
   title: string;
@@ -9,18 +11,16 @@ export type QuickCheckIntroProps = {
 
 /** A Quick Check not started yet: what it is and how long, before Start. */
 export function QuickCheckIntro({ title, questionCount }: QuickCheckIntroProps) {
-  const theme = useTheme();
-
   return (
     <View testID="quick-check-intro" style={styles.body}>
-      <Text style={[theme.typography.metaBody, { color: theme.colors.textMuted }]}>
+      <MonoBody tone="textMuted">
         {`${questionCount} ${questionCount === 1 ? "question" : "questions"}`}
-      </Text>
-      <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>{title}</Text>
+      </MonoBody>
+      <SFProTitle>{title}</SFProTitle>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 16 },
+  body: { gap: space[16] },
 });

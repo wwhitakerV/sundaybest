@@ -8,48 +8,45 @@ import {
 import { Link } from "expo-router";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 
-import { GradientBackdrop } from "@/ui/GradientBackdrop";
-import { HeroContent } from "@/ui/hero/HeroContent";
+import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
+import { HeroContent, type ContinueHandOver, type HeroPlan } from "@/ui/hero/HeroContent";
 import { HeroContentFade } from "@/ui/hero/HeroContentFade";
 import { HERO_BOTTOM_SPACE, HERO_WASH_OPACITY, HERO_WORDS_GAP } from "@/ui/hero/hero-layout";
-import { PAGE_INSET } from "@/ui/Screen";
-import { VideoThumbnail } from "@/ui/VideoThumbnail";
-import { useTheme } from "@/theme";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
+import { radius, useTheme } from "@/theme";
 import { getBackdropStops } from "@/utils/color/getBackdropStops";
 import { prefersLightInk } from "@/utils/color/prefersLightInk";
 import type { PlanArtworkFrame } from "../logic/plan-artwork";
-import type { PlanHeroWords } from "../logic/plan-hero";
 
 /** As Home's hero's artwork. */
-const ARTWORK_RADIUS = 20;
+const ARTWORK_RADIUS = radius[20];
 
 type AnimatedViewStyle = StyleProp<AnimatedStyle<ViewStyle>>;
 
-export type PlanHeroProps = {
-  title: string;
-  church: string | null;
-  thumbnailUrl: string | null;
-  /** The sermon's colours, strongest first; empty until known. */
-  colors: readonly string[];
-  words: PlanHeroWords;
-  totalDays: number;
-  completedDayCount: number;
-  /** Where the artwork sits in the hero (`getPlanArtworkFrame`). */
-  artwork: PlanArtworkFrame;
+/** How the hero moves as the page scrolls (`usePlanHeroScroll`). */
+type PlanHeroMotion = {
   /** Holds the artwork back as the page scrolls, so it rises at half the rate. */
   artworkStyle?: AnimatedViewStyle;
+  /** The hero's colour zooming from its foot on a pull down, to keep reaching the top. */
+  colourStyle?: AnimatedViewStyle;
   /** Continue, fading as it hands over to the tab bar and back. */
-  continueStyle?: AnimatedViewStyle;
-  /** Whether Continue's here to press — not while it's handed over. */
-  continueShown: boolean;
-  /** Reports where Continue sits down the hero. */
-  onContinueLayout: (event: LayoutChangeEvent) => void;
-  onContinue: () => void;
+  continueHandOver: ContinueHandOver;
   /** The hero's height, once measured (0 until then), and how it's measured. */
   heroHeight: number;
   onHeroLayout: (event: LayoutChangeEvent) => void;
-  /** The hero's colour zooming from its foot on a pull down, to keep reaching the top. */
-  colourStyle?: AnimatedViewStyle;
+};
+
+export type PlanHeroProps = {
+  plan: HeroPlan & {
+    thumbnailUrl: string | null;
+    /** The sermon's colours, strongest first; empty until known. */
+    colors: readonly string[];
+  };
+  /** Where the artwork sits in the hero (`getPlanArtworkFrame`). */
+  artwork: PlanArtworkFrame;
+  motion: PlanHeroMotion;
+  onContinue: () => void;
 };
 
 /**
@@ -68,25 +65,10 @@ export type PlanHeroProps = {
  * white above it: which is why only the artwork's clipped to the hero. The
  * artwork is the target of the zoom from Home's plan.
  */
-export function PlanHero({
-  title,
-  church,
-  thumbnailUrl,
-  colors,
-  words,
-  totalDays,
-  completedDayCount,
-  artwork,
-  artworkStyle,
-  continueStyle,
-  continueShown,
-  onContinueLayout,
-  onContinue,
-  heroHeight,
-  onHeroLayout,
-  colourStyle,
-}: PlanHeroProps) {
+export function PlanHero({ plan, artwork, motion, onContinue }: PlanHeroProps) {
   const theme = useTheme();
+  const { thumbnailUrl, colors } = plan;
+  const { artworkStyle, colourStyle, continueHandOver, heroHeight, onHeroLayout } = motion;
   const colour = colors.at(0) ?? theme.colors.featureBackdrop;
   const stops = getBackdropStops(colors, theme.colors.featureBackdrop);
   const { top, left, width, height, bottom } = artwork;
@@ -141,16 +123,10 @@ export function PlanHero({
       </Animated.View>
 
       <HeroContent
-        title={title}
-        church={church}
-        words={words}
-        totalDays={totalDays}
-        completedDayCount={completedDayCount}
+        plan={plan}
         light={prefersLightInk(colour)}
         onContinue={onContinue}
-        continueStyle={continueStyle}
-        continueShown={continueShown}
-        onContinueLayout={onContinueLayout}
+        continueHandOver={continueHandOver}
         // The days below show how far through it is.
         showProgress={false}
         testIDs={{

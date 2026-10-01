@@ -2,13 +2,13 @@ import { useContext, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { useTheme } from "@/theme";
-import { BottomFade } from "./BottomFade";
+import { space } from "@/theme";
+import { BottomFade } from "./atoms/BottomFade";
 import {
   FLOATING_NAV_BAR,
   getFloatingNavBarBottom,
   getFloatingNavBarTintHeight,
-} from "./floatingNavBar";
+} from "./organisms/floatingNavBar";
 
 const { capsuleHeight, sideMargin } = FLOATING_NAV_BAR;
 
@@ -27,7 +27,6 @@ export type FloatingBarProps = {
  * `getFloatingNavBarClearance` at the foot to scroll clear of it.
  */
 export function FloatingBar({ children, testID }: FloatingBarProps) {
-  const theme = useTheme();
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   const capsuleBottom = getFloatingNavBarBottom(insetBottom);
   const tintHeight = getFloatingNavBarTintHeight(capsuleBottom);
@@ -44,7 +43,7 @@ export function FloatingBar({ children, testID }: FloatingBarProps) {
       >
         <BottomFade testID={`${testID}-tint`} height={tintHeight} solidHeight={capsuleBottom} />
       </View>
-      <View testID={`${testID}-row`} style={[styles.row, { gap: theme.spacing.sm }]}>
+      <View testID={`${testID}-row`} style={[styles.row, { gap: space[8] }]}>
         {children}
       </View>
     </View>

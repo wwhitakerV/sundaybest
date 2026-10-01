@@ -1,8 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
 import { PRAYER_LINES, getFilledPerLine, getPrayScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { space } from "@/theme";
+import { SerifBody } from "@/ui/typography/SerifBody";
+import { Span } from "@/ui/typography/Span";
 
 /**
  * The day's prayer. It rests grey; as its scene plays, black fills across it
@@ -11,7 +13,6 @@ import type { LiftPieceProps } from "./lift-piece";
  * it stays sharp and cheap to redraw.
  */
 export function PrayerLines({ elapsedMs }: LiftPieceProps) {
-  const theme = useTheme();
   const filledPerLine = getFilledPerLine(getPrayScene(elapsedMs).filledChars);
 
   return (
@@ -19,10 +20,10 @@ export function PrayerLines({ elapsedMs }: LiftPieceProps) {
       {PRAYER_LINES.map((line, position) => {
         const filled = filledPerLine.at(position) ?? 0;
         return (
-          <Text key={line} style={[theme.typography.scripture, { color: theme.colors.border }]}>
-            <Text style={{ color: theme.colors.text }}>{line.slice(0, filled)}</Text>
+          <SerifBody tone="border" key={line}>
+            <Span tone="text">{line.slice(0, filled)}</Span>
             {line.slice(filled)}
-          </Text>
+          </SerifBody>
         );
       })}
     </View>
@@ -30,5 +31,5 @@ export function PrayerLines({ elapsedMs }: LiftPieceProps) {
 }
 
 const styles = StyleSheet.create({
-  lines: { paddingVertical: 4 },
+  lines: { paddingVertical: space[4] },
 });

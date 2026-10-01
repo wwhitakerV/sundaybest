@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ComponentType } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -9,22 +9,16 @@ import {
 } from "react-native";
 import Animated from "react-native-reanimated";
 
-import { BottomFade } from "@/ui/BottomFade";
-import { PHONE_FRAME } from "@/ui/PhoneFrame";
+import { BottomFade } from "@/ui/atoms/BottomFade";
+import { PHONE_FRAME } from "../logic/phone-frame";
 // Progress line switched off for now — see the render below.
-// import { ProgressLine } from "@/ui/ProgressLine";
+// import { ProgressLine } from "./ProgressLine";
+import { useLiftAnchors } from "../hooks/use-lift-anchors";
 import { useSceneClock } from "../hooks/use-scene-clock";
 import { useStageSlide } from "../hooks/use-stage-slide";
+import { getLiftLayout, getLiftId } from "../logic/lift";
+import { NAVIGATION_MS, getActiveLift } from "../logic/scenes";
 import {
-  getLiftLayout,
-  getScrollToReveal,
-  getScrollToShow,
-  type DesignRect,
-  type LiftBacking,
-} from "../logic/lift";
-import { NAVIGATION_MS, getActiveLift, getScrollTargetIndex } from "../logic/scenes";
-import {
-  SIDE_CARDS,
   // STORY_LOOP_MS,
   getCaption,
   getLiftsFor,
@@ -32,135 +26,30 @@ import {
   getScreen,
   getScreenView,
   isStageShown,
-  type StoryCardKey,
   type StoryPhase,
   type StoryScreen,
 } from "../logic/story";
 import {
-  LIFT_RIM,
   LIFT_SIDE_PADDING,
   MIN_STAGE_HEIGHT,
-  SUPPORT_OPACITY,
-  HAND_DROP,
   TOP_PAD,
   getStageGeometry,
-} from "./fan-geometry";
-import { LiftAnchorContext, getLiftId } from "./lift/lift-anchor-context";
+} from "../logic/fan-geometry";
+import { LiftAnchorContext } from "./lift/lift-anchor-context";
 import { StageLift } from "./lift/StageLift";
-import { ANSWER_BOX_RADIUS, AnswerBox } from "./lifts/AnswerBox";
-import type { LiftPieceProps } from "./lifts/lift-piece";
-import { LISTEN_CARD_RADIUS, ListenCard } from "./lifts/ListenCard";
-import { PASTE_FIELD_RADIUS, PasteField } from "./lifts/PasteField";
-import { PlanSetup } from "./lifts/PlanSetup";
-import { PrayerLines } from "./lifts/PrayerLines";
-import { QUIZ_OPTION_RADIUS, QuizOptions } from "./lifts/QuizOptions";
-import { VERSE_CARD_RADIUS, VerseCard } from "./lifts/VerseCard";
-import type { MockScreenProps } from "./mocks/mock-page";
-import { NEW_PLAN_HEADER_HEIGHT, NewPlanMock } from "./mocks/NewPlanMock";
-import { QuickCheckMock } from "./mocks/QuickCheckMock";
-import { StudyMock } from "./mocks/StudyMock";
 import { ScreenPush, type PhoneNavigation } from "./ScreenPush";
-import { SideCard } from "./SideCard";
+import { SideHand } from "./SideHand";
 import { StagePhone } from "./StagePhone";
 import { StepCaption } from "./StepCaption";
-import { WELCOME_STEPS, getStepLabel } from "./welcome-steps";
-
-/** Each of the app's screens the phone shows, as a mock. */
-function getScreenMock(screen: StoryScreen): ComponentType<MockScreenProps> {
-  switch (screen) {
-    case "newPlan":
-      return NewPlanMock;
-    case "study":
-      return StudyMock;
-    case "quiz":
-      return QuickCheckMock;
-  }
-}
-
-/** A piece that lifts off the phone, and the floating card it rides on. */
-type LiftPart = {
-  Piece: ComponentType<LiftPieceProps>;
-  /** The floating card behind it: a see-through rim around a solid container. */
-  backing: LiftBacking;
-  /** How much higher than usual it rests once lifted (points). */
-  raise?: number;
-};
-
-/** A piece that's a card itself: the container sits right behind it, corners matched. */
-const lift = (Piece: ComponentType<LiftPieceProps>, radius: number): LiftPart => ({
-  Piece,
-  backing: { rim: LIFT_RIM, inset: 0, radius },
-});
-
-/**
- * A piece with no surface of its own — straight on the page on the phone —
- * sits in the container with room around it.
- */
-const liftOntoCard = (
-  Piece: ComponentType<LiftPieceProps>,
-  inset: number,
-  radius: number,
-): LiftPart => ({ Piece, backing: { rim: LIFT_RIM, inset, radius } });
-
-/** The pieces that lift off on each turn, in order (matching `STORY_CARDS[].lifts`). */
-function getLiftParts(key: StoryCardKey): readonly LiftPart[] {
-  switch (key) {
-    case "paste":
-      // A short piece: raised a little, so it floats nearer the middle of the phone.
-      return [{ ...lift(PasteField, PASTE_FIELD_RADIUS), raise: 30 }];
-    case "plan":
-      return [liftOntoCard(PlanSetup, 12, 24)];
-    case "read":
-      // Rests a little higher than the rest.
-      return [{ ...lift(ListenCard, LISTEN_CARD_RADIUS), raise: 24 }];
-    case "scripture":
-      return [lift(VerseCard, VERSE_CARD_RADIUS)];
-    case "reflect":
-      return [lift(AnswerBox, ANSWER_BOX_RADIUS)];
-    case "pray":
-      // Serif lines run close to the edges, so this one gets extra room.
-      return [liftOntoCard(PrayerLines, 20, 32)];
-    case "quiz":
-      // The options' gaps show the container, so a dimmed option never goes see-through.
-      return [lift(QuizOptions, QUIZ_OPTION_RADIUS)];
-  }
-}
+import { getLiftParts, getScreenMock } from "./stage-parts";
+import { useStageScroll } from "../hooks/use-stage-scroll";
+import { WELCOME_STEPS, getStepLabel } from "../logic/welcome-steps";
 
 /** Navigating within the phone: a step is the screen's own business, not navigation. */
 function toPhoneNavigation(phase: StoryPhase): PhoneNavigation {
   const navigation = getNavigation(phase);
   return navigation === "push" || navigation === "modal" ? navigation : "cut";
 }
-
-function sameRect(a: DesignRect | undefined, b: DesignRect): boolean {
-  return a?.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
-}
-
-/**
- * Where New Plan's days land once it has scrolled to them, below its header
- * (design points): room for "How many days?" above them (~21pt, then its
- * 24pt gap) with space to breathe above that.
- */
-const SCROLL_TOP_MARGIN = 80;
-/** Clear space kept below a piece the study session has scrolled into view (design points). */
-const SCROLL_BOTTOM_MARGIN = 28;
-/** How far each scrolling screen is scrolled (design points). */
-type Scrolls = {
-  newPlan: number;
-  /** Only `step`'s page is scrolled; every other step's page sits at its top. */
-  study: { step: number; y: number };
-};
-/** Every scrolling screen at its top. */
-const NO_SCROLL: Scrolls = { newPlan: 0, study: { step: 0, y: 0 } };
-
-/**
- * The side phones in drawing order: outermost first, so on each side the
- * phone nearer the middle lies on top, the same both ways. `index` is still
- * each one's place left to right, for when it fans.
- */
-const SIDE_CARD_STACK = SIDE_CARDS.map((card, index) => ({ ...card, index })).sort(
-  (a, b) => Math.abs(b.angleDeg) - Math.abs(a.angleDeg),
-);
 
 /** How far the phone may ever rise above its place: its top stays inside the stage. */
 const MAX_RISE = TOP_PAD - 4;
@@ -225,65 +114,18 @@ export function ScreenFan({ phase, testID, style }: ScreenFanProps) {
   const { slideStyle, captionStyle } = useStageSlide(shown, size.height, MAX_RISE);
   const frameRef = useRef<View>(null);
 
-  // Where each lift piece sits in its mock, keyed by `getLiftId`.
-  const [anchors, setAnchors] = useState<ReadonlyMap<string, DesignRect>>(() => new Map());
-  const onAnchor = useMemo(
-    () => (id: string, rect: DesignRect) =>
-      setAnchors((previous) =>
-        sameRect(previous.get(id), rect) ? previous : new Map(previous).set(id, rect),
-      ),
-    [],
-  );
+  const { anchors, onAnchor } = useLiftAnchors();
 
   const turnKey = phase.kind === "focus" ? phase.card : null;
   const turnElapsedMs = useSceneClock(turnKey, CLOCK_QUIET_MS);
 
-  // Screens scroll a piece into view before it lifts. New Plan brings its
-  // section near the top of the part of the phone the stage shows, below its
-  // fixed header; the study session scrolls just far enough to show it.
-  const screen = getScreen(phase);
-  const visibleBottom = (geometry.fade.from - geometry.mainCard.y) / geometry.mainCard.scale;
-  const scrollTop = PHONE_FRAME.contentTop + NEW_PLAN_HEADER_HEIGHT;
-  const scrollIndex = turnKey ? getScrollTargetIndex(turnElapsedMs, getLiftsFor(turnKey)) : null;
-  const scrollAnchor =
-    turnKey && scrollIndex !== null ? anchors.get(getLiftId(turnKey, scrollIndex)) : undefined;
-  function getScrollTarget(anchor: DesignRect): number {
-    return screen === "newPlan"
-      ? getScrollToShow(anchor, {
-          contentTop: scrollTop,
-          maxScroll: Math.max(
-            0,
-            PHONE_FRAME.contentHeight - (visibleBottom - PHONE_FRAME.contentTop),
-          ),
-          topMargin: SCROLL_TOP_MARGIN,
-        })
-      : getScrollToReveal(anchor, { visibleBottom, bottomMargin: SCROLL_BOTTOM_MARGIN });
-  }
-  const scrollTarget = scrollAnchor ? getScrollTarget(scrollAnchor) : null;
-  // Each screen holds its scroll once scrolled: New Plan stays put while the
-  // study session slides up over it, and a study step's page keeps its
-  // scroll while it fades out — the next step's page starts at its top. All
-  // are back at the top when the story starts again.
-  const screenStep = getScreenView(screen, phase, 0).step;
-  const [scrolls, setScrolls] = useState<Scrolls>(NO_SCROLL);
-  if (phase.kind === "arrive") {
-    if (scrolls !== NO_SCROLL) setScrolls(NO_SCROLL);
-  } else if (scrollTarget !== null && screen === "newPlan") {
-    if (Math.abs(scrollTarget - scrolls.newPlan) > 0.5) {
-      setScrolls({ ...scrolls, newPlan: scrollTarget });
-    }
-  } else if (scrollTarget !== null && screen === "study") {
-    const { step, y } = scrolls.study;
-    if (step !== screenStep || Math.abs(scrollTarget - y) > 0.5) {
-      setScrolls({ ...scrolls, study: { step: screenStep, y: scrollTarget } });
-    }
-  }
-  /** How far `of`'s page at `step` is scrolled. */
-  function getScrollOf(of: StoryScreen, step: number): number {
-    if (of === "newPlan") return scrolls.newPlan;
-    if (of === "study" && scrolls.study.step === step) return scrolls.study.y;
-    return 0;
-  }
+  const { screen, screenStep, studyScroll, getScrollOf } = useStageScroll({
+    phase,
+    geometry,
+    turnKey,
+    turnElapsedMs,
+    anchors,
+  });
   // Which of the turn's lifts is under way, on its own clock.
   const activeLift = turnKey ? getActiveLift(turnElapsedMs, getLiftsFor(turnKey)) : null;
   const liftId = turnKey && activeLift ? getLiftId(turnKey, activeLift.index) : null;
@@ -320,7 +162,7 @@ export function ScreenFan({ phase, testID, style }: ScreenFanProps) {
     // it's showing — which lags its step while cross-fading — keeps it.
     const scroll =
       screen === "study"
-        ? { scrollY: scrolls.study.y, scrollStep: scrolls.study.step }
+        ? { scrollY: studyScroll.y, scrollStep: studyScroll.step }
         : { scrollY: getScrollOf(screen, view.step) };
     return <Mock step={view.step} elapsedMs={view.elapsedMs} {...scroll} />;
   }
@@ -339,21 +181,7 @@ export function ScreenFan({ phase, testID, style }: ScreenFanProps) {
         {/* The phone and the hand behind it slide as one; the fade stays put,
             so the phone rises out of the white and sinks back into it. */}
         <Animated.View style={[styles.slide, slideStyle]}>
-          {/* Dimmed as one layer: each phone is solid within it, so where
-              they overlap one never shows through another. */}
-          <View style={styles.hand}>
-            {SIDE_CARD_STACK.map(({ screen, step, angleDeg, index }) => (
-              <SideCard
-                key={`${screen}:${step}`}
-                Mock={getScreenMock(screen)}
-                step={step}
-                index={index}
-                angleDeg={angleDeg}
-                fanned={shown}
-                {...(testID && { testID: `${testID}-side-${screen}-${step}` })}
-              />
-            ))}
-          </View>
+          <SideHand fanned={shown} {...(testID && { testIDPrefix: testID })} />
 
           <StagePhone frameRef={frameRef} {...(testID && { testID: `${testID}-phone` })}>
             <LiftAnchorContext.Provider value={anchorContext}>
@@ -414,7 +242,6 @@ const styles = StyleSheet.create({
   // Clips only what the fade has already turned white — never the top of a phone.
   cards: { ...StyleSheet.absoluteFill, overflow: "hidden" },
   slide: StyleSheet.absoluteFill,
-  hand: { ...StyleSheet.absoluteFill, top: HAND_DROP, opacity: SUPPORT_OPACITY },
   caption: { position: "absolute", left: 0, right: 0 },
   progress: { position: "absolute", left: 0, right: 0 },
   captionFill: { flex: 1 },

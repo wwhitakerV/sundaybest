@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { ChevronBadge } from "@/ui/ChevronBadge";
-import { GradientBackdrop } from "@/ui/GradientBackdrop";
+import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
 import { ImageCrop } from "@/ui/ImageCrop";
 import { useTheme } from "@/theme";
 import { getBackdropStops } from "@/utils/color/getBackdropStops";

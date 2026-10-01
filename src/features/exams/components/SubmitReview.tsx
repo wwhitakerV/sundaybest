@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { Button } from "@/ui/Button";
-import { Divider } from "@/ui/Divider";
+import { Button } from "@/ui/atoms/Button";
+import { Divider } from "@/ui/atoms/Divider";
 import { useTheme } from "@/theme";
 
 type ReviewRow = { questionId: string; number: number; answered: boolean };

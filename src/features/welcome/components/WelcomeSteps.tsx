@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
-import { WELCOME_STEPS, getStepLabel } from "./welcome-steps";
+import { space, useTheme } from "@/theme";
+import { WELCOME_STEPS, getStepLabel } from "../logic/welcome-steps";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const ICON_SIZE = 20;
 
@@ -23,7 +24,7 @@ export function WelcomeSteps() {
             <View style={styles.iconArea}>
               <Icon size={ICON_SIZE} color={theme.colors.text} strokeWidth={1.75} />
             </View>
-            <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>{label}</Text>
+            <SFProBody variant="listItem">{label}</SFProBody>
           </View>
         );
       })}
@@ -31,13 +32,16 @@ export function WelcomeSteps() {
   );
 }
 
+/** The spec's gap from the headline down to the steps. */
+const STEPS_TOP = 21;
+
 const styles = StyleSheet.create({
-  steps: { marginTop: 21, gap: 12 },
+  steps: { marginTop: STEPS_TOP, gap: space[12] },
   step: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
-    paddingHorizontal: 15,
+    gap: space[15],
+    paddingHorizontal: space[15],
     borderBottomWidth: 1,
   },
   iconArea: {

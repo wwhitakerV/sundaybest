@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { space } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
 
 export type PlanAboutProps = {
   paragraphs: readonly string[];
@@ -9,28 +11,18 @@ export type PlanAboutProps = {
 
 /** Plan Detail's "About this plan": a heading over a few paragraphs, for reading. */
 export function PlanAbout({ paragraphs, testID }: PlanAboutProps) {
-  const theme = useTheme();
-
   return (
     <View testID={testID} style={styles.about}>
-      <Text
-        accessibilityRole="header"
-        style={[theme.typography.editorialHeading, { color: theme.colors.text }]}
-      >
-        About this plan
-      </Text>
+      <SerifTitle accessibilityRole="header">About this plan</SerifTitle>
       {paragraphs.map((paragraph) => (
-        <Text
-          key={paragraph}
-          style={[theme.typography.reading, { color: theme.colors.textInactive }]}
-        >
+        <SFProBody variant="reading" tone="textInactive" key={paragraph}>
           {paragraph}
-        </Text>
+        </SFProBody>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  about: { gap: 12 },
+  about: { gap: space[12] },
 });

@@ -2,7 +2,8 @@ import { StyleSheet, View } from "react-native";
 
 import { CreateButton } from "./CreateButton";
 import { DayPicker } from "./DayPicker";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { space } from "@/theme";
 
 /**
  * The end of New Plan's second step, lifted as one: the day chips, then
@@ -20,5 +21,5 @@ export function PlanSetup({ elapsedMs }: LiftPieceProps) {
 
 const styles = StyleSheet.create({
   // A clear step down from the days to the action.
-  setup: { gap: 28 },
+  setup: { gap: space[28] },
 });

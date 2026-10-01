@@ -1,6 +1,6 @@
 import { Stack } from "expo-router";
 
-import { headerEntranceLayout } from "@/ui/HeaderEntranceScope";
+import { headerEntranceLayout } from "@/ui/header-entrance/HeaderEntranceScope";
 
 /**
  * Home's own stack, so Plan Detail can be pushed from Home's plan card within

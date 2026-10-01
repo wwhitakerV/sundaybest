@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 
 export type SettingsSubpageHeaderProps = {
   title: string;

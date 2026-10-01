@@ -1,7 +1,7 @@
 import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 
-import { VideoThumbnail } from "@/ui/VideoThumbnail";
+import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 
 export type ArtworkFlightProps = {
   thumbnailUrl: string | null;

@@ -1,3 +1,5 @@
+import { clampUnit } from "@/utils/motion/clampUnit";
+
 /**
  * Where a lifted piece of UI starts and ends, as pure geometry. The piece is
  * drawn at its real size and rests, lifted, at exactly that size — text is
@@ -78,7 +80,7 @@ export function getLiftLayout({
       y: onPhoneY,
       scale: card.scale,
     },
-    onPhoneOpacity: Math.min(1, Math.max(0, (fade.to - onPhoneMiddle) / fadeSpan)),
+    onPhoneOpacity: clampUnit((fade.to - onPhoneMiddle) / fadeSpan),
     lifted: {
       x: (stageWidth - anchor.width * liftedScale) / 2,
       y: bottom - cardPadding - anchor.height * liftedScale,
@@ -121,4 +123,9 @@ export type ScrollWindow = {
 export function getScrollToShow(anchor: DesignRect, window: ScrollWindow): number {
   const wanted = anchor.y - window.contentTop - window.topMargin;
   return Math.min(window.maxScroll, Math.max(0, wanted));
+}
+
+/** A lift piece's id: its turn, and which of that turn's lifts it is. */
+export function getLiftId(card: string, index: number): string {
+  return `${card}:${index}`;
 }

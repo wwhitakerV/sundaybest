@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { BookOpen, ChevronRight, CircleCheck } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const BADGE = 60;
 
@@ -51,18 +52,14 @@ export function UpNextCard({
           />
         </View>
         <View style={styles.titles}>
-          <Text numberOfLines={1} style={[theme.typography.listItem, { color: theme.colors.text }]}>
+          <SFProBody variant="listItem" numberOfLines={1}>
             {title}
-          </Text>
-          <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>
-            {`Day ${dayNumber}, ${minutes} min`}
-          </Text>
+          </SFProBody>
+          <SFProBody tone="textMuted">{`Day ${dayNumber}, ${minutes} min`}</SFProBody>
         </View>
         <View style={styles.percent}>
           <CircleCheck size={20} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
-          <Text
-            style={[theme.typography.listItem, { color: theme.colors.text }]}
-          >{`${percent}%`}</Text>
+          <SFProBody variant="listItem">{`${percent}%`}</SFProBody>
         </View>
       </View>
       <View style={styles.bottom}>
@@ -70,20 +67,16 @@ export function UpNextCard({
           <View
             style={[
               styles.time,
-              { backgroundColor: theme.colors.segmentBackground, borderRadius: theme.radii.pill },
+              { backgroundColor: theme.colors.segmentBackground, borderRadius: radius.pill },
             ]}
           >
-            <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
-              {reminderTime}
-            </Text>
+            <SFProBody variant="listItem">{reminderTime}</SFProBody>
           </View>
         ) : (
           <View />
         )}
         <View style={styles.day}>
-          <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
-            {`Day ${dayNumber}`}
-          </Text>
+          <SFProBody variant="listItem">{`Day ${dayNumber}`}</SFProBody>
           <ChevronRight size={20} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
         </View>
       </View>
@@ -92,8 +85,8 @@ export function UpNextCard({
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1.5, borderRadius: 36, padding: 20, gap: 20 },
-  top: { flexDirection: "row", alignItems: "center", gap: 16 },
+  card: { borderWidth: 1.5, borderRadius: radius[36], padding: space[20], gap: space[20] },
+  top: { flexDirection: "row", alignItems: "center", gap: space[16] },
   badge: {
     width: BADGE,
     height: BADGE,
@@ -101,9 +94,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  titles: { flex: 1, gap: 2 },
-  percent: { flexDirection: "row", alignItems: "center", gap: 8 },
+  titles: { flex: 1, gap: space[2] },
+  percent: { flexDirection: "row", alignItems: "center", gap: space[8] },
   bottom: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  time: { paddingHorizontal: 16, paddingVertical: 8 },
-  day: { flexDirection: "row", alignItems: "center", gap: 4 },
+  time: { paddingHorizontal: space[16], paddingVertical: space[8] },
+  day: { flexDirection: "row", alignItems: "center", gap: space[4] },
 });

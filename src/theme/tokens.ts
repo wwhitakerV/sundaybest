@@ -413,13 +413,84 @@ const darkColors: ColorTokens = {
 };
 
 /**
- * Scales are reached through the theme (`theme.spacing.md`) rather than imported
- * directly, so they stay module-local and there is one way to read a token.
+ * The spacing scale: every gap, padding and margin the app repeats, in points,
+ * each named by its own value so a mock's 22 reads as `space[22]`. A number not
+ * on it is one-off geometry, kept beside its component as a named constant with
+ * its reason (ADR 0016).
+ *
+ * Spacing, corners and control heights read the same in every theme, so they
+ * are imported directly (`import { space } from "@/theme"`) and work inside
+ * `StyleSheet.create`. Colour stays on `useTheme()`.
  */
-const spacing = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 } as const;
+export const space = {
+  2: 2,
+  4: 4,
+  6: 6,
+  8: 8,
+  10: 10,
+  12: 12,
+  14: 14,
+  15: 15,
+  16: 16,
+  18: 18,
+  20: 20,
+  22: 22,
+  24: 24,
+  28: 28,
+  32: 32,
+  36: 36,
+  40: 40,
+} as const;
+
+/** The corner scale, named by value like `space`. `pill` rounds any height fully. */
+export const radius = {
+  10: 10,
+  12: 12,
+  14: 14,
+  16: 16,
+  20: 20,
+  23: 23,
+  24: 24,
+  28: 28,
+  32: 32,
+  36: 36,
+  pill: 999,
+} as const;
+
+/** The heights controls repeat. */
+export const controlHeight = {
+  /** The smallest a tap target gets: a compact button, an icon button, a header row. */
+  hitTarget: 44,
+  /** A header's round icon button. */
+  headerButton: 49,
+  /** A screen header's row. */
+  header: 54,
+  /** The full-width primary `Button`. */
+  button: 61,
+} as const;
+
+/**
+ * The older named scales, read through the theme (`theme.spacing.md`) by Fun
+ * and Exams, which sit outside the token migration. Everything else uses
+ * `space` and `radius`.
+ */
+const spacing = {
+  xs: space[4],
+  sm: space[8],
+  md: space[16],
+  lg: space[24],
+  xl: space[32],
+} as const;
 
 /** `card` is a featured or tappable card's corner (Fun's hero, games, and banner). */
-const radii = { sm: 6, md: 10, lg: 16, card: 20, xl: 24, pill: 999 } as const;
+const radii = {
+  sm: 6,
+  md: radius[10],
+  lg: radius[16],
+  card: radius[20],
+  xl: radius[24],
+  pill: radius.pill,
+} as const;
 
 /**
  * `fontFamily` keys reference `src/theme/fonts.ts`'s custom-loaded faces.
@@ -437,6 +508,13 @@ const typography = {
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
   /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
+  /** A study question set in the editorial face (Reflect, and the Welcome tour's copy of it). */
+  editorialQuestion: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 24,
+    fontWeight: "500",
+    lineHeight: 30,
+  },
   /** The editorial face at its largest: a page's own title (a theology exam's overview). */
   editorialDisplay: {
     fontFamily: fonts.editorialHeading,
@@ -487,8 +565,14 @@ const typography = {
     fontWeight: "400",
     lineHeight: 26,
   },
-  editorialBody: { fontFamily: fonts.editorialBody, fontSize: 16, fontWeight: "400" },
   metaLabel: { fontFamily: fonts.metaLabel, fontSize: 13, fontWeight: "500" },
+  /** `metaLabel`, tracked a point — a line of status set in capitals (a hero's, a day row's heading). */
+  metaLabelTracked: {
+    fontFamily: fonts.metaLabel,
+    fontSize: 13,
+    fontWeight: "500",
+    letterSpacing: 1,
+  },
   /**
    * A label set above what it names — a page's kicker ("Subject 01 / 12",
    * "Scripture & Reading / Foundations"), a section's name, an exam's level:
@@ -505,16 +589,18 @@ const typography = {
   metaBody: { fontFamily: fonts.metaBody, fontSize: 13, fontWeight: "400" },
   metaEmphasis: { fontFamily: fonts.metaEmphasis, fontSize: 11, fontWeight: "600" },
   body: { fontSize: 17, fontWeight: "400" },
+  /** Body, leaded for a short paragraph in a sheet. */
+  bodyLoose: { fontSize: 17, fontWeight: "400", lineHeight: 26 },
   label: { fontSize: 14, fontWeight: "500" },
   headline: { fontSize: 24, fontWeight: "700" },
+  /** The headline's size at regular weight — a number chosen from a row (New Plan's days). */
+  headlineRegular: { fontSize: 24, fontWeight: "400" },
   /** A title on a large card (the Plans library's): bold, set close for up to three lines. */
   cardTitle: { fontSize: 20, fontWeight: "700", lineHeight: 25 },
   /** The number on a small tile (Plan Detail's days): large enough to read at a glance. */
   tileNumber: { fontSize: 22, fontWeight: "600" },
   /** A study step's name on its row (Plan Detail's day): clear, and firm enough to tap. */
   stepTitle: { fontSize: 18, fontWeight: "600", lineHeight: 24 },
-  /** What the step holds, under its name: light, and easy to read. */
-  stepDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
   /** The date under it: small, in the hero's mono, set in capitals by the tile. */
   tileDate: { fontFamily: fonts.metaLabel, fontSize: 11, fontWeight: "500", letterSpacing: 0.6 },
 
@@ -536,6 +622,8 @@ const typography = {
   },
   /** Feature-row labels. Spec 13.5. */
   listItem: { fontSize: 17, fontWeight: "500" },
+  /** A list item's weight, larger — a sermon's title over its preview. */
+  listItemLarge: { fontSize: 20, fontWeight: "500" },
   /** Button labels, both variants. Spec 15/-0.01em. */
   button: { fontSize: 18, fontWeight: "600" },
   /** A compact button's label — a smaller call to action set on a colour. */
@@ -555,6 +643,14 @@ const typography = {
 
   /** Centered header title ("New plan", "Day 2 of 6", "Quick check"). Spec 14/500. */
   navTitle: { fontSize: 17, fontWeight: "500" },
+  /** A full-screen fallback's heading ("Something went wrong") — where the app's own components can't be used. */
+  fallbackTitle: { fontSize: 20, fontWeight: "600" },
+  /** …its message… */
+  fallbackBody: { fontSize: 15, fontWeight: "400" },
+  /** …and its one action ("Try again"). */
+  fallbackAction: { fontSize: 15, fontWeight: "600" },
+  /** The clock in a drawn phone's status bar (the Welcome tour's phones). */
+  statusTime: { fontSize: 17, fontWeight: "600" },
   /** Top-level tab-root titles (Plans, Progress, Settings). Spec 24/500/1.12/-0.02em. */
   screenTitle: { fontSize: 29, fontWeight: "500", lineHeight: 32, letterSpacing: -0.58 },
   /** A header's right-aligned step count ("1 of 2"). Spec 11 mono/0.02em. */

@@ -1,21 +1,18 @@
-import { Text } from "react-native";
-
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { useModalSession } from "@/hooks/use-modal-session";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 /** The end of a plan, inside the Daily Study session. Every action leaves the session. */
 export function PlanCompleteScreen() {
-  const theme = useTheme();
   const session = useModalSession();
 
   return (
     <Screen testID="plan-complete-screen" padded>
       <ScreenHeader testID="plan-complete" title="Plan complete" />
 
-      <Text style={[theme.typography.body, { color: theme.colors.text }]}>...</Text>
+      <SFProBody>...</SFProBody>
 
       <Button
         testID="plan-complete-share-button"

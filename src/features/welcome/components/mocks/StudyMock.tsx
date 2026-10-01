@@ -2,13 +2,12 @@ import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { useStepTransition } from "@/hooks/use-step-transition";
-import { useTheme } from "@/theme";
-import { getBodyElapsedMs, type MockScreenProps } from "./mock-page";
+import { space, useTheme } from "@/theme";
+import { getBodyElapsedMs, type MockScreenProps } from "../../logic/mock-page";
 import { MockScroll } from "./MockScroll";
 import { PrayBody, ReadBody, ReflectBody, ScriptureBody } from "./StudyBodies";
 import { StudyMockHeader } from "./StudyMockHeader";
-
-const PAGE_INSET = 24;
+import { PAGE_INSET } from "@/ui/organisms/Screen";
 
 /**
  * Mock of the Daily Study session, stepping exactly as the real `StudyScreen`
@@ -53,8 +52,13 @@ const styles = StyleSheet.create({
   page: { flex: 1 },
   // A white bar with room under its step labels, so content scrolling up
   // passes cleanly beneath it.
-  headerBar: { paddingHorizontal: PAGE_INSET, paddingTop: 12, paddingBottom: 14, zIndex: 1 },
+  headerBar: {
+    paddingHorizontal: PAGE_INSET,
+    paddingTop: space[12],
+    paddingBottom: space[14],
+    zIndex: 1,
+  },
   // Clips the content scrolling up beneath the header.
   scrollArea: { flex: 1, overflow: "hidden" },
-  scrollContent: { paddingHorizontal: PAGE_INSET, paddingTop: 12 },
+  scrollContent: { paddingHorizontal: PAGE_INSET, paddingTop: space[12] },
 });

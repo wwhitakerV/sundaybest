@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 
 import type { QuizChoice } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import { describeChoice, type ChoiceLook } from "../logic/quick-check";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 /** A word picked into the verse steps back in the row, as it's gone up into the blank. */
 const USED_OPACITY = 0.4;
@@ -52,16 +53,16 @@ export function QuickCheckWordChip({
       onPress={onPress}
       style={[
         styles.chip,
-        { borderColor: edge, backgroundColor: fill, borderRadius: theme.radii.pill },
+        { borderColor: edge, backgroundColor: fill, borderRadius: radius.pill },
         (look === "selected" || look === "faded") && styles.used,
       ]}
     >
-      <Text style={[theme.typography.body, { color: theme.colors.text }]}>{choice.text}</Text>
+      <SFProBody>{choice.text}</SFProBody>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  chip: { borderWidth: 1, paddingHorizontal: 22, paddingVertical: 12 },
+  chip: { borderWidth: 1, paddingHorizontal: space[22], paddingVertical: space[12] },
   used: { opacity: USED_OPACITY },
 });

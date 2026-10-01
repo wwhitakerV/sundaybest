@@ -10,8 +10,8 @@ import {
   PIVOT_DISTANCE,
   REST_SCALE,
   TOP_PAD,
-} from "./fan-geometry";
-import type { MockScreenProps } from "./mocks/mock-page";
+} from "../logic/fan-geometry";
+import type { MockScreenProps } from "../logic/mock-page";
 import { PhoneCardBody } from "./PhoneCardBody";
 
 export type SideCardProps = {

@@ -1,10 +1,11 @@
 import { StyleSheet, View } from "react-native";
 import { X } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { StepCounter } from "@/ui/StepCounter";
-import { StepProgress } from "@/ui/StepProgress";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { StepCounter } from "@/ui/atoms/StepCounter";
+import { StepProgress } from "@/ui/atoms/StepProgress";
+import { space } from "@/theme";
 
 export type QuickCheckHeaderProps = {
   /** The question on screen, shown as "N of total". */
@@ -49,5 +50,5 @@ export function QuickCheckHeader({
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 16 },
+  container: { gap: space[16] },
 });

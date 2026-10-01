@@ -1,9 +1,11 @@
+import { space } from "@/theme";
+
 /** Of the page's width (inside its inset) — as Home's hero. */
 const WIDTH_RATIO = 0.82;
 /** Thumbnails are YouTube's: always 16:9. */
 const THUMB_ASPECT = 9 / 16;
 /** Between the nav buttons' bottom and the artwork's top. */
-const GAP_BELOW_NAV = 24;
+const GAP_BELOW_NAV = space[24];
 
 export type PlanArtworkFrame = {
   top: number;

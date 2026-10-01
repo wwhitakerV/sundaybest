@@ -2,8 +2,8 @@ import { ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
 import {
   getAttemptAnswers,
   getQuestionResult,

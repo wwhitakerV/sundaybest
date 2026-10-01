@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { VideoThumbnail } from "@/ui/VideoThumbnail";
-import { useTheme } from "@/theme";
+import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
+import { radius, space } from "@/theme";
 import type { LibraryPlanLook } from "../logic/library";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 const TITLE_LINES = 2;
 
@@ -30,8 +32,6 @@ export function LibraryPlanCard({
   testID,
   thumbnailTestID,
 }: LibraryPlanCardProps) {
-  const theme = useTheme();
-
   return (
     <Pressable
       testID={testID}
@@ -39,27 +39,21 @@ export function LibraryPlanCard({
       accessibilityLabel={`${title}. ${look.summary}`}
       accessibilityHint="Opens the plan"
       onPress={onPress}
-      style={[styles.card, { gap: theme.spacing.md }]}
+      style={[styles.card, { gap: space[16] }]}
     >
       <VideoThumbnail
         testID={thumbnailTestID}
         uri={thumbnailUrl}
-        style={{ borderRadius: theme.radii.lg }}
+        style={{ borderRadius: radius[16] }}
       />
 
-      <View style={{ gap: theme.spacing.xs }}>
-        <Text
-          numberOfLines={TITLE_LINES}
-          style={[theme.typography.cardTitle, { color: theme.colors.text }]}
-        >
+      <View style={{ gap: space[4] }}>
+        <SFProTitle variant="card" numberOfLines={TITLE_LINES}>
           {title}
-        </Text>
-        <Text
-          numberOfLines={1}
-          style={[theme.typography.metaLabel, { color: theme.colors.textMuted }]}
-        >
+        </SFProTitle>
+        <MonoLabel tone="textMuted" numberOfLines={1}>
           {look.summary}
-        </Text>
+        </MonoLabel>
       </View>
     </Pressable>
   );

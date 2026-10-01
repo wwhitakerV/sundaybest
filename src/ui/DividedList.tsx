@@ -1,7 +1,7 @@
 import { Children, Fragment, type ReactNode } from "react";
 import { View } from "react-native";
 
-import { Divider } from "./Divider";
+import { Divider } from "./atoms/Divider";
 
 export type DividedListProps = {
   children: ReactNode;

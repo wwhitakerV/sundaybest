@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import {
   BookOpen,
@@ -9,18 +9,20 @@ import {
 } from "lucide-react-native";
 
 import type { StudyStep } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import type { DayHeaderLook, DayStepKey, QuickCheckLook, StudyStepLook } from "../logic/day-rail";
 import { QuickCheckFollowUp } from "./QuickCheckFollowUp";
-import { STEP_ROW_INSET } from "./step-sequence";
+import { STEP_ROW_INSET } from "../logic/step-sequence";
 import { StudyStepRow } from "./StudyStepRow";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
 
 /** How quickly a newly picked day's words ease in, in the place that stays. */
 const CONTENT_FADE_MS = 160;
 /** Between the header and the first step's row (which has room of its own above). */
-const HEADER_SPACE = 12;
+const HEADER_SPACE = space[12];
 /** Between the last step's row and the rule over the Quick Check. */
-const FOLLOW_UP_SPACE = 8;
+const FOLLOW_UP_SPACE = space[8];
 
 /** Each study step's icon, the same ink for all: where it stands is what colours it. */
 function stepIcon(key: StudyStep): LucideIcon {
@@ -80,18 +82,16 @@ export function SelectedDay({
       easing in (keyed by day). */}
       <Animated.View key={contentKey} entering={FadeIn.duration(CONTENT_FADE_MS)}>
         <View style={styles.header}>
-          <Text
+          <SerifTitle
+            variant="title"
+            tone={header.locked ? "textMuted" : "text"}
             accessibilityRole="header"
-            style={[
-              theme.typography.editorialTitle,
-              { color: header.locked ? theme.colors.textMuted : theme.colors.text },
-            ]}
           >
             {title}
-          </Text>
-          <Text style={[theme.typography.label, { color: theme.colors.textMuted }]}>
+          </SerifTitle>
+          <SFProBody variant="label" tone="textMuted">
             {header.meta}
-          </Text>
+          </SFProBody>
         </View>
 
         {/* Reaching into the page's inset (which must be at least
@@ -131,7 +131,7 @@ export function SelectedDay({
 }
 
 const styles = StyleSheet.create({
-  header: { gap: 6, marginBottom: HEADER_SPACE },
+  header: { gap: space[6], marginBottom: HEADER_SPACE },
   bleed: { marginHorizontal: -STEP_ROW_INSET },
   followUp: { marginTop: FOLLOW_UP_SPACE, borderTopWidth: 1 },
 });

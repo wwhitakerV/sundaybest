@@ -1,8 +1,10 @@
-import { Modal, StyleSheet, Text, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
 import { Flame } from "lucide-react-native";
 
-import { Button } from "@/ui/Button";
-import { useTheme } from "@/theme";
+import { Button } from "@/ui/atoms/Button";
+import { radius, space, useTheme } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 export type CaptionsSheetProps = {
   visible: boolean;
@@ -35,16 +37,13 @@ export function CaptionsSheet({
           <View style={[styles.icon, { backgroundColor: theme.colors.segmentBackground }]}>
             <Flame size={28} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
           </View>
-          <Text
-            accessibilityRole="header"
-            style={[theme.typography.screenTitle, { color: theme.colors.text }]}
-          >
+          <SFProTitle accessibilityRole="header">
             This video doesn&apos;t have captions yet
-          </Text>
-          <Text style={[theme.typography.body, styles.body, { color: theme.colors.textMuted }]}>
+          </SFProTitle>
+          <SFProBody variant="bodyLoose" tone="textMuted">
             SundayBest reads captions to build your plan. New uploads often get them within a few
             hours, so try again later or use another link.
-          </Text>
+          </SFProBody>
           <View style={styles.actions}>
             <Button
               testID={`${testID}-try-another-link-button`}
@@ -64,18 +63,34 @@ export function CaptionsSheet({
   );
 }
 
+/** iOS's own sheet grabber, drawn to match it. */
+const GRABBER = { width: 40, height: 5, radius: 3 } as const;
+/** The round badge over the sheet's title. */
+const ICON_SIZE = 64;
+
 const styles = StyleSheet.create({
   scrim: { flex: 1, justifyContent: "flex-end" },
   sheet: {
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 40,
-    gap: 16,
+    borderTopLeftRadius: radius[36],
+    borderTopRightRadius: radius[36],
+    paddingHorizontal: space[24],
+    paddingTop: space[12],
+    paddingBottom: space[40],
+    gap: space[16],
   },
-  grabber: { alignSelf: "center", width: 40, height: 5, borderRadius: 3, marginBottom: 12 },
-  icon: { width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" },
-  body: { lineHeight: 26 },
-  actions: { gap: 12, marginTop: 12 },
+  grabber: {
+    alignSelf: "center",
+    width: GRABBER.width,
+    height: GRABBER.height,
+    borderRadius: GRABBER.radius,
+    marginBottom: space[12],
+  },
+  icon: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: ICON_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  actions: { gap: space[12], marginTop: space[12] },
 });

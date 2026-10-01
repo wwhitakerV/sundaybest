@@ -1,16 +1,18 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import type { StudyStepLook } from "../logic/day-rail";
-import { STEP_MARK_GAP, STEP_NODE_SIZE, STEP_ROW_INSET } from "./step-sequence";
+import { STEP_MARK_GAP, STEP_NODE_SIZE, STEP_ROW_INSET } from "../logic/step-sequence";
 import { StudyStepNode } from "./StudyStepNode";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 /** Above and below its words: room enough that each step reads as a thing to tap. */
-const ROW_PADDING = 16;
+const ROW_PADDING = space[16];
 const LINE_WIDTH = 1.5;
 /** Between the line and the mark it runs into. */
-const LINE_GAP = 4;
+const LINE_GAP = space[4];
 const CHEVRON_SIZE = 18;
 /** How a step answers a press: a soft dim — no give, so the line it's on stays unbroken. */
 const PRESSED = { opacity: 0.7 };
@@ -43,11 +45,6 @@ export function StudyStepRow({
   const theme = useTheme();
   const { status } = look;
   const current = status === "current";
-  const title = current
-    ? theme.colors.text
-    : status === "upcoming"
-      ? theme.colors.textInactive
-      : theme.colors.textMuted;
   const line = (joins: boolean) => ({
     backgroundColor: joins ? theme.colors.sequenceLine : "transparent",
   });
@@ -64,7 +61,7 @@ export function StudyStepRow({
         styles.row,
         {
           backgroundColor: current ? theme.colors.surface : "transparent",
-          borderRadius: theme.radii.lg,
+          borderRadius: radius[16],
         },
         pressed && PRESSED,
       ]}
@@ -83,17 +80,20 @@ export function StudyStepRow({
       </View>
 
       <View style={styles.words}>
-        <Text style={[theme.typography.stepTitle, { color: title }]}>{look.label}</Text>
+        <SFProTitle
+          variant="step"
+          tone={current ? "text" : status === "upcoming" ? "textInactive" : "textMuted"}
+        >
+          {look.label}
+        </SFProTitle>
         {look.detail && (
-          <Text
+          <SFProBody
+            variant="detail"
+            tone={current ? "textInactive" : "textMuted"}
             numberOfLines={1}
-            style={[
-              theme.typography.stepDetail,
-              { color: current ? theme.colors.textInactive : theme.colors.textMuted },
-            ]}
           >
             {look.detail}
-          </Text>
+          </SFProBody>
         )}
       </View>
 
@@ -129,5 +129,5 @@ const styles = StyleSheet.create({
   line: { flex: 1, width: LINE_WIDTH },
   lineIn: { marginBottom: LINE_GAP },
   lineOut: { marginTop: LINE_GAP },
-  words: { flex: 1, gap: 2 },
+  words: { flex: 1, gap: space[2] },
 });

@@ -1,10 +1,15 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import type { Id, QuizQuestion } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { space } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { getChoiceLook, getQuestionKicker, splitVersePrompt } from "../logic/quick-check";
 import { QuickCheckChoice } from "./QuickCheckChoice";
 import { QuickCheckWordChip } from "./QuickCheckWordChip";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SerifBody } from "@/ui/typography/SerifBody";
+import { Span } from "@/ui/typography/Span";
 
 export type QuickCheckQuestionProps = {
   question: QuizQuestion;
@@ -26,7 +31,6 @@ export function QuickCheckQuestion({
   answeredChoiceId,
   onPick,
 }: QuickCheckQuestionProps) {
-  const theme = useTheme();
   const answered = answeredChoiceId !== null;
   const lookOf = (choiceId: Id) =>
     getChoiceLook({
@@ -42,44 +46,30 @@ export function QuickCheckQuestion({
 
   return (
     <View testID="quick-check-question" style={styles.body}>
-      <Text style={[theme.typography.metaBody, { color: theme.colors.textMuted }]}>
-        {getQuestionKicker(question)}
-      </Text>
+      <MonoBody tone="textMuted">{getQuestionKicker(question)}</MonoBody>
 
       {verse ? (
         <>
-          <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-            {question.scriptureReference ?? ""}
-          </Text>
-          <View
-            style={[
-              styles.verseCard,
-              { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-            ]}
-          >
-            <Text
-              testID="quick-check-verse"
-              style={[theme.typography.scripture, { color: theme.colors.text }]}
-            >
+          <SFProTitle>{question.scriptureReference ?? ""}</SFProTitle>
+          <Card radius={36} style={styles.verseCard}>
+            <SerifBody testID="quick-check-verse">
               {verse.before}
-              <Text
-                style={[
-                  styles.blank,
-                  {
-                    color:
-                      filledLook === "correct"
-                        ? theme.colors.correct
-                        : filledLook === "incorrect"
-                          ? theme.colors.incorrect
-                          : theme.colors.text,
-                  },
-                ]}
+              <Span
+                italic
+                style={styles.blank}
+                tone={
+                  filledLook === "correct"
+                    ? "correct"
+                    : filledLook === "incorrect"
+                      ? "incorrect"
+                      : "text"
+                }
               >
                 {filled ? filled.text : "    "}
-              </Text>
+              </Span>
               {verse.after}
-            </Text>
-          </View>
+            </SerifBody>
+          </Card>
           <View style={styles.chips}>
             {question.choices.map((choice) => (
               <QuickCheckWordChip
@@ -95,9 +85,7 @@ export function QuickCheckQuestion({
         </>
       ) : (
         <>
-          <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-            {question.prompt}
-          </Text>
+          <SFProTitle>{question.prompt}</SFProTitle>
           <View style={styles.choices}>
             {question.choices.map((choice) => (
               <QuickCheckChoice
@@ -117,10 +105,10 @@ export function QuickCheckQuestion({
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 16 },
-  choices: { gap: 12, marginTop: 8 },
-  verseCard: { borderWidth: 1, borderRadius: 36, paddingHorizontal: 28, paddingVertical: 24 },
+  body: { gap: space[16] },
+  choices: { gap: space[12], marginTop: space[8] },
+  verseCard: { paddingHorizontal: space[28], paddingVertical: space[24] },
   // The blank, filled or not: an underlined space the chosen words drop into.
-  blank: { fontStyle: "italic", textDecorationLine: "underline" },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 8 },
+  blank: { textDecorationLine: "underline" },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[12], marginTop: space[8] },
 });

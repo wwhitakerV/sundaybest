@@ -1,7 +1,9 @@
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Switch } from "react-native";
 import { ListChecks } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 export type QuickCheckToggleProps = {
   value: boolean;
@@ -14,16 +16,11 @@ export function QuickCheckToggle({ value, onChange, testID }: QuickCheckTogglePr
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.row,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-      ]}
-    >
+    <Card style={styles.row}>
       <ListChecks size={22} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
-      <Text style={[theme.typography.listItem, styles.label, { color: theme.colors.text }]}>
+      <SFProBody variant="listItem" style={styles.label}>
         Add a quick check quiz
-      </Text>
+      </SFProBody>
       <Switch
         testID={testID}
         value={value}
@@ -32,7 +29,7 @@ export function QuickCheckToggle({ value, onChange, testID }: QuickCheckTogglePr
         trackColor={{ true: theme.colors.controlPrimary, false: theme.colors.divider }}
         ios_backgroundColor={theme.colors.divider}
       />
-    </View>
+    </Card>
   );
 }
 
@@ -40,11 +37,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
-    borderWidth: 1,
-    borderRadius: 28,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    gap: space[14],
+    paddingHorizontal: space[20],
+    paddingVertical: space[14],
   },
   label: { flex: 1 },
 });

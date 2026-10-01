@@ -5,12 +5,12 @@ import { ArrowRight, RotateCcw } from "lucide-react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { FloatingBar } from "@/ui/FloatingBar";
-import { FloatingButton } from "@/ui/FloatingButton";
-import { getFloatingNavBarClearance } from "@/ui/floatingNavBar";
-import { Divider } from "@/ui/Divider";
+import { FloatingButton } from "@/ui/atoms/FloatingButton";
+import { getFloatingNavBarClearance } from "@/ui/organisms/floatingNavBar";
+import { Divider } from "@/ui/atoms/Divider";
 import { LinkRow } from "@/ui/LinkRow";
 import { PillButton } from "@/ui/PillButton";
-import { PAGE_INSET, Screen } from "@/ui/Screen";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { useTheme } from "@/theme";
 import {
   getExamAttempt,

@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { Screen } from "@/ui/Screen";
-import { TitleHeader } from "@/ui/TitleHeader";
-import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { TitleHeader } from "@/ui/molecules/TitleHeader";
+import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { addDays } from "@/utils/dates/addDays";
 import { planOverviewHref } from "@/features/plans";
 import {
@@ -26,10 +25,9 @@ import { WeekDays } from "../components/WeekDays";
 import { WeekNavigator } from "../components/WeekNavigator";
 import { formatClockTime } from "@/utils/time/formatClockTime";
 import { describeDate, getWeekTitle } from "../logic/week";
-
-/** Room under the content for the floating tab bar. */
-const BOTTOM_CLEARANCE =
-  FLOATING_NAV_BAR.capsuleHeight + FLOATING_NAV_BAR.bottomMargin + FLOATING_NAV_BAR.sideMargin;
+import { space } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { Span } from "@/ui/typography/Span";
 
 /**
  * Progress, from the store's completion records and quiz attempts: a week
@@ -40,7 +38,6 @@ const BOTTOM_CLEARANCE =
  * anywhere shows the moment it's done.
  */
 export function ProgressScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const today = useToday();
   // Which week is shown: 0 is this one, -1 the one before, and so on.
@@ -81,15 +78,10 @@ export function ProgressScreen() {
 
         {upNext && upNextDetail && (
           <>
-            <Text
-              testID="progress-up-next"
-              style={[theme.typography.body, styles.centred, { color: theme.colors.text }]}
-            >
+            <SFProBody style={styles.centred} testID="progress-up-next">
               {"Up next "}
-              <Text style={{ color: theme.colors.textMuted }}>
-                {describeDate(upNext.date, today)}
-              </Text>
-            </Text>
+              <Span tone="textMuted">{describeDate(upNext.date, today)}</Span>
+            </SFProBody>
             <UpNextCard
               title={upNext.plan.title}
               dayNumber={upNext.day.dayNumber}
@@ -118,19 +110,16 @@ export function ProgressScreen() {
             label="Quiz score"
           />
         </View>
-        <Text
-          testID="progress-plans-done"
-          style={[theme.typography.body, styles.centred, { color: theme.colors.textMuted }]}
-        >
+        <SFProBody tone="textMuted" style={styles.centred} testID="progress-plans-done">
           {`${plansDone} ${plansDone === 1 ? "plan" : "plans"} finished`}
-        </Text>
+        </SFProBody>
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: 24, paddingTop: 8, paddingBottom: BOTTOM_CLEARANCE },
+  content: { gap: space[24], paddingTop: space[8], paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
   centred: { textAlign: "center" },
-  stats: { flexDirection: "row", gap: 12 },
+  stats: { flexDirection: "row", gap: space[12] },
 });

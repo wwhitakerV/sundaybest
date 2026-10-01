@@ -1,4 +1,6 @@
 import { HERO_BOTTOM_SPACE } from "@/ui/hero/hero-layout";
+import { radius } from "@/theme";
+import { clampUnit } from "@/utils/motion/clampUnit";
 
 /**
  * How Home's featured plan collapses into the plan bar as it scrolls up, the
@@ -6,8 +8,8 @@ import { HERO_BOTTOM_SPACE } from "@/ui/hero/hero-layout";
  * its top reaches the top of the phone, then holds there and shortens point
  * for point with the scroll — the list staying attached below it — until
  * it's the bar's height. Along the way its words fade, its artwork flies up
- * into the bar's thumbnail — from the moment the hero starts to move — and
- * the bar settles in over the last of it.
+ * into the bar's thumbnail (`artwork-flight`) — from the moment the hero
+ * starts to move — and the bar settles in over the last of it.
  *
  * All worked out from how far the content has scrolled, so it tracks the
  * finger and reverses on the way back. Worklets: they run on the UI thread,
@@ -29,7 +31,7 @@ export type CollapseGeometry = {
 };
 
 /** The hero's corner radius at rest. */
-export const HERO_RADIUS = 36;
+export const HERO_RADIUS = radius[36];
 /** Over how much scroll the corners straighten, arriving square at the top. */
 const CORNER_RANGE = 100;
 /** The hero's words are gone by this far through the collapse… */
@@ -42,19 +44,10 @@ export const BAR_THUMB_WIDTH = 64;
 export const BAR_THUMB_RADIUS = 8;
 /** The hero's artwork: its share of the page's width, its corners, and the room above it. */
 export const HERO_ARTWORK_WIDTH_RATIO = 0.82;
-export const HERO_ARTWORK_RADIUS = 20;
+export const HERO_ARTWORK_RADIUS = radius[20];
 export const HERO_BREATHE_TOP = 52;
 /** Room for the hero's colour to breathe below its day line — as Plan Detail's. */
 export const HERO_BREATHE_BOTTOM = HERO_BOTTOM_SPACE;
-/** Thumbnails are YouTube's: always 16:9. */
-const THUMB_ASPECT = 9 / 16;
-/** Over how much of the first scroll the flying copy fades in over the hero's artwork. */
-const FLIGHT_HANDOFF_RANGE = 24;
-
-function clamp(value: number): number {
-  "worklet";
-  return Math.min(1, Math.max(0, value));
-}
 
 /**
  * The scroll distances from the laid-out screen: the status bar's height,
@@ -84,7 +77,7 @@ export function getCollapseGeometry(layout: {
 export function getCollapseProgress(scrolled: number, geometry: CollapseGeometry): number {
   "worklet";
   if (geometry.collapseRange <= 0) return scrolled > geometry.screenTop ? 1 : 0;
-  return clamp((scrolled - geometry.screenTop) / geometry.collapseRange);
+  return clampUnit((scrolled - geometry.screenTop) / geometry.collapseRange);
 }
 
 /**
@@ -105,7 +98,7 @@ export function getHeroPin(
 /** The hero's words fade over the first part of the collapse, gone before the bar comes in. */
 export function getHeroContentOpacity(scrolled: number, geometry: CollapseGeometry): number {
   "worklet";
-  return 1 - clamp(getCollapseProgress(scrolled, geometry) / CONTENT_GONE_AT);
+  return 1 - clampUnit(getCollapseProgress(scrolled, geometry) / CONTENT_GONE_AT);
 }
 
 /**
@@ -115,19 +108,19 @@ export function getHeroContentOpacity(scrolled: number, geometry: CollapseGeomet
  */
 export function getHeaderOpacity(scrolled: number, geometry: CollapseGeometry): number {
   "worklet";
-  return geometry.headerCross <= 0 ? 1 : clamp(1.8 - scrolled / geometry.headerCross);
+  return geometry.headerCross <= 0 ? 1 : clampUnit(1.8 - scrolled / geometry.headerCross);
 }
 
 /** The hero's corners straighten as it nears the top of the phone, square once there. */
 export function getHeroCornerRadius(scrolled: number, geometry: CollapseGeometry): number {
   "worklet";
-  return HERO_RADIUS * clamp((geometry.screenTop - scrolled) / CORNER_RANGE);
+  return HERO_RADIUS * clampUnit((geometry.screenTop - scrolled) / CORNER_RANGE);
 }
 
 /** How far the plan bar has come in (0–1): over the last of the collapse, in as the hero reaches its height. */
 export function getBarProgress(scrolled: number, geometry: CollapseGeometry): number {
   "worklet";
-  return clamp((getCollapseProgress(scrolled, geometry) - BAR_FROM) / (1 - BAR_FROM));
+  return clampUnit((getCollapseProgress(scrolled, geometry) - BAR_FROM) / (1 - BAR_FROM));
 }
 
 /** What should take taps, and the status bar's shade, at a point in the scroll. */
@@ -147,89 +140,6 @@ export function getCollapsePhase(scrolled: number, geometry: CollapseGeometry): 
     headerTouchable: getHeaderOpacity(scrolled, geometry) > 0.25,
     barTouchable: getBarProgress(scrolled, geometry) >= 0.5,
     lightStatusBar: scrolled >= geometry.screenTop - geometry.statusBar,
-  };
-}
-
-/** A rectangle on screen, in points from the phone's top left. */
-export type Rect = { x: number; y: number; width: number; height: number };
-
-/** How the hero lays out its artwork: the screen's width, the page inset, the artwork's share of the width inside it, and the room above it. */
-export type ArtworkFrame = {
-  screenWidth: number;
-  inset: number;
-  widthRatio: number;
-  breatheTop: number;
-};
-
-/**
- * Where the hero's artwork is on screen at a point in the scroll — centred,
- * carried up with the hero, and held with it once it's pinned at the top.
- */
-export function getArtworkRect(
-  scrolled: number,
-  geometry: CollapseGeometry,
-  frame: ArtworkFrame,
-): Rect {
-  "worklet";
-  const width = (frame.screenWidth - frame.inset * 2) * frame.widthRatio;
-  return {
-    x: (frame.screenWidth - width) / 2,
-    y: Math.max(0, geometry.screenTop - scrolled) + frame.breatheTop,
-    width,
-    height: width * THUMB_ASPECT,
-  };
-}
-
-/** Where the plan bar's thumbnail sits: at the page inset, centred in the bar's row. */
-export function getBarThumbRect(insetTop: number, inset: number): Rect {
-  "worklet";
-  const height = BAR_THUMB_WIDTH * THUMB_ASPECT;
-  return { x: inset, y: insetTop + (BAR_ROW_HEIGHT - height) / 2, width: BAR_THUMB_WIDTH, height };
-}
-
-/**
- * Eases in and out, gently (a sine): moving soon after it sets off, so the
- * flight's seen to begin with the hero, quick through the middle, soft to land.
- */
-function easeInOut(progress: number): number {
-  "worklet";
-  return (1 - Math.cos(Math.PI * progress)) / 2;
-}
-
-/**
- * How far the artwork's flight to the bar has come (0–1): from the moment
- * the hero starts to move — rising to the top of the phone, then collapsing
- * — landing as the collapse does. None before the hero's measured.
- */
-export function getFlightProgress(scrolled: number, geometry: CollapseGeometry): number {
-  "worklet";
-  if (geometry.collapseRange <= 0) return 0;
-  return clamp(scrolled / (geometry.screenTop + geometry.collapseRange));
-}
-
-/**
- * How far the flying copy has faded in over the hero's own artwork (0–1),
- * over the first of the scroll, while it's barely moved — so the words'
- * colour over the artwork's lower part fades away rather than popping.
- */
-export function getFlightHandoff(scrolled: number): number {
-  "worklet";
-  return clamp(scrolled / FLIGHT_HANDOFF_RANGE);
-}
-
-/**
- * The artwork in flight, `progress` (0–1) of the way from the hero's artwork
- * to the bar's thumbnail — eased, so it lifts off gently and lands softly.
- */
-export function getFlightRect(progress: number, from: Rect, to: Rect): Rect {
-  "worklet";
-  const eased = easeInOut(clamp(progress));
-  const toward = (a: number, b: number) => a + (b - a) * eased;
-  return {
-    x: toward(from.x, to.x),
-    y: toward(from.y, to.y),
-    width: toward(from.width, to.width),
-    height: toward(from.height, to.height),
   };
 }
 

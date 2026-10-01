@@ -1,7 +1,8 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import sermonThumbnail from "../../../../../assets/images/welcome/sermon-thumbnail.png";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 /** The video thumbnail's own proportions — 16:9 — so it's never squashed or cropped. */
 const THUMBNAIL_ASPECT = 16 / 9;
@@ -30,10 +31,10 @@ export function SermonCard() {
         />
       </View>
       <View style={styles.text}>
-        <Text numberOfLines={1} style={[theme.typography.listItem, { color: theme.colors.text }]}>
+        <SFProBody variant="listItem" numberOfLines={1}>
           Today I Choose to Be a Blessing
-        </Text>
-        <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>VOUS Church</Text>
+        </SFProBody>
+        <SFProBody tone="textMuted">VOUS Church</SFProBody>
       </View>
     </View>
   );
@@ -45,5 +46,10 @@ const styles = StyleSheet.create({
   // Explicit 100% of a frame whose size is already fixed, so it can't fall
   // back to the image file's own dimensions.
   fill: { width: "100%", height: "100%" },
-  text: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 14, gap: 2 },
+  text: {
+    paddingHorizontal: space[16],
+    paddingTop: space[12],
+    paddingBottom: space[14],
+    gap: space[2],
+  },
 });

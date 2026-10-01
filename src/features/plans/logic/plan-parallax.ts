@@ -1,3 +1,5 @@
+import { clampUnit } from "@/utils/motion/clampUnit";
+
 /**
  * Plan Detail's hero as it scrolls, the way Apple lays out a show: the
  * artwork held back behind the page, rising at half the scroll, while the
@@ -44,14 +46,14 @@ export function isContinueHandedOff(
 /** The artwork fading slowly as the page scrolls, never quite gone — and whole when pulled past the top. */
 export function getArtworkOpacity(scrolled: number): number {
   "worklet";
-  const progress = Math.min(1, Math.max(0, scrolled / ARTWORK_FADE_RANGE));
+  const progress = clampUnit(scrolled / ARTWORK_FADE_RANGE);
   return 1 - (1 - ARTWORK_MIN_OPACITY) * progress;
 }
 
 /** The artwork shrinking slowly as the page scrolls, to 85% at most — and whole when pulled past the top. */
 export function getArtworkScale(scrolled: number): number {
   "worklet";
-  const progress = Math.min(1, Math.max(0, scrolled / ARTWORK_SCALE_RANGE));
+  const progress = clampUnit(scrolled / ARTWORK_SCALE_RANGE);
   return 1 - (1 - ARTWORK_MIN_SCALE) * progress;
 }
 

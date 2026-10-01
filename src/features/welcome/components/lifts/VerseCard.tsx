@@ -1,8 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { SCRIPTURE_WORDS, getScriptureScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { SerifBody } from "@/ui/typography/SerifBody";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { Span } from "@/ui/typography/Span";
 
 // Stable keys for the words; a word can repeat, its position can't.
 const WORDS = SCRIPTURE_WORDS.map((text, position) => ({ key: `${position}-${text}`, text }));
@@ -12,39 +16,25 @@ const WORDS = SCRIPTURE_WORDS.map((text, position) => ({ key: `${position}-${tex
  * as if someone were reading along; unread words sit quiet.
  */
 export function VerseCard({ elapsedMs }: LiftPieceProps) {
-  const theme = useTheme();
   const { litWords } = getScriptureScene(elapsedMs);
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-      ]}
-    >
-      <Text style={[theme.typography.scripture, { color: theme.colors.text }]}>
-        <Text style={theme.typography.metaEmphasis}>8 </Text>
+    <Card radius={VERSE_CARD_RADIUS} fill="page" style={styles.card}>
+      <SerifBody>
+        <MonoLabel variant="emphasis">8 </MonoLabel>
         {WORDS.map(({ key, text }, position) => (
-          <Text
-            key={key}
-            style={{ color: position < litWords ? theme.colors.text : theme.colors.border }}
-          >
+          <Span key={key} tone={position < litWords ? "text" : "border"}>
             {position < WORDS.length - 1 ? `${text} ` : text}
-          </Text>
+          </Span>
         ))}
-      </Text>
-    </View>
+      </SerifBody>
+    </Card>
   );
 }
 
 /** Its corners — shared with the floating card it lifts onto. */
-export const VERSE_CARD_RADIUS = 24;
+export const VERSE_CARD_RADIUS = radius[24];
 
 const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    borderRadius: VERSE_CARD_RADIUS,
-    paddingHorizontal: 22,
-    paddingVertical: 18,
-  },
+  card: { paddingHorizontal: space[22], paddingVertical: space[18] },
 });

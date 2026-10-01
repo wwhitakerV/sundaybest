@@ -1,15 +1,17 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Pause, Play } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { usePressPulse } from "../../hooks/use-tap-feedback";
 import { getListenScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const PLAY_SIZE = 48;
 /** Its corners — shared with the floating card it lifts onto. */
-export const LISTEN_CARD_RADIUS = 36;
+export const LISTEN_CARD_RADIUS = radius[36];
 
 /**
  * "Hear this part of the sermon": the Read step's link to where this reading
@@ -23,12 +25,7 @@ export function ListenCard({ elapsedMs }: LiftPieceProps) {
   const Icon = playing ? Pause : Play;
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-      ]}
-    >
+    <Card radius={LISTEN_CARD_RADIUS} fill="page" style={styles.card}>
       <Animated.View
         style={[styles.play, { backgroundColor: theme.colors.controlPrimary }, pressStyle]}
       >
@@ -39,27 +36,25 @@ export function ListenCard({ elapsedMs }: LiftPieceProps) {
         />
       </Animated.View>
       <View style={styles.text}>
-        <Text numberOfLines={1} style={[theme.typography.listItem, { color: theme.colors.text }]}>
+        <SFProBody variant="listItem" numberOfLines={1}>
           Hear this part of the sermon
-        </Text>
-        <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>
+        </SFProBody>
+        <SFProBody tone="textMuted">
           {playing ? `Playing · ${clock}` : `Starts at ${clock}`}
-        </Text>
+        </SFProBody>
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: LISTEN_CARD_RADIUS,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingVertical: 14,
-    paddingLeft: 14,
-    paddingRight: 20,
+    gap: space[16],
+    paddingVertical: space[14],
+    paddingLeft: space[14],
+    paddingRight: space[20],
   },
   play: {
     width: PLAY_SIZE,
@@ -68,5 +63,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  text: { flex: 1, gap: 2 },
+  text: { flex: 1, gap: space[2] },
 });

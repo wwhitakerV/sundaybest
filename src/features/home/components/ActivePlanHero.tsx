@@ -10,16 +10,15 @@ import {
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { Link, type Href } from "expo-router";
 
-import { GradientBackdrop } from "@/ui/GradientBackdrop";
-import { HeroContent } from "@/ui/hero/HeroContent";
+import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
+import { HeroContent, type HeroPlan } from "@/ui/hero/HeroContent";
 import { HeroContentFade } from "@/ui/hero/HeroContentFade";
 import { HERO_WASH_OPACITY, HERO_WORDS_GAP } from "@/ui/hero/hero-layout";
-import { PAGE_INSET } from "@/ui/Screen";
-import { VideoThumbnail } from "@/ui/VideoThumbnail";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { useTheme } from "@/theme";
 import { getBackdropStops } from "@/utils/color/getBackdropStops";
 import { prefersLightInk } from "@/utils/color/prefersLightInk";
-import type { ActivePlanWords } from "../logic/active-plan-hero";
 import {
   HERO_ARTWORK_RADIUS,
   HERO_ARTWORK_WIDTH_RATIO,
@@ -28,32 +27,36 @@ import {
   HERO_RADIUS,
 } from "../logic/hero-collapse";
 
-export type ActivePlanHeroProps = {
-  title: string;
-  church: string | null;
-  thumbnailUrl: string | null;
-  /** The sermon's colours, from its thumbnail, strongest first; empty until known. */
-  colors: readonly string[];
-  words: ActivePlanWords;
-  currentDay: number;
-  totalDays: number;
-  completedDayCount: number;
-  /** Plan Detail for this plan, in the same stack — the artwork zooms into it. */
-  href: Href;
-  onContinue: () => void;
+type AnimatedViewStyle = StyleProp<AnimatedStyle<ViewStyle>>;
+
+/** How the hero collapses as Home scrolls (`useHeroCollapse`). */
+type ActivePlanHeroMotion = {
   /**
    * Its coloured frame as it scrolls: corners straightening as it nears the
    * top of the phone, then held there and shortening as it collapses.
    */
-  frameStyle?: StyleProp<AnimatedStyle<ViewStyle>>;
+  frameStyle?: AnimatedViewStyle;
+  /** Its content as it collapses into the plan bar — it gives way. */
+  contentStyle?: AnimatedViewStyle;
+  /** Its artwork — hidden while a copy flies it up into the plan bar. */
+  artworkStyle?: AnimatedViewStyle;
   /** The room it keeps in the page — its full height, once measured — so the list never jumps as it collapses. */
   slotHeight?: number | undefined;
   /** Reports its content's height, from which its full height is known. */
   onContentLayout?: (event: LayoutChangeEvent) => void;
-  /** Its content as it collapses into the plan bar — it gives way. */
-  contentStyle?: StyleProp<AnimatedStyle<ViewStyle>>;
-  /** Its artwork — hidden while a copy flies it up into the plan bar. */
-  artworkStyle?: StyleProp<AnimatedStyle<ViewStyle>>;
+};
+
+export type ActivePlanHeroProps = {
+  plan: HeroPlan & {
+    thumbnailUrl: string | null;
+    /** The sermon's colours, from its thumbnail, strongest first; empty until known. */
+    colors: readonly string[];
+    currentDay: number;
+  };
+  /** Plan Detail for this plan, in the same stack — the artwork zooms into it. */
+  href: Href;
+  onContinue: () => void;
+  motion?: ActivePlanHeroMotion;
 };
 
 /**
@@ -69,24 +72,10 @@ export type ActivePlanHeroProps = {
  * out; earlier iOS gets a normal push. Continue goes straight to today's
  * study.
  */
-export function ActivePlanHero({
-  title,
-  church,
-  thumbnailUrl,
-  colors,
-  words,
-  currentDay,
-  totalDays,
-  completedDayCount,
-  href,
-  onContinue,
-  frameStyle,
-  slotHeight,
-  onContentLayout,
-  contentStyle,
-  artworkStyle,
-}: ActivePlanHeroProps) {
+export function ActivePlanHero({ plan, href, onContinue, motion = {} }: ActivePlanHeroProps) {
   const theme = useTheme();
+  const { title, thumbnailUrl, colors, currentDay, totalDays, completedDayCount } = plan;
+  const { frameStyle, contentStyle, artworkStyle, slotHeight, onContentLayout } = motion;
   const colour = colors.at(0) ?? theme.colors.featureBackdrop;
   const stops = getBackdropStops(colors, theme.colors.featureBackdrop);
   const underlay = thumbnailUrl ? { uri: thumbnailUrl, opacity: HERO_WASH_OPACITY } : undefined;
@@ -146,11 +135,7 @@ export function ActivePlanHero({
           />
 
           <HeroContent
-            title={title}
-            church={church}
-            words={words}
-            totalDays={totalDays}
-            completedDayCount={completedDayCount}
+            plan={plan}
             light={prefersLightInk(colour)}
             onContinue={onContinue}
             testIDs={{

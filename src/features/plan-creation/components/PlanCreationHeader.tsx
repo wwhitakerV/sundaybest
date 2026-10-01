@@ -1,8 +1,8 @@
 import { ArrowLeft, X } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { StepCounter } from "@/ui/StepCounter";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { StepCounter } from "@/ui/atoms/StepCounter";
 
 export type PlanCreationHeaderProps = {
   /** "close" for the flow's first screen or a temporary step; "back" to move within the flow. */

@@ -1,7 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { Button } from "@/ui/Button";
-import { useTheme } from "@/theme";
+import { Button } from "@/ui/atoms/Button";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 export type StartHereCardProps = {
   onAddSermon: () => void;
@@ -12,36 +15,26 @@ export function StartHereCard({ onAddSermon }: StartHereCardProps) {
   const theme = useTheme();
 
   return (
-    <View
-      testID="home-tab-start-here"
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-      ]}
-    >
+    <Card testID="home-tab-start-here" radius={32} style={styles.card}>
       <View
         style={[
           styles.pill,
-          { backgroundColor: theme.colors.segmentBackground, borderRadius: theme.radii.pill },
+          { backgroundColor: theme.colors.segmentBackground, borderRadius: radius.pill },
         ]}
       >
-        <Text style={[theme.typography.body, { color: theme.colors.text }]}>Start here</Text>
+        <SFProBody>Start here</SFProBody>
       </View>
       <View style={styles.text}>
-        <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-          Start with last Sunday&apos;s sermon
-        </Text>
-        <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>
-          Paste a link and get a daily plan in seconds.
-        </Text>
+        <SFProTitle>Start with last Sunday&apos;s sermon</SFProTitle>
+        <SFProBody tone="textMuted">Paste a link and get a daily plan in seconds.</SFProBody>
       </View>
       <Button testID="home-tab-add-sermon-button" label="Add a sermon" onPress={onAddSermon} />
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, borderRadius: 32, padding: 24, gap: 24 },
-  pill: { alignSelf: "flex-start", paddingHorizontal: 14, paddingVertical: 8 },
-  text: { gap: 10, marginTop: 20 },
+  card: { padding: space[24], gap: space[24] },
+  pill: { alignSelf: "flex-start", paddingHorizontal: space[14], paddingVertical: space[8] },
+  text: { gap: space[10], marginTop: space[20] },
 });

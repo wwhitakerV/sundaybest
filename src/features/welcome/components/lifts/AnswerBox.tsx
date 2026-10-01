@@ -1,8 +1,10 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import { REFLECT_ANSWER, getReflectScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { Span } from "@/ui/typography/Span";
 
 /** The reflection answer box. As its scene plays, the answer is written out. */
 export function AnswerBox({ elapsedMs }: LiftPieceProps) {
@@ -17,17 +19,17 @@ export function AnswerBox({ elapsedMs }: LiftPieceProps) {
         { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
       ]}
     >
-      <Text style={[theme.typography.body, { color: theme.colors.text }]}>
+      <SFProBody>
         {REFLECT_ANSWER.slice(0, typedChars)}
-        {writing && <Text style={{ color: theme.colors.accent }}>|</Text>}
-      </Text>
+        {writing && <Span tone="accent">|</Span>}
+      </SFProBody>
     </View>
   );
 }
 
 /** Its corners — shared with the floating card it lifts onto. */
-export const ANSWER_BOX_RADIUS = 20;
+export const ANSWER_BOX_RADIUS = radius[20];
 
 const styles = StyleSheet.create({
-  box: { borderWidth: 1, borderRadius: ANSWER_BOX_RADIUS, padding: 18, minHeight: 124 },
+  box: { borderWidth: 1, borderRadius: ANSWER_BOX_RADIUS, padding: space[18], minHeight: 124 },
 });

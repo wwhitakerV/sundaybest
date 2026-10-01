@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { CircleCheck, CircleX } from "lucide-react-native";
 
-import { Button } from "@/ui/Button";
+import { Button } from "@/ui/atoms/Button";
 import { useTheme } from "@/theme";
 
 export type ResultItemProps = {

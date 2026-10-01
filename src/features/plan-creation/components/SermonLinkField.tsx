@@ -1,7 +1,10 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ClipboardPaste, Link2 } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProLabel } from "@/ui/typography/SFProLabel";
+import { TextField } from "@/ui/typography/TextField";
 
 export type SermonLinkFieldProps = {
   value: string;
@@ -35,19 +38,18 @@ export function SermonLinkField({
         ]}
       >
         <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-        <TextInput
+        <TextField
           testID={testID}
           value={value}
           onChangeText={onChangeText}
           placeholder="Sermon link"
-          placeholderTextColor={theme.colors.textMuted}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
           returnKeyType="done"
           textContentType="URL"
           accessibilityLabel="Sermon link"
-          style={[theme.typography.body, styles.input, { color: theme.colors.text }]}
+          style={styles.input}
         />
         <Pressable
           testID={`${testID}-paste-button`}
@@ -64,44 +66,44 @@ export function SermonLinkField({
             color={theme.colors.onControlPrimary}
             strokeWidth={theme.icon.strokeWidth}
           />
-          <Text style={[theme.typography.button, { color: theme.colors.onControlPrimary }]}>
-            Paste
-          </Text>
+          <SFProLabel tone="onControlPrimary">Paste</SFProLabel>
         </Pressable>
       </View>
       {error && (
-        <Text
+        <MonoBody
+          variant="supporting"
+          tone="accent"
+          style={styles.error}
           testID={`${testID}-error`}
           accessibilityLiveRegion="polite"
-          style={[theme.typography.supporting, styles.error, { color: theme.colors.accent }]}
         >
           {error}
-        </Text>
+        </MonoBody>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 8 },
+  wrap: { gap: space[8] },
   field: {
     minHeight: 64,
     borderWidth: 1,
-    borderRadius: 32,
+    borderRadius: radius[32],
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 20,
-    paddingRight: 8,
-    gap: 12,
+    paddingLeft: space[20],
+    paddingRight: space[8],
+    gap: space[12],
   },
   paste: {
     height: 48,
-    borderRadius: 24,
+    borderRadius: radius[24],
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 18,
+    gap: space[8],
+    paddingHorizontal: space[18],
   },
-  input: { flex: 1, paddingVertical: 16 },
-  error: { marginLeft: 20 },
+  input: { flex: 1, paddingVertical: space[16] },
+  error: { marginLeft: space[20] },
 });

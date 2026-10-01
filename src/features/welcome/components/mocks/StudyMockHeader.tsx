@@ -1,10 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { ALargeSmall, X } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { StepProgress } from "@/ui/StepProgress";
-import { useTheme } from "@/theme";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { StepProgress } from "@/ui/atoms/StepProgress";
+import { space } from "@/theme";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { SFProLabel } from "@/ui/typography/SFProLabel";
+import { Span } from "@/ui/typography/Span";
 
 const STEP_LABELS = ["Read", "Scripture", "Reflect", "Pray"] as const;
 // Matches the real `StudyHeader`: text size left (20pt icon), close right.
@@ -22,7 +25,6 @@ export type StudyMockHeaderProps = {
  * like the real `StudyHeader`: it stays put while the body steps beneath it.
  */
 export function StudyMockHeader({ activeStep, testID }: StudyMockHeaderProps) {
-  const theme = useTheme();
   const noop = () => undefined;
 
   return (
@@ -52,20 +54,13 @@ export function StudyMockHeader({ activeStep, testID }: StudyMockHeaderProps) {
         <StepProgress steps={STEP_LABELS.length} activeIndex={activeStep} />
         <View style={styles.stepLabels}>
           {STEP_LABELS.map((label, index) => (
-            <Text
+            <SFProLabel
+              variant="stepLabel"
+              tone={index === activeStep ? "stepLabelActive" : "stepLabelInactive"}
               key={label}
-              style={[
-                theme.typography.stepLabel,
-                {
-                  color:
-                    index === activeStep
-                      ? theme.colors.stepLabelActive
-                      : theme.colors.stepLabelInactive,
-                },
-              ]}
             >
               {label}
-            </Text>
+            </SFProLabel>
           ))}
         </View>
       </View>
@@ -74,7 +69,7 @@ export function StudyMockHeader({ activeStep, testID }: StudyMockHeaderProps) {
 }
 
 const styles = StyleSheet.create({
-  steps: { gap: 10, marginTop: 4 },
+  steps: { gap: space[10], marginTop: space[4] },
   stepLabels: { flexDirection: "row", justifyContent: "space-between" },
 });
 
@@ -82,12 +77,10 @@ export type StudyKickerProps = { label: string };
 
 /** A study step's mono kicker, e.g. "Day 2  Scripture" — part of the step's body. */
 export function StudyKicker({ label }: StudyKickerProps) {
-  const theme = useTheme();
-
   return (
-    <Text style={[theme.typography.metaLabel, { color: theme.colors.text }]}>
+    <MonoLabel>
       {"Day 2  "}
-      <Text style={{ color: theme.colors.textMuted }}>{label}</Text>
-    </Text>
+      <Span tone="textMuted">{label}</Span>
+    </MonoLabel>
   );
 }

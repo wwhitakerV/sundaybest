@@ -2,7 +2,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
 import type { BackdropStop } from "@/utils/color/getBackdropStops";
 import { getHeroContentFade } from "@/utils/hero/getHeroContentFade";
-import { GradientBackdrop } from "../GradientBackdrop";
+import { GradientBackdrop } from "../atoms/GradientBackdrop";
 
 export type HeroContentFadeProps = {
   /** The hero's own gradient (`getBackdropStops`), so it lies seamlessly over it. */

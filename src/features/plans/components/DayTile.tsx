@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Check, Lock } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import type { DayTileLook } from "../logic/day-rail";
+import { SFProLabel } from "@/ui/typography/SFProLabel";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
 
 /** Every day's width — and the selected day's outline's, which the rail draws over it. */
 export const DAY_TILE_WIDTH = 58;
@@ -13,7 +15,7 @@ const LOCK_SIZE = 10;
 /** A finished day's check, drawn a touch firmer than the chrome's icons. */
 const CHECK_STROKE = 3;
 /** Between the mark and the number: room to breathe. */
-const MARK_GAP = 6;
+const MARK_GAP = space[6];
 const TODAY_DOT = 6;
 
 export type DayTileProps = {
@@ -36,9 +38,6 @@ export function DayTile({ look, selected, onPress, testID }: DayTileProps) {
   const theme = useTheme();
   const locked = look.mark === "locked";
   const dayComplete = look.mark === "done";
-  const ink = locked ? theme.colors.textMuted : theme.colors.text;
-  // A finished day's date keeps some presence — secondary, not ghosted.
-  const dateInk = dayComplete ? theme.colors.textInactive : theme.colors.textMuted;
   return (
     <Pressable
       testID={testID}
@@ -50,7 +49,7 @@ export function DayTile({ look, selected, onPress, testID }: DayTileProps) {
         styles.day,
         {
           backgroundColor: dayComplete ? theme.colors.surface : "transparent",
-          borderRadius: theme.radii.lg,
+          borderRadius: radius[16],
         },
       ]}
     >
@@ -75,18 +74,23 @@ export function DayTile({ look, selected, onPress, testID }: DayTileProps) {
             testID={`${testID}-today`}
             style={[
               styles.dot,
-              { backgroundColor: theme.colors.accent, borderRadius: theme.radii.pill },
+              { backgroundColor: theme.colors.accent, borderRadius: radius.pill },
             ]}
           />
         )}
       </View>
-      <Text style={[theme.typography.tileNumber, styles.number, { color: ink }]}>
+      <SFProLabel variant="tileNumber" tone={locked ? "textMuted" : "text"} style={styles.number}>
         {look.number}
-      </Text>
+      </SFProLabel>
       {look.date && (
-        <Text style={[theme.typography.tileDate, styles.date, { color: dateInk }]}>
+        <MonoLabel
+          variant="date"
+          // A finished day's date keeps some presence — secondary, not ghosted.
+          tone={dayComplete ? "textInactive" : "textMuted"}
+          style={styles.date}
+        >
           {look.date}
-        </Text>
+        </MonoLabel>
       )}
     </Pressable>
   );
@@ -98,7 +102,7 @@ const styles = StyleSheet.create({
     height: DAY_TILE_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
+    gap: space[2],
   },
   mark: {
     height: MARK_SIZE,

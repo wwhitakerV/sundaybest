@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { lightTheme } from "@/theme/tokens";
-import { HeroContent, type HeroContentProps } from "@/ui/hero/HeroContent";
+import { HeroContent, type HeroContentProps, type HeroPlan } from "@/ui/hero/HeroContent";
 
 const TEST_IDS = {
   content: "a-hero-content",
@@ -12,17 +12,23 @@ const TEST_IDS = {
   progress: "a-hero-progress",
 };
 
-function renderContent(overrides: Partial<HeroContentProps> = {}) {
+function renderContent({
+  plan,
+  ...overrides
+}: Partial<Omit<HeroContentProps, "plan">> & { plan?: Partial<HeroPlan> } = {}) {
   const props: HeroContentProps = {
-    title: "Today I Choose to Be a Blessing",
-    church: "VOUS Church",
-    words: {
-      status: "IN PROGRESS · DAY 2 OF 6",
-      action: "Continue Day 2",
-      today: "Today: Grace is received · 9 min",
+    plan: {
+      title: "Today I Choose to Be a Blessing",
+      church: "VOUS Church",
+      words: {
+        status: "IN PROGRESS · DAY 2 OF 6",
+        action: "Continue Day 2",
+        today: "Today: Grace is received · 9 min",
+      },
+      totalDays: 6,
+      completedDayCount: 1,
+      ...plan,
     },
-    totalDays: 6,
-    completedDayCount: 1,
     light: true,
     onContinue: () => undefined,
     testIDs: TEST_IDS,
@@ -51,7 +57,7 @@ describe("HeroContent", () => {
   });
 
   it("leaves the church out when there isn't one", () => {
-    renderContent({ church: null });
+    renderContent({ plan: { church: null } });
 
     expect(screen.queryByText("VOUS Church")).toBeNull();
   });
@@ -85,14 +91,14 @@ describe("HeroContent", () => {
   });
 
   it("lets Continue go while it's handed over elsewhere", () => {
-    renderContent({ continueShown: false });
+    renderContent({ continueHandOver: { shown: false, onLayout: () => undefined } });
 
     expect(screen.getByTestId("a-hero-continue-slot")).toHaveProp("pointerEvents", "none");
   });
 
   it("reports where Continue sits", () => {
     const onContinueLayout = jest.fn();
-    renderContent({ onContinueLayout });
+    renderContent({ continueHandOver: { shown: true, onLayout: onContinueLayout } });
 
     fireEvent(screen.getByTestId("a-hero-continue-slot"), "layout", {
       nativeEvent: { layout: { x: 0, y: 320, width: 200, height: 44 } },
@@ -102,7 +108,8 @@ describe("HeroContent", () => {
   });
 
   it("says what today holds, and how far through the plan is", () => {
-    renderContent();
+    // The day-by-day line is off by default; this is a hero that shows it.
+    renderContent({ showProgress: true });
 
     expect(screen.getByTestId("a-hero-today")).toHaveTextContent(
       "Today: Grace is received · 9 min",
@@ -137,9 +144,16 @@ describe("HeroContent", () => {
   });
 
   it("sets the day-by-day line well apart, a thing of its own", () => {
-    renderContent();
+    // The day-by-day line is off by default; this is a hero that shows it.
+    renderContent({ showProgress: true });
 
     expect(screen.getByTestId("a-hero-today")).toHaveStyle({ marginBottom: 28 });
+  });
+
+  it("leaves the day-by-day line out unless asked for it", () => {
+    renderContent();
+
+    expect(screen.queryByTestId("a-hero-progress")).toBeNull();
   });
 
   it("can leave the day-by-day line out, for a page that shows the days itself", () => {

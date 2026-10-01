@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, useTheme } from "@/theme";
 
 const SIZE = 40;
 const ICON_SIZE = 18;
@@ -27,7 +27,7 @@ export function IconBadge({ icon: Icon, selected = false, testID }: IconBadgePro
         styles.badge,
         {
           backgroundColor: selected ? theme.colors.selectionBadge : theme.colors.surface,
-          borderRadius: theme.radii.pill,
+          borderRadius: radius.pill,
         },
       ]}
     >

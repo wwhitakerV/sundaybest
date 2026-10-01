@@ -1,7 +1,7 @@
 import { Text } from "react-native";
 import { render, screen } from "@tests/helpers/render";
 
-import { FLOATING_NAV_BAR, getFloatingNavBarBottom } from "@/ui/floatingNavBar";
+import { FLOATING_NAV_BAR, getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 import { FloatingBar } from "@/ui/FloatingBar";
 
 describe("FloatingBar", () => {

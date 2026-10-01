@@ -2,11 +2,11 @@ import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { Divider } from "@/ui/Divider";
-import { FilterPills } from "@/ui/FilterPills";
-import { TitleHeader } from "@/ui/TitleHeader";
-import { useTheme } from "@/theme";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { Divider } from "@/ui/atoms/Divider";
+import { FilterPills } from "@/ui/molecules/FilterPills";
+import { TitleHeader } from "@/ui/molecules/TitleHeader";
+import { space } from "@/theme";
 import {
   getCompletedPlans,
   getInProgressPlans,
@@ -29,7 +29,6 @@ import { planOverviewHref } from "../logic/routes";
  * opens to its overview.
  */
 export function PlansScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const [filter, setFilter] = useState("All");
   const cards = useAppSelector((state) =>
@@ -69,7 +68,7 @@ export function PlansScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => (
-          <Divider testID="plans-divider" style={{ marginVertical: theme.spacing.lg }} />
+          <Divider testID="plans-divider" style={{ marginVertical: space[24] }} />
         )}
         renderItem={({ item: { plan, thumbnailUrl, look } }) => (
           <LibraryPlanCard
@@ -86,6 +85,9 @@ export function PlansScreen() {
   );
 }
 
+/** Room under the last plan, so it scrolls clear of the tab bar and its tint. */
+const LIST_FOOT = 140;
+
 const styles = StyleSheet.create({
-  list: { paddingBottom: 140 },
+  list: { paddingBottom: LIST_FOOT },
 });

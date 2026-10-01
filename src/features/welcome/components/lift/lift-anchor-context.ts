@@ -14,8 +14,3 @@ export type LiftAnchorContextValue = {
 
 /** Provided around the big phone's screens; read by the `LiftAnchor`s in them. */
 export const LiftAnchorContext = createContext<LiftAnchorContextValue | null>(null);
-
-/** A lift piece's id: its turn, and which of that turn's lifts it is. */
-export function getLiftId(card: string, index: number): string {
-  return `${card}:${index}`;
-}

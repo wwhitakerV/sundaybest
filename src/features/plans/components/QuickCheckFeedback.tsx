@@ -1,11 +1,14 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { CircleCheck, CircleX } from "lucide-react-native";
 
 import type { QuizQuestion } from "@/types/domain";
-import { Button } from "@/ui/Button";
-import { PAGE_INSET } from "@/ui/Screen";
-import { useTheme } from "@/theme";
+import { Button } from "@/ui/atoms/Button";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { radius, space, useTheme } from "@/theme";
 import type { QuickCheckAction } from "../logic/quick-check";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { toneColor, type Tone } from "@/ui/typography/tone";
 
 export type QuickCheckFeedbackProps = {
   /** How the question went — from the store, never worked out here. */
@@ -28,7 +31,8 @@ export function QuickCheckFeedback({
 }: QuickCheckFeedbackProps) {
   const theme = useTheme();
   const right = result === "correct";
-  const ink = right ? theme.colors.correct : theme.colors.incorrect;
+  const tone: Tone = right ? "correct" : "incorrect";
+  const ink = toneColor(theme.colors, tone);
   const Icon = right ? CircleCheck : CircleX;
   const why = [question.scriptureReference, question.explanation].filter(Boolean).join(". ");
 
@@ -45,11 +49,11 @@ export function QuickCheckFeedback({
     >
       <View style={styles.verdict}>
         <Icon size={22} color={ink} strokeWidth={theme.icon.strokeWidth} />
-        <Text style={[theme.typography.headline, { color: ink }]}>
+        <SFProTitle variant="headline" tone={tone}>
           {right ? "That's the one" : "Not quite"}
-        </Text>
+        </SFProTitle>
       </View>
-      {why ? <Text style={[theme.typography.body, { color: ink }]}>{why}</Text> : null}
+      {why ? <SFProBody tone={tone}>{why}</SFProBody> : null}
       <Button testID={action.testID} label={action.label} onPress={onAction} />
     </View>
   );
@@ -60,11 +64,11 @@ const styles = StyleSheet.create({
   panel: {
     marginHorizontal: -PAGE_INSET,
     paddingHorizontal: PAGE_INSET,
-    paddingTop: 24,
-    gap: 16,
+    paddingTop: space[24],
+    gap: space[16],
     borderTopWidth: 1,
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
+    borderTopLeftRadius: radius[36],
+    borderTopRightRadius: radius[36],
   },
-  verdict: { flexDirection: "row", alignItems: "center", gap: 10 },
+  verdict: { flexDirection: "row", alignItems: "center", gap: space[10] },
 });

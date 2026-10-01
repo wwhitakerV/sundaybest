@@ -10,4 +10,8 @@ describe("formatClockTime", () => {
     expect(formatClockTime("00:05")).toBe("12:05 AM");
     expect(formatClockTime("12:00")).toBe("12:00 PM");
   });
+
+  it("reads an hour with no minutes as on the hour", () => {
+    expect(formatClockTime("7")).toBe("7:00 AM");
+  });
 });

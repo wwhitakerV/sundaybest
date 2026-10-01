@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Play } from "lucide-react-native";
 
 import { formatDuration } from "@/utils/time/formatDuration";
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
-const RADIUS = 36;
+const RADIUS = radius[36];
 const PLAY_SIZE = 48;
 
 export type SermonClipCardProps = {
@@ -21,12 +23,7 @@ export function SermonClipCard({ startSeconds }: SermonClipCardProps) {
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-      ]}
-    >
+    <Card radius={RADIUS} fill="page" style={styles.card}>
       <View style={[styles.play, { backgroundColor: theme.colors.controlPrimary }]}>
         <Play
           size={20}
@@ -35,27 +32,23 @@ export function SermonClipCard({ startSeconds }: SermonClipCardProps) {
         />
       </View>
       <View style={styles.text}>
-        <Text numberOfLines={1} style={[theme.typography.listItem, { color: theme.colors.text }]}>
+        <SFProBody variant="listItem" numberOfLines={1}>
           Hear this part of the sermon
-        </Text>
-        <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>
-          {`Starts at ${formatDuration(startSeconds)}`}
-        </Text>
+        </SFProBody>
+        <SFProBody tone="textMuted">{`Starts at ${formatDuration(startSeconds)}`}</SFProBody>
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: RADIUS,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingVertical: 14,
-    paddingLeft: 14,
-    paddingRight: 20,
+    gap: space[16],
+    paddingVertical: space[14],
+    paddingLeft: space[14],
+    paddingRight: space[20],
   },
   play: {
     width: PLAY_SIZE,
@@ -64,5 +57,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  text: { flex: 1, gap: 2 },
+  text: { flex: 1, gap: space[2] },
 });

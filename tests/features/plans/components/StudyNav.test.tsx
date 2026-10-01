@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { tapFeedback } from "@/core/haptics/haptics";
 import { StudyNav } from "@/features/plans/components/StudyNav";
-import { getFloatingNavBarBottom } from "@/ui/floatingNavBar";
+import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 
 jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
 

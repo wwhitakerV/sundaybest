@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Check, X } from "lucide-react-native";
 
 import type { QuizChoice } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import { describeChoice, type ChoiceLook } from "../logic/quick-check";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
-const RADIUS = 28;
+const RADIUS = radius[28];
 const LETTER_SIZE = 36;
 /** The picked outline's weight — drawn over the 1pt border, never in layout. */
 const PICKED_OUTLINE = 2;
@@ -76,21 +77,12 @@ export function QuickCheckChoice({ choice, look, picked, onPress, testID }: Quic
         ) : look === "incorrect" ? (
           <X size={18} color={theme.colors.onControlPrimary} strokeWidth={3} />
         ) : (
-          <Text
-            style={[
-              theme.typography.label,
-              {
-                color: look === "selected" ? theme.colors.onControlPrimary : theme.colors.textMuted,
-              },
-            ]}
-          >
+          <SFProBody variant="label" tone={look === "selected" ? "onControlPrimary" : "textMuted"}>
             {choice.label}
-          </Text>
+          </SFProBody>
         )}
       </View>
-      <Text style={[theme.typography.body, styles.text, { color: theme.colors.text }]}>
-        {choice.text}
-      </Text>
+      <SFProBody style={styles.text}>{choice.text}</SFProBody>
     </Pressable>
   );
 }
@@ -101,9 +93,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS,
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    gap: space[16],
+    paddingVertical: space[18],
+    paddingHorizontal: space[18],
   },
   outline: {
     position: "absolute",

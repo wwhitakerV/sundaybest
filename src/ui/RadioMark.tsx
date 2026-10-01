@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { radius, useTheme } from "@/theme";
 
 const SIZE = 24;
 const RING = 2;
@@ -27,17 +27,14 @@ export function RadioMark({ selected, testID }: RadioMarkProps) {
         styles.ring,
         {
           borderColor: selected ? theme.colors.accent : theme.colors.borderStrong,
-          borderRadius: theme.radii.pill,
+          borderRadius: radius.pill,
         },
       ]}
     >
       {selected && (
         <View
           testID={testID && `${testID}-dot`}
-          style={[
-            styles.dot,
-            { backgroundColor: theme.colors.accent, borderRadius: theme.radii.pill },
-          ]}
+          style={[styles.dot, { backgroundColor: theme.colors.accent, borderRadius: radius.pill }]}
         />
       )}
     </View>

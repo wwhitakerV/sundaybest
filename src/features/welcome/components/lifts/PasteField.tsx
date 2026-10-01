@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { Check, ClipboardPaste, Link2 } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { usePopIn, usePressPulse } from "../../hooks/use-tap-feedback";
 import { PASTE_LINK, getPasteScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 /**
  * The sermon-link field. As its scene plays, Paste is tapped, the link
@@ -26,16 +27,9 @@ export function PasteField({ elapsedMs }: LiftPieceProps) {
       ]}
     >
       <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-      <Text
-        numberOfLines={1}
-        style={[
-          theme.typography.body,
-          styles.text,
-          { color: typed ? theme.colors.text : theme.colors.textMuted },
-        ]}
-      >
+      <SFProBody tone={typed ? "text" : "textMuted"} style={styles.text} numberOfLines={1}>
         {typed || "Sermon link"}
-      </Text>
+      </SFProBody>
       {scene.complete ? (
         <Animated.View
           style={[styles.check, { backgroundColor: theme.colors.segmentBackground }, checkStyle]}
@@ -51,9 +45,9 @@ export function PasteField({ elapsedMs }: LiftPieceProps) {
             color={theme.colors.onControlPrimary}
             strokeWidth={theme.icon.strokeWidth}
           />
-          <Text style={[theme.typography.label, { color: theme.colors.onControlPrimary }]}>
+          <SFProBody variant="label" tone="onControlPrimary">
             Paste
-          </Text>
+          </SFProBody>
         </Animated.View>
       )}
     </View>
@@ -63,6 +57,11 @@ export function PasteField({ elapsedMs }: LiftPieceProps) {
 /** Its corners — shared with the floating card it lifts onto. */
 export const PASTE_FIELD_RADIUS = 37;
 
+/** The Paste button (and the tick that replaces it): a full-round 54. */
+const BUTTON_SIZE = 54;
+/** Inset from the field's end, so the button sits concentric with its round corner. */
+const FIELD_END = 9;
+
 const styles = StyleSheet.create({
   field: {
     height: 74,
@@ -70,23 +69,23 @@ const styles = StyleSheet.create({
     borderRadius: PASTE_FIELD_RADIUS,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 22,
-    paddingRight: 9,
-    gap: 12,
+    paddingLeft: space[22],
+    paddingRight: FIELD_END,
+    gap: space[12],
   },
   text: { flex: 1 },
   paste: {
-    height: 54,
-    borderRadius: 27,
-    paddingHorizontal: 18,
+    height: BUTTON_SIZE,
+    borderRadius: BUTTON_SIZE / 2,
+    paddingHorizontal: space[18],
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: space[8],
   },
   check: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: BUTTON_SIZE,
+    height: BUTTON_SIZE,
+    borderRadius: BUTTON_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
   },

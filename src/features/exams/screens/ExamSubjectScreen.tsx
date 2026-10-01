@@ -5,10 +5,10 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { ArrowLeft, Check } from "lucide-react-native";
 
 import { DividedList } from "@/ui/DividedList";
-import { getFloatingNavBarClearance } from "@/ui/floatingNavBar";
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { ScreenHeader } from "@/ui/ScreenHeader";
+import { getFloatingNavBarClearance } from "@/ui/organisms/floatingNavBar";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { useTheme } from "@/theme";
 import { openPassageLink } from "@/core/links/open-passage-link";
 import { ExamUnavailable } from "../components/ExamUnavailable";

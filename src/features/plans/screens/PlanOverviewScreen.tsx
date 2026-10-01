@@ -1,59 +1,41 @@
-import { useContext, useState } from "react";
-import { StatusBar, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { useContext } from "react";
+import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
-import { ArrowLeft, BookOpen, Ellipsis } from "lucide-react-native";
+import { BookOpen } from "lucide-react-native";
 
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { FadeInView } from "@/ui/FadeInView";
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
-import { useTabBarAccessory } from "@/ui/tab-bar/tab-bar-accessory";
-import { useTheme } from "@/theme";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
+import { useTabBarAccessory } from "@/ui/organisms/tab-bar/tab-bar-accessory";
+import { controlHeight, space, useTheme } from "@/theme";
 import { prefersLightInk } from "@/utils/color/prefersLightInk";
 import { tapFeedback } from "@/core/haptics/haptics";
 import {
   getCurrentPlanDay,
   getDayMinutes,
-  getDayScripture,
   getPlanById,
   getPlanDays,
   getPlanProgress,
-  getAttemptAnswers,
-  getQuizAttempt,
-  getQuizForDay,
-  getQuizQuestions,
-  getQuizScore,
-  getQuizStatus,
-  getReflectionsForDay,
   getSermonForPlan,
   useAppSelector,
-  type AppState,
 } from "@/core/store";
+import { FadeInView } from "../components/FadeInView";
 import { PlanAbout } from "../components/PlanAbout";
-import { DayRail } from "../components/DayRail";
 import { PlanHero } from "../components/PlanHero";
+import { PlanJourney } from "../components/PlanJourney";
+import { PlanNav } from "../components/PlanNav";
+import { PlanStatusBar } from "../components/PlanStatusBar";
 import { SelectedDay } from "../components/SelectedDay";
 import { usePlanHeroScroll } from "../hooks/use-plan-hero-scroll";
-import {
-  describeDayHeader,
-  describeDaySteps,
-  describeDayTile,
-  describeQuickCheckStep,
-  getJourneyLabel,
-  type QuickCheckStanding,
-} from "../logic/day-rail";
+import { useSelectedDay } from "../hooks/use-selected-day";
+import { describeDayTile } from "../logic/day-rail";
 import { getPlanArtworkFrame } from "../logic/plan-artwork";
 import { describePlanHero } from "../logic/plan-hero";
 import { quickCheckHref, studyHref } from "../logic/routes";
 
-/** Room at the bottom for the floating tab bar. */
-const BOTTOM_NAV_CLEARANCE =
-  FLOATING_NAV_BAR.capsuleHeight + FLOATING_NAV_BAR.bottomMargin + FLOATING_NAV_BAR.sideMargin;
 /** The nav buttons sit this far below the status bar. */
-const NAV_GAP = 8;
+const NAV_GAP = space[8];
 /** Placeholder until plans carry their own description. */
 const ABOUT_PLACEHOLDER = [
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
@@ -63,7 +45,7 @@ const ABOUT_PLACEHOLDER = [
   "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.",
 ] as const;
 /** The nav buttons' height. */
-const NAV_BUTTON = 49;
+const NAV_BUTTON = controlHeight.headerButton;
 
 /**
  * Plan Detail, from the store, laid out the way Apple lays out a show: the
@@ -97,24 +79,11 @@ export function PlanOverviewScreen() {
   const days = useAppSelector((state) =>
     getPlanDays(state, planId).map((day) => ({ day, minutes: getDayMinutes(state, day.id) })),
   );
-  // The day picked in the row of days: the one the plan's on, until another's tapped.
-  const [pickedDay, setPickedDay] = useState<number | null>(null);
-  const selectedNumber = pickedDay ?? currentDay?.dayNumber ?? 1;
-  const selected = days.find(({ day }) => day.dayNumber === selectedNumber) ?? null;
-  const selectedDay = selected?.day ?? null;
-  const selectedMinutes = selected?.minutes ?? 0;
-  const selectedToday =
-    selectedDay !== null && describeDayTile(selectedDay, currentDay?.dayNumber ?? null).today;
-  const selectedContent = useAppSelector((state) =>
-    selectedDay
-      ? {
-          readingTitle: selectedDay.reading.title,
-          scriptureReference: getDayScripture(state, selectedDay.id)?.reference ?? null,
-          reflectionCount: getReflectionsForDay(state, selectedDay.id).length,
-          quiz: getQuickCheckStanding(state, selectedDay.id),
-        }
-      : null,
-  );
+  const { selectedNumber, pickDay, selected } = useSelectedDay({
+    days,
+    currentDayNumber: currentDay?.dayNumber ?? null,
+    quickCheckEnabled: plan?.quickCheckEnabled ?? false,
+  });
 
   const navTop = insetTop + NAV_GAP;
   const artwork = getPlanArtworkFrame({
@@ -124,12 +93,7 @@ export function PlanOverviewScreen() {
   });
   const {
     onScroll,
-    artworkStyle,
-    continueStyle,
-    colourStyle,
-    onContinueLayout,
-    onHeroLayout,
-    heroHeight,
+    heroMotion,
     handedOff,
     heroNavStyle,
     pageNavStyle,
@@ -168,15 +132,6 @@ export function PlanOverviewScreen() {
   );
 
   if (!plan || !progress) return null;
-  // The day picked's four study steps, and — apart from them — its Quick Check if it has one.
-  const selectedSteps =
-    selectedDay && selectedContent
-      ? describeDaySteps(selectedDay, selectedContent, { today: selectedToday })
-      : null;
-  const quickCheck =
-    selectedDay && selectedContent
-      ? describeQuickCheckStep(selectedDay, plan.quickCheckEnabled ? selectedContent.quiz : null)
-      : null;
   const colors = sermon?.thumbnailColors ?? [];
   const light = prefersLightInk(colors.at(0) ?? theme.colors.featureBackdrop);
 
@@ -192,65 +147,45 @@ export function PlanOverviewScreen() {
         >
           {words && (
             <PlanHero
-              title={plan.title}
-              church={sermon?.church ?? null}
-              thumbnailUrl={sermon?.thumbnailUrl ?? null}
-              colors={colors}
-              words={words}
-              totalDays={progress.totalDays}
-              completedDayCount={progress.completedDayCount}
+              plan={{
+                title: plan.title,
+                church: sermon?.church ?? null,
+                thumbnailUrl: sermon?.thumbnailUrl ?? null,
+                colors,
+                words,
+                totalDays: progress.totalDays,
+                completedDayCount: progress.completedDayCount,
+              }}
               artwork={artwork}
-              artworkStyle={artworkStyle}
-              continueStyle={continueStyle}
-              continueShown={!handedOff}
-              onContinueLayout={onContinueLayout}
+              motion={heroMotion}
               onContinue={openCurrentDay}
-              heroHeight={heroHeight}
-              onHeroLayout={onHeroLayout}
-              colourStyle={colourStyle}
             />
           )}
 
           {/* Where you are at a glance, and what the day picked holds. */}
           <View style={styles.days}>
-            <View style={styles.journey}>
-              <Text
-                testID="plan-overview-journey"
-                style={[
-                  theme.typography.metaLabel,
-                  styles.journeyLabel,
-                  { color: theme.colors.textMuted },
-                ]}
-              >
-                {getJourneyLabel(progress.totalDays)}
-              </Text>
-              <DayRail
-                testID="plan-overview-days"
-                tileTestIDPrefix="plan-overview-day"
-                tiles={days.map(({ day }) => describeDayTile(day, currentDay?.dayNumber ?? null))}
-                selected={selectedNumber}
-                onSelect={(dayNumber) => {
-                  tapFeedback();
-                  setPickedDay(dayNumber);
-                }}
-              />
-            </View>
-            {selectedDay && selectedSteps && (
+            <PlanJourney
+              totalDays={progress.totalDays}
+              tiles={days.map(({ day }) => describeDayTile(day, currentDay?.dayNumber ?? null))}
+              selected={selectedNumber}
+              onSelect={(dayNumber) => {
+                tapFeedback();
+                pickDay(dayNumber);
+              }}
+            />
+            {selected && (
               <SelectedDay
                 testID="plan-overview-selected-day"
-                contentKey={selectedDay.id}
+                contentKey={selected.day.id}
                 stepTestIDPrefix="plan-overview-step"
-                title={selectedDay.reading.title}
-                header={describeDayHeader(selectedDay, {
-                  minutes: selectedMinutes,
-                  steps: selectedSteps,
-                })}
-                steps={selectedSteps}
-                quickCheck={quickCheck}
+                title={selected.day.reading.title}
+                header={selected.header}
+                steps={selected.steps}
+                quickCheck={selected.quickCheck}
                 onOpenStep={(key) =>
                   key === "quickCheck"
-                    ? router.push(quickCheckHref(planId, selectedDay.dayNumber))
-                    : openDay(selectedDay.dayNumber)
+                    ? router.push(quickCheckHref(planId, selected.day.dayNumber))
+                    : openDay(selected.day.dayNumber)
                 }
               />
             )}
@@ -262,110 +197,50 @@ export function PlanOverviewScreen() {
         </Animated.ScrollView>
       </FadeInView>
 
-      {/* Over everything, fixed: they never move as the page scrolls under them.
-      Two looks — set for the sermon's colour over the hero, and the page's own
-      over the page — cross-fading as the hero's edge passes behind them. Only
-      the one showing takes touches, or is read by VoiceOver. */}
-      <Animated.View
-        testID="plan-overview-nav-hero"
-        pointerEvents={navOverPage ? "none" : "box-none"}
-        accessibilityElementsHidden={navOverPage}
-        importantForAccessibility={navOverPage ? "no-hide-descendants" : "auto"}
-        style={[styles.nav, { paddingTop: navTop }, heroNavStyle]}
-      >
-        <ScreenHeader
-          testID="plan-overview"
-          title=""
-          left={
-            <HeaderIconButton
-              testID="plan-overview-back-button"
-              icon={ArrowLeft}
-              accessibilityLabel="Back"
-              overlay={light ? "dark" : "light"}
-              onPress={() => router.back()}
-            />
-          }
-          right={
-            <HeaderIconButton
-              testID="plan-overview-more-button"
-              icon={Ellipsis}
-              accessibilityLabel="More"
-              overlay={light ? "dark" : "light"}
-              onPress={() => undefined}
-            />
-          }
-        />
-      </Animated.View>
-      <Animated.View
-        testID="plan-overview-nav-page"
-        pointerEvents={navOverPage ? "box-none" : "none"}
-        accessibilityElementsHidden={!navOverPage}
-        importantForAccessibility={navOverPage ? "auto" : "no-hide-descendants"}
-        style={[styles.nav, { paddingTop: navTop }, pageNavStyle]}
-      >
-        <ScreenHeader
-          testID="plan-overview-page"
-          title=""
-          left={
-            <HeaderIconButton
-              testID="plan-overview-back-button-page"
-              icon={ArrowLeft}
-              accessibilityLabel="Back"
-              onPress={() => router.back()}
-            />
-          }
-          right={
-            <HeaderIconButton
-              testID="plan-overview-more-button-page"
-              icon={Ellipsis}
-              accessibilityLabel="More"
-              onPress={() => undefined}
-            />
-          }
-        />
-      </Animated.View>
+      {/* Over everything. Two looks — set for the sermon's colour over the
+      hero, and the page's own over the page — cross-fading as the hero's edge
+      passes behind them. */}
+      <PlanNav
+        testIDs={{
+          root: "plan-overview-nav-hero",
+          header: "plan-overview",
+          back: "plan-overview-back-button",
+          more: "plan-overview-more-button",
+        }}
+        shown={!navOverPage}
+        overlay={light ? "dark" : "light"}
+        top={navTop}
+        style={heroNavStyle}
+        onBack={() => router.back()}
+      />
+      <PlanNav
+        testIDs={{
+          root: "plan-overview-nav-page",
+          header: "plan-overview-page",
+          back: "plan-overview-back-button-page",
+          more: "plan-overview-more-button-page",
+        }}
+        shown={navOverPage}
+        top={navTop}
+        style={pageNavStyle}
+        onBack={() => router.back()}
+      />
 
-      {/* Set for what's under it — the sermon's colour, or the page — only
-      while this is the screen shown. */}
-      {isFocused && (
-        <StatusBar
-          animated
-          barStyle={
-            statusBarOverPage
-              ? theme.name === "dark"
-                ? "light-content"
-                : "dark-content"
-              : light
-                ? "light-content"
-                : "dark-content"
-          }
-        />
-      )}
+      {/* Only while this is the screen shown. */}
+      {isFocused && <PlanStatusBar overPage={statusBarOverPage} light={light} />}
     </Screen>
   );
 }
 
+/** Between the row of days and the selected day below it. */
+const DAYS_GAP = 30;
+/** The About section sits well clear of the day above it. */
+const ABOUT_TOP = 48;
+
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  content: { paddingBottom: BOTTOM_NAV_CLEARANCE },
+  content: { paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
   // Room around the row of days, so it reads as its own layer: where you are.
-  days: { gap: 30, paddingHorizontal: PAGE_INSET, paddingTop: 36 },
-  // The row of days under its heading.
-  journey: { gap: 14 },
-  journeyLabel: { textTransform: "uppercase", letterSpacing: 1 },
-  about: { paddingHorizontal: PAGE_INSET, paddingTop: 48 },
-  nav: { position: "absolute", top: 0, left: 0, right: 0, paddingHorizontal: PAGE_INSET },
+  days: { gap: DAYS_GAP, paddingHorizontal: PAGE_INSET, paddingTop: space[36] },
+  about: { paddingHorizontal: PAGE_INSET, paddingTop: ABOUT_TOP },
 });
-
-/** Where a day's Quick Check stands — none if it hasn't one. */
-function getQuickCheckStanding(state: AppState, dayId: string): QuickCheckStanding | null {
-  const quiz = getQuizForDay(state, dayId);
-  if (!quiz) return null;
-  const attempt = getQuizAttempt(state, quiz.id);
-  return {
-    status: getQuizStatus(state, quiz.id),
-    questionCount: getQuizQuestions(state, quiz.id).length,
-    answeredCount: attempt ? getAttemptAnswers(state, attempt.id).length : 0,
-    correctCount: attempt ? (getQuizScore(state, attempt.id)?.correct ?? 0) : 0,
-  };
-}

@@ -1,11 +1,11 @@
 import { Pressable, StyleSheet } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { controlHeight, radius, useTheme } from "@/theme";
 
-const SIZE = 44;
+const SIZE = controlHeight.hitTarget;
 const ICON_SIZE = 20;
-const RADIUS = 14;
+const RADIUS = radius[14];
 
 export type IconSquareButtonProps = {
   icon: LucideIcon;

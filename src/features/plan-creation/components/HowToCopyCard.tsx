@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const STEPS = [
   "Open the sermon video",
@@ -14,15 +16,10 @@ export function HowToCopyCard() {
 
   return (
     <View style={styles.wrap}>
-      <Text style={[theme.typography.body, styles.heading, { color: theme.colors.textMuted }]}>
+      <SFProBody tone="textMuted" style={styles.heading}>
         How to copy a link
-      </Text>
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-        ]}
-      >
+      </SFProBody>
+      <Card style={styles.card}>
         {STEPS.map((label, index) => (
           <View
             key={label}
@@ -32,27 +29,25 @@ export function HowToCopyCard() {
             ]}
           >
             <View style={[styles.badge, { backgroundColor: theme.colors.segmentBackground }]}>
-              <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
-                {index + 1}
-              </Text>
+              <SFProBody variant="listItem">{index + 1}</SFProBody>
             </View>
-            <Text style={[theme.typography.body, { color: theme.colors.text }]}>{label}</Text>
+            <SFProBody>{label}</SFProBody>
           </View>
         ))}
-      </View>
+      </Card>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12, marginTop: 8 },
-  heading: { marginLeft: 6 },
-  card: { borderWidth: 1, borderRadius: 28, overflow: "hidden" },
-  row: { flexDirection: "row", alignItems: "center", gap: 18, padding: 18 },
+  wrap: { gap: space[12], marginTop: space[8] },
+  heading: { marginLeft: space[6] },
+  card: { overflow: "hidden" },
+  row: { flexDirection: "row", alignItems: "center", gap: space[18], padding: space[18] },
   badge: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: radius[12],
     alignItems: "center",
     justifyContent: "center",
   },

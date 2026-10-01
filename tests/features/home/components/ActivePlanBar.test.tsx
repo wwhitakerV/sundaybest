@@ -7,12 +7,14 @@ const HREF = { pathname: "/(tabs)/home/[planId]", params: { planId: "plan-1" } }
 function renderBar(handlers: { onContinue?: () => void } = {}) {
   return render(
     <ActivePlanBar
-      title="Today I Choose to Be a Blessing"
-      day="Day 2"
-      thumbnailUrl={null}
-      colors={["#3D403F", "#1F5A6E", "#1C1D20"]}
+      plan={{
+        title: "Today I Choose to Be a Blessing",
+        day: "Day 2",
+        thumbnailUrl: null,
+        colors: ["#3D403F", "#1F5A6E", "#1C1D20"],
+      }}
       topInset={59}
-      touchable
+      motion={{ touchable: true }}
       href={HREF}
       onContinue={handlers.onContinue ?? (() => undefined)}
     />,
@@ -55,12 +57,14 @@ describe("ActivePlanBar", () => {
   it("takes no taps until it's in", () => {
     render(
       <ActivePlanBar
-        title="Today I Choose to Be a Blessing"
-        day="Day 2"
-        thumbnailUrl={null}
-        colors={[]}
+        plan={{
+          title: "Today I Choose to Be a Blessing",
+          day: "Day 2",
+          thumbnailUrl: null,
+          colors: [],
+        }}
         topInset={0}
-        touchable={false}
+        motion={{ touchable: false }}
         href={HREF}
         onContinue={() => undefined}
       />,

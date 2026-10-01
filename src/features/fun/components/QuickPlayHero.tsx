@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Image, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { ArrowRight, Clock3 } from "lucide-react-native";
 
-import { CompactButton } from "@/ui/CompactButton";
-import { GradientBackdrop } from "@/ui/GradientBackdrop";
+import { CompactButton } from "@/ui/atoms/CompactButton";
+import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
 import { Tag } from "@/ui/Tag";
 import { useTheme } from "@/theme";
 import { getBackdropStops } from "@/utils/color/getBackdropStops";

@@ -16,4 +16,8 @@ describe("getPlanEndsLine", () => {
   it("ends a full week on Sunday", () => {
     expect(getPlanEndsLine(7)).toBe("Ends Sunday.");
   });
+
+  it("ends a plan longer than a week on Sunday", () => {
+    expect(getPlanEndsLine(9)).toBe("Ends Sunday.");
+  });
 });

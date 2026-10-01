@@ -89,7 +89,7 @@ needs no wiring, and is overridable so every test constructs its own mock and
 never touches the real SDK.
 
 `error-boundary.tsx` builds its screen from `View`/`SafeAreaView` directly
-rather than `@/ui/Screen` — `core -> ui` is not an allowed dependency
+rather than `@/ui/organisms/Screen` — `core -> ui` is not an allowed dependency
 direction (`core -> utils, theme, types` only), so a `core` file cannot
 import a `ui` primitive even though it would otherwise be the obvious choice.
 

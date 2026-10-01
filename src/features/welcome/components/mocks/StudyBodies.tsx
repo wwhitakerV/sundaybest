@@ -1,20 +1,26 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { HandHeart, Lock } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { LiftAnchor } from "../lift/LiftAnchor";
-import { getLiftId } from "../lift/lift-anchor-context";
+import { getLiftId } from "../../logic/lift";
 import { AnswerBox } from "../lifts/AnswerBox";
 import { ListenCard } from "../lifts/ListenCard";
 import { PrayerLines } from "../lifts/PrayerLines";
 import { VerseCard } from "../lifts/VerseCard";
 import { FadeUp } from "./FadeUp";
-import { MOCK_PAGE, type MockBodyProps } from "./mock-page";
+import { MOCK_PAGE } from "./mock-page-styles";
+import type { MockBodyProps } from "../../logic/mock-page";
 import { StudyKicker } from "./StudyMockHeader";
+import { DisplayTitle } from "@/ui/typography/DisplayTitle";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
 
 /** Daily Study's Read step: the day's reading. "Hear this part of the sermon" lifts off. */
 export function ReadBody({ elapsedMs }: MockBodyProps) {
-  const theme = useTheme();
   const still = elapsedMs === Infinity;
 
   return (
@@ -23,21 +29,19 @@ export function ReadBody({ elapsedMs }: MockBodyProps) {
         <StudyKicker label="Read" />
       </FadeUp>
       <FadeUp order={1} still={still}>
-        <Text style={[theme.typography.display, { color: theme.colors.text }]}>
-          Grace is received
-        </Text>
+        <DisplayTitle>Grace is received</DisplayTitle>
       </FadeUp>
       <FadeUp order={2} still={still}>
-        <Text style={[theme.typography.reading, { color: theme.colors.textInactive }]}>
+        <SFProBody variant="reading" tone="textInactive">
           Most of us believe grace is free. We just don&apos;t live like it. We keep a quiet ledger:
           a good morning here, a kept promise there, as if God were checking the balance.
-        </Text>
+        </SFProBody>
       </FadeUp>
       <FadeUp order={3} still={still}>
-        <Text style={[theme.typography.reading, { color: theme.colors.textInactive }]}>
+        <SFProBody variant="reading" tone="textInactive">
           Joshua&apos;s call to choose wasn&apos;t a call to earn. Israel was rescued long before
           they promised anything. Choosing God starts with receiving what He&apos;s already done.
-        </Text>
+        </SFProBody>
       </FadeUp>
       <FadeUp order={4} still={still}>
         <LiftAnchor id={getLiftId("read", 0)}>
@@ -60,16 +64,13 @@ export function ScriptureBody({ elapsedMs }: MockBodyProps) {
       </FadeUp>
       <FadeUp order={1} still={still}>
         <View style={styles.titleRow}>
-          <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-            Ephesians 2:8
-          </Text>
+          <SFProTitle>Ephesians 2:8</SFProTitle>
           <View
-            style={[
-              styles.pill,
-              { borderColor: theme.colors.divider, borderRadius: theme.radii.pill },
-            ]}
+            style={[styles.pill, { borderColor: theme.colors.divider, borderRadius: radius.pill }]}
           >
-            <Text style={[theme.typography.label, { color: theme.colors.textInactive }]}>NIV</Text>
+            <SFProBody variant="label" tone="textInactive">
+              NIV
+            </SFProBody>
           </View>
         </View>
       </FadeUp>
@@ -93,36 +94,21 @@ export function ReflectBody({ elapsedMs }: MockBodyProps) {
         <StudyKicker label="Question 1 of 2" />
       </FadeUp>
       <FadeUp order={1} still={still}>
-        <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-          Grace is received
-        </Text>
+        <SFProTitle>Grace is received</SFProTitle>
       </FadeUp>
       <FadeUp order={2} still={still}>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-          ]}
-        >
-          <Text
-            style={[
-              theme.typography.editorialHeading,
-              styles.question,
-              { color: theme.colors.text },
-            ]}
-          >
-            What are you still trying to pay for?
-          </Text>
+        <Card fill="page" style={styles.card}>
+          <SerifTitle variant="question">What are you still trying to pay for?</SerifTitle>
           <LiftAnchor id={getLiftId("reflect", 0)}>
             <AnswerBox elapsedMs={elapsedMs} />
           </LiftAnchor>
           <View style={styles.privacy}>
             <Lock size={16} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-            <Text style={[theme.typography.supporting, { color: theme.colors.textMuted }]}>
+            <MonoBody variant="supporting" tone="textMuted">
               Only you ever see this.
-            </Text>
+            </MonoBody>
           </View>
-        </View>
+        </Card>
       </FadeUp>
     </View>
   );
@@ -147,9 +133,7 @@ export function PrayBody({ elapsedMs }: MockBodyProps) {
               strokeWidth={theme.icon.strokeWidth}
             />
           </View>
-          <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-            A prayer for today
-          </Text>
+          <SFProTitle>A prayer for today</SFProTitle>
         </View>
       </FadeUp>
       <FadeUp order={2} still={still}>
@@ -161,17 +145,19 @@ export function PrayBody({ elapsedMs }: MockBodyProps) {
   );
 }
 
+/** Pray's round badge, as on the real Pray step. */
+const BADGE_SIZE = 52;
+
 const styles = StyleSheet.create({
   titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  pill: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 6 },
-  card: { borderWidth: 1, borderRadius: 28, padding: 22, gap: 16 },
-  question: { fontSize: 24, lineHeight: 30 },
-  privacy: { flexDirection: "row", alignItems: "center", gap: 8 },
-  prayTitle: { flexDirection: "row", alignItems: "center", gap: 14 },
+  pill: { borderWidth: 1, paddingHorizontal: space[14], paddingVertical: space[6] },
+  card: { padding: space[22], gap: space[16] },
+  privacy: { flexDirection: "row", alignItems: "center", gap: space[8] },
+  prayTitle: { flexDirection: "row", alignItems: "center", gap: space[14] },
   badge: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: BADGE_SIZE,
+    height: BADGE_SIZE,
+    borderRadius: BADGE_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
   },

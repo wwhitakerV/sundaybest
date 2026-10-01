@@ -1,9 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { controlHeight, space, useTheme } from "@/theme";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { Span } from "@/ui/typography/Span";
 
-const HIT = 44;
+const HIT = controlHeight.hitTarget;
 
 export type WeekNavigatorProps = {
   /** The title's two parts: "September" and, quieter, "20–26". */
@@ -29,13 +31,10 @@ export function WeekNavigator({ lead, range, onPrevious, onNext }: WeekNavigator
       >
         <ChevronLeft {...arrow} />
       </Pressable>
-      <Text
-        testID="progress-week-title"
-        style={[theme.typography.screenTitle, { color: theme.colors.text }]}
-      >
+      <SFProTitle testID="progress-week-title">
         {`${lead} `}
-        <Text style={{ color: theme.colors.textMuted }}>{range}</Text>
-      </Text>
+        <Span tone="textMuted">{range}</Span>
+      </SFProTitle>
       <Pressable
         testID="progress-week-next"
         accessibilityRole="button"
@@ -50,6 +49,6 @@ export function WeekNavigator({ lead, range, onPrevious, onNext }: WeekNavigator
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 20 },
+  row: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: space[20] },
   arrow: { width: HIT, height: HIT, alignItems: "center", justifyContent: "center" },
 });

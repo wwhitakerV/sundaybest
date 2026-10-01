@@ -7,7 +7,7 @@ import { renderRouter, type RenderRouterOptions } from "expo-router/testing-libr
 import type { ReactElement, ReactNode } from "react";
 
 import { AppProviders } from "@/core/providers/AppProviders";
-import { LoadingScreen } from "@/ui/LoadingScreen";
+import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 
 function Providers({ children }: { children: ReactNode }) {
   return <AppProviders fallback={<LoadingScreen />}>{children}</AppProviders>;

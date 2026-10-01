@@ -2,10 +2,10 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { LinkButton } from "@/ui/LinkButton";
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { ScreenHeader } from "@/ui/ScreenHeader";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { useTheme } from "@/theme";
 import { getExamAttempt, isExamQuestionRevealed, useAppSelector } from "@/core/store";
 import { openPassageLink } from "@/core/links/open-passage-link";

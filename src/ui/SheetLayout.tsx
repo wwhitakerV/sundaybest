@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/theme";
 import { lightTheme } from "@/theme/tokens";
-import { PAGE_INSET } from "./Screen";
+import { PAGE_INSET } from "./organisms/Screen";
 
 /** Room at the top for the sheet's own grabber, drawn by iOS. */
 const GRABBER_ROOM = 28;

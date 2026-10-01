@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 
-import { DriftIn } from "@/ui/DriftIn";
+import { DriftIn } from "./DriftIn";
 
 /** The page being brought in (`revealKey`), and whether motion's reduced — set by the Daily Study. */
 type StudyDriftValue = { revealKey: unknown; still: boolean };

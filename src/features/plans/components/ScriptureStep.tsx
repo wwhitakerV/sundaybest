@@ -1,10 +1,16 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import type { ScripturePassage } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SerifBody } from "@/ui/typography/SerifBody";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { Span } from "@/ui/typography/Span";
 
 export type ScriptureStepProps = {
   dayNumber: number;
@@ -22,56 +28,41 @@ export function ScriptureStep({ dayNumber, passage, followStyle }: ScriptureStep
       <StudyKicker dayNumber={dayNumber} label="Scripture" />
       <StudyDriftIn order={1}>
         <View style={styles.titleRow}>
-          <Text
-            style={[theme.typography.screenTitle, styles.reference, { color: theme.colors.text }]}
-          >
-            {passage.reference}
-          </Text>
+          <SFProTitle style={styles.reference}>{passage.reference}</SFProTitle>
           <View
-            style={[
-              styles.pill,
-              { borderColor: theme.colors.divider, borderRadius: theme.radii.pill },
-            ]}
+            style={[styles.pill, { borderColor: theme.colors.divider, borderRadius: radius.pill }]}
           >
-            <Text style={[theme.typography.label, { color: theme.colors.textInactive }]}>
+            <SFProBody variant="label" tone="textInactive">
               {passage.translation}
-            </Text>
+            </SFProBody>
           </View>
         </View>
       </StudyDriftIn>
       <StudyFollow style={followStyle}>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-          ]}
-        >
-          <Text
-            testID="study-scripture-verses"
-            style={[theme.typography.scripture, { color: theme.colors.text }]}
-          >
+        <Card radius={24} fill="page" style={styles.card}>
+          <SerifBody testID="study-scripture-verses">
             {passage.verses.map((verse) => (
-              <Text key={verse.number}>
-                <Text style={theme.typography.metaEmphasis}>{`${verse.number} `}</Text>
+              <Span key={verse.number}>
+                <MonoLabel variant="emphasis">{`${verse.number} `}</MonoLabel>
                 {`${verse.text} `}
-              </Text>
+              </Span>
             ))}
-          </Text>
-        </View>
+          </SerifBody>
+        </Card>
       </StudyFollow>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 16 },
+  body: { gap: space[16] },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 12,
+    gap: space[12],
   },
   reference: { flexShrink: 1 },
-  pill: { borderWidth: 1, paddingHorizontal: 14, paddingVertical: 6 },
-  card: { borderWidth: 1, borderRadius: 24, paddingHorizontal: 22, paddingVertical: 18 },
+  pill: { borderWidth: 1, paddingHorizontal: space[14], paddingVertical: space[6] },
+  card: { paddingHorizontal: space[22], paddingVertical: space[18] },
 });

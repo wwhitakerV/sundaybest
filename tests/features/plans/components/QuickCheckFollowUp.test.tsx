@@ -42,7 +42,7 @@ describe("QuickCheckFollowUp", () => {
     renderFollowUp();
 
     expect(screen.getByText("After Pray")).toHaveStyle({
-      ...typography.stepDetail,
+      ...typography.cardDetail,
       color: colors.textMuted,
     });
   });

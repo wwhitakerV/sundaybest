@@ -1,11 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import type { DayReading } from "@/types/domain";
-import { useTheme } from "@/theme";
 import { SermonClipCard } from "./SermonClipCard";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
+import { space } from "@/theme";
+import { DisplayTitle } from "@/ui/typography/DisplayTitle";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 export type ReadStepProps = {
   dayNumber: number;
@@ -16,24 +18,17 @@ export type ReadStepProps = {
 
 /** Daily Study's Read step: the day's reading, and where it comes from in the sermon. */
 export function ReadStep({ dayNumber, reading, followStyle }: ReadStepProps) {
-  const theme = useTheme();
-
   return (
     <View testID="study-read-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label="Read" />
       <StudyDriftIn order={1}>
-        <Text style={[theme.typography.display, { color: theme.colors.text }]}>
-          {reading.title}
-        </Text>
+        <DisplayTitle>{reading.title}</DisplayTitle>
       </StudyDriftIn>
       <StudyFollow style={followStyle}>
         {reading.paragraphs.map((paragraph) => (
-          <Text
-            key={paragraph}
-            style={[theme.typography.reading, { color: theme.colors.textInactive }]}
-          >
+          <SFProBody variant="reading" tone="textInactive" key={paragraph}>
             {paragraph}
-          </Text>
+          </SFProBody>
         ))}
         {reading.sermonClip && <SermonClipCard startSeconds={reading.sermonClip.startSeconds} />}
       </StudyFollow>
@@ -42,5 +37,5 @@ export function ReadStep({ dayNumber, reading, followStyle }: ReadStepProps) {
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 16 },
+  body: { gap: space[16] },
 });

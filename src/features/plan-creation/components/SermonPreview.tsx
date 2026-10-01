@@ -1,8 +1,11 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Check, Link2 } from "lucide-react-native";
 
-import { VideoThumbnail } from "@/ui/VideoThumbnail";
-import { useTheme } from "@/theme";
+import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 export type SermonPreviewProps = {
   /** The link, shortened for display. */
@@ -28,66 +31,46 @@ export function SermonPreview({
 
   return (
     <View testID={testID} style={styles.wrap}>
-      <View
-        style={[
-          styles.link,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-        ]}
-      >
+      <Card radius={32} style={styles.link}>
         <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-        <Text
-          numberOfLines={1}
-          style={[theme.typography.body, styles.grow, { color: theme.colors.text }]}
-        >
+        <SFProBody style={styles.grow} numberOfLines={1}>
           {link}
-        </Text>
+        </SFProBody>
         <View style={[styles.check, { backgroundColor: theme.colors.segmentBackground }]}>
           <Check size={20} color={theme.colors.selected} strokeWidth={theme.icon.strokeWidth} />
         </View>
-      </View>
+      </Card>
 
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-        ]}
-      >
+      <Card style={styles.card}>
         <VideoThumbnail uri={thumbnailUrl} duration={duration} style={styles.thumbnail} />
         <View style={styles.text}>
-          <Text style={[theme.typography.listItem, styles.title, { color: theme.colors.text }]}>
-            {title}
-          </Text>
-          {church && (
-            <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>{church}</Text>
-          )}
+          <SFProTitle variant="preview">{title}</SFProTitle>
+          {church && <SFProBody tone="textMuted">{church}</SFProBody>}
         </View>
-      </View>
+      </Card>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 16 },
+  wrap: { gap: space[16] },
   link: {
     height: 64,
-    borderWidth: 1,
-    borderRadius: 32,
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: 20,
-    paddingRight: 8,
-    gap: 12,
+    paddingLeft: space[20],
+    paddingRight: space[8],
+    gap: space[12],
   },
   grow: { flex: 1 },
   check: {
     width: 46,
     height: 46,
-    borderRadius: 23,
+    borderRadius: radius[23],
     alignItems: "center",
     justifyContent: "center",
   },
-  card: { borderWidth: 1, borderRadius: 28, padding: 12, gap: 12 },
-  thumbnail: { borderRadius: 20 },
-  text: { paddingHorizontal: 8, paddingBottom: 6, gap: 2 },
-  title: { fontSize: 20 },
+  card: { padding: space[12], gap: space[12] },
+  thumbnail: { borderRadius: radius[20] },
+  text: { paddingHorizontal: space[8], paddingBottom: space[6], gap: space[2] },
 });

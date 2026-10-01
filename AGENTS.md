@@ -110,8 +110,8 @@ reproduces the bug. See [ADR 0002](docs/adr/0002-testing-strategy.md).
   in a slice's `logic/` folder (or `src/utils` if truly shared), not in JSX.
   Components render and wire events; side effects live in hooks or `src/core`.
 - **Tests never live in `src/`.** Every test, helper, mock, and fixture is under
-  `tests/`, mirroring `src/` (`src/ui/Screen.tsx` →
-  `tests/ui/Screen.test.tsx`). See
+  `tests/`, mirroring `src/` (`src/ui/organisms/Screen.tsx` →
+  `tests/ui/organisms/Screen.test.tsx`). See
   [ADR 0011](docs/adr/0011-tests-in-a-mirrored-tests-tree.md).
 
 ## Security never-dos
@@ -182,6 +182,18 @@ For every UI creation or update:
 
 Do not hardcode reusable colors, typography, spacing, radii, or motion into feature components.
 
+All text goes through `src/ui/typography` (`SFProBody`, `MonoLabel`, `SerifTitle`, …; see
+[ADR 0015](docs/adr/0015-typography-components.md)): pick a `variant` and a semantic `tone`,
+and use `style` for layout only. Never import react-native's `Text` or `TextInput`, and never
+read `theme.typography` directly — lint enforces both. A size the variants don't have becomes
+a named role in `src/theme/tokens.ts` first.
+
+Spacing, corners, and control heights come from the scales in `@/theme` — `space[16]`,
+`radius[28]`, `controlHeight.button` — imported directly and used in `StyleSheet.create`
+(see [ADR 0016](docs/adr/0016-spacing-corner-and-control-scales.md)). A value not on a scale is
+one-off geometry: a named constant beside its component, with its reason. Lint rejects raw
+spacing and corner numbers. A card's shell is `Card` from `src/ui`.
+
 Prefer semantic theme values such as `theme.colors.*` over raw palette values when the value represents UI meaning.
 
 Any new theme-dependent semantic value must support both light and dark themes.
@@ -200,7 +212,14 @@ theme/design system → shared primitive or variant → feature component → sc
 - Only use our theme, or add to it
 - Only use our text-based logo mark
 - Do not animate anything unless directed
-- Always use atomic design principles
+- Always use atomic design principles. `src/ui` is sorted by them: `typography/`
+  (text), `atoms/` (one element: a button, a card, a divider), `molecules/` (a few
+  atoms working together: a header, a filter row), and `organisms/` (a whole
+  region: the screen frame, the tab bar). A part with private hooks keeps its own
+  folder inside one of these (`organisms/tab-bar/`); a small system that isn't one
+  component keeps its own folder beside them (`burst/`, `header-entrance/`).
+- Keep files short: about 250 lines at most, data files aside. A long render is
+  split into named components, not left as one long block of unnamed JSX.
 - Always use the following practices when possible:
 - Pure components
 - Single use functions

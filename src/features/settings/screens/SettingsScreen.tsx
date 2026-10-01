@@ -1,16 +1,17 @@
 import { useContext } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { getFloatingNavBarClearance } from "@/ui/floatingNavBar";
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { TitleHeader } from "@/ui/TitleHeader";
-import { useTheme } from "@/theme";
+import { getFloatingNavBarClearance } from "@/ui/organisms/floatingNavBar";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { TitleHeader } from "@/ui/molecules/TitleHeader";
+import { space } from "@/theme";
 import { getAppVersion } from "@/core/config/app-version";
 import { getReminder, getUserSettings, useAppSelector } from "@/core/store";
 import { SettingsGroup } from "../components/SettingsGroup";
 import { describeSettingsSections, formatShortVersion } from "../logic/settings-sections";
+import { MonoBody } from "@/ui/typography/MonoBody";
 
 /**
  * Settings, a tab of its own: the user's routine — daily reminder, Bible
@@ -19,7 +20,6 @@ import { describeSettingsSections, formatShortVersion } from "../logic/settings-
  * version at the foot.
  */
 export function SettingsScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   const settings = useAppSelector(getUserSettings);
@@ -38,8 +38,8 @@ export function SettingsScreen() {
         contentContainerStyle={[
           styles.inset,
           {
-            gap: theme.spacing.xl,
-            paddingBottom: getFloatingNavBarClearance(insetBottom) + theme.spacing.lg,
+            gap: space[32],
+            paddingBottom: getFloatingNavBarClearance(insetBottom) + space[24],
           },
         ]}
       >
@@ -55,12 +55,14 @@ export function SettingsScreen() {
           />
         ))}
         {version && (
-          <Text
+          <MonoBody
+            variant="supporting"
+            tone="textMuted"
+            style={styles.centred}
             testID="settings-version"
-            style={[theme.typography.supporting, styles.centred, { color: theme.colors.textMuted }]}
           >
             {`SundayBest ${formatShortVersion(version)}`}
-          </Text>
+          </MonoBody>
         )}
       </ScrollView>
     </Screen>

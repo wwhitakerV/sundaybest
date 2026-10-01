@@ -1,6 +1,5 @@
 import {
   StyleSheet,
-  Text,
   View,
   type LayoutChangeEvent,
   type StyleProp,
@@ -9,9 +8,12 @@ import {
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { BookOpen } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
-import { CompactButton } from "../CompactButton";
-import { StepProgress } from "../StepProgress";
+import { space, useTheme } from "@/theme";
+import { CompactButton } from "../atoms/CompactButton";
+import { StepProgress } from "../atoms/StepProgress";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const HALO_RADIUS = 12;
 /**
@@ -20,9 +22,9 @@ const HALO_RADIUS = 12;
  * caption; and the day-by-day line well apart, a thing of its own.
  */
 const STATUS_TO_TITLE_EXTRA = 2;
-const NAME_TO_CONTINUE = 24;
-const CONTINUE_TO_TODAY = 10;
-const TODAY_TO_PROGRESS = 28;
+const NAME_TO_CONTINUE = space[24];
+const CONTINUE_TO_TODAY = space[10];
+const TODAY_TO_PROGRESS = space[28];
 
 type HeroContentTestIDs = {
   continueButton: string;
@@ -33,23 +35,33 @@ type HeroContentTestIDs = {
   progress?: string;
 };
 
-export type HeroContentProps = {
+/** What a hero says about its plan. */
+export type HeroPlan = {
   title: string;
   church: string | null;
   /** Where the plan stands, the way on, and what today holds. */
   words: { status: string; action: string; today: string };
   totalDays: number;
   completedDayCount: number;
+};
+
+/** Continue as it hands over elsewhere and back. */
+export type ContinueHandOver = {
+  style?: StyleProp<AnimatedStyle<ViewStyle>>;
+  /** Whether Continue's here to press — not while it's handed over. */
+  shown: boolean;
+  /** Reports where Continue sits in it. */
+  onLayout: (event: LayoutChangeEvent) => void;
+};
+
+export type HeroContentProps = {
+  plan: HeroPlan;
   /** Whether it sits on a dark colour, so its type is white; black on a light one. */
   light: boolean;
   onContinue: () => void;
-  /** Continue as it hands over elsewhere and back. */
-  continueStyle?: StyleProp<AnimatedStyle<ViewStyle>>;
-  /** Whether Continue's here to press — not while it's handed over. Shown unless said. */
-  continueShown?: boolean;
-  /** Reports where Continue sits in it. */
-  onContinueLayout?: (event: LayoutChangeEvent) => void;
-  /** Whether it ends on the day-by-day line — not on a page that shows the days itself. Shown unless said. */
+  /** Only where Continue hands over; otherwise it's always here to press. */
+  continueHandOver?: ContinueHandOver;
+  /** Whether it ends on the day-by-day line — not on a page that shows the days itself. Hidden unless said. */
   showProgress?: boolean;
   testIDs: HeroContentTestIDs;
   /** Its placement in the hero. */
@@ -63,23 +75,19 @@ export type HeroContentProps = {
  * under way and on Plan Detail; each hero places it and moves it its own way.
  */
 export function HeroContent({
-  title,
-  church,
-  words,
-  totalDays,
-  completedDayCount,
+  plan,
   light,
   onContinue,
-  continueStyle,
-  continueShown = true,
-  onContinueLayout,
+  continueHandOver,
   showProgress = false,
   testIDs,
   style,
 }: HeroContentProps) {
   const theme = useTheme();
-  const ink = light ? theme.colors.inkOnDark : theme.colors.inkOnLight;
-  const muted = light ? theme.colors.inkOnDarkMuted : theme.colors.inkOnLightMuted;
+  const { title, church, words, totalDays, completedDayCount } = plan;
+  const continueShown = continueHandOver?.shown ?? true;
+  const ink = light ? "inkOnDark" : "inkOnLight";
+  const muted = light ? "inkOnDarkMuted" : "inkOnLightMuted";
   const halo = {
     textShadowColor: light ? theme.colors.inkHaloOnDark : theme.colors.inkHaloOnLight,
     textShadowRadius: HALO_RADIUS,
@@ -88,31 +96,35 @@ export function HeroContent({
   return (
     <View testID={testIDs.content} style={style}>
       <View style={styles.words}>
-        <Text
+        <MonoLabel
           testID={testIDs.status}
-          style={[theme.typography.metaLabel, styles.status, halo, { color: muted }]}
+          variant="labelTracked"
+          tone={muted}
+          style={[styles.status, halo]}
         >
           {words.status}
-        </Text>
-        <Text
+        </MonoLabel>
+        <SFProTitle
           testID={testIDs.title}
           accessibilityRole="header"
-          style={[theme.typography.headline, styles.centred, halo, { color: ink }]}
+          variant="headline"
+          tone={ink}
+          style={[styles.centred, halo]}
         >
           {title}
-        </Text>
+        </SFProTitle>
         {church && (
-          <Text style={[theme.typography.body, styles.centred, halo, { color: muted }]}>
+          <SFProBody tone={muted} style={[styles.centred, halo]}>
             {church}
-          </Text>
+          </SFProBody>
         )}
       </View>
 
       <Animated.View
         testID={`${testIDs.continueButton}-slot`}
-        onLayout={onContinueLayout}
+        onLayout={continueHandOver?.onLayout}
         pointerEvents={continueShown ? "auto" : "none"}
-        style={[styles.action, continueStyle]}
+        style={[styles.action, continueHandOver?.style]}
       >
         <CompactButton
           testID={testIDs.continueButton}
@@ -123,17 +135,13 @@ export function HeroContent({
         />
       </Animated.View>
 
-      <Text
+      <SFProBody
         testID={testIDs.today}
-        style={[
-          theme.typography.body,
-          styles.centred,
-          showProgress && styles.today,
-          { color: muted },
-        ]}
+        tone={muted}
+        style={[styles.centred, showProgress && styles.today]}
       >
         {words.today}
-      </Text>
+      </SFProBody>
       {showProgress && (
         <View accessible accessibilityLabel={`${completedDayCount} of ${totalDays} days done`}>
           <StepProgress
@@ -150,8 +158,8 @@ export function HeroContent({
 }
 
 const styles = StyleSheet.create({
-  words: { alignItems: "center", gap: 6 },
-  status: { letterSpacing: 1, marginBottom: STATUS_TO_TITLE_EXTRA },
+  words: { alignItems: "center", gap: space[6] },
+  status: { marginBottom: STATUS_TO_TITLE_EXTRA },
   action: { marginTop: NAME_TO_CONTINUE, marginBottom: CONTINUE_TO_TODAY },
   today: { marginBottom: TODAY_TO_PROGRESS },
   centred: { textAlign: "center" },

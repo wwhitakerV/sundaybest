@@ -7,19 +7,20 @@ import {
 
 function renderHero(overrides: Partial<ActivePlanHeroProps> = {}) {
   const props: ActivePlanHeroProps = {
-    title: "Still Praying",
-    church: "Harbor Light Church",
-    thumbnailUrl: "still-praying.jpg",
-    colors: ["#48443F", "#654F46", "#111117"],
-    words: {
-      status: "IN PROGRESS · DAY 2 OF 6",
-      action: "Continue Day 2",
-      today: "Today: Grace is received · 9 min",
-      day: "Day 2",
+    plan: {
+      title: "Still Praying",
+      church: "Harbor Light Church",
+      thumbnailUrl: "still-praying.jpg",
+      colors: ["#48443F", "#654F46", "#111117"],
+      words: {
+        status: "IN PROGRESS · DAY 2 OF 6",
+        action: "Continue Day 2",
+        today: "Today: Grace is received · 9 min",
+      },
+      currentDay: 2,
+      totalDays: 6,
+      completedDayCount: 1,
     },
-    currentDay: 2,
-    totalDays: 6,
-    completedDayCount: 1,
     href: "/",
     onContinue: () => undefined,
     ...overrides,
@@ -43,7 +44,7 @@ describe("ActivePlanHero", () => {
   });
 
   it("lays the words' own colour behind them once the hero and its artwork are measured", () => {
-    renderHero({ slotHeight: 700 });
+    renderHero({ motion: { slotHeight: 700 } });
 
     fireEvent(screen.getByTestId("home-tab-active-plan"), "layout", {
       nativeEvent: { layout: { x: 0, y: 0, width: 283, height: 159 } },
@@ -53,7 +54,7 @@ describe("ActivePlanHero", () => {
   });
 
   it("draws no colour behind the words before the artwork's measured — it'd cover it", () => {
-    renderHero({ slotHeight: 700 });
+    renderHero({ motion: { slotHeight: 700 } });
 
     expect(screen.queryByTestId("home-tab-active-hero-content-fade")).toBeNull();
   });

@@ -42,7 +42,7 @@ describe("StudyStepRow", () => {
   it("sets what it holds under its name", () => {
     renderRow();
 
-    expect(screen.getByText("Grace is received")).toHaveStyle(typography.stepDetail);
+    expect(screen.getByText("Grace is received")).toHaveStyle(typography.cardDetail);
   });
 
   describe("the step you're on", () => {

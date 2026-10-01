@@ -1,11 +1,13 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import { usePickPop } from "../../hooks/use-tap-feedback";
 import { getPlanEndsLine } from "@/utils/plans/getPlanEndsLine";
 import { getPlanScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 const CHIP_WIDTH = 44;
@@ -26,9 +28,7 @@ function DayChip({ day, selected }: { day: number; selected: boolean }) {
         popStyle,
       ]}
     >
-      <Text style={[theme.typography.headline, styles.day, { color: theme.colors.text }]}>
-        {day}
-      </Text>
+      <SFProTitle variant="headlineRegular">{day}</SFProTitle>
     </Animated.View>
   );
 }
@@ -38,7 +38,6 @@ function DayChip({ day, selected }: { day: number; selected: boolean }) {
  * plays, a day is picked.
  */
 export function DayPicker({ elapsedMs }: LiftPieceProps) {
-  const theme = useTheme();
   const { selectedDay } = getPlanScene(elapsedMs);
 
   return (
@@ -48,22 +47,21 @@ export function DayPicker({ elapsedMs }: LiftPieceProps) {
           <DayChip key={day} day={day} selected={selectedDay === day} />
         ))}
       </View>
-      <Text style={[theme.typography.supporting, { color: theme.colors.textMuted }]}>
+      <MonoBody variant="supporting" tone="textMuted">
         {getPlanEndsLine(selectedDay)}
-      </Text>
+      </MonoBody>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  picker: { gap: 12 },
+  picker: { gap: space[12] },
   chips: { flexDirection: "row", justifyContent: "space-between" },
   chip: {
     width: CHIP_WIDTH,
     height: CHIP_WIDTH * 1.3,
-    borderRadius: 14,
+    borderRadius: radius[14],
     alignItems: "center",
     justifyContent: "center",
   },
-  day: { fontWeight: "400" },
 });

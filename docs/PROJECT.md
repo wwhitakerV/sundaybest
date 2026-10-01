@@ -358,7 +358,7 @@ undefined (reading 'match')`, thrown from inside Sentry's own Metro
 - **`core` cannot import `ui`.** The dependency graph is
   `core -> utils, theme, types` only. `error-boundary.tsx`'s `ErrorScreen`
   builds its layout from `View`/`SafeAreaView` directly rather than
-  `@/ui/Screen`, which would be the obvious choice but is a disallowed import
+  `@/ui/organisms/Screen`, which would be the obvious choice but is a disallowed import
   from `src/core`.
 - **Expo Router's `ErrorBoundary`/`SuspenseFallback` exports are function
   components with `{ error, retry }` / `{ route, params }` props, not a

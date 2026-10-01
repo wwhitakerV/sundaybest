@@ -1,11 +1,10 @@
 import { Tabs } from "expo-router";
 import { Flame, House, LibraryBig, UserRound } from "lucide-react-native";
 
-import { TabBar } from "@/ui/tab-bar/TabBar";
-import { TabIcon } from "@/ui/tab-bar/TabIcon";
-import { TabBarAccessoryProvider } from "@/ui/tab-bar/tab-bar-accessory";
-import { tapFeedback } from "@/core/haptics/haptics";
-import { headerEntranceLayout } from "@/ui/HeaderEntranceScope";
+import { TabIcon } from "@/ui/organisms/tab-bar/TabIcon";
+import { TabBarAccessoryProvider } from "@/ui/organisms/tab-bar/tab-bar-accessory";
+import { AppTabBar } from "@/features/home";
+import { headerEntranceLayout } from "@/ui/header-entrance/HeaderEntranceScope";
 
 export default function TabsLayout() {
   return (
@@ -14,7 +13,7 @@ export default function TabsLayout() {
       <Tabs
         screenOptions={{ headerShown: false }}
         screenLayout={headerEntranceLayout}
-        tabBar={(props) => <TabBar {...props} onPress={tapFeedback} />}
+        tabBar={(props) => <AppTabBar {...props} />}
       >
         <Tabs.Screen
           name="home"

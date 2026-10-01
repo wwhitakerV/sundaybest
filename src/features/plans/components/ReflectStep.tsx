@@ -1,11 +1,16 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Lock } from "lucide-react-native";
 
 import type { Reflection } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
+import { TextField } from "@/ui/typography/TextField";
 
 export type ReflectStepProps = {
   dayNumber: number;
@@ -40,64 +45,44 @@ export function ReflectStep({
     <View testID="study-reflect-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label={`Question ${reflection.order} of ${total}`} />
       <StudyDriftIn order={1}>
-        <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>{title}</Text>
+        <SFProTitle>{title}</SFProTitle>
       </StudyDriftIn>
       <StudyFollow style={followStyle}>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-          ]}
-        >
-          <Text
-            style={[
-              theme.typography.editorialHeading,
-              styles.question,
-              { color: theme.colors.text },
-            ]}
-          >
-            {reflection.question}
-          </Text>
-          <TextInput
+        <Card fill="page" style={styles.card}>
+          <SerifTitle variant="question">{reflection.question}</SerifTitle>
+          <TextField
             testID={`study-reflect-answer-${reflection.order}`}
             accessibilityLabel={reflection.question}
             multiline
             value={answer}
             onChangeText={onAnswerChange}
             placeholder="Write what comes to mind"
-            placeholderTextColor={theme.colors.textMuted}
             style={[
-              theme.typography.body,
               styles.answer,
-              {
-                color: theme.colors.text,
-                backgroundColor: theme.colors.background,
-                borderColor: theme.colors.divider,
-              },
+              { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
             ]}
           />
           <View style={styles.privacy}>
             <Lock size={16} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-            <Text style={[theme.typography.supporting, { color: theme.colors.textMuted }]}>
+            <MonoBody variant="supporting" tone="textMuted">
               Only you ever see this.
-            </Text>
+            </MonoBody>
           </View>
-        </View>
+        </Card>
       </StudyFollow>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: 16 },
-  card: { borderWidth: 1, borderRadius: 28, padding: 22, gap: 16 },
-  question: { fontSize: 24, lineHeight: 30 },
+  body: { gap: space[16] },
+  card: { padding: space[22], gap: space[16] },
   answer: {
     borderWidth: 1,
-    borderRadius: 20,
-    padding: 18,
+    borderRadius: radius[20],
+    padding: space[18],
     minHeight: 124,
     textAlignVertical: "top",
   },
-  privacy: { flexDirection: "row", alignItems: "center", gap: 8 },
+  privacy: { flexDirection: "row", alignItems: "center", gap: space[8] },
 });

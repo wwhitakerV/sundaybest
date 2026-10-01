@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { BellRing } from "lucide-react-native";
 
 import type { LocalTime } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { controlHeight, radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const TIMES: readonly { time: LocalTime; label: string }[] = [
   { time: "06:30", label: "6:30" },
@@ -22,18 +24,10 @@ export function ReminderTimes({ selected, onSelect, testID }: ReminderTimesProps
   const theme = useTheme();
 
   return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-      ]}
-    >
+    <Card testID={testID} style={styles.card}>
       <View style={styles.heading}>
         <BellRing size={22} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
-        <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
-          Remind me each morning
-        </Text>
+        <SFProBody variant="listItem">Remind me each morning</SFProBody>
       </View>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {TIMES.map(({ time, label }) => {
@@ -49,7 +43,7 @@ export function ReminderTimes({ selected, onSelect, testID }: ReminderTimesProps
               style={[
                 styles.chip,
                 {
-                  borderRadius: theme.radii.pill,
+                  borderRadius: radius.pill,
                   borderColor: isSelected ? theme.colors.textInactive : theme.colors.divider,
                   backgroundColor: isSelected
                     ? theme.colors.segmentBackground
@@ -57,25 +51,25 @@ export function ReminderTimes({ selected, onSelect, testID }: ReminderTimesProps
                 },
               ]}
             >
-              <Text style={[theme.typography.body, { color: theme.colors.text }]}>{label}</Text>
+              <SFProBody>{label}</SFProBody>
             </Pressable>
           );
         })}
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { alignSelf: "stretch", borderWidth: 1, borderRadius: 28, padding: 20, gap: 16 },
-  heading: { flexDirection: "row", alignItems: "center", gap: 12 },
-  chips: { flexDirection: "row", gap: 10 },
+  card: { alignSelf: "stretch", padding: space[20], gap: space[16] },
+  heading: { flexDirection: "row", alignItems: "center", gap: space[12] },
+  chips: { flexDirection: "row", gap: space[10] },
   chip: {
     minWidth: 72,
-    minHeight: 44,
+    minHeight: controlHeight.hitTarget,
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: space[16],
   },
 });

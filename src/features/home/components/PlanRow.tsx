@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Check, ChevronRight } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const ART_SIZE = 64;
 
@@ -32,10 +33,10 @@ export function PlanRow({ title, detail, done, onPress, testID }: PlanRowProps) 
     >
       <View style={[styles.art, { backgroundColor: theme.colors.segmentBackground }]} />
       <View style={styles.text}>
-        <Text numberOfLines={1} style={[theme.typography.listItem, { color: theme.colors.text }]}>
+        <SFProBody variant="listItem" numberOfLines={1}>
           {title}
-        </Text>
-        <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>{detail}</Text>
+        </SFProBody>
+        <SFProBody tone="textMuted">{detail}</SFProBody>
       </View>
       {done ? (
         <View style={[styles.done, { backgroundColor: theme.colors.controlPrimary }]}>
@@ -56,17 +57,26 @@ export function PlanRow({ title, detail, done, onPress, testID }: PlanRowProps) 
   );
 }
 
+/** The round "done" mark at a finished plan's end. */
+const DONE_SIZE = 36;
+
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: space[16],
     borderWidth: 1,
-    borderRadius: 28,
-    padding: 16,
-    paddingRight: 20,
+    borderRadius: radius[28],
+    padding: space[16],
+    paddingRight: space[20],
   },
-  art: { width: ART_SIZE, height: ART_SIZE, borderRadius: 16 },
-  text: { flex: 1, gap: 2 },
-  done: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
+  art: { width: ART_SIZE, height: ART_SIZE, borderRadius: radius[16] },
+  text: { flex: 1, gap: space[2] },
+  done: {
+    width: DONE_SIZE,
+    height: DONE_SIZE,
+    borderRadius: DONE_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

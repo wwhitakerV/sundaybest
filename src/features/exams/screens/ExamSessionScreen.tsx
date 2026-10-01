@@ -5,14 +5,14 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
 
 import type { ExamAttempt, ExamResponse } from "@/types/domain";
-import { Button } from "@/ui/Button";
+import { Button } from "@/ui/atoms/Button";
 import { FloatingBar } from "@/ui/FloatingBar";
-import { FloatingButton } from "@/ui/FloatingButton";
-import { getFloatingNavBarClearance } from "@/ui/floatingNavBar";
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { StepCounter } from "@/ui/StepCounter";
+import { FloatingButton } from "@/ui/atoms/FloatingButton";
+import { getFloatingNavBarClearance } from "@/ui/organisms/floatingNavBar";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { StepCounter } from "@/ui/atoms/StepCounter";
 import { useTheme } from "@/theme";
 import {
   getExamAttempt,

@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useIsFocused, useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
 
 import type { PlanLength } from "@/types/domain";
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
@@ -26,6 +25,9 @@ import {
   getNextNewPlanAction,
 } from "../logic/new-plan-steps";
 import { checkSermonLink, shortenLink } from "../logic/sermon-link";
+import { space } from "@/theme";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 /** The link checked on the first step, and the sermon it points to. */
 type CheckedLink = { url: string; sermon: Preview };
@@ -44,7 +46,6 @@ type CheckedLink = { url: string; sermon: Preview };
  * X on the first step dismisses the whole modal; Back on the second steps back.
  */
 export function NewPlanScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const session = useModalSession();
   const focused = useIsFocused();
@@ -139,12 +140,8 @@ export function NewPlanScreen() {
         <Animated.View testID={`${body.key}-body`} style={[styles.body, bodyStyle]}>
           {renderedStep === 0 ? (
             <>
-              <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-                Paste a sermon link
-              </Text>
-              <Text style={[theme.typography.body, { color: theme.colors.textMuted }]}>
-                Any public sermon video with captions works.
-              </Text>
+              <SFProTitle>Paste a sermon link</SFProTitle>
+              <SFProBody tone="textMuted">Any public sermon video with captions works.</SFProBody>
               <SermonLinkField
                 testID="paste-sermon-link-input"
                 value={link}
@@ -199,7 +196,7 @@ export function NewPlanScreen() {
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { paddingBottom: 16 },
-  body: { gap: 16 },
-  action: { paddingBottom: 8 },
+  content: { paddingBottom: space[16] },
+  body: { gap: space[16] },
+  action: { paddingBottom: space[8] },
 });

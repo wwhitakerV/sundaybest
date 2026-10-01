@@ -8,4 +8,8 @@ describe("formatDotDate", () => {
   it("pads a single-digit month and day", () => {
     expect(formatDotDate("2027-01-05")).toBe("01.05.27");
   });
+
+  it("leaves out the parts a malformed day doesn't have", () => {
+    expect(formatDotDate("2026")).toBe("..26");
+  });
 });

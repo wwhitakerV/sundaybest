@@ -2,7 +2,7 @@ import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
 import type { Id } from "@/types/domain";
-import { FilterTabs } from "@/ui/FilterTabs";
+import { FilterTabs } from "@/ui/molecules/FilterTabs";
 import {
   getCompletedPlans,
   getInProgressPlans,
@@ -13,6 +13,7 @@ import {
 } from "@/core/store";
 import { describePlan } from "../logic/describe-plan";
 import { PlanRow } from "./PlanRow";
+import { space } from "@/theme";
 
 type Filter = "All" | "In progress" | "Done" | "Saved";
 
@@ -58,5 +59,5 @@ export function PlanList({ onOpenPlan }: PlanListProps) {
 }
 
 const styles = StyleSheet.create({
-  list: { gap: 12 },
+  list: { gap: space[12] },
 });

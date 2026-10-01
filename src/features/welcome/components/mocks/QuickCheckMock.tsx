@@ -1,20 +1,22 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { X } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { ScreenHeader } from "@/ui/ScreenHeader";
-import { StepCounter } from "@/ui/StepCounter";
-import { StepProgress } from "@/ui/StepProgress";
-import { useTheme } from "@/theme";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { StepCounter } from "@/ui/atoms/StepCounter";
+import { StepProgress } from "@/ui/atoms/StepProgress";
 import { LiftAnchor } from "../lift/LiftAnchor";
-import { getLiftId } from "../lift/lift-anchor-context";
+import { getLiftId } from "../../logic/lift";
 import { QuizOptions } from "../lifts/QuizOptions";
 import { FadeUp } from "./FadeUp";
-import { MOCK_PAGE, type MockScreenProps } from "./mock-page";
+import { MOCK_PAGE } from "./mock-page-styles";
+import type { MockScreenProps } from "../../logic/mock-page";
+import { space } from "@/theme";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 /** Mock of a Quick Check question — pushed onto, as the real one is. Its answers lift off on its turn. */
 export function QuickCheckMock({ elapsedMs }: MockScreenProps) {
-  const theme = useTheme();
   const still = elapsedMs === Infinity;
 
   return (
@@ -34,14 +36,12 @@ export function QuickCheckMock({ elapsedMs }: MockScreenProps) {
       <StepProgress steps={3} activeIndex={0} />
 
       <FadeUp order={0} still={still}>
-        <Text style={[theme.typography.metaBody, styles.kicker, { color: theme.colors.textMuted }]}>
+        <MonoBody tone="textMuted" style={styles.kicker}>
           From the sermon
-        </Text>
+        </MonoBody>
       </FadeUp>
       <FadeUp order={1} still={still}>
-        <Text style={[theme.typography.screenTitle, { color: theme.colors.text }]}>
-          In Joshua 24, what does Joshua ask the people to do?
-        </Text>
+        <SFProTitle>In Joshua 24, what does Joshua ask the people to do?</SFProTitle>
       </FadeUp>
 
       <FadeUp order={2} still={still}>
@@ -56,6 +56,6 @@ export function QuickCheckMock({ elapsedMs }: MockScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  kicker: { marginTop: 8 },
-  options: { marginTop: 8 },
+  kicker: { marginTop: space[8] },
+  options: { marginTop: space[8] },
 });

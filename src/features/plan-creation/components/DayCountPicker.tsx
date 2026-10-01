@@ -1,8 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import type { PlanLength } from "@/types/domain";
-import { useTheme } from "@/theme";
+import { controlHeight, radius, space, useTheme } from "@/theme";
 import { getPlanEndsLine } from "@/utils/plans/getPlanEndsLine";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 const LENGTHS: readonly PlanLength[] = [1, 2, 3, 4, 5, 6, 7];
 
@@ -18,9 +21,9 @@ export function DayCountPicker({ value, onChange, testID }: DayCountPickerProps)
 
   return (
     <View testID={testID} style={styles.wrap}>
-      <Text style={[theme.typography.body, styles.heading, { color: theme.colors.textMuted }]}>
+      <SFProBody tone="textMuted" style={styles.heading}>
         How many days?
-      </Text>
+      </SFProBody>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {LENGTHS.map((days) => {
           const selected = days === value;
@@ -41,25 +44,28 @@ export function DayCountPicker({ value, onChange, testID }: DayCountPickerProps)
                 },
               ]}
             >
-              <Text style={[theme.typography.headline, styles.day, { color: theme.colors.text }]}>
-                {days}
-              </Text>
+              <SFProTitle variant="headlineRegular">{days}</SFProTitle>
             </Pressable>
           );
         })}
       </View>
-      <Text style={[theme.typography.supporting, { color: theme.colors.textMuted }]}>
+      <MonoBody variant="supporting" tone="textMuted">
         {getPlanEndsLine(value)}
-      </Text>
+      </MonoBody>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 12 },
-  heading: { marginLeft: 6 },
+  wrap: { gap: space[12] },
+  heading: { marginLeft: space[6] },
   chips: { flexDirection: "row", justifyContent: "space-between" },
   // 44pt wide keeps each chip a full tap target.
-  chip: { width: 44, height: 57, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  day: { fontWeight: "400" },
+  chip: {
+    width: controlHeight.hitTarget,
+    height: 57,
+    borderRadius: radius[14],
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

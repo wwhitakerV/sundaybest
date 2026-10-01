@@ -2,9 +2,9 @@ import { StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Clock3 } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/HeaderIconButton";
-import { Screen } from "@/ui/Screen";
-import { ScreenHeader } from "@/ui/ScreenHeader";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { Screen } from "@/ui/organisms/Screen";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { useTheme } from "@/theme";
 import { getFunDestinationTitle, parseFunDestination } from "../logic/destinations";
 

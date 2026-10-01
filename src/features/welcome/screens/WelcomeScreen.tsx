@@ -1,10 +1,9 @@
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { Screen } from "@/ui/Screen";
-import { Button } from "@/ui/Button";
-import { DayStrip } from "@/ui/DayStrip";
-import { useTheme } from "@/theme";
+import { Screen } from "@/ui/organisms/Screen";
+import { Button } from "@/ui/atoms/Button";
+import { DayStrip } from "../components/DayStrip";
 import { SAMPLE_PLAN_ID, planOverviewHref } from "@/features/plans";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
 import { tapFeedback } from "@/core/haptics/haptics";
@@ -13,9 +12,13 @@ import { IntroStory } from "../components/IntroStory";
 import { WelcomeSteps } from "../components/WelcomeSteps";
 import { useVisit } from "../hooks/use-visit";
 import { getStartRoutes } from "../logic/start";
+import { space } from "@/theme";
+import { DisplayTitle } from "@/ui/typography/DisplayTitle";
+import { MonoBody } from "@/ui/typography/MonoBody";
+import { Wordmark } from "@/ui/typography/Wordmark";
+import { Span } from "@/ui/typography/Span";
 
 export function WelcomeScreen() {
-  const theme = useTheme();
   const router = useRouter();
   // The intro story tells how it works. With Reduce Motion on it holds still
   // on its opening — the first screen on stage — and the steps are listed instead.
@@ -42,33 +45,21 @@ export function WelcomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
+          <Wordmark />
         </View>
 
         <View style={styles.weekRow}>
           <DayStrip testID="welcome-day-strip" active="Sun" />
         </View>
 
-        <Text
-          style={[
-            theme.typography.supporting,
-            styles.supporting,
-            { color: theme.colors.textMuted },
-          ]}
-        >
+        <MonoBody variant="supporting" tone="textMuted" style={styles.supporting}>
           We keep you in God&apos;s word. All week.
-        </Text>
+        </MonoBody>
 
-        <Text
-          style={[
-            theme.typography.display,
-            reduceMotion ? styles.stillHero : styles.hero,
-            { color: theme.colors.text },
-          ]}
-        >
+        <DisplayTitle style={reduceMotion ? styles.stillHero : styles.hero}>
           {"A new way to "}
-          <Text style={{ color: theme.colors.textMuted }}>study the sermons you love.</Text>
-        </Text>
+          <Span tone="textMuted">study the sermons you love.</Span>
+        </DisplayTitle>
 
         {visit.visible ? (
           <IntroStory
@@ -101,15 +92,9 @@ export function WelcomeScreen() {
               onPress={() => router.push(planOverviewHref(SAMPLE_PLAN_ID))}
             />
           </View>
-          <Text
-            style={[
-              theme.typography.supporting,
-              styles.footnote,
-              { color: theme.colors.textMuted },
-            ]}
-          >
+          <MonoBody variant="supporting" tone="textMuted" style={styles.footnote}>
             Free. No account needed.
-          </Text>
+          </MonoBody>
         </View>
       </ScrollView>
     </Screen>
@@ -119,30 +104,36 @@ export function WelcomeScreen() {
 // Every number is the design spec's 320px value multiplied by 1.228125 (the
 // 393pt baseline) and rounded once — see the typography block in
 // src/theme/tokens.ts. Fixed, never scaled from the running device's width.
+/** The week row's 29 from the brand mark, less the header bar's own 12 (see below). */
+const WEEK_ROW_TOP = 17;
+/** The spec's gaps above the headline and above the footnote. */
+const HERO_TOP = 26;
+const FOOTNOTE_TOP = 17;
+
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  content: { flexGrow: 1, paddingHorizontal: 24 },
+  content: { flexGrow: 1, paddingHorizontal: space[24] },
   // 20px above the wordmark and 12px below. The week row's own 29 (the spec's
   // 24 from the brand-mark area) is measured from this bar's edge, so it
   // carries 17 here and the bar's 12 makes up the rest.
-  header: { paddingTop: 20, paddingBottom: 12 },
-  weekRow: { marginTop: 17 },
-  supporting: { marginTop: 15 },
+  header: { paddingTop: space[20], paddingBottom: space[12] },
+  weekRow: { marginTop: WEEK_ROW_TOP },
+  supporting: { marginTop: space[15] },
   // With the intro playing, the page flows top-down and the stage takes all
   // the height the rest leaves, so the phone on stage is as big as the
   // device allows. Full-bleed: the stage runs past the 24pt page inset. It
   // stops 20pt short of the buttons, so a little more of the phone is cut
   // off under its fade, and the steps line sits higher on it.
-  stage: { flex: 1, marginTop: 22, marginBottom: 20, marginHorizontal: -24 },
-  hero: { marginTop: 26 },
-  actions: { marginTop: 24, paddingBottom: 20 },
+  stage: { flex: 1, marginTop: space[22], marginBottom: space[20], marginHorizontal: -space[24] },
+  hero: { marginTop: HERO_TOP },
+  actions: { marginTop: space[24], paddingBottom: space[20] },
   // With Reduce Motion on, the hand holds still at a fixed size and the page
   // anchors from the bottom: fan, headline, and the steps listed, sitting
   // together above the buttons, any spare height above the fan.
-  stillFan: { height: 230, marginTop: "auto", marginHorizontal: -24 },
-  stillHero: { marginTop: 36 },
+  stillFan: { height: 230, marginTop: "auto", marginHorizontal: -space[24] },
+  stillHero: { marginTop: space[36] },
   // A fixed, generous gap from the end of the list down to the buttons.
-  stillActions: { marginTop: 40, paddingBottom: 20 },
-  secondaryAction: { marginTop: 12 },
-  footnote: { marginTop: 17, textAlign: "center" },
+  stillActions: { marginTop: space[40], paddingBottom: space[20] },
+  secondaryAction: { marginTop: space[12] },
+  footnote: { marginTop: FOOTNOTE_TOP, textAlign: "center" },
 });

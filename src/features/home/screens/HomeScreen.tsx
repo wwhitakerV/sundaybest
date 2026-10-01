@@ -1,9 +1,8 @@
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 import { useIsFocused, useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
-import { PAGE_INSET, Screen } from "@/ui/Screen";
-import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
-import { useTheme } from "@/theme";
+import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { formatDotDate } from "@/utils/dates/formatDotDate";
 import { planOverviewHref, studyHref } from "@/features/plans";
 import {
@@ -26,14 +25,14 @@ import { PlanRow } from "../components/PlanRow";
 import { StartHereCard } from "../components/StartHereCard";
 import { describeActivePlan } from "../logic/active-plan-hero";
 import { describePlan } from "../logic/describe-plan";
-import { homePlanOverviewHref } from "../logic/routes";
+import { NEW_PLAN_HREF, homePlanOverviewHref } from "../logic/routes";
+import { controlHeight, space } from "@/theme";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { Wordmark } from "@/ui/typography/Wordmark";
 
-/** A header button's height — the masthead row keeps it. */
-const HEADER_HEIGHT = 44;
-
-/** Room under the content for the floating tab bar. */
-const BOTTOM_CLEARANCE =
-  FLOATING_NAV_BAR.capsuleHeight + FLOATING_NAV_BAR.bottomMargin + FLOATING_NAV_BAR.sideMargin;
+/** A header action's 44pt tap target — the masthead row keeps it. */
+const HEADER_HEIGHT = controlHeight.hitTarget;
 
 /**
  * Home, from the store. With a plan under way: that plan featured up top,
@@ -46,7 +45,6 @@ const BOTTOM_CLEARANCE =
  * if they have some waiting). The tab bar's + also starts a new plan.
  */
 export function HomeScreen() {
-  const theme = useTheme();
   const router = useRouter();
   const active = useAppSelector(getActivePlan);
   const progress = useAppSelector((state) => (active ? getPlanProgress(state, active.id) : null));
@@ -70,15 +68,10 @@ export function HomeScreen() {
     onScroll,
     onHeaderLayout,
     onScrollLayout,
-    onHeroContentLayout,
-    heroSlotHeight,
     headerStyle,
-    heroFrameStyle,
-    heroContentStyle,
-    barStyle,
+    heroMotion,
+    barMotion,
     flightStyle,
-    heroArtworkStyle,
-    barThumbStyle,
     phase,
   } = useHeroCollapse();
   const words =
@@ -92,7 +85,7 @@ export function HomeScreen() {
       : null;
 
   const openPlan = (planId: string) => router.push(planOverviewHref(planId));
-  const addSermon = () => router.push("/(plan-creation)/paste-sermon");
+  const addSermon = () => router.push(NEW_PLAN_HREF);
 
   return (
     <View style={styles.root}>
@@ -107,14 +100,10 @@ export function HomeScreen() {
           pointerEvents={phase.headerTouchable ? "auto" : "none"}
           style={[styles.header, headerStyle]}
         >
-          <Text style={[theme.typography.masthead, { color: theme.colors.text }]}>SUNDAYBEST</Text>
-          <Text
-            testID="home-tab-date"
-            numberOfLines={1}
-            style={[theme.typography.dayStrip, { color: theme.colors.textMuted }]}
-          >
+          <Wordmark />
+          <MonoLabel variant="dayStrip" tone="textMuted" testID="home-tab-date" numberOfLines={1}>
             {formatDotDate(today)}
-          </Text>
+          </MonoLabel>
         </Animated.View>
 
         <Animated.ScrollView
@@ -134,40 +123,32 @@ export function HomeScreen() {
         >
           {active && progress && words ? (
             <ActivePlanHero
-              title={active.title}
-              church={sermon?.church ?? null}
-              thumbnailUrl={sermon?.thumbnailUrl ?? null}
-              colors={sermon?.thumbnailColors ?? []}
-              words={words}
-              currentDay={progress.currentDayNumber}
-              totalDays={progress.totalDays}
-              completedDayCount={progress.completedDayCount}
+              plan={{
+                title: active.title,
+                church: sermon?.church ?? null,
+                thumbnailUrl: sermon?.thumbnailUrl ?? null,
+                colors: sermon?.thumbnailColors ?? [],
+                words,
+                currentDay: progress.currentDayNumber,
+                totalDays: progress.totalDays,
+                completedDayCount: progress.completedDayCount,
+              }}
               href={homePlanOverviewHref(active.id)}
               onContinue={() => router.push(studyHref(active.id, progress.currentDayNumber))}
-              frameStyle={heroFrameStyle}
-              slotHeight={heroSlotHeight}
-              onContentLayout={onHeroContentLayout}
-              contentStyle={heroContentStyle}
-              artworkStyle={heroArtworkStyle}
+              motion={heroMotion}
             />
           ) : (
             <StartHereCard onAddSermon={addSermon} />
           )}
 
           {hasPlans ? (
-            <>
-              <PlanList onOpenPlan={openPlan} />
-              <PlanList onOpenPlan={openPlan} />
-              <PlanList onOpenPlan={openPlan} />
-            </>
+            <PlanList onOpenPlan={openPlan} />
           ) : (
             sample && (
               <View style={styles.sample}>
-                <Text
-                  style={[theme.typography.body, styles.label, { color: theme.colors.textMuted }]}
-                >
+                <SFProBody tone="textMuted" style={styles.label}>
                   Try a sample
-                </Text>
+                </SFProBody>
                 <PlanRow
                   testID="home-tab-sample-plan"
                   title={sample.title}
@@ -184,14 +165,14 @@ export function HomeScreen() {
       {/* Over everything, from the very top of the phone. */}
       {active && progress && words && (
         <ActivePlanBar
-          title={active.title}
-          day={words.day}
-          thumbnailUrl={sermon?.thumbnailUrl ?? null}
-          colors={sermon?.thumbnailColors ?? []}
+          plan={{
+            title: active.title,
+            day: words.day,
+            thumbnailUrl: sermon?.thumbnailUrl ?? null,
+            colors: sermon?.thumbnailColors ?? [],
+          }}
           topInset={insetTop}
-          touchable={phase.barTouchable}
-          style={barStyle}
-          thumbStyle={barThumbStyle}
+          motion={barMotion}
           href={homePlanOverviewHref(active.id)}
           onContinue={() => router.push(studyHref(active.id, progress.currentDayNumber))}
         />
@@ -219,11 +200,11 @@ const styles = StyleSheet.create({
   // inside the scroll view's own frame, so the header's button still works.
   scroll: { flex: 1, overflow: "visible" },
   content: {
-    gap: 28,
+    gap: space[28],
     paddingHorizontal: PAGE_INSET,
     paddingTop: CONTENT_TOP,
-    paddingBottom: BOTTOM_CLEARANCE,
+    paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
   },
-  sample: { gap: 12 },
-  label: { marginLeft: 6 },
+  sample: { gap: space[12] },
+  label: { marginLeft: space[6] },
 });

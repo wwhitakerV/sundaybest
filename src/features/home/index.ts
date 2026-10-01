@@ -4,4 +4,5 @@
  *
  * Deep imports such as `@/features/<name>/screens/Thing` are blocked by lint.
  */
+export { AppTabBar } from "./components/AppTabBar";
 export { HomeScreen } from "./screens/HomeScreen";

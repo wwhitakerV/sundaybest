@@ -1,14 +1,21 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Check, ChevronRight, ListChecks, Lock } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import type { QuickCheckLook } from "../logic/day-rail";
-import { STEP_CHECK_STROKE, STEP_MARK_GAP, STEP_NODE_SIZE, STEP_ROW_INSET } from "./step-sequence";
+import {
+  STEP_CHECK_STROKE,
+  STEP_MARK_GAP,
+  STEP_NODE_SIZE,
+  STEP_ROW_INSET,
+} from "../logic/step-sequence";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { toneColor, type Tone } from "@/ui/typography/tone";
 
 const ICON_SIZE = 20;
 const LOCK_SIZE = 16;
 const MARK_SIZE = 18;
-const ROW_PADDING = 14;
+const ROW_PADDING = space[14];
 /** How it answers a press: a soft dim. */
 const PRESSED = { opacity: 0.7 };
 
@@ -29,7 +36,8 @@ export function QuickCheckFollowUp({ look, onPress, testID }: QuickCheckFollowUp
   const theme = useTheme();
   const { status, opens } = look;
   const done = status === "done";
-  const ink = status === "current" ? theme.colors.text : theme.colors.textMuted;
+  const tone: Tone = status === "current" ? "text" : "textMuted";
+  const ink = toneColor(theme.colors, tone);
 
   return (
     <Pressable
@@ -51,13 +59,15 @@ export function QuickCheckFollowUp({ look, onPress, testID }: QuickCheckFollowUp
           <ListChecks size={ICON_SIZE} color={ink} strokeWidth={theme.icon.strokeWidth} />
         )}
       </View>
-      <Text style={[theme.typography.listItem, styles.name, { color: ink }]}>{look.label}</Text>
+      <SFProBody variant="listItem" tone={tone} style={styles.name}>
+        {look.label}
+      </SFProBody>
       {/* Where it stands, and its mark, kept together at the right. */}
       <View style={styles.standing}>
         {look.detail && (
-          <Text style={[theme.typography.stepDetail, { color: theme.colors.textMuted }]}>
+          <SFProBody variant="detail" tone="textMuted">
             {look.detail}
-          </Text>
+          </SFProBody>
         )}
         {done && (
           <View testID={`${testID}-done`}>
@@ -93,5 +103,5 @@ const styles = StyleSheet.create({
   },
   icon: { width: STEP_NODE_SIZE, alignItems: "center" },
   name: { flex: 1 },
-  standing: { flexDirection: "row", alignItems: "center", gap: 6 },
+  standing: { flexDirection: "row", alignItems: "center", gap: space[6] },
 });

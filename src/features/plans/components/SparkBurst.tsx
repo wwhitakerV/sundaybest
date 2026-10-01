@@ -7,13 +7,21 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { useTheme } from "@/theme";
 import { makeSparkParticles, type SparkParticle } from "../logic/spark-particles";
 
-const SPARK_COLOR = "#D62626";
 const PARTICLE_WIDTH = 3;
 const PARTICLE_HEIGHT = 9;
 
-function Spark({ particle, testID }: { particle: SparkParticle; testID?: string }) {
+function Spark({
+  particle,
+  color,
+  testID,
+}: {
+  particle: SparkParticle;
+  color: string;
+  testID?: string;
+}) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -53,6 +61,7 @@ function Spark({ particle, testID }: { particle: SparkParticle; testID?: string 
       style={[
         styles.particle,
         {
+          backgroundColor: color,
           left: `${particle.originXPercent}%`,
           top: `${particle.originYPercent}%`,
         },
@@ -70,6 +79,7 @@ export type SparkBurstProps = {
 
 /** StudyNav's one-shot, screen-crossing spark burst (see `makeSparkParticles`). */
 export function SparkBurst({ fire, testID }: SparkBurstProps) {
+  const theme = useTheme();
   const { width, height } = useWindowDimensions();
   const particles = useMemo(
     () => (fire ? makeSparkParticles(width, height) : []),
@@ -84,6 +94,7 @@ export function SparkBurst({ fire, testID }: SparkBurstProps) {
         <Spark
           key={particle.id}
           particle={particle}
+          color={theme.colors.accent}
           {...(testID && { testID: `${testID}-particle-${particle.id}` })}
         />
       ))}
@@ -104,6 +115,5 @@ const styles = StyleSheet.create({
     marginLeft: -PARTICLE_WIDTH / 2,
     marginTop: -PARTICLE_HEIGHT / 2,
     borderRadius: PARTICLE_WIDTH / 2,
-    backgroundColor: SPARK_COLOR,
   },
 });

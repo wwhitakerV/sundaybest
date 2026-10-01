@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { ErrorBoundaryProps as RouterErrorBoundaryProps } from "expo-router";
 
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { crashReporter as defaultCrashReporter } from "./crash-reporter";
 import { logger } from "./logger";
 import type { CrashReporter } from "./crash-reporter";
@@ -47,14 +47,18 @@ export function ErrorBoundary({
       style={[styles.root, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.container}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Something went wrong</Text>
-        <Text style={[styles.body, { color: theme.colors.textMuted }]}>
+        <Text style={[theme.typography.fallbackTitle, { color: theme.colors.text }]}>
+          Something went wrong
+        </Text>
+        <Text
+          style={[theme.typography.fallbackBody, styles.body, { color: theme.colors.textMuted }]}
+        >
           Please try again, or close and reopen the app.
         </Text>
         <Text
           accessibilityRole="button"
           testID="error-screen-retry"
-          style={[styles.retry, { color: theme.colors.accent }]}
+          style={[theme.typography.fallbackAction, styles.retry, { color: theme.colors.accent }]}
           onPress={() => void retry()}
         >
           Try again
@@ -84,7 +88,11 @@ export function SuspenseFallback() {
       style={[styles.root, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.container}>
-        <Text style={[styles.body, { color: theme.colors.textMuted }]}>Loading…</Text>
+        <Text
+          style={[theme.typography.fallbackBody, styles.body, { color: theme.colors.textMuted }]}
+        >
+          Loading…
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -92,8 +100,8 @@ export function SuspenseFallback() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  container: { flex: 1, alignItems: "center", justifyContent: "center", gap: 8 },
-  title: { fontSize: 20, fontWeight: "600" },
-  body: { fontSize: 15, textAlign: "center" },
-  retry: { fontSize: 15, fontWeight: "600", marginTop: 8 },
+  container: { flex: 1, alignItems: "center", justifyContent: "center", gap: space[8] },
+  // Type from the theme's roles: core can't use src/ui's typography components.
+  body: { textAlign: "center" },
+  retry: { marginTop: space[8] },
 });

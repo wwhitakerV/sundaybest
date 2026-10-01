@@ -73,6 +73,49 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
 };
 
 /**
+ * Where text may be drawn raw, or its type read straight from the theme — and
+ * where spacing and corners may be raw numbers: the typography components
+ * themselves, the theme, and src/core (which can't import src/ui — its one
+ * text surface, the crash screen, reads theme roles). Fun and Exams — and the
+ * src/ui pieces only they use — sit outside the typography and token
+ * migrations for now (ADR 0015, ADR 0016).
+ */
+const RAW_TYPOGRAPHY_ALLOWED = [
+  "src/ui/typography/**",
+  "src/theme/**",
+  "src/core/**",
+  "src/features/fun/**",
+  "src/features/exams/**",
+  "src/app/(tabs)/fun/**",
+  "src/app/exam/**",
+  "src/app/exams/**",
+  "src/ui/AnswerRow.tsx",
+  "src/ui/Chip.tsx",
+  "src/ui/FactRow.tsx",
+  "src/ui/LinkButton.tsx",
+  "src/ui/LinkRow.tsx",
+  "src/ui/PillButton.tsx",
+  "src/ui/SectionHeader.tsx",
+  "src/ui/SheetLayout.tsx",
+  "src/ui/Tag.tsx",
+];
+
+/** Style keys that space things out, and the ones that round corners. */
+const SPACING_PROP =
+  "/^(gap|rowGap|columnGap|padding|margin)(Top|Bottom|Left|Right|Horizontal|Vertical|Start|End)?$/";
+const RADIUS_PROP = "/^border(Top|Bottom|Start|End)?(Left|Right|Start|End)?Radius$/";
+const SPACING_MESSAGE =
+  "Spacing comes from the spacing scale (space[16]) or a named constant with its reason, not a raw number (ADR 0016).";
+
+/** Text is drawn by src/ui/typography's components, never react-native's own. */
+const RAW_TEXT_OUTSIDE_TYPOGRAPHY = {
+  name: "react-native",
+  importNames: ["Text", "TextInput"],
+  message:
+    "Draw text with a component from @/ui/typography (SFProBody, MonoLabel, …) and take input with TextField — they carry the brand's type and tones.",
+};
+
+/**
  * Config files and build scripts: default exports are the convention there, and
  * they run in Node rather than on a device.
  *
@@ -323,6 +366,61 @@ module.exports = defineConfig([
       "no-restricted-imports": [
         "error",
         { patterns: [FEATURE_ENTRY_POINT_ONLY, SIDE_EFFECT_SDKS_CORE_ONLY] },
+      ],
+    },
+  },
+
+  // 5c-bis. Text goes through src/ui/typography: no raw react-native Text or
+  //         TextInput, and no type read straight off the theme (ADR 0015).
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: RAW_TYPOGRAPHY_ALLOWED,
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            FEATURE_ENTRY_POINT_ONLY,
+            SIDE_EFFECT_SDKS_CORE_ONLY,
+            {
+              group: ["@/ui/typography/ThemedText"],
+              message:
+                "ThemedText is the typography components' private base. Use SFProBody, MonoLabel, … instead.",
+            },
+          ],
+          paths: [RAW_TEXT_OUTSIDE_TYPOGRAPHY],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "MemberExpression[property.name='typography']",
+          message:
+            "Type comes from a @/ui/typography component's variant, not straight from theme.typography.",
+        },
+        {
+          selector: "VariableDeclarator > ObjectPattern > Property[key.name='typography']",
+          message:
+            "Type comes from a @/ui/typography component's variant, not straight from theme.typography.",
+        },
+        {
+          selector: `Property[key.name=${SPACING_PROP}][value.type='Literal'][value.raw=/^(?!0$)\\d/]`,
+          message: SPACING_MESSAGE,
+        },
+        {
+          selector: `Property[key.name=${SPACING_PROP}][value.type='UnaryExpression'][value.argument.type='Literal']`,
+          message: SPACING_MESSAGE,
+        },
+        {
+          selector: `Property[key.name=${RADIUS_PROP}][value.type='Literal'][value.raw=/^(?!0$)\\d/]`,
+          message:
+            "Corners come from the corner scale (radius[28], radius.pill) or a named constant with its reason, not a raw number (ADR 0016).",
+        },
+        {
+          selector: "MemberExpression[property.name=/^(spacing|radii)$/]",
+          message:
+            'Read spacing and corners from the scales (import { space, radius } from "@/theme"); theme.spacing and theme.radii are Fun and Exams\' older names (ADR 0016).',
+        },
       ],
     },
   },

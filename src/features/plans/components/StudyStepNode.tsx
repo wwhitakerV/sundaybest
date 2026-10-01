@@ -1,9 +1,9 @@
 import { StyleSheet, View } from "react-native";
 import { Check, Lock, type LucideIcon } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, useTheme } from "@/theme";
 import type { StudyStepLook } from "../logic/day-rail";
-import { STEP_CHECK_STROKE, STEP_NODE_SIZE } from "./step-sequence";
+import { STEP_CHECK_STROKE, STEP_NODE_SIZE } from "../logic/step-sequence";
 
 const ICON_SIZE = 18;
 const LOCK_SIZE = 15;
@@ -41,7 +41,7 @@ export function StudyStepNode({ status, icon: Icon, testID }: StudyStepNodeProps
               ? theme.colors.accent
               : "transparent",
           borderColor: ringed ? theme.colors.sequenceLine : "transparent",
-          borderRadius: theme.radii.pill,
+          borderRadius: radius.pill,
         },
       ]}
     >

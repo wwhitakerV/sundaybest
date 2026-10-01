@@ -1,8 +1,10 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Check } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import type { StageRow } from "../logic/preparing-stages";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const MARK_SIZE = 28;
 
@@ -16,13 +18,7 @@ export function PreparingStages({ rows, testID }: PreparingStagesProps) {
   const theme = useTheme();
 
   return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
-      ]}
-    >
+    <Card testID={testID} style={styles.card}>
       {rows.map(({ key, label, state }, index) => (
         <View
           key={key}
@@ -42,28 +38,21 @@ export function PreparingStages({ rows, testID }: PreparingStagesProps) {
               <View style={[styles.pending, { borderColor: theme.colors.divider }]} />
             )}
           </View>
-          <Text
-            style={[
-              theme.typography.body,
-              { color: state === "pending" ? theme.colors.textMuted : theme.colors.text },
-            ]}
-          >
-            {label}
-          </Text>
+          <SFProBody tone={state === "pending" ? "textMuted" : "text"}>{label}</SFProBody>
         </View>
       ))}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { alignSelf: "stretch", borderWidth: 1, borderRadius: 28, overflow: "hidden" },
+  card: { alignSelf: "stretch", overflow: "hidden" },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    gap: space[16],
+    paddingHorizontal: space[20],
+    paddingVertical: space[18],
   },
   mark: { width: MARK_SIZE, height: MARK_SIZE, alignItems: "center", justifyContent: "center" },
   pending: { width: MARK_SIZE, height: MARK_SIZE, borderRadius: MARK_SIZE / 2, borderWidth: 2 },

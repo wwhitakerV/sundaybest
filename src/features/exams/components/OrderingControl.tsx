@@ -2,7 +2,7 @@ import { View } from "react-native";
 
 import type { ExamResponse } from "@/types/domain";
 import { AnswerRow } from "@/ui/AnswerRow";
-import { Button } from "@/ui/Button";
+import { Button } from "@/ui/atoms/Button";
 import { useTheme } from "@/theme";
 import { getOrderingFeedback } from "../logic/feedback";
 import { togglePlacedStep } from "../logic/responses";

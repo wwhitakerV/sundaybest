@@ -1,11 +1,12 @@
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 import { Sparkles } from "lucide-react-native";
 
-import { useTheme } from "@/theme";
+import { radius, space, useTheme } from "@/theme";
 import { usePressPulse } from "../../hooks/use-tap-feedback";
 import { getCreateScene } from "../../logic/scenes";
-import type { LiftPieceProps } from "./lift-piece";
+import type { LiftPieceProps } from "../../logic/lift-piece";
+import { SFProLabel } from "@/ui/typography/SFProLabel";
 
 export const CREATE_BUTTON_HEIGHT = 64;
 
@@ -19,7 +20,7 @@ export function CreateButton({ elapsedMs }: LiftPieceProps) {
     <Animated.View
       style={[
         styles.button,
-        { backgroundColor: theme.colors.controlPrimary, borderRadius: theme.radii.pill },
+        { backgroundColor: theme.colors.controlPrimary, borderRadius: radius.pill },
         pressStyle,
       ]}
     >
@@ -28,9 +29,7 @@ export function CreateButton({ elapsedMs }: LiftPieceProps) {
         color={theme.colors.onControlPrimary}
         strokeWidth={theme.icon.strokeWidth}
       />
-      <Text style={[theme.typography.button, { color: theme.colors.onControlPrimary }]}>
-        Create my plan
-      </Text>
+      <SFProLabel tone="onControlPrimary">Create my plan</SFProLabel>
     </Animated.View>
   );
 }
@@ -41,6 +40,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: space[10],
   },
 });

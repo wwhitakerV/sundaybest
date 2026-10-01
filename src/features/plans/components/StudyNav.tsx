@@ -1,21 +1,22 @@
 import { useContext } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ArrowLeft, ArrowRight } from "lucide-react-native";
 import Animated from "react-native-reanimated";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { useTheme } from "@/theme";
-import { DotPagination } from "@/ui/DotPagination";
-import { BottomFade } from "@/ui/BottomFade";
+import { space, useTheme } from "@/theme";
+import { DotPagination } from "./DotPagination";
+import { BottomFade } from "@/ui/atoms/BottomFade";
 import { tapFeedback } from "@/core/haptics/haptics";
 import {
   FLOATING_NAV_BAR,
   getFloatingNavBarBottom,
   getFloatingNavBarTintHeight,
-} from "@/ui/floatingNavBar";
+} from "@/ui/organisms/floatingNavBar";
 import { useStudyNavEntrance } from "../hooks/use-study-nav-entrance";
 import { STUDY_STEP_COUNT } from "../logic/study-steps";
 import { SparkBurst } from "./SparkBurst";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 const { capsuleHeight, capsuleRadius, sideMargin } = FLOATING_NAV_BAR;
 
@@ -106,16 +107,7 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
             strokeWidth={ARROW_STROKE_WIDTH}
           />
 
-          <Text
-            style={[
-              theme.typography.label,
-              {
-                color: theme.colors.text,
-              },
-            ]}
-          >
-            Previous
-          </Text>
+          <SFProBody variant="label">Previous</SFProBody>
         </Pressable>
 
         <DotPagination
@@ -139,16 +131,7 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           }}
           style={[styles.side, styles.sideEnd]}
         >
-          <Text
-            style={[
-              theme.typography.label,
-              {
-                color: theme.colors.text,
-              },
-            ]}
-          >
-            {finishLabel ? "Finish" : "Next"}
-          </Text>
+          <SFProBody variant="label">{finishLabel ? "Finish" : "Next"}</SFProBody>
 
           <ArrowRight
             size={ARROW_ICON_SIZE}
@@ -175,7 +158,7 @@ const styles = StyleSheet.create({
     height: capsuleHeight,
     borderRadius: capsuleRadius,
     borderWidth: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: space[16],
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -186,7 +169,7 @@ const styles = StyleSheet.create({
     width: SIDE_WIDTH,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: space[6],
   },
   sideStart: { justifyContent: "flex-start" },
   sideEnd: { justifyContent: "flex-end" },

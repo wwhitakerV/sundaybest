@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { StreakBurst } from "@/ui/burst/StreakBurst";
-import { useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { makeRadialStreaks } from "@/utils/burst/makeRadialStreaks";
 import { useSpringIn } from "../hooks/use-spring-in";
 import type { CaptionState } from "../logic/story";
-import { WELCOME_STEPS } from "./welcome-steps";
+import { WELCOME_STEPS } from "../logic/welcome-steps";
+import { SFProBody } from "@/ui/typography/SFProBody";
+import { Span } from "@/ui/typography/Span";
 
 const ICON_SIZE = 18;
 /** Clear space between the line's ends and where each burst fires from. */
@@ -71,21 +73,21 @@ export function StepCaption({ caption, style, testID }: StepCaptionProps) {
         </View>
         <Animated.View style={[styles.content, springStyle]}>
           <Icon size={ICON_SIZE} color={theme.colors.text} strokeWidth={1.75} />
-          <Text style={[theme.typography.listItem, { color: theme.colors.text }]}>
+          <SFProBody variant="listItem">
             {step.parts.map(({ lead, item }, index) => (
-              <Text key={item}>
+              <Span key={item}>
                 {lead}
-                <Text
+                <Span
                   // The item on screen (step 3's read / reflect / pray / quiz)
                   // in SundayBest red; everything else — commas included —
                   // stays black.
-                  style={{ color: shown.word === index ? theme.colors.accent : theme.colors.text }}
+                  tone={shown.word === index ? "accent" : "text"}
                 >
                   {item}
-                </Text>
-              </Text>
+                </Span>
+              </Span>
             ))}
-          </Text>
+          </SFProBody>
         </Animated.View>
         <View pointerEvents="none" style={[styles.burstColumn, styles.rightColumn]}>
           <StreakBurst
@@ -103,7 +105,7 @@ export function StepCaption({ caption, style, testID }: StepCaptionProps) {
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", justifyContent: "center" },
   line: { justifyContent: "center" },
-  content: { flexDirection: "row", alignItems: "center", gap: 10 },
+  content: { flexDirection: "row", alignItems: "center", gap: space[10] },
   burstColumn: { position: "absolute", top: 0, bottom: 0, width: 0, justifyContent: "center" },
   leftColumn: { left: -BURST_GAP },
   rightColumn: { right: -BURST_GAP },

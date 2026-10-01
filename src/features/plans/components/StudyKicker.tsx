@@ -1,7 +1,6 @@
-import { Text } from "react-native";
-
-import { useTheme } from "@/theme";
 import { StudyDriftIn } from "./StudyDriftIn";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { Span } from "@/ui/typography/Span";
 
 export type StudyKickerProps = {
   dayNumber: number;
@@ -11,14 +10,12 @@ export type StudyKickerProps = {
 
 /** The small line over each Daily Study step: "Day 2  Read". */
 export function StudyKicker({ dayNumber, label }: StudyKickerProps) {
-  const theme = useTheme();
-
   return (
     <StudyDriftIn order={0}>
-      <Text style={[theme.typography.metaLabel, { color: theme.colors.text }]}>
+      <MonoLabel>
         {`Day ${dayNumber}  `}
-        <Text style={{ color: theme.colors.textMuted }}>{label}</Text>
-      </Text>
+        <Span tone="textMuted">{label}</Span>
+      </MonoLabel>
     </StudyDriftIn>
   );
 }

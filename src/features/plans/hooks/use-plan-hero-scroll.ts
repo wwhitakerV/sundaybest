@@ -31,8 +31,8 @@ const NAV_FADE_MS = 180;
  * fading out as the tab bar takes it, and back in scrolling down.
  * Pulled down past the top, the hero's colour zooms from its foot to keep
  * reaching the top of the screen (`colourStyle`), while the artwork moves
- * with the words, the same distance above them, as one. Measure the hero with
- * `onHeroLayout` and Continue with `onContinueLayout`.
+ * with the words, the same distance above them, as one. Hand `heroMotion` to
+ * `PlanHero`: it measures the hero and Continue, and moves them, with it.
  *
  * Once the hero's bottom edge has scrolled up past the nav buttons
  * (`navLine`, down the screen), they're over the page: `navOverPage`, and
@@ -113,12 +113,14 @@ export function usePlanHeroScroll({
 
   return {
     onScroll,
-    artworkStyle,
-    continueStyle,
-    colourStyle,
-    onContinueLayout,
-    onHeroLayout,
-    heroHeight,
+    /** For `PlanHero`: how it moves, and how it's measured. */
+    heroMotion: {
+      artworkStyle,
+      colourStyle,
+      continueHandOver: { style: continueStyle, shown: !handedOff, onLayout: onContinueLayout },
+      heroHeight,
+      onHeroLayout,
+    },
     handedOff,
     heroNavStyle,
     pageNavStyle,

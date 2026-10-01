@@ -1,10 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { Screen } from "@/ui/Screen";
+import { Screen } from "@/ui/organisms/Screen";
 import { SectionHeader } from "@/ui/SectionHeader";
-import { TitleHeader } from "@/ui/TitleHeader";
-import { FLOATING_NAV_BAR } from "@/ui/floatingNavBar";
+import { TitleHeader } from "@/ui/molecules/TitleHeader";
+import { FLOATING_NAV_BAR } from "@/ui/organisms/floatingNavBar";
 import { useTheme } from "@/theme";
 import { getStreak, useAppSelector, useToday } from "@/core/store";
 import { CategoryRail } from "../components/CategoryRail";

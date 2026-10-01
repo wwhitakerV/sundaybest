@@ -1,10 +1,11 @@
 import type { ReactNode, RefObject } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { PHONE_FRAME, PhoneFrame } from "@/ui/PhoneFrame";
-import { ScaledView } from "@/ui/ScaledView";
+import { PhoneFrame } from "./PhoneFrame";
+import { PHONE_FRAME } from "../logic/phone-frame";
+import { ScaledView } from "./ScaledView";
 import { useTheme } from "@/theme";
-import { BUILD_RADIUS, BUILD_WIDTH } from "./fan-geometry";
+import { BUILD_RADIUS, BUILD_WIDTH } from "../logic/fan-geometry";
 
 export type PhoneCardBodyProps = {
   /** The mock screen inside the phone. */

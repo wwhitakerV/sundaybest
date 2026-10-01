@@ -2,9 +2,9 @@ import { Stack } from "expo-router";
 
 import { AppProviders } from "@/core/providers/AppProviders";
 import { ErrorBoundary, SuspenseFallback } from "@/core/monitoring/error-boundary";
-import { LoadingScreen } from "@/ui/LoadingScreen";
-import { HeaderArrivalProvider } from "@/ui/HeaderArrivalProvider";
-import { headerEntranceLayout } from "@/ui/HeaderEntranceScope";
+import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
+import { HeaderArrivalProvider } from "@/ui/header-entrance/HeaderArrivalProvider";
+import { headerEntranceLayout } from "@/ui/header-entrance/HeaderEntranceScope";
 import { HALF_SHEET_OPTIONS } from "@/ui/SheetLayout";
 
 /**

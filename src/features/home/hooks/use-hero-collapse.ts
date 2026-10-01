@@ -9,7 +9,7 @@ import {
 } from "react-native-reanimated";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { PAGE_INSET } from "@/ui/Screen";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
 import {
   BAR_ROW_HEIGHT,
   BAR_THUMB_RADIUS,
@@ -17,14 +17,9 @@ import {
   HERO_ARTWORK_WIDTH_RATIO,
   HERO_BREATHE_BOTTOM,
   HERO_BREATHE_TOP,
-  getArtworkRect,
   getBarProgress,
-  getBarThumbRect,
   getCollapseGeometry,
   getCollapsePhase,
-  getFlightHandoff,
-  getFlightProgress,
-  getFlightRect,
   getHeaderOpacity,
   getHeroContentOpacity,
   getHeroCornerRadius,
@@ -33,6 +28,13 @@ import {
   isHeroMeasurable,
   type CollapsePhase,
 } from "../logic/hero-collapse";
+import {
+  getArtworkRect,
+  getBarThumbRect,
+  getFlightHandoff,
+  getFlightProgress,
+  getFlightRect,
+} from "../logic/artwork-flight";
 
 /** How far into the scroll view Home's content starts. */
 export const CONTENT_TOP = 8;
@@ -74,10 +76,10 @@ function toBits(phase: CollapsePhase): number {
  * would (`snapOffsets`).
  *
  * Give the scroll view `onScroll`, `onContentSizeChange`, and `snapOffsets`;
- * measure the header, the
- * scroll view, and the hero's content with `onHeaderLayout`,
- * `onScrollLayout`, and `onHeroContentLayout`, and give the hero
- * `heroSlotHeight` so it keeps its room in the page. `phase` says
+ * measure the header and the scroll view with `onHeaderLayout` and
+ * `onScrollLayout`. Hand `heroMotion` to `ActivePlanHero` (it measures its
+ * content and keeps its room in the page with it), `barMotion` to
+ * `ActivePlanBar`, and `flightStyle` to the flying artwork. `phase` says
  * what takes taps and whether the status bar should be light, and only
  * changes at those points.
  */
@@ -186,6 +188,12 @@ export function useHeroCollapse() {
     setLayout((current) => ({ ...current, contentHeight: height }));
   }
 
+  const phase = {
+    headerTouchable: (phaseBits & HEADER_TOUCHABLE) !== 0,
+    barTouchable: (phaseBits & BAR_TOUCHABLE) !== 0,
+    lightStatusBar: (phaseBits & LIGHT_STATUS_BAR) !== 0,
+  };
+
   return {
     insetTop,
     snapOffsets: getSnapOffsets(
@@ -196,19 +204,18 @@ export function useHeroCollapse() {
     onScroll,
     onHeaderLayout,
     onScrollLayout,
-    onHeroContentLayout,
-    heroSlotHeight: heroHeight > 0 ? heroHeight : undefined,
     headerStyle,
-    heroFrameStyle,
-    heroContentStyle,
-    barStyle,
-    flightStyle,
-    heroArtworkStyle,
-    barThumbStyle,
-    phase: {
-      headerTouchable: (phaseBits & HEADER_TOUCHABLE) !== 0,
-      barTouchable: (phaseBits & BAR_TOUCHABLE) !== 0,
-      lightStatusBar: (phaseBits & LIGHT_STATUS_BAR) !== 0,
+    /** For `ActivePlanHero`: how it collapses, and how it's measured. */
+    heroMotion: {
+      frameStyle: heroFrameStyle,
+      contentStyle: heroContentStyle,
+      artworkStyle: heroArtworkStyle,
+      slotHeight: heroHeight > 0 ? heroHeight : undefined,
+      onContentLayout: onHeroContentLayout,
     },
+    /** For `ActivePlanBar`: how it comes in. */
+    barMotion: { style: barStyle, thumbStyle: barThumbStyle, touchable: phase.barTouchable },
+    flightStyle,
+    phase,
   };
 }
