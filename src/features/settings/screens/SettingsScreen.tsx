@@ -1,16 +1,13 @@
 import { useContext } from "react";
 import { ScrollView, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { getFloatingNavBarClearance } from "@/ui/organisms/floatingNavBar";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { space } from "@/theme";
-import { getAppVersion } from "@/core/config/app-version";
-import { getReminder, getUserSettings, useAppSelector } from "@/core/store";
 import { SettingsGroup } from "../components/SettingsGroup";
-import { describeSettingsSections, formatShortVersion } from "../logic/settings-sections";
+import { useSettingsView } from "../hooks/use-settings-view";
 import { MonoBody } from "@/ui/typography/MonoBody";
 
 /**
@@ -20,16 +17,8 @@ import { MonoBody } from "@/ui/typography/MonoBody";
  * version at the foot.
  */
 export function SettingsScreen() {
-  const router = useRouter();
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
-  const settings = useAppSelector(getUserSettings);
-  const reminder = useAppSelector((state) => getReminder(state, "dailyStudy"));
-  const version = getAppVersion();
-  const sections = describeSettingsSections({
-    reminderTime: reminder?.enabled ? reminder.time : null,
-    translation: settings.bibleTranslation,
-    textSize: settings.textSize,
-  });
+  const { sections, version, open } = useSettingsView();
 
   return (
     <Screen testID="settings-screen" padded="vertical">
@@ -50,7 +39,7 @@ export function SettingsScreen() {
             title={title}
             rows={rows}
             onOpen={({ href }) => {
-              if (href) router.push(href);
+              if (href) open(href);
             }}
           />
         ))}
@@ -61,7 +50,7 @@ export function SettingsScreen() {
             style={styles.centred}
             testID="settings-version"
           >
-            {`SundayBest ${formatShortVersion(version)}`}
+            {`SundayBest ${version}`}
           </MonoBody>
         )}
       </ScrollView>

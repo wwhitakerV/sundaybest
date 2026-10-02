@@ -1,30 +1,15 @@
-import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
 
 import { Screen } from "@/ui/organisms/Screen";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
-import { addDays } from "@/utils/dates/addDays";
-import { planOverviewHref } from "@/features/plans";
-import {
-  getDayMinutes,
-  getLatestQuizScore,
-  getPlanProgress,
-  getProgressTotals,
-  getReminder,
-  getStreak,
-  getUpNext,
-  getWeeklyCompletionCounts,
-  useAppSelector,
-  useToday,
-} from "@/core/store";
-import { StatCard } from "../components/StatCard";
+import { StatCard } from "@/ui/molecules/StatCard";
 import { UpNextCard } from "../components/UpNextCard";
-import { WeekDays } from "../components/WeekDays";
+import { WeekDays } from "@/entities/streak";
 import { WeekNavigator } from "../components/WeekNavigator";
 import { formatClockTime } from "@/utils/time/formatClockTime";
-import { describeDate, getWeekTitle } from "../logic/week";
+import { useProgressWeek } from "../hooks/use-progress-week";
+import { describeDate } from "../logic/week";
 import { space } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { Span } from "@/ui/typography/Span";
@@ -38,29 +23,19 @@ import { Span } from "@/ui/typography/Span";
  * anywhere shows the moment it's done.
  */
 export function ProgressScreen() {
-  const router = useRouter();
-  const today = useToday();
-  // Which week is shown: 0 is this one, -1 the one before, and so on.
-  const [weekOffset, setWeekOffset] = useState(0);
-
-  const week = useAppSelector((state) =>
-    getWeeklyCompletionCounts(state, addDays(today, weekOffset * 7)),
-  );
-  const streak = useAppSelector((state) => getStreak(state, today));
-  const totals = useAppSelector(getProgressTotals);
-  const quizScore = useAppSelector(getLatestQuizScore);
-  const upNext = useAppSelector((state) => getUpNext(state, today));
-  const upNextDetail = useAppSelector((state) =>
-    upNext
-      ? {
-          minutes: getDayMinutes(state, upNext.day.id),
-          percent: getPlanProgress(state, upNext.plan.id)?.completionPercentage ?? 0,
-        }
-      : null,
-  );
-  const reminder = useAppSelector((state) => getReminder(state, "dailyStudy"));
-
-  const title = getWeekTitle(week.at(0)?.date ?? today, week.at(-1)?.date ?? today);
+  const {
+    today,
+    week,
+    title,
+    previousWeek,
+    nextWeek,
+    streak,
+    totals,
+    quizScore,
+    upNext,
+    reminder,
+    openUpNext,
+  } = useProgressWeek();
   const plansDone = totals.completedPlanCount;
 
   return (
@@ -71,12 +46,12 @@ export function ProgressScreen() {
         <WeekNavigator
           lead={title.lead}
           range={title.range}
-          onPrevious={() => setWeekOffset((offset) => offset - 1)}
-          onNext={() => setWeekOffset((offset) => offset + 1)}
+          onPrevious={previousWeek}
+          onNext={nextWeek}
         />
-        <WeekDays days={week} today={today} />
+        <WeekDays days={week} today={today} testIDPrefix="progress-day" />
 
-        {upNext && upNextDetail && (
+        {upNext && (
           <>
             <SFProBody style={styles.centred} testID="progress-up-next">
               {"Up next "}
@@ -85,10 +60,10 @@ export function ProgressScreen() {
             <UpNextCard
               title={upNext.plan.title}
               dayNumber={upNext.day.dayNumber}
-              minutes={upNextDetail.minutes}
-              percent={upNextDetail.percent}
+              minutes={upNext.minutes}
+              percent={upNext.percent}
               reminderTime={reminder?.enabled ? formatClockTime(reminder.time) : null}
-              onPress={() => router.push(planOverviewHref(upNext.plan.id))}
+              onPress={openUpNext}
             />
           </>
         )}

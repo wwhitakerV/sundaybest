@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { useTheme } from "@/theme";
-import { NAVIGATION_MS } from "../logic/scenes";
+import { NAVIGATION_MS } from "../logic/lift-timing";
 import { ArrivalContext } from "./mocks/arrival-context";
 
 /** On a push, the screen being left drifts this share of the width to the left, as on iOS. */

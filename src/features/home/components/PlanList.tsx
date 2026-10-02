@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 
 import type { Id } from "@/types/domain";
 import { FilterTabs } from "@/ui/molecules/FilterTabs";
+import { selectionFeedback } from "@/core/haptics/haptics";
 import {
   getCompletedPlans,
   getInProgressPlans,
@@ -36,13 +37,17 @@ export function PlanList({ onOpenPlan }: PlanListProps) {
   );
   const options = lists.map(({ label, plans: listed }) => ({ label, count: listed.length }));
 
+  function selectFilter(next: Filter) {
+    if (next !== filter) selectionFeedback();
+    setFilter(next);
+  }
   return (
     <View style={styles.list}>
       <FilterTabs
         testID="home-tab-plan-filters"
         options={options}
         selected={filter}
-        onSelect={setFilter}
+        onSelect={selectFilter}
       />
       {plans.map((plan, index) => (
         <PlanRow

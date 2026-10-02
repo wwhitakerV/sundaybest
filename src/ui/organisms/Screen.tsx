@@ -28,6 +28,8 @@ const DEFAULT_EDGES: readonly Edge[] = ["top", "bottom", "left", "right"];
 
 /** The page's side inset. Content inside a `padded="vertical"` screen applies it itself. */
 export const PAGE_INSET = space[24];
+/** The room a padded screen leaves above its content, under the safe area. */
+export const PAGE_TOP = space[12];
 
 /**
  * Safe-area aware page container with the themed background applied.
@@ -76,6 +78,6 @@ export function Screen({
 const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { flex: 1 },
-  padded: { paddingHorizontal: PAGE_INSET, paddingTop: space[12], gap: space[16] },
-  paddedVertical: { paddingTop: space[12], gap: space[16] },
+  padded: { paddingHorizontal: PAGE_INSET, paddingTop: PAGE_TOP, gap: space[16] },
+  paddedVertical: { paddingTop: PAGE_TOP, gap: space[16] },
 });

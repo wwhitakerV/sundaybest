@@ -1,40 +1,21 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { ScrollView, StatusBar, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 
-import type { Id } from "@/types/domain";
 import { Screen } from "@/ui/organisms/Screen";
+import { TextSizeScope } from "@/ui/typography/TextSizeScope";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
+import { ReadingSheet } from "../components/ReadingSheet";
 import { StudyHeader } from "../components/StudyHeader";
+import { StudyNotFound } from "../components/StudyNotFound";
+import { useStudySession } from "../hooks/use-study-session";
 import { StudyNav } from "../components/StudyNav";
 import { StudyStepBody } from "../components/StudyStepBody";
 import { StudyDriftProvider } from "../components/StudyDriftIn";
-import { useStudyRoute } from "../hooks/use-study-route";
-import { useModalSession } from "@/hooks/use-modal-session";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
-import {
-  getDayScripture,
-  getPrayerForDay,
-  getReflectionsForDay,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
 import { useStepTransition } from "@/hooks/use-step-transition";
-import { getReflectionWrites, type ReflectionDrafts } from "../logic/reflection-drafts";
-import { dayCompleteHref } from "../logic/routes";
-import {
-  STUDY_STEPS,
-  fromPageIndex,
-  getNextStudyAction,
-  getPreviousStudyAction,
-  getStudyPages,
-  isLastStudyPage,
-  toPageIndex,
-  type StudyNavAction,
-  type StudyPosition,
-} from "../logic/study-steps";
-import { space } from "@/theme";
+import { STUDY_STEPS, fromPageIndex, toPageIndex } from "../logic/study-steps";
+import { ThemeScope, getReadingTheme, space } from "@/theme";
 
 /**
  * Read, Scripture, Reflect, and Pray as one screen with internal step state.
@@ -43,121 +24,91 @@ import { space } from "@/theme";
  * the body cross-fades (`useStepTransition`), calmly — each page's title,
  * then its content a beat later — since this is for reading.
  *
- * Everything shown is the route's day, from the store: its reading, its
- * passage in the user's translation, its questions — one a page, on Reflect —
- * its prayer. Answers are
- * typed into drafts and written to the store whenever the user moves — to
- * another step, out of the study, or on Finish — so they're there on coming
- * back. Moving forward records the step just done. Only Finish completes the
- * day: the prayer's marked prayed and the store completes the day — which
- * records it, opens the next day, and completes the plan after its last —
- * then Day Complete *replaces* this screen inside the session.
- *
- * The first screen of the Daily Study session modal (`src/app/study`).
- * Closing — the header's X, or Previous on the first step — dismisses the
- * whole session.
+ * The first screen of the Daily Study session modal (`src/app/study`). What
+ * it shows and what moving does: `useStudySession`.
  */
 export function StudyScreen() {
-  const router = useRouter();
-  const session = useModalSession();
-  const { planId, dayNumber, plan, day } = useStudyRoute();
-  const dayId = day?.id ?? "";
-  const scripture = useAppSelector((state) => getDayScripture(state, dayId));
-  const reflections = useAppSelector((state) => getReflectionsForDay(state, dayId));
-  const prayer = useAppSelector((state) => getPrayerForDay(state, dayId));
-  const actions = useStoreActions();
+  const view = useStudySession();
+  // Whether the reading sheet is up: the screen's own, passing state.
+  const [readingOpen, setReadingOpen] = useState(false);
   const reduceMotion = useReduceMotion();
-
-  const [position, setPosition] = useState<StudyPosition>({ step: 0, page: 0 });
-  const [drafts, setDrafts] = useState<ReflectionDrafts>({});
-  const pages = getStudyPages(reflections.length);
   // Pages cross-fade like steps: the transition follows one running page
   // number. Calm, for reading — each page's title, then the rest a beat later.
   const {
     renderedStep: renderedPage,
     bodyStyle,
     followStyle,
-  } = useStepTransition(toPageIndex(position, pages), { profile: "drift", reduceMotion });
+  } = useStepTransition(toPageIndex(view.position, view.pages), { profile: "drift", reduceMotion });
 
-  if (!plan || !day) return null;
-  const studyDay = day;
-
-  const answerFor = (reflectionId: Id) =>
-    new Map(Object.entries(drafts)).get(reflectionId) ??
-    reflections.find((reflection) => reflection.id === reflectionId)?.answer ??
-    "";
-  const changeAnswer = (reflectionId: Id, answer: string) =>
-    setDrafts((current) => ({ ...current, [reflectionId]: answer }));
-
-  /** Writes what's been typed to the store — every time the user moves. */
-  function commitAnswers() {
-    for (const write of getReflectionWrites(reflections, drafts)) {
-      if (write.kind === "clear") actions.clearReflection(write.reflectionId);
-      else if (write.kind === "save") actions.saveReflection(write.reflectionId, write.answer);
-      else actions.updateReflection(write.reflectionId, write.answer);
-    }
+  if (!view.found) {
+    return <StudyNotFound testID="study-not-found" />;
   }
 
-  function applyNavAction(action: StudyNavAction) {
-    commitAnswers();
-    if (action.type === "exit") session.exit();
-    else if (action.type === "finish") {
-      if (prayer) actions.markPrayed(prayer.id);
-      actions.completePlanDay(studyDay.id);
-      router.replace(dayCompleteHref(planId, dayNumber));
-    } else {
-      const done = STUDY_STEPS.at(position.step);
-      if (action.to.step > position.step && done) actions.updatePlanDay(studyDay.id, done.key);
-      setPosition(action.to);
-    }
-  }
-
-  const rendered = fromPageIndex(renderedPage, pages);
+  const rendered = fromPageIndex(renderedPage, view.pages);
   const bodyStep = STUDY_STEPS.at(rendered.step) ?? STUDY_STEPS[0];
+  const { reading } = view;
+  const paper = getReadingTheme(reading.paper);
 
   return (
-    <Screen testID="study-screen" padded style={styles.clearBottomNav}>
-      <StudyHeader
-        testID="study"
-        day={dayNumber}
-        totalDays={plan.lengthDays}
-        step={position.step}
-        pages={pages}
-        page={position.page}
-        onClose={() => applyNavAction({ type: "exit" })}
-        // Mocked action only — text-size controls aren't built yet.
-        onTextSize={() => undefined}
-      />
+    <>
+      {/* The page, on its paper. The sheet stays in the app's own colours. */}
+      <ThemeScope theme={paper}>
+        <Screen testID="study-screen" padded style={styles.clearBottomNav}>
+          <StudyHeader
+            testID="study"
+            day={view.dayNumber}
+            totalDays={view.totalDays}
+            step={view.position.step}
+            pages={view.pages}
+            page={view.position.page}
+            onClose={view.close}
+            onTextSize={() => setReadingOpen(true)}
+          />
 
-      <Animated.View style={[styles.body, bodyStyle]}>
-        {/* A day's reading runs longer than the screen; the keyboard lifts the answer boxes. */}
-        <ScrollView
-          contentContainerStyle={styles.bodyContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          automaticallyAdjustKeyboardInsets
-        >
-          <StudyDriftProvider revealKey={renderedPage} still={reduceMotion}>
-            <StudyStepBody
-              stepKey={bodyStep.key}
-              page={rendered.page}
-              content={{ day, scripture, reflections, prayer }}
-              answerFor={answerFor}
-              onAnswerChange={changeAnswer}
-              followStyle={followStyle}
-            />
-          </StudyDriftProvider>
-        </ScrollView>
-      </Animated.View>
+          <Animated.View style={[styles.body, bodyStyle]}>
+            {/* A day's reading runs longer than the screen; the keyboard lifts the answer boxes. */}
+            <ScrollView
+              contentContainerStyle={styles.bodyContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              automaticallyAdjustKeyboardInsets
+            >
+              {/* The reading's own size; the header and nav stay as they are. */}
+              <TextSizeScope offset={reading.textOffset}>
+                <StudyDriftProvider revealKey={renderedPage} still={reduceMotion}>
+                  <StudyStepBody
+                    stepKey={bodyStep.key}
+                    page={rendered.page}
+                    content={view.content}
+                    answerFor={view.answerFor}
+                    onAnswerChange={view.changeAnswer}
+                    followStyle={followStyle}
+                  />
+                </StudyDriftProvider>
+              </TextSizeScope>
+            </ScrollView>
+          </Animated.View>
 
-      <StudyNav
-        testID="study-nav"
-        step={position.step}
-        {...(isLastStudyPage(position, pages) && { finishLabel: "Finish" })}
-        onPrevious={() => applyNavAction(getPreviousStudyAction(position, pages))}
-        onNext={() => applyNavAction(getNextStudyAction(position, pages))}
+          <StudyNav
+            testID="study-nav"
+            step={view.position.step}
+            {...(view.isLastPage && { finishLabel: "Finish" })}
+            onPrevious={view.previous}
+            onNext={view.next}
+          />
+        </Screen>
+      </ThemeScope>
+      <ReadingSheet
+        visible={readingOpen}
+        onClose={() => setReadingOpen(false)}
+        textOffset={reading.textOffset}
+        onTextOffsetChange={reading.setTextOffset}
+        paper={reading.paper}
+        onPaperChange={reading.setPaper}
       />
-    </Screen>
+      {/* Light status bar text over a dark paper. */}
+      {paper.name === "dark" && <StatusBar animated barStyle="light-content" />}
+    </>
   );
 }
 

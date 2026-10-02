@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 import { PAGE_INSET } from "@/ui/organisms/Screen";
-import { radius, space, useTheme } from "@/theme";
+import { motion, radius, space, useTheme } from "@/theme";
 import { getRailScrollOffset, getRailTabX, type DayTileLook } from "../logic/day-rail";
 import { DAY_TILE_HEIGHT, DAY_TILE_WIDTH, DayTile } from "./DayTile";
 
@@ -13,7 +13,7 @@ const DAY_GAP = space[6];
 const PITCH = DAY_TILE_WIDTH + DAY_GAP;
 const TAB_BORDER = 2;
 /** The tab's move to a newly picked day: a quick spring, settling with the least give. */
-const TAB_SPRING = { damping: 18, stiffness: 220, mass: 0.8 };
+const TAB_SPRING = motion.slide;
 
 export type DayRailProps = {
   tiles: readonly DayTileLook[];

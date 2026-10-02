@@ -1,6 +1,6 @@
 import type { Reflection } from "@/types/domain";
 
-import { getReflectionWrites } from "@/features/plans/logic/reflection-drafts";
+import { getAnswer, getReflectionWrites } from "@/features/plans/logic/reflection-drafts";
 
 function reflection(id: string, answer: string | null): Reflection {
   return {
@@ -53,5 +53,31 @@ describe("getReflectionWrites", () => {
     });
 
     expect(writes.map((write) => write.reflectionId)).toEqual(["r1", "r2"]);
+  });
+});
+
+describe("getAnswer", () => {
+  it("returns the draft when one was typed", () => {
+    expect(getAnswer("r1", { r1: "Draft" }, [reflection("r1", "Saved")])).toBe("Draft");
+  });
+
+  it("returns an empty draft rather than the saved answer", () => {
+    expect(getAnswer("r1", { r1: "" }, [reflection("r1", "Saved")])).toBe("");
+  });
+
+  it("returns the saved answer when there is no draft", () => {
+    expect(getAnswer("r1", {}, [reflection("r1", "Saved")])).toBe("Saved");
+  });
+
+  it("returns an empty string when unanswered and untyped", () => {
+    expect(getAnswer("r1", {}, [reflection("r1", null)])).toBe("");
+  });
+
+  it("returns an empty string for an unknown reflection", () => {
+    expect(getAnswer("nope", {}, [reflection("r1", "Saved")])).toBe("");
+  });
+
+  it("ignores drafts for other questions", () => {
+    expect(getAnswer("r1", { r2: "Other" }, [reflection("r1", "Saved")])).toBe("Saved");
   });
 });

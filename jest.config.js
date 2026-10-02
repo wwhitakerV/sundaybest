@@ -11,7 +11,7 @@ const path = require("path");
  * threshold becomes live the moment the first file lands there — it is never
  * permanently relaxed, and nothing has to be remembered later.
  */
-const STRICT_COVERAGE_PATHS = ["src/utils", "src/core/security"];
+const STRICT_COVERAGE_PATHS = ["src/utils", "src/core/security", "src/entities"];
 const STRICT_THRESHOLD = { lines: 95, branches: 95, functions: 95, statements: 95 };
 
 function containsSourceFile(dir) {

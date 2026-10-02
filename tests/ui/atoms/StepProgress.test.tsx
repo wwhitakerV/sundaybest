@@ -39,7 +39,7 @@ describe("StepProgress", () => {
     render(<StepProgress testID="a-step-progress" steps={4} activeIndex={0} />);
 
     expect(screen.getByTestId("a-step-progress-segment-3")).toHaveStyle({
-      backgroundColor: "#F7F1F1",
+      backgroundColor: "#EFF0F3",
     });
   });
 
@@ -68,7 +68,7 @@ describe("StepProgress", () => {
       );
 
       expect(screen.getByTestId("a-step-progress-segment-2")).toHaveStyle({
-        backgroundColor: "#F7F1F1",
+        backgroundColor: "#EFF0F3",
       });
       expect(screen.getByTestId("a-step-progress-segment-2-fill")).toHaveStyle({
         width: "50%",

@@ -3,6 +3,7 @@ import { Text, type StyleProp, type TextProps, type TextStyle } from "react-nati
 
 import { useTheme } from "@/theme";
 import { scaleTypeStyle, toneColor, type Tone } from "./tone";
+import { useTextOffset } from "./TextSizeScope";
 import { useTextScale } from "./use-text-scale";
 
 /** What a caller may style: where the text sits, never its face, size, weight, leading, tracking or colour. */
@@ -40,11 +41,12 @@ export function ThemedText({
 }: TypographyProps & { type: TextStyle }) {
   const theme = useTheme();
   const scale = useTextScale();
+  const offset = useTextOffset();
 
   return (
     <Text
       {...props}
-      style={[scaleTypeStyle(type, scale), { color: toneColor(theme.colors, tone) }, style]}
+      style={[scaleTypeStyle(type, scale, offset), { color: toneColor(theme.colors, tone) }, style]}
     />
   );
 }

@@ -4,12 +4,10 @@ import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { BookOpen } from "lucide-react-native";
 
 import { CompactButton } from "@/ui/atoms/CompactButton";
-import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
+import { HeroBackdrop, getHeroPalette } from "@/entities/plan";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { space, useTheme } from "@/theme";
-import { getBackdropStops } from "@/utils/color/getBackdropStops";
-import { prefersLightInk } from "@/utils/color/prefersLightInk";
 import { BAR_ROW_HEIGHT, BAR_THUMB_RADIUS, BAR_THUMB_WIDTH } from "../logic/hero-collapse";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
@@ -54,8 +52,7 @@ export function ActivePlanBar({ plan, topInset, motion, href, onContinue }: Acti
   const theme = useTheme();
   const { title, day, thumbnailUrl, colors } = plan;
   const { style, thumbStyle, touchable } = motion;
-  const colour = colors.at(0) ?? theme.colors.featureBackdrop;
-  const light = prefersLightInk(colour);
+  const { colour, light } = getHeroPalette(colors, theme.colors.featureBackdrop);
 
   return (
     <Animated.View
@@ -63,7 +60,8 @@ export function ActivePlanBar({ plan, topInset, motion, href, onContinue }: Acti
       pointerEvents={touchable ? "auto" : "none"}
       style={[styles.bar, { paddingTop: topInset, backgroundColor: colour }, style]}
     >
-      <GradientBackdrop stops={getBackdropStops(colors, theme.colors.featureBackdrop)} />
+      {/* Gradient only: unlike the hero, the bar has no wash of the still. */}
+      <HeroBackdrop colors={colors} thumbnailUrl={null} />
       <View style={styles.row}>
         <Link href={href} asChild>
           <Pressable

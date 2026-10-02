@@ -1,121 +1,108 @@
 import { ScrollView, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import Animated from "react-native-reanimated";
+import { ListChecks, X } from "lucide-react-native";
 
+import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { Screen } from "@/ui/organisms/Screen";
 import { Button } from "@/ui/atoms/Button";
-import {
-  getAttemptAnswers,
-  getQuestionResult,
-  getQuizAttempt,
-  getQuizForDay,
-  getQuizQuestions,
-  getQuizScore,
-  getQuizStatus,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { IconRing } from "@/ui/atoms/IconRing";
+import { ProgressRing } from "@/ui/atoms/ProgressRing";
 import { QuickCheckFeedback } from "../components/QuickCheckFeedback";
 import { QuickCheckHeader } from "../components/QuickCheckHeader";
-import { QuickCheckIntro } from "../components/QuickCheckIntro";
 import { QuickCheckQuestion } from "../components/QuickCheckQuestion";
-import { QuickCheckScore } from "../components/QuickCheckScore";
-import { useStudyRoute } from "../hooks/use-study-route";
+import { QuickCheckResults } from "../components/QuickCheckResults";
+import { StudyNotFound } from "../components/StudyNotFound";
+import { useQuickCheckSession } from "../hooks/use-quick-check-session";
+import { describeQuickCheckIntro, getScoreHeadline } from "../logic/quick-check";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
-import { getQuickCheckAction, type QuickCheckAction } from "../logic/quick-check";
-import { dayCompleteHref } from "../logic/routes";
 
 /**
- * A day's Quick Check, from the store: its latest attempt, begun or resumed
- * on the question it's up to. One screen whose body cross-fades question to
- * question (`useStepTransition`), as the study does; the header and the
- * action stay put.
+ * A day's Quick Check. Its start and its results are milestone pages
+ * (`MilestoneScreen`): the start just the day's quiz and Start, with a close
+ * and no title; the results its score, how it went, and each question. In
+ * between, one screen whose body cross-fades question to question
+ * (`useStepTransition`), as the study does; the header and the action stay
+ * put, and once checked the verdict rises from the bottom with the way on.
  *
- * Picking, checking, moving on, and finishing are the store's actions — and
- * the store decides what's allowed (one answer a question, no finishing with
- * one unanswered) and whether an answer is right (`getQuestionResult`). Once
- * checked, the verdict rises from the bottom with the way on. The finished
- * attempt shows its score, and shows it again whenever it's reopened.
- *
- * Pushed on top of Day Complete inside the Daily Study session. Close and
- * Done both return there.
+ * What it shows and what each action does: `useQuickCheckSession`.
  */
 export function QuickCheckScreen() {
-  const router = useRouter();
-  const actions = useStoreActions();
-  const { planId, dayNumber, day } = useStudyRoute();
-  const quiz = useAppSelector((state) => (day ? getQuizForDay(state, day.id) : null));
-  const quizId = quiz?.id ?? "";
-  const questions = useAppSelector((state) => getQuizQuestions(state, quizId));
-  const attempt = useAppSelector((state) => getQuizAttempt(state, quizId));
-  const status = useAppSelector((state) => getQuizStatus(state, quizId));
-  const attemptId = attempt?.id ?? "";
-  const answers = useAppSelector((state) => getAttemptAnswers(state, attemptId));
-  const score = useAppSelector((state) => getQuizScore(state, attemptId));
-  const results = useAppSelector((state) =>
-    questions.map((question) => ({
-      question,
-      result: getQuestionResult(state, attemptId, question.id),
-    })),
-  );
-
-  // Pages: the start (0), each question (1…n), then the score (n + 1).
-  const currentIndex = questions.findIndex(
-    (question) => question.id === attempt?.currentQuestionId,
-  );
-  const page =
-    status === "notStarted" ? 0 : status === "completed" ? questions.length + 1 : currentIndex + 1;
+  const view = useQuickCheckSession();
   const reduceMotion = useReduceMotion();
   // Calm, like the study it follows.
-  const { renderedStep: renderedPage, bodyStyle } = useStepTransition(page, {
+  const { renderedStep: renderedPage, bodyStyle } = useStepTransition(view.page, {
     profile: "calm",
     reduceMotion,
   });
 
-  if (!quiz || questions.length === 0) return null;
+  if (!view.found) return <StudyNotFound testID="quick-check-not-found" />;
+  const { questions, attempt, status, currentIndex, current, currentResult, action, score } = view;
+  const actionButton = (
+    <Button
+      testID={action.testID}
+      label={action.label}
+      disabled={!action.enabled}
+      onPress={() => view.act(action)}
+    />
+  );
 
-  const current = questions.at(currentIndex);
-  const currentResult = results.at(currentIndex)?.result ?? "unanswered";
-  const action = getQuickCheckAction({
-    status,
-    result: currentResult,
-    hasSelection: Boolean(attempt?.selectedChoiceId),
-    isLastQuestion: currentIndex === questions.length - 1,
-  });
-
-  function backToDayComplete() {
-    router.dismissTo(dayCompleteHref(planId, dayNumber));
+  if (status === "notStarted") {
+    return (
+      <MilestoneScreen
+        testID="quick-check-screen"
+        header={
+          <HeaderIconButton
+            testID="quick-check-close-button"
+            icon={X}
+            accessibilityLabel="Close"
+            onPress={view.close}
+          />
+        }
+        mark={<IconRing testID="quick-check-intro" icon={ListChecks} />}
+        title={`Day ${view.dayNumber} Quiz`}
+        subtitle={describeQuickCheckIntro(questions.length)}
+        footer={actionButton}
+      />
+    );
   }
 
-  function act({ kind }: QuickCheckAction) {
-    if (kind === "start") actions.startQuizAttempt(quizId);
-    else if (kind === "check") actions.submitQuizAnswer(attemptId);
-    else if (kind === "next") actions.moveToNextQuestion(attemptId);
-    else if (kind === "finish") actions.completeQuizAttempt(attemptId);
-    else backToDayComplete();
+  if (status === "completed" && score) {
+    return (
+      <MilestoneScreen
+        testID="quick-check-screen"
+        mark={
+          <ProgressRing
+            testID="quick-check-score-ring"
+            percent={score.percentage}
+            label={`${score.correct}/${score.total}`}
+          />
+        }
+        title={getScoreHeadline(score)}
+        subtitle={`${score.percentage}% right`}
+        footer={actionButton}
+      >
+        <QuickCheckResults results={view.results} />
+      </MilestoneScreen>
+    );
   }
 
-  const shown = questions.at(renderedPage - 1);
-  const shownAnswer = shown && answers.find((answer) => answer.questionId === shown.id);
+  // A question's page — none while the start is still fading out.
+  const shown = renderedPage > 0 ? questions.at(renderedPage - 1) : undefined;
+  const shownAnswer = shown && view.answers.find((answer) => answer.questionId === shown.id);
 
   return (
     <Screen testID="quick-check-screen" padded>
-      {status !== "completed" && (
-        <QuickCheckHeader
-          testID="quick-check"
-          counter={Math.max(1, currentIndex + 1)}
-          total={questions.length}
-          progressIndex={Math.max(0, currentIndex)}
-          onClose={backToDayComplete}
-        />
-      )}
+      <QuickCheckHeader
+        testID="quick-check"
+        total={questions.length}
+        progress={{ counter: currentIndex + 1, index: currentIndex }}
+        onClose={view.close}
+      />
 
       <Animated.View style={[styles.body, bodyStyle]}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          {renderedPage === 0 && (
-            <QuickCheckIntro title={quiz.title} questionCount={questions.length} />
-          )}
           {shown && (
             <QuickCheckQuestion
               question={shown}
@@ -123,29 +110,21 @@ export function QuickCheckScreen() {
                 shown.id === attempt?.currentQuestionId ? (attempt.selectedChoiceId ?? null) : null
               }
               answeredChoiceId={shownAnswer?.choiceId ?? null}
-              onPick={(choiceId) => actions.selectQuizAnswer(attemptId, choiceId)}
+              onPick={view.pick}
             />
-          )}
-          {renderedPage > questions.length && score && (
-            <QuickCheckScore score={score} results={results} />
           )}
         </ScrollView>
       </Animated.View>
 
-      {current && currentResult !== "unanswered" && status === "inProgress" ? (
+      {current && currentResult !== "unanswered" ? (
         <QuickCheckFeedback
           result={currentResult}
           question={current}
           action={action}
-          onAction={() => act(action)}
+          onAction={() => view.act(action)}
         />
       ) : (
-        <Button
-          testID={action.testID}
-          label={action.label}
-          disabled={!action.enabled}
-          onPress={() => act(action)}
-        />
+        actionButton
       )}
     </Screen>
   );

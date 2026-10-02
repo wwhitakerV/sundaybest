@@ -25,6 +25,8 @@ export const MOCK_SETTINGS: UserSettings = {
   bibleTranslation: "NIV",
   defaultPlanLength: 6,
   quickCheckByDefault: true,
+  readingTextOffset: 0,
+  readingPaper: "white",
   hapticsEnabled: true,
 };
 

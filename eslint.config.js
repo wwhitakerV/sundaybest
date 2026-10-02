@@ -22,6 +22,20 @@ const FEATURE_ENTRY_POINT_ONLY = {
     "Import a feature only through its public entry point, e.g. @/features/home. Deep imports couple you to another slice's internals.",
 };
 
+/** ThemedText is the typography family's private base (ADR 0015). */
+const THEMED_TEXT_PRIVATE = {
+  group: ["@/ui/typography/ThemedText"],
+  message:
+    "ThemedText is the typography components' private base. Use SFProBody, MonoLabel, … instead.",
+};
+
+/** The same for an entity: only its index.ts is public (ADR 0017). */
+const ENTITY_ENTRY_POINT_ONLY = {
+  group: ["@/entities/*/*", "@/entities/*/**"],
+  message:
+    "Import an entity only through its public entry point, e.g. @/entities/plan. Deep imports couple you to its internals.",
+};
+
 /**
  * SDKs that touch the keychain, the network, device integrity, or a telemetry
  * backend. Importable inside src/core only. Listed ahead of installing them so a
@@ -67,6 +81,10 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     // opening a web page: the one way content leaves for another site, so the
     // allowlist that guards it lives in src/core/links
     "expo-web-browser",
+    // haptics and notifications: device side effects, wrapped in
+    // src/core/haptics and src/core/notifications
+    "expo-haptics",
+    "expo-notifications",
   ],
   message:
     "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",
@@ -100,6 +118,35 @@ const RAW_TYPOGRAPHY_ALLOWED = [
   "src/ui/Tag.tsx",
 ];
 
+/**
+ * Colour literals — hex (#fff, #1F5A6E, #1F5A6E80) and rgb()/rgba() — belong in
+ * src/theme only: everything else reads a token from useTheme().
+ */
+const COLOUR_LITERALS = [
+  {
+    selector: "Literal[value=/^\\s*#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\s*$/]",
+    message: "Colours come from the theme (useTheme().colors), not a hex literal.",
+  },
+  {
+    selector: "Literal[value=/^\\s*(?:rgb|hsl)a?\\(/i]",
+    message: "Colours come from the theme (useTheme().colors), not an rgb()/hsl() literal.",
+  },
+  {
+    selector: "TemplateElement[value.raw=/(?:^|[^\\w])(?:#[0-9a-fA-F]{3,8}\\b|(?:rgb|hsl)a?\\()/i]",
+    message: "Colours come from the theme (useTheme().colors), not a literal in a template string.",
+  },
+];
+
+/** Where colour literals may live: the theme, and the mock data's sermon colours. */
+const COLOUR_EXEMPT = ["src/theme/**", "src/core/mock-data/**"];
+
+/** Files allowed to hold data, not logic, so they may run past the file-length limit. */
+const LONG_DATA_FILES = [
+  "src/theme/tokens.ts",
+  "src/core/mock-data/**",
+  "src/core/plan-builder/day-templates.ts",
+];
+
 /** Style keys that space things out, and the ones that round corners. */
 const SPACING_PROP =
   "/^(gap|rowGap|columnGap|padding|margin)(Top|Bottom|Left|Right|Horizontal|Vertical|Start|End)?$/";
@@ -108,6 +155,17 @@ const SPACING_MESSAGE =
   "Spacing comes from the spacing scale (space[16]) or a named constant with its reason, not a raw number (ADR 0016).";
 
 /** Text is drawn by src/ui/typography's components, never react-native's own. */
+/**
+ * react-native's own side-effect APIs — the share sheet, opening URLs and
+ * apps, vibration — belong in src/core with the SDKs above.
+ */
+const RN_SIDE_EFFECTS_CORE_ONLY = {
+  name: "react-native",
+  importNames: ["Share", "Linking", "Vibration"],
+  message:
+    "Share, Linking, and Vibration are side effects: wrap them in src/core (see @/core/links, @/core/haptics) and import that.",
+};
+
 const RAW_TEXT_OUTSIDE_TYPOGRAPHY = {
   name: "react-native",
   importNames: ["Text", "TextInput"],
@@ -199,10 +257,12 @@ module.exports = defineConfig([
     },
   },
 
-  // 4. Architecture boundaries. See docs/adr/0001-feature-sliced-architecture.md.
+  // 4. Architecture boundaries. See docs/adr/0001-feature-sliced-architecture.md
+  //    and docs/adr/0017-entities-layer.md.
   //
-  //    app -> features -> ui, core, hooks, utils, theme, types
-  //    ui / hooks / utils never reach back into features, core, or app
+  //    app -> features -> entities, ui, core, hooks, utils, theme, types
+  //    entities -> entities, ui, hooks, utils, theme, types
+  //    ui / hooks / utils never reach back into entities, features, core, or app
   {
     files: ["src/**/*.{ts,tsx}"],
     plugins: { boundaries },
@@ -223,6 +283,7 @@ module.exports = defineConfig([
       "boundaries/elements": [
         { type: "app", pattern: "src/app" },
         { type: "feature", pattern: "src/features/*", capture: ["feature"] },
+        { type: "entities", pattern: "src/entities/*", capture: ["entity"] },
         { type: "core", pattern: "src/core" },
         { type: "ui", pattern: "src/ui" },
         { type: "hooks", pattern: "src/hooks" },
@@ -248,6 +309,7 @@ module.exports = defineConfig([
                 to: [
                   { element: { type: "app" } },
                   { element: { type: "feature" } },
+                  { element: { type: "entities" } },
                   { element: { type: "core" } },
                   { element: { type: "ui" } },
                   { element: { type: "hooks" } },
@@ -264,7 +326,24 @@ module.exports = defineConfig([
               allow: {
                 to: [
                   { element: { type: "feature" } },
+                  { element: { type: "entities" } },
                   { element: { type: "core" } },
+                  { element: { type: "ui" } },
+                  { element: { type: "hooks" } },
+                  { element: { type: "utils" } },
+                  { element: { type: "theme" } },
+                  { element: { type: "types" } },
+                ],
+              },
+            },
+            // Shared SundayBest concepts (ADR 0017): pure, props-in. They lean on
+            // the generic layers and on each other, never on core, features, or
+            // app. Cross-entity imports go through each entity's index.ts.
+            {
+              from: { element: { type: "entities" } },
+              allow: {
+                to: [
+                  { element: { type: "entities" } },
                   { element: { type: "ui" } },
                   { element: { type: "hooks" } },
                   { element: { type: "utils" } },
@@ -352,7 +431,10 @@ module.exports = defineConfig([
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ["error", { patterns: [FEATURE_ENTRY_POINT_ONLY] }],
+      "no-restricted-imports": [
+        "error",
+        { patterns: [FEATURE_ENTRY_POINT_ONLY, ENTITY_ENTRY_POINT_ONLY] },
+      ],
     },
   },
 
@@ -365,7 +447,10 @@ module.exports = defineConfig([
     rules: {
       "no-restricted-imports": [
         "error",
-        { patterns: [FEATURE_ENTRY_POINT_ONLY, SIDE_EFFECT_SDKS_CORE_ONLY] },
+        {
+          patterns: [FEATURE_ENTRY_POINT_ONLY, ENTITY_ENTRY_POINT_ONLY, SIDE_EFFECT_SDKS_CORE_ONLY],
+          paths: [RN_SIDE_EFFECTS_CORE_ONLY],
+        },
       ],
     },
   },
@@ -381,18 +466,16 @@ module.exports = defineConfig([
         {
           patterns: [
             FEATURE_ENTRY_POINT_ONLY,
+            ENTITY_ENTRY_POINT_ONLY,
             SIDE_EFFECT_SDKS_CORE_ONLY,
-            {
-              group: ["@/ui/typography/ThemedText"],
-              message:
-                "ThemedText is the typography components' private base. Use SFProBody, MonoLabel, … instead.",
-            },
+            THEMED_TEXT_PRIVATE,
           ],
-          paths: [RAW_TEXT_OUTSIDE_TYPOGRAPHY],
+          paths: [RAW_TEXT_OUTSIDE_TYPOGRAPHY, RN_SIDE_EFFECTS_CORE_ONLY],
         },
       ],
       "no-restricted-syntax": [
         "error",
+        ...COLOUR_LITERALS,
         {
           selector: "MemberExpression[property.name='typography']",
           message:
@@ -425,6 +508,70 @@ module.exports = defineConfig([
     },
   },
 
+  // 5c-ter. Inside an entity's logic/ or ui/, a relative import never climbs
+  //         out of the entity: "../../plan/logic/x" is a deep import into
+  //         another entity that the alias pattern can't see. Restates 5c-bis's
+  //         patterns, because a later no-restricted-imports replaces an earlier
+  //         one. Entities also never import each other in a cycle (ADR 0017).
+  {
+    files: ["src/entities/*/*/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            FEATURE_ENTRY_POINT_ONLY,
+            ENTITY_ENTRY_POINT_ONLY,
+            SIDE_EFFECT_SDKS_CORE_ONLY,
+            THEMED_TEXT_PRIVATE,
+            {
+              group: ["../../*", "../../**"],
+              message:
+                "This climbs out of the entity. Import another entity through its index (@/entities/plan).",
+            },
+          ],
+          paths: [RAW_TEXT_OUTSIDE_TYPOGRAPHY, RN_SIDE_EFFECTS_CORE_ONLY],
+        },
+      ],
+    },
+  },
+  {
+    files: ["src/entities/**/*.{ts,tsx}"],
+    rules: { "import/no-cycle": "error" },
+  },
+
+  // 5c-quater. src/core is outside 5c-bis (it can't use src/ui), but holds no
+  //            colour literals either — apart from the mock data.
+  {
+    files: ["src/core/**/*.{ts,tsx}"],
+    ignores: COLOUR_EXEMPT,
+    rules: { "no-restricted-syntax": ["error", ...COLOUR_LITERALS] },
+  },
+  // …and the rest of what 5c-bis skips (Fun, Exams, the typography components,
+  // the ui pieces only they use) holds none either.
+  {
+    files: RAW_TYPOGRAPHY_ALLOWED.filter(
+      (glob) => !glob.startsWith("src/theme") && !glob.startsWith("src/core"),
+    ),
+    rules: { "no-restricted-syntax": ["error", ...COLOUR_LITERALS] },
+  },
+
+  // 5c-quinquies. A file runs to 250 lines at most; a long render becomes named
+  //               components, not one long block (see .claude/rules/ui.md).
+  //               Data files are exempt, and so are Fun and Exams for now.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      ...LONG_DATA_FILES,
+      "src/features/fun/**",
+      "src/features/exams/**",
+      "src/app/(tabs)/fun/**",
+      "src/app/exam/**",
+      "src/app/exams/**",
+    ],
+    rules: { "max-lines": ["error", { max: 250 }] },
+  },
+
   // 5d. src/utils stays pure: no React, no I/O, no reaching into the app.
   {
     files: ["src/utils/**/*.{ts,tsx}"],
@@ -434,6 +581,7 @@ module.exports = defineConfig([
         {
           patterns: [
             FEATURE_ENTRY_POINT_ONLY,
+            ENTITY_ENTRY_POINT_ONLY,
             SIDE_EFFECT_SDKS_CORE_ONLY,
             {
               group: [

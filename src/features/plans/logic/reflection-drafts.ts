@@ -1,12 +1,8 @@
+import type { ReflectionWrite } from "@/core/store";
 import type { Id, Reflection } from "@/types/domain";
 
 /** What the user has typed for each question this visit, by reflection ID. */
 export type ReflectionDrafts = Readonly<Record<Id, string>>;
-
-/** One change to write to the store: a first answer, a change to one, or one taken back. */
-export type ReflectionWrite =
-  | { kind: "save" | "update"; reflectionId: Id; answer: string }
-  | { kind: "clear"; reflectionId: Id };
 
 /**
  * What to write to the store for a day's drafts: a first answer where there
@@ -32,4 +28,15 @@ export function getReflectionWrites(
       },
     ];
   });
+}
+
+/** What's in a question's answer box: what was typed this visit, else the saved answer, else nothing. */
+export function getAnswer(
+  reflectionId: Id,
+  drafts: ReflectionDrafts,
+  reflections: readonly Reflection[],
+): string {
+  const typed = new Map(Object.entries(drafts)).get(reflectionId);
+  if (typed !== undefined) return typed;
+  return reflections.find((reflection) => reflection.id === reflectionId)?.answer ?? "";
 }

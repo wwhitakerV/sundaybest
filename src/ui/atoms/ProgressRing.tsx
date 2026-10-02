@@ -9,10 +9,12 @@ import Animated, {
 import Svg, { Circle } from "react-native-svg";
 
 import { useTheme } from "@/theme";
+import { HERO_RING } from "./hero-ring";
 import { DisplayTitle } from "@/ui/typography/DisplayTitle";
 
-const SIZE = 160;
-const STROKE = 14;
+/** Its size and band: every hero ring's. */
+const SIZE = HERO_RING.size;
+const STROKE = HERO_RING.band;
 const RADIUS = (SIZE - STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 

@@ -8,12 +8,13 @@
  * Anything derived — progress, percentages, streaks, scores, weekly counts —
  * is a selector, never a stored value.
  */
-export type { AppAction, GeneratedPlanContent, PlanChanges } from "./actions";
+export type { AppAction, GeneratedPlanContent, PlanChanges, ReflectionWrite } from "./actions";
 export { AppStoreProvider, useAppSelector, useToday } from "./AppStoreProvider";
 export { useStoreActions, type StoreActions } from "./use-store-actions";
 export { appReducer } from "./reducer";
 export { INITIAL_STATE, type AppState } from "./state";
 export { GENERATION_STAGES } from "./transitions";
+export { READING_TEXT_SIZE, isReadingTextOffset } from "./reducers/settings";
 
 export {
   getDayMinutes,
@@ -57,6 +58,7 @@ export {
 export {
   getCompletedDays,
   getPlanProgress,
+  getPlanSummary,
   getProgressForDateRange,
   getProgressTotals,
   getUpNext,
@@ -67,6 +69,7 @@ export {
   type PlanProgress,
   type ProgressTotals,
   type UpNext,
+  type PlanSummary,
   type Streak,
 } from "./selectors/progress";
 export {
@@ -79,8 +82,11 @@ export {
   getQuizScore,
   getQuizStatus,
   getQuizzesForPlan,
+  getQuickCheckStanding,
   isAnswerCorrect,
+  isChoiceCorrect,
   type QuestionResult,
+  type QuickCheckStanding,
   type QuizScore,
   type QuizStatus,
 } from "./selectors/quizzes";

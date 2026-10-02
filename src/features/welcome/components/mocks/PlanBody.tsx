@@ -3,7 +3,8 @@ import { Check, Link2 } from "lucide-react-native";
 
 import { radius, space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
-import { PASTE_LINK, getLiftElapsedMs } from "../../logic/scenes";
+import { PASTE_LINK } from "../../logic/scenes";
+import { getLiftElapsedMs } from "../../logic/lift-timing";
 import { getLiftsFor } from "../../logic/story";
 import { LiftAnchor } from "../lift/LiftAnchor";
 import { getLiftId } from "../../logic/lift";

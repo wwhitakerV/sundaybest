@@ -17,18 +17,15 @@ import { useLiftAnchors } from "../hooks/use-lift-anchors";
 import { useSceneClock } from "../hooks/use-scene-clock";
 import { useStageSlide } from "../hooks/use-stage-slide";
 import { getLiftLayout, getLiftId } from "../logic/lift";
-import { NAVIGATION_MS, getActiveLift } from "../logic/scenes";
+import { NAVIGATION_MS, getActiveLift } from "../logic/lift-timing";
 import {
   // STORY_LOOP_MS,
-  getCaption,
   getLiftsFor,
-  getNavigation,
-  getScreen,
-  getScreenView,
   isStageShown,
   type StoryPhase,
   type StoryScreen,
 } from "../logic/story";
+import { getCaption, getNavigation, getScreen, getScreenView } from "../logic/story-screens";
 import {
   LIFT_SIDE_PADDING,
   MIN_STAGE_HEIGHT,

@@ -9,8 +9,6 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-import { sparkBuzz } from "@/core/haptics/haptics";
-
 const ENTRANCE_START_TRANSLATE_Y = 32;
 const ENTRANCE_START_SCALE = 0.97;
 
@@ -27,8 +25,8 @@ const SPARK_VISIBLE_MS = 850;
 /**
  * StudyNav's one-time entrance, run on mount: a short delay, then a fade in
  * while it rises past its resting place and springs back, scaling the same
- * way. The spark burst and the haptic buzz fire together partway through,
- * and the sparks clear themselves afterwards. Every timer and animation is
+ * way. The spark burst fires partway through, silently — Continue already
+ * tapped — and the sparks clear themselves afterwards. Every timer and animation is
  * cancelled on unmount.
  */
 export function useStudyNavEntrance() {
@@ -76,7 +74,6 @@ export function useStudyNavEntrance() {
 
     sparkTimeoutRef.current = setTimeout(() => {
       setShowSparks(true);
-      sparkBuzz();
 
       sparkCleanupTimeoutRef.current = setTimeout(() => {
         setShowSparks(false);

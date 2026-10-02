@@ -18,7 +18,7 @@ config/       environment and runtime config
 monitoring/   logging, crash and error reporting
 providers/    app-wide React providers (AppProviders)
 fonts/        font loading
-haptics/      tap and vibration feedback
+haptics/      haptic vocabulary (selection, tap, outcomes) and the entrance buzz
 accessibility/ OS accessibility settings (Reduce Motion) and VoiceOver announcements
 links/        opens allowed outside links (Bible passages) in an in-app Safari sheet
 notifications/ notification permission (stubbed until expo-notifications lands)
@@ -26,6 +26,14 @@ mock-data/    connected mock records for every screen, as `AppData` (see below)
 store/        the app store: state, reducer, selectors, provider (see below)
 plan-builder/ builds plans from sermon links, in the frontend for now (see below)
 ```
+
+## `haptics/`
+
+The app's haptic vocabulary over `expo-haptics`: `selectionFeedback`,
+`tapFeedback`, `successFeedback`, `warningFeedback`, and `errorFeedback`. Each swallows a rejection (a simulator, a device
+without a Taptic Engine), so a haptic never breaks what it decorates; iOS's own
+System Haptics switch turns them off. Where each is used is in
+`.claude/rules/ui.md`.
 
 ## `plan-builder/`
 
@@ -48,7 +56,7 @@ The single source of truth for application state — React Context +
 `useReducer`, no library. `AppStoreProvider` (mounted in `AppProviders`) holds
 `AppState`: normalized tables of facts, starting from `mock-data/`. Read it
 with `useAppSelector(selector)`; change it only through `useStoreActions()`
-(`createPlan`, `completePlanDay`, `submitQuizAnswer`, …). Components never
+(`createAndBuildPlan`, `finishPlanDay`, `submitQuizAnswer`, …). Components never
 learn where the data came from, and never change state themselves.
 
 - **Selectors** (`selectors/`) are pure: `(state, …args) => value`. Anything
@@ -63,6 +71,19 @@ learn where the data came from, and never change state themselves.
   completed plan back to being built, finishing a quiz with questions
   unanswered — returns the state untouched, and completing anything twice
   changes nothing, so progress can't be counted twice.
+- **One domain operation, one dispatch.** An operation that changes several
+  things — finishing a day from the study (`finishPlanDay`), saving everything
+  typed (`commitReflections`), making and building a plan
+  (`createAndBuildPlan`), turning the reminder on at a time
+  (`turnOnReminderAt`) — is one named action whose reducer
+  (`reducers/operations.ts`) applies the fine-grained ones in order: one
+  transition to test, and no way to fire half of it.
+- **Re-renders.** Every store change re-renders every mounted reader, related
+  or not. Measured on 2026-10-01 in Jest (slower than a phone): about 13 ms for
+  Home, 18 ms for Plan Detail, and 13 ms for Progress per change. Changes come
+  from taps, never per frame, so the provider is left as it is. If that changes,
+  move to `useSyncExternalStore` with selector equality behind the same
+  `useAppSelector` API.
 
 ## `mock-data/`
 

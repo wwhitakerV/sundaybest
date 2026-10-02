@@ -1,31 +1,16 @@
 import { StatusBar, StyleSheet, View } from "react-native";
-import { useIsFocused, useRouter } from "expo-router";
+import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
-import { formatDotDate } from "@/utils/dates/formatDotDate";
-import { planOverviewHref, studyHref } from "@/features/plans";
-import {
-  getActivePlan,
-  getCurrentPlanDay,
-  getDayMinutes,
-  getPlanProgress,
-  getSamplePlan,
-  getSermonForPlan,
-  getUserPlans,
-  useAppSelector,
-  useToday,
-} from "@/core/store";
 import { ActivePlanBar } from "../components/ActivePlanBar";
 import { ActivePlanHero } from "../components/ActivePlanHero";
 import { ArtworkFlight } from "../components/ArtworkFlight";
+import { useHomeView } from "../hooks/use-home-view";
 import { CONTENT_TOP, useHeroCollapse } from "../hooks/use-hero-collapse";
 import { PlanList } from "../components/PlanList";
 import { PlanRow } from "../components/PlanRow";
 import { StartHereCard } from "../components/StartHereCard";
-import { describeActivePlan } from "../logic/active-plan-hero";
-import { describePlan } from "../logic/describe-plan";
-import { NEW_PLAN_HREF, homePlanOverviewHref } from "../logic/routes";
 import { controlHeight, space } from "@/theme";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
@@ -45,21 +30,7 @@ const HEADER_HEIGHT = controlHeight.hitTarget;
  * if they have some waiting). The tab bar's + also starts a new plan.
  */
 export function HomeScreen() {
-  const router = useRouter();
-  const active = useAppSelector(getActivePlan);
-  const progress = useAppSelector((state) => (active ? getPlanProgress(state, active.id) : null));
-  const sermon = useAppSelector((state) => (active ? getSermonForPlan(state, active.id) : null));
-  const today = useToday();
-  const todayStudy = useAppSelector((state) => {
-    const day = active ? getCurrentPlanDay(state, active.id) : null;
-    return day ? { day, minutes: getDayMinutes(state, day.id) } : null;
-  });
-  const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
-  const sample = useAppSelector(getSamplePlan);
-  const sampleDetail = useAppSelector((state) =>
-    sample ? describePlan(sample, getPlanProgress(state, sample.id)) : "",
-  );
-
+  const view = useHomeView();
   const isFocused = useIsFocused();
   const {
     insetTop,
@@ -74,19 +45,6 @@ export function HomeScreen() {
     flightStyle,
     phase,
   } = useHeroCollapse();
-  const words =
-    progress && todayStudy
-      ? describeActivePlan({
-          currentDay: progress.currentDayNumber,
-          totalDays: progress.totalDays,
-          dayTitle: todayStudy.day.reading.title,
-          minutes: todayStudy.minutes,
-        })
-      : null;
-
-  const openPlan = (planId: string) => router.push(planOverviewHref(planId));
-  const addSermon = () => router.push(NEW_PLAN_HREF);
-
   return (
     <View style={styles.root}>
       {/* Built like an iOS scroll screen: the scroll view runs edge to edge,
@@ -101,8 +59,8 @@ export function HomeScreen() {
           style={[styles.header, headerStyle]}
         >
           <Wordmark />
-          <MonoLabel variant="dayStrip" tone="textMuted" testID="home-tab-date" numberOfLines={1}>
-            {formatDotDate(today)}
+          <MonoLabel variant="headerDate" tone="textMuted" testID="home-tab-date" numberOfLines={1}>
+            {view.date}
           </MonoLabel>
         </Animated.View>
 
@@ -121,40 +79,31 @@ export function HomeScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {active && progress && words ? (
+          {view.active ? (
             <ActivePlanHero
-              plan={{
-                title: active.title,
-                church: sermon?.church ?? null,
-                thumbnailUrl: sermon?.thumbnailUrl ?? null,
-                colors: sermon?.thumbnailColors ?? [],
-                words,
-                currentDay: progress.currentDayNumber,
-                totalDays: progress.totalDays,
-                completedDayCount: progress.completedDayCount,
-              }}
-              href={homePlanOverviewHref(active.id)}
-              onContinue={() => router.push(studyHref(active.id, progress.currentDayNumber))}
+              plan={view.active.hero}
+              href={view.active.href}
+              onContinue={view.continueToday}
               motion={heroMotion}
             />
           ) : (
-            <StartHereCard onAddSermon={addSermon} />
+            <StartHereCard onAddSermon={view.addSermon} />
           )}
 
-          {hasPlans ? (
-            <PlanList onOpenPlan={openPlan} />
+          {view.hasPlans ? (
+            <PlanList onOpenPlan={view.openPlan} />
           ) : (
-            sample && (
+            view.sample && (
               <View style={styles.sample}>
                 <SFProBody tone="textMuted" style={styles.label}>
                   Try a sample
                 </SFProBody>
                 <PlanRow
                   testID="home-tab-sample-plan"
-                  title={sample.title}
-                  detail={sampleDetail}
+                  title={view.sample.title}
+                  detail={view.sample.detail}
                   done={false}
-                  onPress={() => openPlan(sample.id)}
+                  onPress={view.openSample}
                 />
               </View>
             )
@@ -163,21 +112,16 @@ export function HomeScreen() {
       </Screen>
 
       {/* Over everything, from the very top of the phone. */}
-      {active && progress && words && (
+      {view.active && (
         <ActivePlanBar
-          plan={{
-            title: active.title,
-            day: words.day,
-            thumbnailUrl: sermon?.thumbnailUrl ?? null,
-            colors: sermon?.thumbnailColors ?? [],
-          }}
+          plan={view.active.bar}
           topInset={insetTop}
           motion={barMotion}
-          href={homePlanOverviewHref(active.id)}
-          onContinue={() => router.push(studyHref(active.id, progress.currentDayNumber))}
+          href={view.active.href}
+          onContinue={view.continueToday}
         />
       )}
-      {active && <ArtworkFlight thumbnailUrl={sermon?.thumbnailUrl ?? null} style={flightStyle} />}
+      {view.flight && <ArtworkFlight thumbnailUrl={view.flight.thumbnailUrl} style={flightStyle} />}
       {/* Light over the plan's colour — only while Home's the screen shown. */}
       {isFocused && phase.lightStatusBar && <StatusBar barStyle="light-content" />}
     </View>

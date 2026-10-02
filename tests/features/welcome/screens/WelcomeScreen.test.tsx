@@ -1,18 +1,20 @@
 import { AccessibilityInfo } from "react-native";
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { act, render, screen, fireEvent } from "@tests/helpers/render";
 import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
 
-jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
+jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
   useNavigation: jest.fn(),
+  useFocusEffect: jest.fn(),
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
@@ -27,6 +29,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  jest.useRealTimers();
   jest.restoreAllMocks();
 });
 
@@ -132,7 +135,11 @@ describe("WelcomeScreen", () => {
   it("taps, and goes to the Home tab, when Get a plan now is pressed by someone with plans", () => {
     render(<WelcomeScreen />);
 
+    jest.useFakeTimers({ advanceTimers: true });
     fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    act(() => {
+      jest.advanceTimersByTime(32);
+    });
 
     expect(tapFeedback).toHaveBeenCalledTimes(1);
     expect(mockPush.mock.calls).toEqual([["/(tabs)/home"]]);
@@ -151,9 +158,21 @@ describe("WelcomeScreen", () => {
       </AppStoreProvider>,
     );
 
+    jest.useFakeTimers({ advanceTimers: true });
     fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    act(() => {
+      jest.advanceTimersByTime(32);
+    });
 
     expect(mockPush.mock.calls).toEqual([["/(tabs)/home"], ["/(plan-creation)/paste-sermon"]]);
+  });
+
+  it("shows a spinner on Get a plan now once it is pressed", () => {
+    render(<WelcomeScreen />);
+
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+    expect(screen.getByTestId("welcome-get-a-plan-now-button-spinner")).toBeVisible();
   });
 
   it("navigates to Plan Overview with the sample plan when See a sample plan is pressed", () => {
@@ -161,12 +180,9 @@ describe("WelcomeScreen", () => {
 
     fireEvent.press(screen.getByTestId("welcome-sample-plan-button"));
 
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: "/(tabs)/plans/[planId]",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()/expect.any()'s own types are `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: expect.any(String) }),
-      }),
-    );
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: "/(tabs)/plans/[planId]",
+      params: { planId: SAMPLE_PLAN_ID },
+    });
   });
 });

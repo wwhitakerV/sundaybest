@@ -2,11 +2,17 @@ import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { tapFeedback } from "@/core/haptics/haptics";
+import { selectionFeedback } from "@/core/haptics/haptics";
 import { AppStoreProvider, INITIAL_STATE, appReducer, type AppState } from "@/core/store";
 import { PlanOverviewScreen } from "@/features/plans/screens/PlanOverviewScreen";
 
-jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
+jest.mock("@/core/haptics/haptics", () => ({
+  tapFeedback: jest.fn(),
+  selectionFeedback: jest.fn(),
+  successFeedback: jest.fn(),
+  warningFeedback: jest.fn(),
+  errorFeedback: jest.fn(),
+}));
 // Under Jest a bundled image resolves to no URI; the ready plan's sermon needs
 // one, as it has on a device, for the hero to show its still.
 jest.mock("../../../../assets/images/mock/still-praying.jpg", () => ({ uri: "still-praying.jpg" }));
@@ -53,10 +59,13 @@ describe("PlanOverviewScreen", () => {
     expect(screen.getByTestId("plan-overview-screen")).toBeVisible();
   });
 
-  it("shows nothing for a plan that doesn't exist", () => {
+  it("says so for a plan that doesn't exist, with the way back", () => {
     renderOverview("no-such-plan");
 
     expect(screen.queryByTestId("plan-overview-screen")).toBeNull();
+    expect(screen.getByRole("header", { name: "This plan isn't here" })).toBeVisible();
+    fireEvent.press(screen.getByTestId("plan-overview-not-found-action"));
+    expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
   it("puts the plan in context: where it stands, its title, and its church", () => {
@@ -305,12 +314,12 @@ describe("PlanOverviewScreen", () => {
     ).toBeNull();
   });
 
-  it("gives a light tap as a day's tile is picked", () => {
+  it("gives a selection haptic as a day's tile is picked", () => {
     renderOverview(ACTIVE);
 
     fireEvent.press(screen.getByTestId("plan-overview-day-1"));
 
-    expect(tapFeedback).toHaveBeenCalledTimes(1);
+    expect(selectionFeedback).toHaveBeenCalledTimes(1);
   });
 
   it("floats Back and More in the page's own look too, hidden until the hero's scrolled from under them", () => {
@@ -430,5 +439,39 @@ describe("PlanOverviewScreen", () => {
     fireEvent.press(screen.getByTestId("plan-overview-back-button"));
 
     expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PlanOverviewScreen's More menu", () => {
+  it("is closed until More is pressed", () => {
+    renderOverview(ACTIVE);
+
+    expect(screen.queryByTestId("plan-overview-more-menu")).toBeNull();
+  });
+
+  it("opens its menu from the hero's More button", () => {
+    renderOverview(ACTIVE);
+
+    fireEvent.press(screen.getByTestId("plan-overview-more-button"));
+
+    expect(screen.getByTestId("plan-overview-more-menu")).toBeOnTheScreen();
+    expect(screen.getByTestId("plan-overview-more-save")).toBeOnTheScreen();
+    expect(screen.getByTestId("plan-overview-more-reminder")).toBeOnTheScreen();
+    expect(screen.getByTestId("plan-overview-more-how-made")).toBeOnTheScreen();
+  });
+
+  // The page's own More button is wired the same way, but takes no touches
+  // until the hero scrolls from under it — which Reanimated's mock can't
+  // drive here; tests/features/plans/components/PlanNav.test.tsx presses it.
+
+  it("offers Remove from Saved the next time it opens, once the plan is saved", () => {
+    renderOverview(ACTIVE);
+    fireEvent.press(screen.getByTestId("plan-overview-more-button"));
+    expect(screen.getByText("Save plan")).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId("plan-overview-more-save"));
+    fireEvent.press(screen.getByTestId("plan-overview-more-button"));
+
+    expect(screen.getByText("Remove from Saved")).toBeOnTheScreen();
   });
 });

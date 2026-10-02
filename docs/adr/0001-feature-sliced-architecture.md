@@ -1,6 +1,6 @@
 # ADR 0001 — Feature-sliced architecture with lint-enforced boundaries
 
-- **Status:** Accepted
+- **Status:** Accepted. Amended by [ADR 0017](./0017-entities-layer.md), which adds `src/entities/`.
 - **Date:** 2026-09-15
 - **Deciders:** @wwhitakerv
 

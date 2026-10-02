@@ -20,17 +20,3 @@ export const NEW_PLAN_STEPS = [
     actionTestID: "link-preview-create-plan-button",
   },
 ] as const;
-
-/** What the header's leading button does: close the flow, or step back. */
-export type NewPlanLeadingAction = { type: "exit" } | { type: "step"; step: number };
-
-/** What the primary action does: step forward, or hand off to Preparing. */
-export type NewPlanAction = { type: "create" } | { type: "step"; step: number };
-
-export function getNewPlanLeadingAction(step: number): NewPlanLeadingAction {
-  return step === 0 ? { type: "exit" } : { type: "step", step: step - 1 };
-}
-
-export function getNextNewPlanAction(step: number): NewPlanAction {
-  return step >= NEW_PLAN_STEPS.length - 1 ? { type: "create" } : { type: "step", step: step + 1 };
-}

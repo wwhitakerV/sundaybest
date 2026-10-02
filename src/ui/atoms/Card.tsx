@@ -1,4 +1,4 @@
-import { StyleSheet, View, type ViewProps } from "react-native";
+import { Pressable, StyleSheet, View, type ViewProps } from "react-native";
 
 import { useTheme } from "@/theme";
 
@@ -10,31 +10,43 @@ export type CardProps = ViewProps & {
   radius?: CardRadius;
   /** `surface`, the soft fill (the default); or `page`, the page's own background colour. */
   fill?: "surface" | "page";
+  /** Makes the whole card one button; name it with `accessibilityLabel`. */
+  onPress?: () => void;
+  /** Its container edge — drawn unless asked for none, for a card that sits on its fill alone. */
+  edge?: boolean;
 };
 
 /**
- * The app's card: a hairline edge round a soft fill. Padding and gap come in
- * through `style`, from the spacing scale.
+ * The app's card: the container edge (`containerBorder`) round a soft fill.
+ * Padding and gap come in through `style`, from the spacing scale. With
+ * `onPress` the whole of it is a button.
  */
-export function Card({ radius = 28, fill = "surface", style, ...props }: CardProps) {
+export function Card({
+  radius = 28,
+  fill = "surface",
+  edge = true,
+  style,
+  onPress,
+  ...props
+}: CardProps) {
   const theme = useTheme();
+  const shell = [
+    edge ? styles.edge : styles.edgeless,
+    {
+      borderRadius: radius,
+      backgroundColor: fill === "page" ? theme.colors.background : theme.colors.surface,
+      borderColor: theme.colors.containerBorder,
+    },
+    style,
+  ];
 
-  return (
-    <View
-      {...props}
-      style={[
-        styles.card,
-        {
-          borderRadius: radius,
-          backgroundColor: fill === "page" ? theme.colors.background : theme.colors.surface,
-          borderColor: theme.colors.divider,
-        },
-        style,
-      ]}
-    />
-  );
+  if (onPress) {
+    return <Pressable {...props} accessibilityRole="button" onPress={onPress} style={shell} />;
+  }
+  return <View {...props} style={shell} />;
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1 },
+  edge: { borderWidth: 1 },
+  edgeless: { borderWidth: 0 },
 });

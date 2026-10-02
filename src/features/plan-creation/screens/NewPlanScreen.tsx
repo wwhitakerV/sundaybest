@@ -1,17 +1,12 @@
-import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useIsFocused, useRouter } from "expo-router";
+import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 
-import type { PlanLength } from "@/types/domain";
 import { Screen } from "@/ui/organisms/Screen";
 import { Button } from "@/ui/atoms/Button";
-import { useModalSession } from "@/hooks/use-modal-session";
 import { useStepTransition } from "@/hooks/use-step-transition";
-import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
-import { lookUpMockSermon, type SermonPreview as Preview } from "@/core/plan-builder";
-import { getPlanGeneration, getUserSettings, useAppSelector, useStoreActions } from "@/core/store";
 import { CaptionsSheet } from "../components/CaptionsSheet";
+import { useNewPlanFlow } from "../hooks/use-new-plan-flow";
 import { DayCountPicker } from "../components/DayCountPicker";
 import { HowToCopyCard } from "../components/HowToCopyCard";
 import { PlanCreationHeader } from "../components/PlanCreationHeader";
@@ -19,108 +14,29 @@ import { QuickCheckToggle } from "../components/QuickCheckToggle";
 import { SermonLinkField } from "../components/SermonLinkField";
 import { SermonPreview } from "../components/SermonPreview";
 import { formatDuration } from "@/utils/time/formatDuration";
-import {
-  NEW_PLAN_STEPS,
-  getNewPlanLeadingAction,
-  getNextNewPlanAction,
-} from "../logic/new-plan-steps";
-import { checkSermonLink, shortenLink } from "../logic/sermon-link";
+import { NEW_PLAN_STEPS } from "../logic/new-plan-steps";
+import { shortenLink } from "../logic/sermon-link";
 import { space } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
-
-/** The link checked on the first step, and the sermon it points to. */
-type CheckedLink = { url: string; sermon: Preview };
 
 /**
  * New Plan: paste a sermon link, then see its sermon, pick how many days, and
  * choose whether to add a Quick Check. One screen with internal step state —
  * the same pattern as Daily Study and Quick Check: the header and action stay
- * put, only the body cross-fades (`useStepTransition`).
- *
- * "Create my plan" makes a draft plan in the store, starts building it, and
- * hands off to Preparing. If the video turns out to have no captions,
- * Preparing brings the user back here, where a sheet says so.
+ * put, only the body cross-fades (`useStepTransition`). If the video turns
+ * out to have no captions, a sheet says so.
  *
  * The first screen of the New Plan full-screen modal (`src/app/(plan-creation)`).
- * X on the first step dismisses the whole modal; Back on the second steps back.
+ * The flow and what each control does: `useNewPlanFlow`.
  */
 export function NewPlanScreen() {
-  const router = useRouter();
-  const session = useModalSession();
+  const flow = useNewPlanFlow();
   const focused = useIsFocused();
-  const settings = useAppSelector(getUserSettings);
-  const generation = useAppSelector(getPlanGeneration);
-  const { createPlan, startPlanGeneration, archivePlan } = useStoreActions();
-
-  const [step, setStep] = useState(0);
-  const { renderedStep, bodyStyle } = useStepTransition(step);
-  const [link, setLink] = useState("");
-  const [linkError, setLinkError] = useState<string | null>(null);
-  const [checked, setChecked] = useState<CheckedLink | null>(null);
-  const [days, setDays] = useState<PlanLength>(settings.defaultPlanLength);
-  const [quickCheck, setQuickCheck] = useState(settings.quickCheckByDefault);
-  const [planId, setPlanId] = useState<string | null>(null);
-
-  const current = NEW_PLAN_STEPS.at(step) ?? NEW_PLAN_STEPS[0];
+  const { renderedStep, bodyStyle } = useStepTransition(flow.stepIndex);
+  const { state, shownChecked } = flow;
+  const current = NEW_PLAN_STEPS.at(flow.stepIndex) ?? NEW_PLAN_STEPS[0];
   const body = NEW_PLAN_STEPS.at(renderedStep) ?? NEW_PLAN_STEPS[0];
-  const noCaptions =
-    planId !== null &&
-    generation?.planId === planId &&
-    generation.status === "failed" &&
-    generation.error?.code === "noCaptions";
-
-  function onChangeLink(text: string) {
-    setLink(text);
-    setLinkError(null);
-  }
-
-  async function onPaste() {
-    const copied = await readClipboardText();
-    if (copied) onChangeLink(copied);
-  }
-
-  function onLeading() {
-    const action = getNewPlanLeadingAction(step);
-    if (action.type === "exit") session.exit();
-    else setStep(action.step);
-  }
-
-  function createAndBuild(url: string, sermon: Preview) {
-    const id = createPlan({
-      sourceUrl: url,
-      title: sermon.title,
-      lengthDays: days,
-      quickCheckEnabled: quickCheck,
-    });
-    startPlanGeneration(id);
-    setPlanId(id);
-    router.push({ pathname: "/(plan-creation)/preparing", params: { planId: id } });
-  }
-
-  function onNext() {
-    const action = getNextNewPlanAction(step);
-    if (action.type === "create") {
-      if (checked) createAndBuild(checked.url, checked.sermon);
-      return;
-    }
-    const result = checkSermonLink(link);
-    if (!result.valid) {
-      setLinkError(result.message);
-      return;
-    }
-    setChecked({ url: result.url, sermon: lookUpMockSermon(result.url) });
-    setStep(action.step);
-  }
-
-  /** Back to an empty link, putting away the plan that couldn't be built. */
-  function onTryAnotherLink() {
-    if (planId) archivePlan(planId);
-    setPlanId(null);
-    setChecked(null);
-    setLink("");
-    setStep(0);
-  }
 
   return (
     <Screen testID="new-plan-screen" padded>
@@ -128,7 +44,7 @@ export function NewPlanScreen() {
         testID={current.key}
         leading={current.leading}
         step={current.counter}
-        onPress={onLeading}
+        onPress={flow.leading}
       />
 
       <ScrollView
@@ -144,29 +60,33 @@ export function NewPlanScreen() {
               <SFProBody tone="textMuted">Any public sermon video with captions works.</SFProBody>
               <SermonLinkField
                 testID="paste-sermon-link-input"
-                value={link}
-                onChangeText={onChangeLink}
-                onPaste={() => void onPaste()}
-                error={linkError}
+                value={state.link}
+                onChangeText={flow.changeLink}
+                onPaste={() => void flow.paste()}
+                error={state.step === "paste" ? state.linkError : null}
               />
               <HowToCopyCard />
             </>
           ) : (
-            checked && (
+            shownChecked && (
               <>
                 <SermonPreview
                   testID="link-preview-sermon"
-                  link={shortenLink(checked.url)}
-                  title={checked.sermon.title}
-                  church={checked.sermon.church}
-                  thumbnailUrl={checked.sermon.thumbnailUrl}
-                  duration={formatDuration(checked.sermon.durationSeconds)}
+                  link={shortenLink(shownChecked.url)}
+                  title={shownChecked.sermon.title}
+                  church={shownChecked.sermon.church}
+                  thumbnailUrl={shownChecked.sermon.thumbnailUrl}
+                  duration={formatDuration(shownChecked.sermon.durationSeconds)}
                 />
-                <DayCountPicker testID="link-preview-days" value={days} onChange={setDays} />
+                <DayCountPicker
+                  testID="link-preview-days"
+                  value={state.days}
+                  onChange={flow.pickDays}
+                />
                 <QuickCheckToggle
                   testID="link-preview-quick-check-toggle"
-                  value={quickCheck}
-                  onChange={setQuickCheck}
+                  value={state.quickCheck}
+                  onChange={flow.setQuickCheck}
                 />
               </>
             )
@@ -178,17 +98,17 @@ export function NewPlanScreen() {
         <Button
           testID={current.actionTestID}
           label={current.actionLabel}
-          disabled={step === 0 && link.trim() === ""}
-          onPress={onNext}
+          disabled={state.step === "paste" && state.link.trim() === ""}
+          onPress={flow.next}
         />
       </View>
 
       {/* Only once Preparing has handed back — never over it. */}
       <CaptionsSheet
         testID="captions-sheet"
-        visible={noCaptions && focused}
-        onTryAnotherLink={onTryAnotherLink}
-        onRemindLater={() => session.exit()}
+        visible={flow.noCaptions && focused}
+        onTryAnotherLink={flow.tryAnotherLink}
+        onRemindLater={flow.remindLater}
       />
     </Screen>
   );

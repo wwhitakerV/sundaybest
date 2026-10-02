@@ -1,33 +1,33 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
-import { QuickCheckHeader } from "@/features/plans/components/QuickCheckHeader";
+import {
+  QuickCheckHeader,
+  type QuickCheckHeaderProps,
+} from "@/features/plans/components/QuickCheckHeader";
+import { lightTheme } from "@/theme/tokens";
+
+function renderHeader(props: Partial<QuickCheckHeaderProps> = {}) {
+  return render(
+    <QuickCheckHeader
+      testID="a-quick-check-header"
+      total={2}
+      progress={{ counter: 1, index: 0 }}
+      onClose={() => undefined}
+      {...props}
+    />,
+  );
+}
 
 describe("QuickCheckHeader", () => {
   it("shows the title", () => {
-    render(
-      <QuickCheckHeader
-        testID="a-quick-check-header"
-        counter={1}
-        total={2}
-        progressIndex={0}
-        onClose={() => undefined}
-      />,
-    );
+    renderHeader();
 
     expect(screen.getByText("Quick check")).toBeVisible();
   });
 
   it("calls onClose when the close button is pressed", () => {
     const onClose = jest.fn();
-    render(
-      <QuickCheckHeader
-        testID="a-quick-check-header"
-        counter={1}
-        total={2}
-        progressIndex={0}
-        onClose={onClose}
-      />,
-    );
+    renderHeader({ onClose });
 
     fireEvent.press(screen.getByTestId("a-quick-check-header-close-button"));
 
@@ -35,48 +35,30 @@ describe("QuickCheckHeader", () => {
   });
 
   it("shows the question counter", () => {
-    render(
-      <QuickCheckHeader
-        testID="a-quick-check-header"
-        counter={2}
-        total={2}
-        progressIndex={2}
-        onClose={() => undefined}
-      />,
-    );
+    renderHeader({ progress: { counter: 2, index: 1 } });
 
     expect(screen.getByText("2 of 2")).toBeVisible();
   });
 
-  it("shows a tracker segment per question, and one for the score", () => {
-    render(
-      <QuickCheckHeader
-        testID="a-quick-check-header"
-        counter={2}
-        total={2}
-        progressIndex={1}
-        onClose={() => undefined}
-      />,
-    );
+  it("has one tracker segment per question, and none for anything else", () => {
+    renderHeader({ total: 2 });
 
-    expect(screen.getByTestId("a-quick-check-header-progress-segment-0")).toBeVisible();
+    expect(screen.getByTestId("a-quick-check-header-progress-segment-1")).toBeVisible();
+    expect(screen.queryByTestId("a-quick-check-header-progress-segment-2")).toBeNull();
+  });
+
+  it("sizes to the quiz: three questions, three segments", () => {
+    renderHeader({ total: 3 });
+
     expect(screen.getByTestId("a-quick-check-header-progress-segment-2")).toBeVisible();
     expect(screen.queryByTestId("a-quick-check-header-progress-segment-3")).toBeNull();
   });
 
-  it("sizes to the quiz: three questions, four segments", () => {
-    render(
-      <QuickCheckHeader
-        testID="a-quick-check-header"
-        counter={1}
-        total={3}
-        progressIndex={0}
-        onClose={() => undefined}
-      />,
-    );
+  it("lights the segment of the question on screen", () => {
+    renderHeader({ total: 3, progress: { counter: 2, index: 1 } });
 
-    expect(screen.getByText("1 of 3")).toBeVisible();
-    expect(screen.getByTestId("a-quick-check-header-progress-segment-3")).toBeVisible();
-    expect(screen.queryByTestId("a-quick-check-header-progress-segment-4")).toBeNull();
+    expect(screen.getByTestId("a-quick-check-header-progress-segment-1")).toHaveStyle({
+      backgroundColor: lightTheme.colors.accent,
+    });
   });
 });

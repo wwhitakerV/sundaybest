@@ -17,13 +17,15 @@ export type PlanNavProps = {
   /** Its cross-fade with the other look. */
   style: StyleProp<AnimatedStyle<ViewStyle>>;
   onBack: () => void;
+  /** Opens Plan Detail's More menu. */
+  onMore: () => void;
 };
 
 /**
  * Plan Detail's Back and More, floating over the page, fixed: they never
  * move as the page scrolls under them.
  */
-export function PlanNav({ testIDs, shown, overlay, top, style, onBack }: PlanNavProps) {
+export function PlanNav({ testIDs, shown, overlay, top, style, onBack, onMore }: PlanNavProps) {
   return (
     <Animated.View
       testID={testIDs.root}
@@ -50,7 +52,7 @@ export function PlanNav({ testIDs, shown, overlay, top, style, onBack }: PlanNav
             icon={Ellipsis}
             accessibilityLabel="More"
             {...(overlay && { overlay })}
-            onPress={() => undefined}
+            onPress={onMore}
           />
         }
       />

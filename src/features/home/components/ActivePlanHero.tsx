@@ -10,15 +10,17 @@ import {
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { Link, type Href } from "expo-router";
 
-import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
-import { HeroContent, type HeroPlan } from "@/ui/hero/HeroContent";
-import { HeroContentFade } from "@/ui/hero/HeroContentFade";
-import { HERO_WASH_OPACITY, HERO_WORDS_GAP } from "@/ui/hero/hero-layout";
+import {
+  getHeroPalette,
+  HERO_WORDS_GAP,
+  HeroBackdrop,
+  HeroContent,
+  HeroContentFade,
+  type HeroPlan,
+} from "@/entities/plan";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { useTheme } from "@/theme";
-import { getBackdropStops } from "@/utils/color/getBackdropStops";
-import { prefersLightInk } from "@/utils/color/prefersLightInk";
 import {
   HERO_ARTWORK_RADIUS,
   HERO_ARTWORK_WIDTH_RATIO,
@@ -76,9 +78,7 @@ export function ActivePlanHero({ plan, href, onContinue, motion = {} }: ActivePl
   const theme = useTheme();
   const { title, thumbnailUrl, colors, currentDay, totalDays, completedDayCount } = plan;
   const { frameStyle, contentStyle, artworkStyle, slotHeight, onContentLayout } = motion;
-  const colour = colors.at(0) ?? theme.colors.featureBackdrop;
-  const stops = getBackdropStops(colors, theme.colors.featureBackdrop);
-  const underlay = thumbnailUrl ? { uri: thumbnailUrl, opacity: HERO_WASH_OPACITY } : undefined;
+  const { colour, stops, light } = getHeroPalette(colors, theme.colors.featureBackdrop);
   // Where the artwork sits in the content, for the words' colour to come in over.
   const [artwork, setArtwork] = useState({ y: 0, height: 0 });
 
@@ -90,10 +90,10 @@ export function ActivePlanHero({ plan, href, onContinue, motion = {} }: ActivePl
         testID="home-tab-active-hero"
         style={[styles.hero, { backgroundColor: colour }, frameStyle]}
       >
-        <GradientBackdrop
+        <HeroBackdrop
           testID="home-tab-active-hero-backdrop"
-          stops={stops}
-          {...(underlay && { underlay })}
+          colors={colors}
+          thumbnailUrl={thumbnailUrl}
         />
         <Animated.View onLayout={onContentLayout} style={[styles.content, contentStyle]}>
           <Link href={href} asChild>
@@ -136,7 +136,7 @@ export function ActivePlanHero({ plan, href, onContinue, motion = {} }: ActivePl
 
           <HeroContent
             plan={plan}
-            light={prefersLightInk(colour)}
+            light={light}
             onContinue={onContinue}
             testIDs={{
               content: "home-tab-active-plan-content",

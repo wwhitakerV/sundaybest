@@ -1,5 +1,9 @@
 import { INITIAL_STATE } from "@/core/store";
-import { getPlanFilterOptions, getPlansForFilter } from "@/features/plans/logic/plan-filters";
+import {
+  describeEmptyFilter,
+  getPlanFilterOptions,
+  getPlansForFilter,
+} from "@/features/plans/logic/plan-filters";
 
 describe("getPlanFilterOptions", () => {
   it("labels each filter with its count, in order", () => {
@@ -35,5 +39,34 @@ describe("getPlansForFilter", () => {
 
   it("shows every plan for a filter it doesn't know", () => {
     expect(ids("Something else")).toEqual(ids("All"));
+  });
+});
+
+describe("describeEmptyFilter", () => {
+  const ALL = {
+    title: "No plans yet",
+    message: "Add a sermon and your first plan will show here.",
+  };
+
+  it.each([
+    ["All", ALL],
+    [
+      "In progress",
+      { title: "Nothing in progress", message: "Start a plan and it will show here." },
+    ],
+    ["Done", { title: "No finished plans yet", message: "Plans you finish will show here." }],
+    [
+      "Saved",
+      {
+        title: "Nothing saved yet",
+        message: "Save a plan from its More menu to keep it here.",
+      },
+    ],
+  ])("words %s", (filter, words) => {
+    expect(describeEmptyFilter(filter)).toEqual(words);
+  });
+
+  it("falls back to the All words for a filter it doesn't know", () => {
+    expect(describeEmptyFilter("Something else")).toEqual(ALL);
   });
 });

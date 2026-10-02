@@ -114,3 +114,22 @@ export function describeChoice(
   if (look === "incorrect") return `${base} Your answer, not right.`;
   return base;
 }
+
+/**
+ * Which page Quick Check is on: the start (0), each question (1…n), then the
+ * score (n + 1).
+ */
+export function getQuickCheckPage(input: {
+  status: QuizStatus;
+  currentIndex: number;
+  questionCount: number;
+}): number {
+  const { status, currentIndex, questionCount } = input;
+  if (status === "notStarted") return 0;
+  return status === "completed" ? questionCount + 1 : currentIndex + 1;
+}
+
+/** What the Quick Check's first page says it is: how many questions, on the day's study. */
+export function describeQuickCheckIntro(questionCount: number): string {
+  return `${questionCount} ${questionCount === 1 ? "question" : "questions"} on today's study`;
+}

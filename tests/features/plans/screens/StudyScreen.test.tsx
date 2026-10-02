@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { StatusBar, Text } from "react-native";
 import { render, screen, fireEvent } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
@@ -13,6 +13,8 @@ import {
   useAppSelector,
   type AppState,
 } from "@/core/store";
+import { READING_PAPERS } from "@/theme";
+import { darkTheme, lightTheme } from "@/theme/tokens";
 import { StudyScreen } from "@/features/plans/screens/StudyScreen";
 
 jest.mock("expo-router", () => ({
@@ -28,6 +30,7 @@ const mockExitSession = jest.fn<void, []>();
 const mockBack = jest.fn<void, []>();
 
 // Ready, not started: three days, day 1 open.
+const READING_TEXT = "The disciples were in a storm with Jesus in the boat — and He was asleep.";
 const STILL_PRAYING = "plan-still-praying";
 // Under way: six days, day 1 done, day 2 today (Read and Scripture done, one answer written).
 const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
@@ -71,6 +74,14 @@ function renderStudy(planId: string, day: number, state: AppState = INITIAL_STAT
   return render(studyTree(planId, day, state));
 }
 
+/** The store with the reading settings already chosen. */
+function withReading(settings: { readingPaper?: "night" | "white"; readingTextOffset?: number }) {
+  return {
+    ...INITIAL_STATE,
+    settings: { ...INITIAL_STATE.settings, ...settings },
+  };
+}
+
 async function goToStep(step: "scripture" | "reflect" | "pray") {
   const order = ["scripture", "reflect", "pray"];
   for (const next of order.slice(0, order.indexOf(step) + 1)) {
@@ -105,10 +116,13 @@ describe("StudyScreen", () => {
     }
   });
 
-  it("shows nothing for a day the plan doesn't have", () => {
+  it("says so for a day the plan doesn't have, with the way out of the session", () => {
     renderStudy(STILL_PRAYING, 9);
 
     expect(screen.queryByTestId("study-screen")).toBeNull();
+    expect(screen.getByRole("header", { name: "This day isn't here" })).toBeVisible();
+    fireEvent.press(screen.getByTestId("study-not-found-action"));
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
   });
 
   it("shows the day context in the header", () => {
@@ -386,6 +400,149 @@ describe("StudyScreen", () => {
       fireEvent.press(screen.getByTestId("study-nav-prev-button"));
 
       expect(mockExitSession).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("reading sheet", () => {
+    const READING = "The disciples were in a storm with Jesus in the boat — and He was asleep.";
+    const nightBackground = () => READING_PAPERS.find((paper) => paper.id === "night")?.background;
+
+    it("is closed until the text-size button is pressed", () => {
+      renderStudy(STILL_PRAYING, 1);
+
+      expect(screen.queryByTestId("study-reading-sheet")).toBeNull();
+      fireEvent.press(screen.getByTestId("study-text-size-button"));
+
+      expect(screen.getByTestId("study-reading-sheet")).toBeVisible();
+    });
+
+    it("closes when its scrim is tapped", () => {
+      renderStudy(STILL_PRAYING, 1);
+      fireEvent.press(screen.getByTestId("study-text-size-button"));
+
+      fireEvent.press(
+        screen.getByTestId("study-reading-sheet-scrim", { includeHiddenElements: true }),
+      );
+
+      expect(screen.queryByTestId("study-reading-sheet")).toBeNull();
+    });
+
+    it("makes the reading's text bigger at once when the scale is increased", () => {
+      renderStudy(STILL_PRAYING, 1);
+      const base = lightTheme.typography.reading.fontSize;
+      expect(screen.getByText(READING)).toHaveStyle({ fontSize: base });
+      fireEvent.press(screen.getByTestId("study-text-size-button"));
+
+      fireEvent.press(screen.getByTestId("study-reading-text-size-increase"));
+
+      expect(screen.getByText(READING)).toHaveStyle({ fontSize: base + 2 });
+    });
+
+    it("makes the reading's text smaller when the scale is decreased", () => {
+      renderStudy(STILL_PRAYING, 1);
+      const base = lightTheme.typography.reading.fontSize;
+      fireEvent.press(screen.getByTestId("study-text-size-button"));
+
+      fireEvent.press(screen.getByTestId("study-reading-text-size-decrease"));
+
+      expect(screen.getByText(READING)).toHaveStyle({ fontSize: base - 2 });
+    });
+
+    it("turns the page to Night: that paper behind it, light text on it", () => {
+      renderStudy(STILL_PRAYING, 1);
+      fireEvent.press(screen.getByTestId("study-text-size-button"));
+
+      fireEvent.press(screen.getByTestId("study-reading-paper-night"));
+
+      expect(screen.getByTestId("study-screen")).toHaveStyle({
+        backgroundColor: nightBackground(),
+      });
+      expect(screen.getByText(READING)).toHaveStyle({ color: darkTheme.colors.textInactive });
+    });
+
+    it("holds the settings when the study is opened again in the same store", () => {
+      const { rerender } = renderStudy(STILL_PRAYING, 1);
+      const base = lightTheme.typography.reading.fontSize;
+      fireEvent.press(screen.getByTestId("study-text-size-button"));
+      fireEvent.press(screen.getByTestId("study-reading-text-size-increase"));
+      fireEvent.press(screen.getByTestId("study-reading-paper-night"));
+
+      rerender(studyTree(STILL_PRAYING, 1, INITIAL_STATE, false));
+      rerender(studyTree(STILL_PRAYING, 1, INITIAL_STATE, true));
+
+      expect(screen.getByText(READING)).toHaveStyle({ fontSize: base + 2 });
+      expect(screen.getByTestId("study-screen")).toHaveStyle({
+        backgroundColor: nightBackground(),
+      });
+    });
+  });
+
+  describe("reading settings beyond the page", () => {
+    it("keeps the header title at its designed size when the text is made larger", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingTextOffset: 4 }));
+
+      expect(screen.getByText("Day 1 of 3")).toHaveStyle({
+        fontSize: lightTheme.typography.navTitle.fontSize,
+      });
+      expect(screen.getByText(READING_TEXT)).toHaveStyle({
+        fontSize: lightTheme.typography.reading.fontSize + 4,
+      });
+    });
+
+    it("lights the status bar text on Night paper", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingPaper: "night" }));
+
+      expect(screen.UNSAFE_getByType(StatusBar).props.barStyle).toBe("light-content");
+    });
+
+    it("leaves the status bar alone on a light paper", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingPaper: "white" }));
+
+      expect(screen.UNSAFE_queryByType(StatusBar)).toBeNull();
+    });
+  });
+
+  describe("step tracker and dots follow the paper", () => {
+    it("draws a done segment in the Night paper's text colour", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingPaper: "night" }));
+      fireEvent.press(screen.getByTestId("study-nav-next-button"));
+
+      expect(screen.getByTestId("study-progress-segment-0")).toHaveStyle({
+        backgroundColor: darkTheme.colors.text,
+      });
+    });
+
+    it("draws an upcoming segment in the Night paper's divider colour", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingPaper: "night" }));
+      fireEvent.press(screen.getByTestId("study-nav-next-button"));
+
+      expect(screen.getByTestId("study-progress-segment-3")).toHaveStyle({
+        backgroundColor: darkTheme.colors.divider,
+      });
+    });
+
+    it("draws the nav's active dot in the Night paper's text colour", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingPaper: "night" }));
+      fireEvent.press(screen.getByTestId("study-nav-next-button"));
+
+      expect(screen.getByTestId("study-nav-dots-dot-1")).toHaveStyle({
+        backgroundColor: darkTheme.colors.text,
+      });
+    });
+
+    it("draws the same on a light paper in the light text and divider colours", () => {
+      renderStudy(STILL_PRAYING, 1, withReading({ readingPaper: "white" }));
+      fireEvent.press(screen.getByTestId("study-nav-next-button"));
+
+      expect(screen.getByTestId("study-progress-segment-0")).toHaveStyle({
+        backgroundColor: lightTheme.colors.text,
+      });
+      expect(screen.getByTestId("study-progress-segment-3")).toHaveStyle({
+        backgroundColor: lightTheme.colors.divider,
+      });
+      expect(screen.getByTestId("study-nav-dots-dot-1")).toHaveStyle({
+        backgroundColor: lightTheme.colors.text,
+      });
     });
   });
 });

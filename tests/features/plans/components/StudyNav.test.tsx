@@ -4,13 +4,15 @@ import { tapFeedback } from "@/core/haptics/haptics";
 import { StudyNav } from "@/features/plans/components/StudyNav";
 import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 
-jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
+jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
 
 // StudyNav fades in from opacity 0 on mount (useStudyNavEntrance). Jest's
 // Reanimated mock never runs that animation, so everything inside the nav
 // stays at its opening frame; these tests assert presence
 // (`toBeOnTheScreen`), not visibility.
 describe("StudyNav", () => {
+  beforeEach(() => jest.clearAllMocks());
+
   it("is addressable as the given testID", () => {
     render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
 
@@ -74,13 +76,13 @@ describe("StudyNav", () => {
     expect(screen.getByText("Next")).toBeOnTheScreen();
   });
 
-  it("taps as Previous and Next are pressed", () => {
+  it("makes no haptic of its own as Previous and Next are pressed", () => {
     render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
 
     fireEvent.press(screen.getByTestId("study-nav-prev-button"));
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
 
-    expect(tapFeedback).toHaveBeenCalledTimes(2);
+    expect(tapFeedback).not.toHaveBeenCalled();
   });
 
   it("calls onPrevious when the previous control is pressed", () => {

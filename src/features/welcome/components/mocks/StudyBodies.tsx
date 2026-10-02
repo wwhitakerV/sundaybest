@@ -1,8 +1,7 @@
-import { StyleSheet, View } from "react-native";
-import { HandHeart, Lock } from "lucide-react-native";
+import { View } from "react-native";
 
-import { radius, space, useTheme } from "@/theme";
-import { Card } from "@/ui/atoms/Card";
+import { PassageHeading } from "@/entities/scripture";
+import { PrayerHeading, ReflectionCard, StepKicker } from "@/entities/study";
 import { LiftAnchor } from "../lift/LiftAnchor";
 import { getLiftId } from "../../logic/lift";
 import { AnswerBox } from "../lifts/AnswerBox";
@@ -12,12 +11,9 @@ import { VerseCard } from "../lifts/VerseCard";
 import { FadeUp } from "./FadeUp";
 import { MOCK_PAGE } from "./mock-page-styles";
 import type { MockBodyProps } from "../../logic/mock-page";
-import { StudyKicker } from "./StudyMockHeader";
 import { DisplayTitle } from "@/ui/typography/DisplayTitle";
-import { MonoBody } from "@/ui/typography/MonoBody";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
-import { SerifTitle } from "@/ui/typography/SerifTitle";
 
 /** Daily Study's Read step: the day's reading. "Hear this part of the sermon" lifts off. */
 export function ReadBody({ elapsedMs }: MockBodyProps) {
@@ -26,7 +22,7 @@ export function ReadBody({ elapsedMs }: MockBodyProps) {
   return (
     <View style={MOCK_PAGE.body}>
       <FadeUp order={0} still={still}>
-        <StudyKicker label="Read" />
+        <StepKicker dayNumber={2} label="Read" />
       </FadeUp>
       <FadeUp order={1} still={still}>
         <DisplayTitle>Grace is received</DisplayTitle>
@@ -54,25 +50,15 @@ export function ReadBody({ elapsedMs }: MockBodyProps) {
 
 /** Daily Study's Scripture step. Its verse lifts off. */
 export function ScriptureBody({ elapsedMs }: MockBodyProps) {
-  const theme = useTheme();
   const still = elapsedMs === Infinity;
 
   return (
     <View style={MOCK_PAGE.body}>
       <FadeUp order={0} still={still}>
-        <StudyKicker label="Scripture" />
+        <StepKicker dayNumber={2} label="Scripture" />
       </FadeUp>
       <FadeUp order={1} still={still}>
-        <View style={styles.titleRow}>
-          <SFProTitle>Ephesians 2:8</SFProTitle>
-          <View
-            style={[styles.pill, { borderColor: theme.colors.divider, borderRadius: radius.pill }]}
-          >
-            <SFProBody variant="label" tone="textInactive">
-              NIV
-            </SFProBody>
-          </View>
-        </View>
+        <PassageHeading reference="Ephesians 2:8" translation="NIV" />
       </FadeUp>
       <FadeUp order={2} still={still}>
         <LiftAnchor id={getLiftId("scripture", 0)}>
@@ -85,30 +71,22 @@ export function ScriptureBody({ elapsedMs }: MockBodyProps) {
 
 /** Daily Study's Reflect step. Its answer box lifts off. */
 export function ReflectBody({ elapsedMs }: MockBodyProps) {
-  const theme = useTheme();
   const still = elapsedMs === Infinity;
 
   return (
     <View style={MOCK_PAGE.body}>
       <FadeUp order={0} still={still}>
-        <StudyKicker label="Question 1 of 2" />
+        <StepKicker dayNumber={2} label="Question 1 of 2" />
       </FadeUp>
       <FadeUp order={1} still={still}>
         <SFProTitle>Grace is received</SFProTitle>
       </FadeUp>
       <FadeUp order={2} still={still}>
-        <Card fill="page" style={styles.card}>
-          <SerifTitle variant="question">What are you still trying to pay for?</SerifTitle>
+        <ReflectionCard question="What are you still trying to pay for?">
           <LiftAnchor id={getLiftId("reflect", 0)}>
             <AnswerBox elapsedMs={elapsedMs} />
           </LiftAnchor>
-          <View style={styles.privacy}>
-            <Lock size={16} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-            <MonoBody variant="supporting" tone="textMuted">
-              Only you ever see this.
-            </MonoBody>
-          </View>
-        </Card>
+        </ReflectionCard>
       </FadeUp>
     </View>
   );
@@ -116,25 +94,15 @@ export function ReflectBody({ elapsedMs }: MockBodyProps) {
 
 /** Daily Study's Pray step. Its prayer lifts off. */
 export function PrayBody({ elapsedMs }: MockBodyProps) {
-  const theme = useTheme();
   const still = elapsedMs === Infinity;
 
   return (
     <View style={MOCK_PAGE.body}>
       <FadeUp order={0} still={still}>
-        <StudyKicker label="Pray" />
+        <StepKicker dayNumber={2} label="Pray" />
       </FadeUp>
       <FadeUp order={1} still={still}>
-        <View style={styles.prayTitle}>
-          <View style={[styles.badge, { backgroundColor: theme.colors.controlPrimary }]}>
-            <HandHeart
-              size={24}
-              color={theme.colors.onControlPrimary}
-              strokeWidth={theme.icon.strokeWidth}
-            />
-          </View>
-          <SFProTitle>A prayer for today</SFProTitle>
-        </View>
+        <PrayerHeading title="A prayer for today" />
       </FadeUp>
       <FadeUp order={2} still={still}>
         <LiftAnchor id={getLiftId("pray", 0)}>
@@ -144,21 +112,3 @@ export function PrayBody({ elapsedMs }: MockBodyProps) {
     </View>
   );
 }
-
-/** Pray's round badge, as on the real Pray step. */
-const BADGE_SIZE = 52;
-
-const styles = StyleSheet.create({
-  titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  pill: { borderWidth: 1, paddingHorizontal: space[14], paddingVertical: space[6] },
-  card: { padding: space[22], gap: space[16] },
-  privacy: { flexDirection: "row", alignItems: "center", gap: space[8] },
-  prayTitle: { flexDirection: "row", alignItems: "center", gap: space[14] },
-  badge: {
-    width: BADGE_SIZE,
-    height: BADGE_SIZE,
-    borderRadius: BADGE_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});

@@ -1,5 +1,6 @@
 import type { Plan } from "@/types/domain";
 import { formatShortDate } from "@/utils/dates/formatShortDate";
+import { formatDayOfTotal, formatPlanLength } from "@/entities/plan";
 
 /** A library card's words: where it stands, the detail of it, and the two as one line. */
 export type LibraryPlanLook = {
@@ -34,11 +35,11 @@ function describeStanding(
   if (plan.status === "active") {
     return {
       status: "In progress",
-      detail: `Day ${progress.currentDayNumber} of ${plan.lengthDays}`,
+      detail: formatDayOfTotal(progress.currentDayNumber, plan.lengthDays),
     };
   }
   return {
     status: "Not started",
-    detail: `${plan.lengthDays} ${plan.lengthDays === 1 ? "day" : "days"}`,
+    detail: formatPlanLength(plan.lengthDays),
   };
 }

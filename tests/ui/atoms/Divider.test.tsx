@@ -1,5 +1,6 @@
 import { render, screen } from "@tests/helpers/render";
 
+import { lightTheme } from "@/theme/tokens";
 import { Divider } from "@/ui/atoms/Divider";
 
 describe("Divider", () => {
@@ -12,6 +13,9 @@ describe("Divider", () => {
   it("draws a thin line in the divider colour", () => {
     render(<Divider testID="a-divider" />);
 
-    expect(screen.getByTestId("a-divider")).toHaveStyle({ height: 1, backgroundColor: "#F7F1F1" });
+    expect(screen.getByTestId("a-divider")).toHaveStyle({
+      height: 1,
+      backgroundColor: lightTheme.colors.divider,
+    });
   });
 });

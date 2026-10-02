@@ -52,6 +52,12 @@ afterEach(() => {
 });
 
 describe("PreparingPlanScreen", () => {
+  it("is laid out as a milestone page while it builds", () => {
+    renderPreparing();
+
+    expect(screen.getByTestId("preparing-plan-screen-body")).toBeOnTheScreen();
+  });
+
   it("is addressable as preparing-plan-screen", () => {
     renderPreparing();
 
@@ -90,6 +96,28 @@ describe("PreparingPlanScreen", () => {
     expect(mockReplace).toHaveBeenCalledWith({
       pathname: "/(plan-creation)/ready",
       params: { planId: PLAN_ID },
+    });
+  });
+
+  describe("without a plan", () => {
+    beforeEach(() => {
+      jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "plan-nope" });
+    });
+
+    it("says the plan isn't here, as a header", () => {
+      renderPreparing();
+
+      expect(screen.getByTestId("preparing-plan-not-found")).toBeVisible();
+      expect(screen.getByRole("header", { name: "This plan isn't here" })).toBeVisible();
+    });
+
+    it("leaves the session when Close is pressed", () => {
+      renderPreparing();
+
+      fireEvent.press(screen.getByTestId("preparing-plan-not-found-action"));
+
+      expect(screen.getByText("Close")).toBeVisible();
+      expect(mockExitModal).toHaveBeenCalledTimes(1);
     });
   });
 });

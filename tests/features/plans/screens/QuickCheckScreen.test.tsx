@@ -8,21 +8,28 @@ import {
   INITIAL_STATE,
   appReducer,
   getAttemptAnswers,
+  getPlanDay,
   getQuizAttempt,
+  getQuizForDay,
+  getQuizQuestions,
   getQuizScore,
   useAppSelector,
   type AppState,
 } from "@/core/store";
+import { getScoreHeadline } from "@/features/plans/logic/quick-check";
 import { QuickCheckScreen } from "@/features/plans/screens/QuickCheckScreen";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useNavigation: () => ({ getParent: () => ({ goBack: mockExitSession }) }),
   useLocalSearchParams: jest.fn<{ planId: string; day: string }, []>(),
 }));
 
+const mockExitSession = jest.fn<void, []>();
+
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
-const mockDismissTo = jest.fn<void, [ExpoRouter.Href]>();
+const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 
 // One day, and a two-question Quick Check not yet taken — B is right both times.
 const TEMPTATION = "plan-overcome-temptation";
@@ -82,7 +89,7 @@ async function answer(letter: string) {
 beforeEach(() => {
   jest
     .mocked(useRouter)
-    .mockReturnValue({ push: mockPush, dismissTo: mockDismissTo } as unknown as ReturnType<
+    .mockReturnValue({ push: mockPush, replace: mockReplace } as unknown as ReturnType<
       typeof useRouter
     >);
 });
@@ -94,10 +101,35 @@ describe("QuickCheckScreen", () => {
     expect(screen.getByTestId("quick-check-screen")).toBeVisible();
   });
 
-  it("shows nothing for a day with no Quick Check", () => {
+  it("says so for a day with no Quick Check, with the way out of the session", () => {
     renderQuickCheck("plan-still-praying", 1);
 
     expect(screen.queryByTestId("quick-check-screen")).toBeNull();
+    expect(screen.getByTestId("quick-check-not-found")).toBeVisible();
+    fireEvent.press(screen.getByTestId("quick-check-not-found-action"));
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
+  });
+
+  describe("its start", () => {
+    it("is laid out as a milestone page", () => {
+      renderQuickCheck(TEMPTATION, 1);
+
+      expect(screen.getByTestId("quick-check-screen-body")).toBeOnTheScreen();
+    });
+
+    it("has only a close at its top, no title", () => {
+      renderQuickCheck(TEMPTATION, 1);
+
+      expect(screen.getByTestId("quick-check-close-button")).toBeVisible();
+      expect(screen.queryByText("Quick check")).toBeNull();
+    });
+
+    it("heads it with the day's quiz and how many questions", () => {
+      renderQuickCheck(TEMPTATION, 1);
+
+      expect(screen.getByRole("header", { name: "Day 1 Quiz" })).toBeVisible();
+      expect(screen.getByText("2 questions on today's study")).toBeVisible();
+    });
   });
 
   describe("not started", () => {
@@ -106,6 +138,23 @@ describe("QuickCheckScreen", () => {
 
       expect(screen.getByTestId("quick-check-start-button")).toBeVisible();
       expect(screen.getByTestId("attempt-probe")).toHaveTextContent("no attempt");
+    });
+
+    it("shows no question until the quiz is started", () => {
+      const day = getPlanDay(INITIAL_STATE, TEMPTATION, 1);
+      const quiz = day && getQuizForDay(INITIAL_STATE, day.id);
+      const prompts = quiz ? getQuizQuestions(INITIAL_STATE, quiz.id).map((q) => q.prompt) : [];
+      renderQuickCheck(TEMPTATION, 1);
+
+      expect(prompts.length).toBeGreaterThan(0);
+      for (const prompt of prompts) expect(screen.queryByText(prompt)).toBeNull();
+    });
+
+    it("counts no question, and shows no tracker, until the quiz is started", () => {
+      renderQuickCheck(TEMPTATION, 1);
+
+      expect(screen.queryByText(/ of 2/)).toBeNull();
+      expect(screen.queryByTestId("quick-check-progress")).toBeNull();
     });
 
     it("starts an attempt on its first question", async () => {
@@ -277,6 +326,15 @@ describe("QuickCheckScreen", () => {
       expect(screen.getByTestId("quick-check-score")).toBeVisible();
       expect(screen.getByText("1/2")).toBeVisible();
     });
+
+    it("lays its results out as a milestone page", () => {
+      renderQuickCheck(ACTIVE, 1);
+
+      expect(screen.getByTestId("quick-check-screen-body")).toBeOnTheScreen();
+      expect(
+        screen.getByRole("header", { name: getScoreHeadline({ correct: 1, total: 2 }) }),
+      ).toBeVisible();
+    });
   });
 
   describe("leaving", () => {
@@ -288,20 +346,21 @@ describe("QuickCheckScreen", () => {
       });
     }
 
-    it("returns to Day Complete when Close is pressed", () => {
+    it("leaves the session when Close is pressed, the day not done", () => {
       renderQuickCheck(TEMPTATION, 1, STARTED);
 
       press("quick-check-close-button");
 
-      expect(mockDismissTo).toHaveBeenCalledWith(dayCompleteRoute(TEMPTATION, "1"));
+      expect(mockExitSession).toHaveBeenCalledTimes(1);
+      expect(mockReplace).not.toHaveBeenCalled();
     });
 
-    it("returns to Day Complete when Done is pressed on the score", () => {
+    it("goes on to Day Complete when Done is pressed on the score", () => {
       renderQuickCheck(ACTIVE, 1);
 
       press("quick-check-done-button");
 
-      expect(mockDismissTo).toHaveBeenCalledWith(dayCompleteRoute(ACTIVE, "1"));
+      expect(mockReplace).toHaveBeenCalledWith(dayCompleteRoute(ACTIVE, "1"));
     });
   });
 });

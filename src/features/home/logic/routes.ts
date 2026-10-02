@@ -6,6 +6,3 @@
 export function homePlanOverviewHref(planId: string) {
   return { pathname: "/(tabs)/home/[planId]", params: { planId } } as const;
 }
-
-/** New Plan's first step — where the tab bar's + and Home's start card go. */
-export const NEW_PLAN_HREF = "/(plan-creation)/paste-sermon";

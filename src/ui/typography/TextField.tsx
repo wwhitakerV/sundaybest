@@ -3,6 +3,7 @@ import { TextInput, type StyleProp, type TextInputProps } from "react-native";
 import { useTheme } from "@/theme";
 import type { LayoutTextStyle } from "./ThemedText";
 import { scaleTypeStyle } from "./tone";
+import { useTextOffset } from "./TextSizeScope";
 import { useTextScale } from "./use-text-scale";
 
 export type TextFieldProps = Omit<TextInputProps, "style" | "placeholderTextColor"> & {
@@ -14,12 +15,17 @@ export type TextFieldProps = Omit<TextInputProps, "style" | "placeholderTextColo
 export function TextField({ style, ...props }: TextFieldProps) {
   const theme = useTheme();
   const scale = useTextScale();
+  const offset = useTextOffset();
 
   return (
     <TextInput
       placeholderTextColor={theme.colors.textMuted}
       {...props}
-      style={[scaleTypeStyle(theme.typography.body, scale), { color: theme.colors.text }, style]}
+      style={[
+        scaleTypeStyle(theme.typography.body, scale, offset),
+        { color: theme.colors.text },
+        style,
+      ]}
     />
   );
 }

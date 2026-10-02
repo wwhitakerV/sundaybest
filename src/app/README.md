@@ -7,7 +7,11 @@ folder is the app's routing table and nothing else.
 
 - One-line re-exports of feature screens:
   `export { HomeScreen as default } from "@/features/home";`
-- Layouts (`_layout.tsx`), `+not-found.tsx`, route groups (`(tabs)`).
+- Layouts (`_layout.tsx`): navigator configuration only — the screen list,
+  `presentation` and sheet options, `screenLayout`, constants like `TAB_ROOTS`.
+  No business logic, data access, or navigation handlers; a navigator's own
+  pieces (the tab bar) come from a feature (`AppTabBar`).
+- `+not-found.tsx`, route groups (`(tabs)`).
 - Default exports — Expo Router discovers routes by default export, which is why
   `import/no-default-export` is switched off for this folder alone.
 

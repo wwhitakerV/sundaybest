@@ -1,15 +1,12 @@
 import { StyleSheet, View } from "react-native";
-import { Lock } from "lucide-react-native";
 
 import type { Reflection } from "@/types/domain";
 import { radius, space, useTheme } from "@/theme";
-import { Card } from "@/ui/atoms/Card";
+import { ReflectionCard } from "@/entities/study";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
-import { MonoBody } from "@/ui/typography/MonoBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
-import { SerifTitle } from "@/ui/typography/SerifTitle";
 import { TextField } from "@/ui/typography/TextField";
 
 export type ReflectStepProps = {
@@ -48,8 +45,7 @@ export function ReflectStep({
         <SFProTitle>{title}</SFProTitle>
       </StudyDriftIn>
       <StudyFollow style={followStyle}>
-        <Card fill="page" style={styles.card}>
-          <SerifTitle variant="question">{reflection.question}</SerifTitle>
+        <ReflectionCard question={reflection.question}>
           <TextField
             testID={`study-reflect-answer-${reflection.order}`}
             accessibilityLabel={reflection.question}
@@ -62,13 +58,7 @@ export function ReflectStep({
               { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
             ]}
           />
-          <View style={styles.privacy}>
-            <Lock size={16} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
-            <MonoBody variant="supporting" tone="textMuted">
-              Only you ever see this.
-            </MonoBody>
-          </View>
-        </Card>
+        </ReflectionCard>
       </StudyFollow>
     </View>
   );
@@ -76,7 +66,6 @@ export function ReflectStep({
 
 const styles = StyleSheet.create({
   body: { gap: space[16] },
-  card: { padding: space[22], gap: space[16] },
   answer: {
     borderWidth: 1,
     borderRadius: radius[20],
@@ -84,5 +73,4 @@ const styles = StyleSheet.create({
     minHeight: 124,
     textAlignVertical: "top",
   },
-  privacy: { flexDirection: "row", alignItems: "center", gap: space[8] },
 });

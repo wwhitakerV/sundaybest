@@ -3,7 +3,7 @@ import Animated from "react-native-reanimated";
 
 import { radius, space, useTheme } from "@/theme";
 import { usePickPop } from "../../hooks/use-tap-feedback";
-import { getPlanEndsLine } from "@/utils/plans/getPlanEndsLine";
+import { getPlanEndsLine } from "@/entities/plan";
 import { getPlanScene } from "../../logic/scenes";
 import type { LiftPieceProps } from "../../logic/lift-piece";
 import { MonoBody } from "@/ui/typography/MonoBody";

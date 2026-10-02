@@ -4,15 +4,9 @@ import { PHONE_FRAME } from "../logic/phone-frame";
 import { NEW_PLAN_HEADER_HEIGHT } from "../logic/new-plan-header";
 import type { StageGeometry } from "../logic/fan-geometry";
 import { getLiftId, getScrollToReveal, getScrollToShow, type DesignRect } from "../logic/lift";
-import { getScrollTargetIndex } from "../logic/scenes";
-import {
-  getLiftsFor,
-  getScreen,
-  getScreenView,
-  type StoryCardKey,
-  type StoryPhase,
-  type StoryScreen,
-} from "../logic/story";
+import { getScrollTargetIndex } from "../logic/lift-timing";
+import { getLiftsFor, type StoryCardKey, type StoryPhase, type StoryScreen } from "../logic/story";
+import { getScreen, getScreenView } from "../logic/story-screens";
 
 /**
  * Where New Plan's days land once it has scrolled to them, below its header

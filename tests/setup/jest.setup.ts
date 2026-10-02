@@ -74,9 +74,9 @@ jest.mock("expo-splash-screen", () => ({
   hideAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
-// React Native's `Vibration` module (used by src/core/haptics/haptics.ts's
-// `sparkBuzz`) has no native side under Jest and throws the moment
-// anything calls `Vibration.vibrate`. Mocked at this exact internal path
+// React Native's `Vibration` module has no native side under Jest and throws
+// the moment anything calls `Vibration.vibrate` — kept mocked so a test can
+// prove nothing does (the study's entrance stays silent). Mocked at this exact internal path
 // (not the top-level `react-native` package, which would also swallow
 // every other RN export the test environment needs) so only the one
 // module with no test-environment implementation is replaced.

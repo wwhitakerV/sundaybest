@@ -38,19 +38,35 @@ no `~`) for everything else. Use npm, and `npx` where another runner would be us
 
 ## Architecture and dependency rules
 
-Feature-sliced; see [ADR 0001](docs/adr/0001-feature-sliced-architecture.md) and
-each folder's README.
+Feature-sliced; see [ADR 0001](docs/adr/0001-feature-sliced-architecture.md),
+[ADR 0017](docs/adr/0017-entities-layer.md) and each folder's README.
 
 ```
-app -> features -> ui, core, hooks, utils, theme, types
+app -> features -> entities, ui, core, hooks, utils, theme, types
+entities -> entities, ui, hooks, utils, theme, types
 core -> utils, theme, types
 ui / hooks -> utils, theme, types
 utils -> types
 ```
 
-- `src/app/` holds routes only: one-line re-exports of feature screens. No logic,
-  no tests.
-- A feature slice is reachable **only** through its `index.ts`.
+**Where code goes**, in this order:
+
+1. Used by one feature → it stays in that feature.
+2. Used by two or more features, and it's a SundayBest idea (a plan, a passage,
+   a study step, a sermon) → `src/entities/<concept>`.
+3. Any app could use it unchanged → `src/ui`, `src/hooks`, or `src/utils`.
+4. It styles something → `src/theme` tokens and `src/ui` typography.
+
+Promote code when its second consumer exists (Welcome's mocks count).
+
+- `src/app/` is the screen map. A route file is a one-line re-export of a feature
+  screen. A `_layout.tsx` holds navigator configuration only — its `Stack`/`Tabs`
+  screen list, `presentation` and sheet options, `screenLayout`, and constants
+  such as `TAB_ROOTS` — never business logic, data access, or navigation
+  handlers (the tab bar's wiring is Home's `AppTabBar`). No tests.
+- A feature slice is reachable **only** through its `index.ts`; so is an entity.
+- Entities are free of side effects and take data as props: they never import `core`,
+  `features`, or `app`. `ui`, `hooks`, and `utils` never import `entities`.
 - `ui`, `hooks`, and `utils` never import `features`, `core`, or `app`.
 - `src/utils` is pure: no React, no I/O.
 - **Every side-effect SDK import lives in `src/core`** — secure storage, app
@@ -106,8 +122,17 @@ reproduces the bug. See [ADR 0002](docs/adr/0002-testing-strategy.md).
 - **A `testID` on every interactive element**, and on any element a test needs to
   find. Forward `testID` through wrapper components.
 - Components in `PascalCase.tsx`, hooks and plain modules in `kebab-case.ts`.
+- **One view-model hook per screen; screens compose.** A screen's store reads,
+  derivations, route params and intent handlers live in one hook in the
+  slice's `hooks/` (`usePlanOverview`, `useStudySession`). The screen calls it,
+  keeps only motion and layout, and renders. A screen whose data isn't there
+  renders `NotFoundScreen` (`src/ui/organisms`), never `null`.
+- **Route params are untrusted.** Read them with a Zod parser that sits beside
+  their route builders (`parsePlanParams`, `parseStudyParams` in
+  `@/entities/plan`), never `useLocalSearchParams<…>()` alone.
 - **Pure functions by default.** Domain rules, derivations, and formatting live
-  in a slice's `logic/` folder (or `src/utils` if truly shared), not in JSX.
+  in a slice's `logic/` folder (or `src/entities/<concept>/logic` if it's a shared
+  SundayBest concept, or `src/utils` if any app could use it), not in JSX.
   Components render and wire events; side effects live in hooks or `src/core`.
 - **Tests never live in `src/`.** Every test, helper, mock, and fixture is under
   `tests/`, mirroring `src/` (`src/ui/organisms/Screen.tsx` →
@@ -138,8 +163,8 @@ A change is done when all of these hold:
 
 - [ ] `npm run validate` passes.
 - [ ] New behavior has a test that was seen to fail first.
-- [ ] Coverage thresholds hold: 80% global, 95% in `src/utils/**` and
-      `src/core/security/**`.
+- [ ] Coverage thresholds hold: 80% global, 95% in `src/utils/**`,
+      `src/core/security/**`, and `src/entities/**`.
 - [ ] Dependency rules pass without new exceptions.
 - [ ] No new `TODO` without an issue link, and no dead code (knip is clean).
 - [ ] Anything a human must do is in `docs/SETUP_CHECKLIST.md`.
@@ -181,6 +206,8 @@ For every UI creation or update:
 5. Keep truly one-off composition geometry local.
 
 Do not hardcode reusable colors, typography, spacing, radii, or motion into feature components.
+Lint rejects colour literals (hex, `rgb()`/`rgba()`, `hsl()`/`hsla()`) anywhere outside `src/theme`
+and the mock data — Fun and Exams included.
 
 All text goes through `src/ui/typography` (`SFProBody`, `MonoLabel`, `SerifTitle`, …; see
 [ADR 0015](docs/adr/0015-typography-components.md)): pick a `variant` and a semantic `tone`,
@@ -204,7 +231,7 @@ When UI work establishes a lasting convention, persist that convention in the ap
 
 The expected flow is:
 
-theme/design system → shared primitive or variant → feature component → screen
+theme/design system → ui primitive or variant → entity component → feature component → screen
 
 `marketing/SundayBest-screens/` is the source of truth for how screens should look
 
@@ -219,7 +246,8 @@ theme/design system → shared primitive or variant → feature component → sc
   folder inside one of these (`organisms/tab-bar/`); a small system that isn't one
   component keeps its own folder beside them (`burst/`, `header-entrance/`).
 - Keep files short: about 250 lines at most, data files aside. A long render is
-  split into named components, not left as one long block of unnamed JSX.
+  split into named components, not left as one long block of unnamed JSX. Lint
+  enforces the limit (`max-lines`), with data files, Fun and Exams exempt.
 - Always use the following practices when possible:
 - Pure components
 - Single use functions

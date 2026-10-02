@@ -35,7 +35,7 @@ export function DotPagination({ count, activeIndex, variant = "dot", testID }: D
           size={DOT_SIZE}
           activeWidth={variant === "pill" ? PILL_WIDTH : DOT_SIZE}
           color={theme.colors.lightIcon}
-          activeColor={theme.palette.black}
+          activeColor={theme.colors.text}
         />
       ))}
     </View>

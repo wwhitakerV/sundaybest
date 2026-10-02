@@ -1,11 +1,12 @@
 import { StyleSheet, View } from "react-native";
 
 import type { DayReading } from "@/types/domain";
-import { SermonClipCard } from "./SermonClipCard";
+import { SermonClipCard } from "@/entities/sermon";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
 import { space } from "@/theme";
+import { formatDuration } from "@/utils/time/formatDuration";
 import { DisplayTitle } from "@/ui/typography/DisplayTitle";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
@@ -30,7 +31,9 @@ export function ReadStep({ dayNumber, reading, followStyle }: ReadStepProps) {
             {paragraph}
           </SFProBody>
         ))}
-        {reading.sermonClip && <SermonClipCard startSeconds={reading.sermonClip.startSeconds} />}
+        {reading.sermonClip && (
+          <SermonClipCard playing={false} clock={formatDuration(reading.sermonClip.startSeconds)} />
+        )}
       </StudyFollow>
     </View>
   );

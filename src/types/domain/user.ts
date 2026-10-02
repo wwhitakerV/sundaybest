@@ -19,6 +19,9 @@ export type ThemePreference = "system" | "light" | "dark";
 export type TextSize = "small" | "default" | "large" | "extraLarge";
 
 /** One user's preferences. */
+/** The paper the Daily Study is read on: four lights, two darks. */
+export type ReadingPaper = "white" | "ivory" | "cream" | "sepia" | "dusk" | "night";
+
 export type UserSettings = Entity & {
   userId: Id;
   theme: ThemePreference;
@@ -29,4 +32,8 @@ export type UserSettings = Entity & {
   /** Whether new plans include a Quick Check quiz by default. */
   quickCheckByDefault: boolean;
   hapticsEnabled: boolean;
+  /** Points added to (or taken from) the Daily Study's text, from its reading sheet. */
+  readingTextOffset: number;
+  /** The paper the Daily Study is read on. */
+  readingPaper: ReadingPaper;
 };

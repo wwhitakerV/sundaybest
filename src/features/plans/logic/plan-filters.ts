@@ -22,6 +22,23 @@ export function getPlanFilterOptions(counts: PlanCounts): PlanFilterOption[] {
   ];
 }
 
+/** What the library says when the filter picked holds no plans. */
+export function describeEmptyFilter(filter: string): { title: string; message: string } {
+  switch (filter) {
+    case "In progress":
+      return { title: "Nothing in progress", message: "Start a plan and it will show here." };
+    case "Done":
+      return { title: "No finished plans yet", message: "Plans you finish will show here." };
+    case "Saved":
+      return {
+        title: "Nothing saved yet",
+        message: "Save a plan from its More menu to keep it here.",
+      };
+    default:
+      return { title: "No plans yet", message: "Add a sermon and your first plan will show here." };
+  }
+}
+
 /**
  * The plans a filter shows, straight from the store's selectors — never a
  * second list kept alongside: All is every plan the user has, In progress

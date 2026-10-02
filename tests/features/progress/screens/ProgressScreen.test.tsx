@@ -32,7 +32,10 @@ function Elsewhere() {
   const attemptId = attempt?.id ?? "";
   return (
     <>
-      <Pressable testID="finish-day" onPress={() => actions.completePlanDay(`${ACTIVE}-day-2`)} />
+      <Pressable
+        testID="finish-day"
+        onPress={() => actions.finishPlanDay(`${ACTIVE}-day-2`, null)}
+      />
       <Pressable testID="quiz-start" onPress={() => actions.startQuizAttempt(TEMPTATION_QUIZ)} />
       <Pressable
         testID="quiz-answer-b"

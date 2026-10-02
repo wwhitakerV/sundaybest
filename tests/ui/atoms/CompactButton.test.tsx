@@ -3,6 +3,8 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 import { Play } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 
+import { lightTheme } from "@/theme/tokens";
+
 import { CompactButton } from "@/ui/atoms/CompactButton";
 
 /** Stands in for an icon, so where it lands in the button can be read. */
@@ -118,5 +120,16 @@ describe("CompactButton", () => {
     );
 
     expect(screen.getByTestId("a-compact")).toHaveTextContent("Play now→");
+  });
+
+  it("is soft: the segment fill and a 1pt container border, with dark words", () => {
+    render(<CompactButton testID="a-compact" label="Go" tone="soft" onPress={() => undefined} />);
+
+    expect(screen.getByTestId("a-compact")).toHaveStyle({
+      backgroundColor: lightTheme.colors.segmentBackground,
+      borderWidth: 1,
+      borderColor: lightTheme.colors.containerBorder,
+    });
+    expect(screen.getByText("Go")).toHaveStyle({ color: lightTheme.colors.inkOnLight });
   });
 });

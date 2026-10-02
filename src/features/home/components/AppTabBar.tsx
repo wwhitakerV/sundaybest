@@ -3,7 +3,7 @@ import type { BottomTabBarProps } from "expo-router/build/react-navigation/botto
 
 import { tapFeedback } from "@/core/haptics/haptics";
 import { TabBar } from "@/ui/organisms/tab-bar/TabBar";
-import { NEW_PLAN_HREF } from "../logic/routes";
+import { NEW_PLAN_HREF } from "@/entities/plan";
 
 /**
  * The app's tab bar: the generic `TabBar`, with a tap's feel on every press

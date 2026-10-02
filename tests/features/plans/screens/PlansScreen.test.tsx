@@ -1,10 +1,17 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { Pressable } from "react-native";
 
-import { useStoreActions } from "@/core/store";
+import {
+  AppStoreProvider,
+  INITIAL_STATE,
+  getCurrentPlanDay,
+  getSermonForPlan,
+  useStoreActions,
+} from "@/core/store";
+import { studyHref } from "@/entities/plan";
 import { PlansScreen } from "@/features/plans/screens/PlansScreen";
 
 jest.mock("expo-router", () => ({
@@ -21,8 +28,8 @@ const TEMPTATION = "plan-overcome-temptation";
 
 /** A stand-in for finishing a day elsewhere in the app, beside the screen. */
 function FinishDay({ dayId }: { dayId: string }) {
-  const { completePlanDay } = useStoreActions();
-  return <Pressable testID="finish-day" onPress={() => completePlanDay(dayId)} />;
+  const { finishPlanDay } = useStoreActions();
+  return <Pressable testID="finish-day" onPress={() => finishPlanDay(dayId, null)} />;
 }
 
 beforeEach(() => {
@@ -64,21 +71,15 @@ describe("PlansScreen", () => {
     expect(screen.getByTestId("plans-filter-pills-option-Saved")).toHaveTextContent("Saved2");
   });
 
-  it("fills the filter picked in the brand red", () => {
+  it("marks the filter picked as selected", () => {
     render(<PlansScreen />);
 
-    expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveStyle({
-      backgroundColor: "#D62626",
-    });
+    expect(screen.getByTestId("plans-filter-pills-option-All")).toBeSelected();
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
 
-    expect(screen.getByTestId("plans-filter-pills-option-Done")).toHaveStyle({
-      backgroundColor: "#D62626",
-    });
-    expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveStyle({
-      backgroundColor: "#F7F1F1",
-    });
+    expect(screen.getByTestId("plans-filter-pills-option-Done")).toBeSelected();
+    expect(screen.getByTestId("plans-filter-pills-option-All")).not.toBeSelected();
   });
 
   it("lists every plan under All", () => {
@@ -115,7 +116,7 @@ describe("PlansScreen", () => {
     render(<PlansScreen />);
 
     const card = screen.getByTestId(`plans-item-${ACTIVE}`);
-    expect(card).toHaveTextContent(/In progress/);
+    expect(card).not.toHaveTextContent(/In progress/);
     expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
     expect(card).toHaveTextContent(/Day 2 of 6/);
   });
@@ -125,15 +126,16 @@ describe("PlansScreen", () => {
 
     const card = screen.getByTestId(`plans-item-${STILL_PRAYING}`);
     expect(card).toHaveTextContent(/Still Praying/);
-    expect(card).toHaveTextContent(/Not started · 3 days/);
+    expect(card).toHaveTextContent(/3 days/);
+    expect(card).not.toHaveTextContent(/Not started/);
   });
 
   it("shows a finished plan as done, with when it finished", () => {
     render(<PlansScreen />);
 
     const card = screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`);
-    expect(card).toHaveTextContent(/Done/);
     expect(card).toHaveTextContent(/Finished Sep 5/);
+    expect(screen.getByTestId(`plans-progress-${NEGATIVE_THINKING}-flame`)).toBeOnTheScreen();
   });
 
   it("opens the plan pressed", () => {
@@ -168,18 +170,46 @@ describe("PlansScreen", () => {
     }
   });
 
-  it("gives a plan no button of its own: the plan itself opens", () => {
+  it("shows Continue on a plan in progress, opening its study at the current day", () => {
+    const day = getCurrentPlanDay(INITIAL_STATE, ACTIVE)?.dayNumber;
     render(<PlansScreen />);
 
-    expect(screen.queryByTestId(`plans-action-${ACTIVE}`)).toBeNull();
-    expect(screen.queryByText("Continue")).toBeNull();
+    expect(screen.getByTestId(`plans-action-${ACTIVE}`)).toHaveTextContent("Continue");
+    fireEvent.press(screen.getByTestId(`plans-action-${ACTIVE}`));
+
+    expect(day).toBeDefined();
+    expect(mockPush).toHaveBeenCalledWith(studyHref(ACTIVE, day ?? 0));
   });
 
-  it("separates the plans with a thin line, with none after the last", () => {
+  it("shows Start on a plan not started, opening its first day", () => {
     render(<PlansScreen />);
 
-    const plans = screen.getAllByTestId(/^plans-item-/);
-    expect(screen.getAllByTestId("plans-divider")).toHaveLength(plans.length - 1);
+    expect(screen.getByTestId(`plans-action-${STILL_PRAYING}`)).toHaveTextContent("Start");
+    fireEvent.press(screen.getByTestId(`plans-action-${STILL_PRAYING}`));
+
+    expect(mockPush).toHaveBeenCalledWith(studyHref(STILL_PRAYING, 1));
+  });
+
+  it("shows no action on a finished plan", () => {
+    render(<PlansScreen />);
+
+    expect(screen.queryByTestId(`plans-action-${NEGATIVE_THINKING}`)).toBeNull();
+  });
+
+  it("names each plan's church under its title", () => {
+    const church = getSermonForPlan(INITIAL_STATE, ACTIVE)?.church;
+    render(<PlansScreen />);
+
+    expect(church).toBeTruthy();
+    expect(
+      within(screen.getByTestId(`plans-item-${ACTIVE}`)).getByText(church ?? "?"),
+    ).toBeOnTheScreen();
+  });
+
+  it("spaces the plans as separate cards, with no line between them", () => {
+    render(<PlansScreen />);
+
+    expect(screen.queryAllByTestId("plans-divider")).toHaveLength(0);
   });
 
   it("shows a plan's progress moving as soon as a day of it is finished", () => {
@@ -193,5 +223,37 @@ describe("PlansScreen", () => {
     fireEvent.press(screen.getByTestId("finish-day"));
 
     expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveTextContent(/Day 3 of 6/);
+  });
+
+  it("says so when the filter picked holds no plans", () => {
+    render(
+      <AppStoreProvider initialState={{ ...INITIAL_STATE, library: {} }}>
+        <PlansScreen />
+      </AppStoreProvider>,
+    );
+
+    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
+
+    const empty = screen.getByTestId("plans-empty");
+    expect(within(empty).getByText("Nothing saved yet")).toBeOnTheScreen();
+    expect(
+      within(empty).getByText("Save a plan from its More menu to keep it here."),
+    ).toBeOnTheScreen();
+    expect(screen.queryAllByTestId(/^plans-item-/)).toHaveLength(0);
+  });
+
+  it("shows no empty state while the filter holds plans", () => {
+    render(<PlansScreen />);
+
+    expect(screen.queryByTestId("plans-empty")).toBeNull();
+  });
+
+  it("shows each plan with a progress dial at its percent", () => {
+    render(<PlansScreen />);
+
+    expect(screen.getByTestId(`plans-progress-${ACTIVE}`)).toHaveProp(
+      "accessibilityValue",
+      expect.objectContaining({ now: 17 }),
+    );
   });
 });

@@ -1,16 +1,10 @@
 import { useState } from "react";
 
 import {
-  getAttemptAnswers,
   getDayScripture,
-  getQuizAttempt,
-  getQuizForDay,
-  getQuizQuestions,
-  getQuizScore,
-  getQuizStatus,
+  getQuickCheckStanding,
   getReflectionsForDay,
   useAppSelector,
-  type AppState,
 } from "@/core/store";
 import type { PlanDay } from "@/types/domain";
 import {
@@ -18,7 +12,6 @@ import {
   describeDaySteps,
   describeDayTile,
   describeQuickCheckStep,
-  type QuickCheckStanding,
 } from "../logic/day-rail";
 
 /**
@@ -61,18 +54,5 @@ export function useSelectedDay(input: {
       steps,
       quickCheck: describeQuickCheckStep(day, quickCheckEnabled ? content.quiz : null),
     },
-  };
-}
-
-/** Where a day's Quick Check stands — none if it hasn't one. */
-function getQuickCheckStanding(state: AppState, dayId: string): QuickCheckStanding | null {
-  const quiz = getQuizForDay(state, dayId);
-  if (!quiz) return null;
-  const attempt = getQuizAttempt(state, quiz.id);
-  return {
-    status: getQuizStatus(state, quiz.id),
-    questionCount: getQuizQuestions(state, quiz.id).length,
-    answeredCount: attempt ? getAttemptAnswers(state, attempt.id).length : 0,
-    correctCount: attempt ? (getQuizScore(state, attempt.id)?.correct ?? 0) : 0,
   };
 }

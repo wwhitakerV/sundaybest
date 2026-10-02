@@ -1,6 +1,8 @@
 import type { PlanDay, StudyStep } from "@/types/domain";
 import { formatShortDate } from "@/utils/dates/formatShortDate";
 import { STUDY_STEPS } from "./study-steps";
+import { formatDay } from "@/entities/plan";
+import type { QuickCheckStanding } from "@/core/store";
 
 /**
  * Plan Detail's days: a row of tiles — where you are at a glance — and, for
@@ -27,7 +29,7 @@ export function describeDayTile(
   const today = mark === null && day.dayNumber === currentDayNumber;
   const date = day.scheduledOn ? formatShortDate(day.scheduledOn) : null;
   const standing = mark === "done" ? "done" : mark === "locked" ? "locked" : today ? "today" : null;
-  const accessibilityLabel = [`Day ${day.dayNumber}`, standing, date]
+  const accessibilityLabel = [formatDay(day.dayNumber), standing, date]
     .filter((part) => part !== null)
     .join(", ");
   return { number: day.dayNumber, date, mark, today, accessibilityLabel };
@@ -115,14 +117,6 @@ export function describeDaySteps(
     return describeStep(key, label, details.get(key) ?? null, status);
   });
 }
-
-/** Where a day's Quick Check stands, and what it asks. */
-export type QuickCheckStanding = {
-  status: "notStarted" | "inProgress" | "completed";
-  questionCount: number;
-  answeredCount: number;
-  correctCount: number;
-};
 
 /**
  * A day's Quick Check, for after its study — none without one. It opens once

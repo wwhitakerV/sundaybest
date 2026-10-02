@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 
+import { motion } from "@/theme";
+
 export type TabLayout = { x: number; width: number };
 
-const INDICATOR_SPRING = { damping: 18, stiffness: 220, mass: 0.7 };
+const INDICATOR_SPRING = motion.slide;
 const INDICATOR_FADE_OUT_MS = 150;
 
 /**

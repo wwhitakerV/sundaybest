@@ -1,6 +1,7 @@
 import {
   getChoiceLook,
   getQuestionKicker,
+  getQuickCheckPage,
   getQuickCheckAction,
   getScoreHeadline,
   splitVersePrompt,
@@ -147,5 +148,20 @@ describe("getScoreHeadline", () => {
 
   it("invites another look when most were missed", () => {
     expect(getScoreHeadline({ correct: 0, total: 2 })).toBe("Worth another look");
+  });
+});
+
+describe("getQuickCheckPage", () => {
+  it("is the start page, 0, before the quiz is begun", () => {
+    expect(getQuickCheckPage({ status: "notStarted", currentIndex: -1, questionCount: 3 })).toBe(0);
+  });
+
+  it("is the question's position, from 1, while in progress", () => {
+    expect(getQuickCheckPage({ status: "inProgress", currentIndex: 0, questionCount: 3 })).toBe(1);
+    expect(getQuickCheckPage({ status: "inProgress", currentIndex: 2, questionCount: 3 })).toBe(3);
+  });
+
+  it("is the score page, one past the last question, once completed", () => {
+    expect(getQuickCheckPage({ status: "completed", currentIndex: -1, questionCount: 3 })).toBe(4);
   });
 });

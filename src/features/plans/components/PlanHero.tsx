@@ -8,15 +8,19 @@ import {
 import { Link } from "expo-router";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 
-import { GradientBackdrop } from "@/ui/atoms/GradientBackdrop";
-import { HeroContent, type ContinueHandOver, type HeroPlan } from "@/ui/hero/HeroContent";
-import { HeroContentFade } from "@/ui/hero/HeroContentFade";
-import { HERO_BOTTOM_SPACE, HERO_WASH_OPACITY, HERO_WORDS_GAP } from "@/ui/hero/hero-layout";
+import {
+  getHeroPalette,
+  HERO_BOTTOM_SPACE,
+  HERO_WORDS_GAP,
+  HeroBackdrop,
+  HeroContent,
+  HeroContentFade,
+  type ContinueHandOver,
+  type HeroPlan,
+} from "@/entities/plan";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { radius, useTheme } from "@/theme";
-import { getBackdropStops } from "@/utils/color/getBackdropStops";
-import { prefersLightInk } from "@/utils/color/prefersLightInk";
 import type { PlanArtworkFrame } from "../logic/plan-artwork";
 
 /** As Home's hero's artwork. */
@@ -69,10 +73,8 @@ export function PlanHero({ plan, artwork, motion, onContinue }: PlanHeroProps) {
   const theme = useTheme();
   const { thumbnailUrl, colors } = plan;
   const { artworkStyle, colourStyle, continueHandOver, heroHeight, onHeroLayout } = motion;
-  const colour = colors.at(0) ?? theme.colors.featureBackdrop;
-  const stops = getBackdropStops(colors, theme.colors.featureBackdrop);
+  const { colour, stops, light } = getHeroPalette(colors, theme.colors.featureBackdrop);
   const { top, left, width, height, bottom } = artwork;
-  const underlay = thumbnailUrl ? { uri: thumbnailUrl, opacity: HERO_WASH_OPACITY } : undefined;
 
   return (
     <View testID="plan-overview-hero" onLayout={onHeroLayout} style={{ backgroundColor: colour }}>
@@ -81,10 +83,10 @@ export function PlanHero({ plan, artwork, motion, onContinue }: PlanHeroProps) {
         pointerEvents="none"
         style={[styles.colour, colourStyle]}
       >
-        <GradientBackdrop
+        <HeroBackdrop
           testID="plan-overview-hero-backdrop"
-          stops={stops}
-          {...(underlay && { underlay })}
+          colors={colors}
+          thumbnailUrl={thumbnailUrl}
         />
       </Animated.View>
 
@@ -124,7 +126,7 @@ export function PlanHero({ plan, artwork, motion, onContinue }: PlanHeroProps) {
 
       <HeroContent
         plan={plan}
-        light={prefersLightInk(colour)}
+        light={light}
         onContinue={onContinue}
         continueHandOver={continueHandOver}
         // The days below show how far through it is.

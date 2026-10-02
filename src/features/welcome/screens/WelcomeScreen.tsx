@@ -1,17 +1,13 @@
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
 
 import { Screen } from "@/ui/organisms/Screen";
 import { Button } from "@/ui/atoms/Button";
 import { DayStrip } from "../components/DayStrip";
-import { SAMPLE_PLAN_ID, planOverviewHref } from "@/features/plans";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
-import { tapFeedback } from "@/core/haptics/haptics";
-import { getUserPlans, useAppSelector } from "@/core/store";
 import { IntroStory } from "../components/IntroStory";
 import { WelcomeSteps } from "../components/WelcomeSteps";
+import { useWelcomeStart } from "../hooks/use-welcome-start";
 import { useVisit } from "../hooks/use-visit";
-import { getStartRoutes } from "../logic/start";
 import { space } from "@/theme";
 import { DisplayTitle } from "@/ui/typography/DisplayTitle";
 import { MonoBody } from "@/ui/typography/MonoBody";
@@ -19,7 +15,6 @@ import { Wordmark } from "@/ui/typography/Wordmark";
 import { Span } from "@/ui/typography/Span";
 
 export function WelcomeScreen() {
-  const router = useRouter();
   // The intro story tells how it works. With Reduce Motion on it holds still
   // on its opening — the first screen on stage — and the steps are listed instead.
   const reduceMotion = useReduceMotion();
@@ -27,7 +22,7 @@ export function WelcomeScreen() {
   // visit: once covered it's unmounted (its timers and animations with it),
   // and it mounts fresh once the screen has come back and settled.
   const visit = useVisit();
-  const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
+  const { start, starting, seeSample } = useWelcomeStart();
 
   return (
     <Screen testID="welcome-screen">
@@ -79,17 +74,15 @@ export function WelcomeScreen() {
           <Button
             testID="welcome-get-a-plan-now-button"
             label="Get a plan now"
-            onPress={() => {
-              tapFeedback();
-              for (const route of getStartRoutes(hasPlans)) router.push(route);
-            }}
+            loading={starting}
+            onPress={start}
           />
           <View style={styles.secondaryAction}>
             <Button
               testID="welcome-sample-plan-button"
               label="See a sample plan"
               variant="secondary"
-              onPress={() => router.push(planOverviewHref(SAMPLE_PLAN_ID))}
+              onPress={seeSample}
             />
           </View>
           <MonoBody variant="supporting" tone="textMuted" style={styles.footnote}>

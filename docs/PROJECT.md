@@ -563,11 +563,13 @@ shipped behavior:
 ## Architecture
 
 Feature-sliced, with the dependency direction enforced in ESLint. Full rationale
-in [ADR 0001](./adr/0001-feature-sliced-architecture.md); each folder under `src/`
-has a README stating what belongs there and what must never go there.
+in [ADR 0001](./adr/0001-feature-sliced-architecture.md), with shared SundayBest
+concepts in `src/entities` ([ADR 0017](./adr/0017-entities-layer.md)); each folder
+under `src/` has a README stating what belongs there and what must never go there.
 
 ```
-app -> features -> ui, core, hooks, utils, theme, types
+app -> features -> entities, ui, core, hooks, utils, theme, types
+entities -> entities, ui, hooks, utils, theme, types
 core -> utils, theme, types
 ui / hooks -> utils, theme, types
 utils -> types

@@ -34,8 +34,16 @@ import {
   updateBibleTranslation,
   updateReminderEnabled,
   updateReminderTime,
+  updateReadingPaper,
+  updateReadingTextOffset,
   updateTextSize,
 } from "./reducers/settings";
+import {
+  commitReflections,
+  createAndBuildPlan,
+  finishPlanDay,
+  turnOnReminderAt,
+} from "./reducers/operations";
 import type { AppState } from "./state";
 
 /**
@@ -60,6 +68,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return savePlan(state, action);
     case "plan/removeSaved":
       return removeSavedPlan(state, action);
+    case "plan/createAndBuild":
+      return createAndBuildPlan(state, action);
 
     case "planDay/start":
       return startPlanDay(state, action);
@@ -70,6 +80,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case "planDay/complete":
     case "progress/recordDayCompletion":
       return completePlanDay(state, action);
+    case "planDay/finish":
+      return finishPlanDay(state, action);
 
     case "reflection/save":
       return saveReflection(state, action);
@@ -79,6 +91,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return clearReflection(state, action);
     case "prayer/markPrayed":
       return markPrayed(state, action);
+    case "reflection/commit":
+      return commitReflections(state, action);
 
     case "quiz/startAttempt":
       return startQuizAttempt(state, action);
@@ -105,10 +119,16 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return updateReminderEnabled(state, action);
     case "settings/reminderTime":
       return updateReminderTime(state, action);
+    case "settings/reminderOn":
+      return turnOnReminderAt(state, action);
     case "settings/bibleTranslation":
       return updateBibleTranslation(state, action);
     case "settings/textSize":
       return updateTextSize(state, action);
+    case "settings/readingTextOffset":
+      return updateReadingTextOffset(state, action);
+    case "settings/readingPaper":
+      return updateReadingPaper(state, action);
 
     case "generation/start":
       return startPlanGeneration(state, action);

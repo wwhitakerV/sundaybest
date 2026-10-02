@@ -51,11 +51,12 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
         {title}
       </SFProBody>
       <View
+        testID={`settings-group-${title.toLowerCase().replace(/\s+/g, "-")}`}
         style={[
           styles.card,
           {
             backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.hairline,
+            borderColor: theme.colors.containerBorder,
             borderRadius: radius[24],
           },
         ]}

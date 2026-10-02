@@ -1,4 +1,7 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { StyleSheet } from "react-native";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
+
+import { lightTheme } from "@/theme/tokens";
 
 import { FilterPills, type FilterPillsProps } from "@/ui/molecules/FilterPills";
 
@@ -54,22 +57,94 @@ describe("FilterPills", () => {
     expect(screen.getByTestId("a-filter-pills-option-All")).not.toBeSelected();
   });
 
-  it("fills the selected pill in the brand red, its words in white", () => {
+  it("fills no pill: the picked one is outlined instead", () => {
     renderPills({ selected: "Done" });
 
-    expect(screen.getByTestId("a-filter-pills-option-Done")).toHaveStyle({
-      backgroundColor: "#D62626",
-    });
-    expect(screen.getByText("Done")).toHaveStyle({ color: "#FFFFFF" });
+    for (const option of OPTIONS) {
+      const style = StyleSheet.flatten(
+        screen.getByTestId(`a-filter-pills-option-${option.label}`).props.style,
+      ) as { backgroundColor?: string };
+      expect([undefined, "transparent"]).toContain(style.backgroundColor);
+    }
   });
 
-  it("fills every other pill in the off-white, its words quieter", () => {
+  it("sets every label in the text ink, picked or not", () => {
     renderPills({ selected: "Done" });
 
-    expect(screen.getByTestId("a-filter-pills-option-All")).toHaveStyle({
-      backgroundColor: "#F7F1F1",
+    expect(screen.getByText("Done")).toHaveStyle({ color: lightTheme.colors.text });
+    expect(screen.getByText("All")).toHaveStyle({ color: lightTheme.colors.text });
+  });
+
+  it("sets every count in the inactive ink", () => {
+    renderPills({ selected: "Done" });
+
+    const done = screen.getByTestId("a-filter-pills-option-Done");
+    const all = screen.getByTestId("a-filter-pills-option-All");
+    expect(within(done).getByText("1")).toHaveStyle({ color: lightTheme.colors.textInactive });
+    expect(within(all).getByText("4")).toHaveStyle({ color: lightTheme.colors.textInactive });
+  });
+
+  describe("the outline", () => {
+    function measureAll() {
+      OPTIONS.forEach((option, index) => {
+        fireEvent(screen.getByTestId(`a-filter-pills-option-${option.label}`), "layout", {
+          nativeEvent: { layout: { x: index * 80, y: 0, width: 72, height: 36 } },
+        });
+      });
+    }
+
+    it("is not drawn until the picked pill has been measured", () => {
+      renderPills();
+
+      expect(screen.queryByTestId("a-filter-pills-indicator")).toBeNull();
     });
-    expect(screen.getByText("All")).toHaveStyle({ color: "#55555D" });
+
+    it("is drawn once the pills are measured", () => {
+      renderPills();
+
+      measureAll();
+
+      expect(screen.getByTestId("a-filter-pills-indicator")).toBeOnTheScreen();
+    });
+
+    it("sits on the picked pill, as wide as it", () => {
+      renderPills({ selected: "Done" });
+
+      measureAll();
+
+      expect(screen.getByTestId("a-filter-pills-indicator")).toHaveStyle({
+        width: 72,
+        transform: [{ translateX: 160 }],
+      });
+    });
+
+    it("moves to the pill picked next", () => {
+      const { rerender } = renderPills({ selected: "Done" });
+      measureAll();
+
+      rerender(
+        <FilterPills
+          testID="a-filter-pills"
+          options={OPTIONS}
+          selected="Saved"
+          onSelect={() => undefined}
+        />,
+      );
+
+      expect(screen.getByTestId("a-filter-pills-indicator")).toHaveStyle({
+        transform: [{ translateX: 240 }],
+      });
+    });
+
+    it("is a 2pt black line that lets touches through", () => {
+      renderPills();
+
+      measureAll();
+
+      const indicator = screen.getByTestId("a-filter-pills-indicator");
+      expect(indicator).toHaveStyle({ borderColor: lightTheme.colors.text, borderWidth: 2 });
+      expect(indicator).toHaveProp("pointerEvents", "none");
+    });
   });
 
   it("rounds each option fully, as a pill", () => {

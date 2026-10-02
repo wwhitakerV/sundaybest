@@ -55,8 +55,13 @@ export function getAttemptAnswers(state: AppState, attemptId: Id): QuizAnswer[] 
   );
 }
 
+/** Whether `choiceId` is the right answer to the question. */
+export function isChoiceCorrect(state: AppState, questionId: Id, choiceId: Id): boolean {
+  return findById(state.quizQuestions, questionId)?.correctChoiceId === choiceId;
+}
+
 export function isAnswerCorrect(state: AppState, answer: QuizAnswer): boolean {
-  return findById(state.quizQuestions, answer.questionId)?.correctChoiceId === answer.choiceId;
+  return isChoiceCorrect(state, answer.questionId, answer.choiceId);
 }
 
 /** How one question went in an attempt. */
@@ -99,5 +104,26 @@ export function getQuizScore(state: AppState, attemptId: Id): QuizScore | null {
     answered: answers.length,
     total,
     percentage: total === 0 ? 0 : Math.round((correct / total) * 100),
+  };
+}
+
+/** Where a day's Quick Check stands: how far through, and how well. */
+export type QuickCheckStanding = {
+  status: QuizStatus;
+  questionCount: number;
+  answeredCount: number;
+  correctCount: number;
+};
+
+/** Where a day's Quick Check stands — none if it hasn't one. */
+export function getQuickCheckStanding(state: AppState, dayId: Id): QuickCheckStanding | null {
+  const quiz = getQuizForDay(state, dayId);
+  if (!quiz) return null;
+  const attempt = getQuizAttempt(state, quiz.id);
+  return {
+    status: getQuizStatus(state, quiz.id),
+    questionCount: getQuizQuestions(state, quiz.id).length,
+    answeredCount: attempt ? getAttemptAnswers(state, attempt.id).length : 0,
+    correctCount: attempt ? (getQuizScore(state, attempt.id)?.correct ?? 0) : 0,
   };
 }

@@ -5,12 +5,10 @@ import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { StepProgress } from "@/ui/atoms/StepProgress";
 import { space } from "@/theme";
-import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProLabel } from "@/ui/typography/SFProLabel";
-import { Span } from "@/ui/typography/Span";
 
 const STEP_LABELS = ["Read", "Scripture", "Reflect", "Pray"] as const;
-// Matches the real `StudyHeader`: text size left (20pt icon), close right.
+// Matches the real `StudyHeader`: close left, text size right (20pt icon).
 const TEXT_SIZE_ICON_SIZE = 20;
 
 export type StudyMockHeaderProps = {
@@ -33,18 +31,18 @@ export function StudyMockHeader({ activeStep, testID }: StudyMockHeaderProps) {
         title="Day 2 of 6"
         left={
           <HeaderIconButton
-            testID={`${testID}-text-size`}
-            icon={ALargeSmall}
-            size={TEXT_SIZE_ICON_SIZE}
-            accessibilityLabel="Text size"
+            testID={`${testID}-close`}
+            icon={X}
+            accessibilityLabel="Close"
             onPress={noop}
           />
         }
         right={
           <HeaderIconButton
-            testID={`${testID}-close`}
-            icon={X}
-            accessibilityLabel="Close"
+            testID={`${testID}-text-size`}
+            icon={ALargeSmall}
+            size={TEXT_SIZE_ICON_SIZE}
+            accessibilityLabel="Text size"
             onPress={noop}
           />
         }
@@ -72,15 +70,3 @@ const styles = StyleSheet.create({
   steps: { gap: space[10], marginTop: space[4] },
   stepLabels: { flexDirection: "row", justifyContent: "space-between" },
 });
-
-export type StudyKickerProps = { label: string };
-
-/** A study step's mono kicker, e.g. "Day 2  Scripture" — part of the step's body. */
-export function StudyKicker({ label }: StudyKickerProps) {
-  return (
-    <MonoLabel>
-      {"Day 2  "}
-      <Span tone="textMuted">{label}</Span>
-    </MonoLabel>
-  );
-}

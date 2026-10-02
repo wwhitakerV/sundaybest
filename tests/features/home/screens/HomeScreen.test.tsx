@@ -234,6 +234,6 @@ describe("HomeScreen", () => {
     renderHome();
 
     expect(screen.getByTestId("home-tab-date")).toHaveTextContent(/^\d{2}\.\d{2}\.\d{2}$/);
-    expect(screen.getByTestId("home-tab-date")).toHaveStyle(lightTheme.typography.dayStrip);
+    expect(screen.getByTestId("home-tab-date")).toHaveStyle(lightTheme.typography.headerDate);
   });
 });

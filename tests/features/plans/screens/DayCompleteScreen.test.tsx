@@ -1,19 +1,11 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import Svg from "react-native-svg";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { Text } from "react-native";
-
-import {
-  AppStoreProvider,
-  INITIAL_STATE,
-  appReducer,
-  getQuizForDay,
-  getQuizStatus,
-  useAppSelector,
-  type AppState,
-} from "@/core/store";
+import { AppStoreProvider, INITIAL_STATE, appReducer, type AppState } from "@/core/store";
 import { DayCompleteScreen } from "@/features/plans/screens/DayCompleteScreen";
+import { lightTheme } from "@/theme/tokens";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -22,7 +14,6 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: jest.fn<{ planId: string; day: string }, []>(),
 }));
 
-const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, []>();
@@ -42,21 +33,11 @@ function finished(planId: string, dayNumber: number): AppState {
   });
 }
 
-/** Where the day's Quick Check stands in the store. */
-function QuizProbe({ planId, dayNumber }: { planId: string; dayNumber: number }) {
-  const status = useAppSelector((state) => {
-    const quiz = getQuizForDay(state, `${planId}-day-${dayNumber}`);
-    return quiz ? getQuizStatus(state, quiz.id) : "no quiz";
-  });
-  return <Text testID="quiz-probe">{status}</Text>;
-}
-
 function renderDayComplete(planId: string, dayNumber: number) {
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId, day: String(dayNumber) });
   return render(
     <AppStoreProvider initialState={finished(planId, dayNumber)}>
       <DayCompleteScreen />
-      <QuizProbe planId={planId} dayNumber={dayNumber} />
     </AppStoreProvider>,
   );
 }
@@ -66,94 +47,100 @@ beforeEach(() => {
     getParent: () => ({ goBack: mockExitSession }),
   });
   jest.mocked(useRouter).mockReturnValue({
-    push: mockPush,
     replace: mockReplace,
     navigate: mockNavigate,
   } as unknown as ReturnType<typeof useRouter>);
 });
 
 describe("DayCompleteScreen", () => {
+  it("says so for a plan that doesn't exist, with the way out of the session", () => {
+    renderDayComplete("no-such-plan", 1);
+
+    expect(screen.queryByTestId("day-complete-screen")).toBeNull();
+    expect(screen.getByRole("header", { name: "This day isn't here" })).toBeVisible();
+    fireEvent.press(screen.getByTestId("day-complete-not-found-action"));
+    expect(mockExitSession).toHaveBeenCalledTimes(1);
+  });
+
   it("is addressable as day-complete-screen", () => {
     renderDayComplete(STILL_PRAYING, 1);
 
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
   });
 
-  it("shows placeholder body text", () => {
+  it("celebrates the day with the flame ring and a header", () => {
     renderDayComplete(STILL_PRAYING, 1);
 
-    expect(screen.getByText("...")).toBeVisible();
+    expect(screen.getByTestId("day-complete-ring")).toBeVisible();
+    expect(screen.getByRole("header", { name: "Day 1 done" })).toBeVisible();
   });
 
-  it("offers the day's Quick Check, when it has one", () => {
+  it("spells the streak, today's study included", () => {
+    renderDayComplete(STILL_PRAYING, 1);
+
+    expect(screen.getByTestId("day-complete-streak")).toBeVisible();
+    expect(screen.getByText("Two day streak")).toBeVisible();
+  });
+
+  it("shows the week", () => {
+    renderDayComplete(STILL_PRAYING, 1);
+
+    expect(screen.getByTestId("day-complete-week")).toBeVisible();
+  });
+
+  it("looks ahead to the next day's reading and when", () => {
+    renderDayComplete(STILL_PRAYING, 1);
+
+    expect(screen.getByTestId("day-complete-up-next")).toBeVisible();
+    expect(screen.getByText("Up next: A refuge")).toBeVisible();
+    expect(screen.getByText("Tomorrow at 6:30 AM")).toBeVisible();
+  });
+
+  it("looks ahead to nothing after a plan's last day", () => {
     renderDayComplete(TEMPTATION, 1);
 
-    expect(screen.getByTestId("day-complete-quick-check-button")).toBeVisible();
+    expect(screen.queryByTestId("day-complete-up-next")).toBeNull();
   });
 
-  it("offers no Quick Check for a day without one", () => {
-    renderDayComplete(STILL_PRAYING, 1);
+  it("offers one button, Done!, whatever the day", () => {
+    renderDayComplete(TEMPTATION, 1);
 
+    expect(screen.getByTestId("day-complete-done-button")).toBeVisible();
+    expect(screen.getByText("Done!")).toBeVisible();
     expect(screen.queryByTestId("day-complete-quick-check-button")).toBeNull();
+    expect(screen.queryByTestId("day-complete-back-button")).toBeNull();
   });
 
-  it("starts the day's Quick Check and opens it", () => {
-    renderDayComplete(TEMPTATION, 1);
-
-    fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
-
-    expect(screen.getByTestId("quiz-probe")).toHaveTextContent("inProgress");
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: "/study/[planId]/quick-check",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: TEMPTATION, day: "1" }),
-      }),
-    );
-  });
-
-  it("navigates to Plans when the Plans action is pressed", () => {
+  it("leaves the session for the plan's overview on Done!", () => {
     renderDayComplete(STILL_PRAYING, 1);
 
-    fireEvent.press(screen.getByTestId("day-complete-plans-button"));
+    fireEvent.press(screen.getByTestId("day-complete-done-button"));
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/plans");
+    expect(mockNavigate).toHaveBeenCalledWith({
+      pathname: "/(tabs)/plans/[planId]",
+      params: { planId: STILL_PRAYING },
+    });
   });
 
-  it("navigates to Home when the Home action is pressed", () => {
+  it("is laid out as a milestone page", () => {
     renderDayComplete(STILL_PRAYING, 1);
 
-    fireEvent.press(screen.getByTestId("day-complete-home-button"));
-
-    expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/home");
+    expect(screen.getByTestId("day-complete-screen-body")).toBeOnTheScreen();
   });
 
-  it("offers the next day, now open, when days remain in the plan", () => {
+  it("marks the day with an outline flame, not a filled one", () => {
     renderDayComplete(STILL_PRAYING, 1);
 
-    fireEvent.press(screen.getByTestId("day-complete-next-day-button"));
-
-    expect(mockReplace).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: "/study/[planId]",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: STILL_PRAYING, day: "2" }),
-      }),
-    );
+    const flame = within(screen.getByTestId("day-complete-ring")).UNSAFE_getByType(Svg);
+    expect(flame.props.fill ?? "none").toBe("none");
   });
 
-  it("offers no next day once every day in the plan is complete", () => {
-    renderDayComplete(TEMPTATION, 1);
+  it("rings the day in red", () => {
+    renderDayComplete(STILL_PRAYING, 1);
 
-    expect(screen.queryByTestId("day-complete-next-day-button")).toBeNull();
-  });
-
-  it("shows nothing for a plan that doesn't exist", () => {
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: "no-such-plan", day: "1" });
-    render(<DayCompleteScreen />);
-
-    expect(screen.queryByTestId("day-complete-screen")).toBeNull();
+    expect(screen.getByTestId("day-complete-ring")).toHaveStyle({
+      borderColor: lightTheme.colors.accent,
+    });
   });
 });

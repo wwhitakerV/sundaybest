@@ -13,6 +13,7 @@ import {
   type AppAction,
   type AppState,
   type GeneratedPlanContent,
+  type ReflectionWrite,
 } from "@/core/store";
 import {
   BUILDING_PLAN_ID,
@@ -32,6 +33,7 @@ const COMPLETED = "plan-break-the-cycle-of-negative-thinking";
 const READY = "plan-still-praying";
 const DRAFT = DRAFT_PLAN_ID;
 const BUILDING = BUILDING_PLAN_ID;
+const SAVED = "plan-overcome-temptation";
 const AT = "2026-09-23T07:00:00.000Z";
 const TODAY = "2026-09-23";
 
@@ -428,5 +430,183 @@ describe("plan generation", () => {
 
   it("won't start a second build while one is under way", () => {
     expect(run({ type: "generation/start", generationId: "g", planId: DRAFT, at: AT })).toBe(state);
+  });
+});
+
+describe("one domain operation, one dispatch", () => {
+  const prayerOf = (id: string) => `${id}-prayer`;
+  const prayerFor = (next: AppState, id: string) => find(next.prayers, prayerOf(id));
+
+  describe("planDay/finish", () => {
+    const finish = (id: string, prayerId: string | null): AppAction => ({
+      type: "planDay/finish",
+      dayId: id,
+      prayerId,
+      today: TODAY,
+      at: AT,
+    });
+    const prayed = (id: string): AppAction => ({
+      type: "prayer/markPrayed",
+      prayerId: prayerOf(id),
+      at: AT,
+    });
+
+    it("marks the prayer prayed then completes the day, as the two actions in order", () => {
+      const day = dayId(ACTIVE, 2);
+      const next = run(finish(day, prayerOf(day)));
+
+      expect(next).toEqual(run(prayed(day), completeDay(ACTIVE, 2)));
+      expect(prayerFor(next, day)?.prayedAt).toBe(AT);
+      expect(getPlanDay(next, ACTIVE, 2)?.status).toBe("completed");
+    });
+
+    it("still marks the prayer on a plan's last day, though completing it completes the plan", () => {
+      const day = dayId(SAVED, 1);
+      const next = run(finish(day, prayerOf(day)));
+
+      expect(getPlanById(next, SAVED)?.status).toBe("completed");
+      expect(prayerFor(next, day)?.prayedAt).toBe(AT);
+      expect(next).toEqual(run(prayed(day), completeDay(SAVED, 1)));
+    });
+
+    it("completes the day alone when there is no prayer", () => {
+      const day = dayId(ACTIVE, 2);
+      const next = run(finish(day, null));
+
+      expect(next).toEqual(run(completeDay(ACTIVE, 2)));
+      expect(prayerFor(next, day)?.prayedAt).toBeNull();
+    });
+
+    it("changes nothing on a locked day, and leaves its prayer unmarked", () => {
+      const day = dayId(ACTIVE, 4);
+      const next = run(finish(day, prayerOf(day)));
+
+      expect(next).toBe(state);
+      expect(prayerFor(next, day)?.prayedAt).toBeNull();
+    });
+  });
+
+  describe("reflection/commit", () => {
+    const first = `${dayId(ACTIVE, 2)}-reflection-1`;
+    const second = `${dayId(ACTIVE, 2)}-reflection-2`;
+
+    it("applies a mix of clear, save and update in order, as the separate actions would", () => {
+      const writes: ReflectionWrite[] = [
+        { kind: "clear", reflectionId: first },
+        { kind: "save", reflectionId: second, answer: "In a friend." },
+        { kind: "update", reflectionId: second, answer: "In my family." },
+      ];
+      const next = run({ type: "reflection/commit", writes, at: AT });
+
+      expect(next).toEqual(
+        run(
+          { type: "reflection/clear", reflectionId: first, at: AT },
+          { type: "reflection/save", reflectionId: second, answer: "In a friend.", at: AT },
+          { type: "reflection/update", reflectionId: second, answer: "In my family.", at: AT },
+        ),
+      );
+      expect(find(next.reflections, first)?.answer).toBeNull();
+      expect(find(next.reflections, second)?.answer).toBe("In my family.");
+    });
+
+    it("returns the same state for an empty list of writes", () => {
+      expect(run({ type: "reflection/commit", writes: [], at: AT })).toBe(state);
+    });
+  });
+
+  describe("plan/createAndBuild", () => {
+    const input = {
+      planId: "plan-new",
+      sermonId: "sermon-new",
+      generationId: "generation-new",
+      sourceUrl: "https://youtu.be/abc123",
+      title: "A new sermon",
+      lengthDays: 4 as const,
+      quickCheckEnabled: true,
+      at: AT,
+    };
+    const twoStep = (): AppAction[] => [
+      { type: "plan/create", ...withoutGeneration(input) },
+      { type: "generation/start", generationId: input.generationId, planId: input.planId, at: AT },
+    ];
+    function withoutGeneration({ generationId: _unused, ...rest }: typeof input) {
+      return rest;
+    }
+
+    it("creates the plan and starts building it in one step", () => {
+      const from = INITIAL_STATE;
+      const next = appReducer(from, { type: "plan/createAndBuild", ...input });
+
+      expect(next).toEqual(twoStep().reduce(appReducer, from));
+      expect(getPlanById(next, "plan-new")?.status).toBe("generating");
+      expect(next.generation?.planId).toBe("plan-new");
+    });
+
+    it("does whatever generation/start does when another plan is already being built", () => {
+      const next = run({ type: "plan/createAndBuild", ...input });
+
+      expect(next).toEqual(run(...twoStep()));
+      expect(next.generation?.planId).toBe(BUILDING);
+    });
+  });
+
+  describe("settings/reminderOn", () => {
+    it("turns the reminder on at that time, as enabled then time would", () => {
+      const next = run({
+        type: "settings/reminderOn",
+        reminderId: "reminder-quick-check",
+        time: "20:15",
+        at: AT,
+      });
+
+      expect(next).toEqual(
+        run(
+          {
+            type: "settings/reminderEnabled",
+            reminderId: "reminder-quick-check",
+            enabled: true,
+            at: AT,
+          },
+          {
+            type: "settings/reminderTime",
+            reminderId: "reminder-quick-check",
+            time: "20:15",
+            at: AT,
+          },
+        ),
+      );
+      expect(find(next.reminders, "reminder-quick-check")).toMatchObject({
+        enabled: true,
+        time: "20:15",
+      });
+    });
+
+    it("changes nothing for an unknown reminder", () => {
+      expect(
+        run({ type: "settings/reminderOn", reminderId: "no-such-reminder", time: "20:15", at: AT }),
+      ).toBe(state);
+    });
+  });
+});
+
+describe("reading settings", () => {
+  it("starts at no offset on white paper", () => {
+    expect(state.settings).toMatchObject({ readingTextOffset: 0, readingPaper: "white" });
+  });
+
+  it.each([-4, 0, 2, 8])("accepts a reading text offset of %i", (offset) => {
+    const next = run({ type: "settings/readingTextOffset", offset, at: AT });
+
+    expect(next.settings.readingTextOffset).toBe(offset);
+  });
+
+  it.each([-6, 10, 3, -3, 100])("refuses a reading text offset of %i", (offset) => {
+    expect(run({ type: "settings/readingTextOffset", offset, at: AT })).toBe(state);
+  });
+
+  it("sets the reading paper", () => {
+    const next = run({ type: "settings/readingPaper", paper: "sepia", at: AT });
+
+    expect(next.settings.readingPaper).toBe("sepia");
   });
 });

@@ -26,7 +26,7 @@ file, built on one private base (`ThemedText`):
 | `SFProTitle`   | SF Pro              | `screen` screenTitle · `headline` · `headlineRegular` · `section` sectionTitle · `card` cardTitle · `step` stepTitle · `nav` navTitle · `preview` listItemLarge |
 | `SFProBody`    | SF Pro              | `body` · `bodyLoose` · `listItem` · `label` · `reading` · `detail` cardDetail                                                                                   |
 | `SFProLabel`   | SF Pro              | `button` · `compactButton` · `segment` · `segmentActive` · `filter` · `filterCount` · `tag` · `stepLabel` · `tileNumber` · `statusTime`                         |
-| `MonoLabel`    | IBM Plex Mono       | `label` metaLabel · `labelTracked` metaLabelTracked · `date` tileDate · `dayStrip` · `emphasis` metaEmphasis                                                    |
+| `MonoLabel`    | IBM Plex Mono       | `label` metaLabel · `labelTracked` metaLabelTracked · `date` tileDate · `dayStrip` · `headerDate` · `emphasis` metaEmphasis                                     |
 | `MonoBody`     | IBM Plex Mono       | `body` metaBody · `supporting` · `counter` stepCounter                                                                                                          |
 
 Plus `Span` (part of a line: keeps the line's type, may take its own tone or

@@ -6,6 +6,7 @@ import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { StepProgress } from "@/ui/atoms/StepProgress";
 import { getStepState } from "@/utils/steps/getStepState";
 import { STUDY_STEPS, STUDY_STEP_COUNT } from "../logic/study-steps";
+import { formatDayOfTotal } from "@/entities/plan";
 import { space } from "@/theme";
 import { SFProLabel } from "@/ui/typography/SFProLabel";
 
@@ -32,7 +33,7 @@ export type StudyHeaderProps = {
 
 /**
  * Shared by Read, Scripture, Reflect, and Pray — every screen in the daily
- * study flow has an identical text-size + "Day X of Y" + close header, plus
+ * study flow has an identical close + "Day X of Y" + text-size header, plus
  * the 4-segment step tracker beneath it. Local to this slice rather than
  * `src/ui`: the day/step content is specific to the plan/day study
  * experience, though it's built from `src/ui`'s generic header/progress
@@ -52,22 +53,22 @@ export function StudyHeader({
     <View style={styles.container}>
       <ScreenHeader
         testID={testID}
-        title={`Day ${day} of ${totalDays}`}
+        title={formatDayOfTotal(day, totalDays)}
         left={
+          <HeaderIconButton
+            testID={`${testID}-close-button`}
+            icon={X}
+            accessibilityLabel="Close"
+            onPress={onClose}
+          />
+        }
+        right={
           <HeaderIconButton
             testID={`${testID}-text-size-button`}
             icon={ALargeSmall}
             size={TEXT_SIZE_ICON_SIZE}
             accessibilityLabel="Text size"
             onPress={onTextSize}
-          />
-        }
-        right={
-          <HeaderIconButton
-            testID={`${testID}-close-button`}
-            icon={X}
-            accessibilityLabel="Close"
-            onPress={onClose}
           />
         }
       />

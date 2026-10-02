@@ -9,10 +9,22 @@ import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 // holds it still, as it does for people who turn it on.
 jest.mock("@/core/accessibility/use-reduce-motion", () => ({ useReduceMotion: () => true }));
 
+/**
+ * Welcome's Get a plan now — which moves on a frame later, once its spinner's
+ * drawn. `renderApp` (Expo Router's `renderRouter`) runs on fake timers, so the
+ * frame is advanced here.
+ */
+function getAPlanNow() {
+  fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+  act(() => {
+    jest.advanceTimersByTime(32);
+  });
+}
+
 /** Welcome -> Home -> the tab bar's + -> New Plan. */
 async function openNewPlan() {
   const view = renderApp();
-  fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+  getAPlanNow();
   expect(view.getPathname()).toBe("/home");
   fireEvent.press(screen.getByTestId("tab-bar-fab"));
   expect(view.getPathname()).toBe("/paste-sermon");
@@ -123,7 +135,7 @@ describe("navigation", () => {
 
   it("opens Plan Detail from Home's plan card within Home's own stack, and back again", () => {
     const view = renderApp();
-    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    getAPlanNow();
 
     // Pushed onto Home's stack (not the Plans tab's), so iOS's zoom
     // transition can run from the card.
@@ -192,10 +204,8 @@ describe("navigation", () => {
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
     expect(screen.getByTestId("day-complete-screen")).toBeVisible();
 
-    // On to day 2, then out to the plan.
-    fireEvent.press(screen.getByTestId("day-complete-next-day-button"));
-    expect(screen.getByText("Day 2 of 5")).toBeVisible();
-    fireEvent.press(screen.getByTestId("study-close-button"));
+    // Done.
+    fireEvent.press(screen.getByTestId("day-complete-done-button"));
 
     expect(screen.getByTestId("plan-overview-day-1")).toHaveAccessibleName(/^Day 1, done/);
     expect(screen.getByTestId("plan-overview-day-2")).not.toHaveAccessibleName(/locked/);
@@ -203,11 +213,11 @@ describe("navigation", () => {
   });
 
   it(
-    "takes a day's Quick Check after finishing it, scores it, and returns to Day Complete",
+    "opens a day's Quick Check on Finish, takes it to Done, lands on Day Complete, and Done! returns to the overview",
     async () => {
       const view = renderApp();
       const TEMPTATION = "plan-overcome-temptation";
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      getAPlanNow();
       fireEvent.press(screen.getByTestId("tab-plans"));
       fireEvent.press(screen.getByTestId(`plans-item-${TEMPTATION}`));
       fireEvent.press(screen.getByTestId("plan-overview-continue-button"));
@@ -216,10 +226,11 @@ describe("navigation", () => {
         await screen.findByTestId(`study-${next}-body`);
       }
       fireEvent.press(screen.getByTestId("study-nav-next-button"));
-      expect(screen.getByTestId("day-complete-screen")).toBeVisible();
-
-      fireEvent.press(screen.getByTestId("day-complete-quick-check-button"));
+      // Finish opens the Quick Check, not Day Complete.
       expect(view.getPathname()).toBe(`/study/${TEMPTATION}/quick-check`);
+      expect(screen.queryByTestId("day-complete-screen")).toBeNull();
+      expect(screen.getByTestId("quick-check-intro")).toBeVisible();
+      fireEvent.press(screen.getByTestId("quick-check-start-button"));
 
       // One question right, one wrong — all in place; the route never changes.
       fireEvent.press(screen.getByTestId("quick-check-choice-b"));
@@ -237,6 +248,10 @@ describe("navigation", () => {
 
       fireEvent.press(screen.getByTestId("quick-check-done-button"));
       expect(view.getPathname()).toBe(`/study/${TEMPTATION}/day-complete`);
+      expect(screen.getByTestId("day-complete-screen")).toBeVisible();
+
+      fireEvent.press(screen.getByTestId("day-complete-done-button"));
+      expect(view.getPathname()).toBe(`/plans/${TEMPTATION}`);
     },
     // A long walk — Plans, a whole study day, and a whole Quick Check.
     BUILD_FLOW_TIMEOUT_MS,
@@ -244,7 +259,7 @@ describe("navigation", () => {
 
   it("sets the tabs as Home, Plans, Progress, then Settings — Fun hidden for now", () => {
     renderApp();
-    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    getAPlanNow();
 
     expect(
       screen
@@ -255,7 +270,7 @@ describe("navigation", () => {
 
   it("carries no account icon in a tab's header, now Settings is a tab", () => {
     renderApp();
-    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    getAPlanNow();
 
     expect(screen.queryByTestId("home-tab-account-button")).toBeNull();
     fireEvent.press(screen.getByTestId("tab-plans"));
@@ -267,7 +282,7 @@ describe("navigation", () => {
   it("round-trips a Settings subpage back to Settings, from its tab", () => {
     const view = renderApp();
 
-    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    getAPlanNow();
     fireEvent.press(screen.getByTestId("tab-settings"));
     expect(view.getPathname()).toBe("/settings");
 
@@ -281,7 +296,7 @@ describe("navigation", () => {
   describe("header icons arriving", () => {
     it("animates Plan Detail's header buttons as it's pushed", () => {
       renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      getAPlanNow();
 
       fireEvent.press(screen.getByTestId("home-tab-active-plan"));
 

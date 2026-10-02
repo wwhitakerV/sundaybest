@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 import { PlanReadyScreen } from "@/features/plan-creation/screens/PlanReadyScreen";
 
 jest.mock("expo-router", () => ({
@@ -64,6 +65,20 @@ describe("PlanReadyScreen", () => {
     });
   });
 
+  it("starts the sample plan's day 1 when opened without a plan of its own", async () => {
+    jest.mocked(useLocalSearchParams).mockReturnValue({});
+    render(<PlanReadyScreen />);
+
+    fireEvent.press(screen.getByTestId("plan-ready-start-button"));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: "/study/[planId]",
+        params: { planId: SAMPLE_PLAN_ID, day: "1" },
+      });
+    });
+  });
+
   it("dismisses the flow to Home when Not now is pressed", () => {
     render(<PlanReadyScreen />);
 
@@ -71,5 +86,11 @@ describe("PlanReadyScreen", () => {
 
     expect(mockExitModal).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/home");
+  });
+
+  it("is laid out as a milestone page", () => {
+    render(<PlanReadyScreen />);
+
+    expect(screen.getByTestId("plan-ready-screen-body")).toBeOnTheScreen();
   });
 });

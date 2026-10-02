@@ -1,38 +1,26 @@
 import { useContext } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
-import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { BookOpen } from "lucide-react-native";
 
+import { NotFoundScreen } from "@/ui/organisms/NotFoundScreen";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { useTabBarAccessory } from "@/ui/organisms/tab-bar/tab-bar-accessory";
-import { controlHeight, space, useTheme } from "@/theme";
-import { prefersLightInk } from "@/utils/color/prefersLightInk";
-import { tapFeedback } from "@/core/haptics/haptics";
-import {
-  getCurrentPlanDay,
-  getDayMinutes,
-  getPlanById,
-  getPlanDays,
-  getPlanProgress,
-  getSermonForPlan,
-  useAppSelector,
-} from "@/core/store";
+import { controlHeight, space } from "@/theme";
 import { FadeInView } from "../components/FadeInView";
 import { PlanAbout } from "../components/PlanAbout";
 import { PlanHero } from "../components/PlanHero";
 import { PlanJourney } from "../components/PlanJourney";
+import { PlanMoreMenu } from "../components/PlanMoreMenu";
 import { PlanNav } from "../components/PlanNav";
 import { PlanStatusBar } from "../components/PlanStatusBar";
 import { SelectedDay } from "../components/SelectedDay";
 import { usePlanHeroScroll } from "../hooks/use-plan-hero-scroll";
-import { useSelectedDay } from "../hooks/use-selected-day";
-import { describeDayTile } from "../logic/day-rail";
+import { usePlanOverview } from "../hooks/use-plan-overview";
 import { getPlanArtworkFrame } from "../logic/plan-artwork";
-import { describePlanHero } from "../logic/plan-hero";
-import { quickCheckHref, studyHref } from "../logic/routes";
 
 /** The nav buttons sit this far below the status bar. */
 const NAV_GAP = space[8];
@@ -46,9 +34,11 @@ const ABOUT_PLACEHOLDER = [
 ] as const;
 /** The nav buttons' height. */
 const NAV_BUTTON = controlHeight.headerButton;
+/** The More menu hangs this far below its button. */
+const MENU_GAP = space[8];
 
 /**
- * Plan Detail, from the store, laid out the way Apple lays out a show: the
+ * Plan Detail, laid out the way Apple lays out a show: the
  * plan's hero flush to the top of the screen (`PlanHero`) — its sermon's
  * thumbnail below the nav buttons, held back as the page scrolls, and
  * where the plan stands, its title and church, Continue, and what the day
@@ -62,28 +52,13 @@ const NAV_BUTTON = controlHeight.headerButton;
  * with the nav buttons, when it hands over to the tab bar — which gathers
  * its tabs into one beside it — and back again scrolling down.
  *
- * Everything is read from the store on every render, so coming back shows
- * what's changed since.
+ * What it shows and where each thing leads: `usePlanOverview`.
  */
 export function PlanOverviewScreen() {
-  const theme = useTheme();
-  const router = useRouter();
+  const view = usePlanOverview();
   const isFocused = useIsFocused();
   const { width: screenWidth } = useWindowDimensions();
   const insetTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
-  const { planId = "" } = useLocalSearchParams<{ planId: string }>();
-  const plan = useAppSelector((state) => getPlanById(state, planId));
-  const sermon = useAppSelector((state) => getSermonForPlan(state, planId));
-  const progress = useAppSelector((state) => getPlanProgress(state, planId));
-  const currentDay = useAppSelector((state) => getCurrentPlanDay(state, planId));
-  const days = useAppSelector((state) =>
-    getPlanDays(state, planId).map((day) => ({ day, minutes: getDayMinutes(state, day.id) })),
-  );
-  const { selectedNumber, pickDay, selected } = useSelectedDay({
-    days,
-    currentDayNumber: currentDay?.dayNumber ?? null,
-    quickCheckEnabled: plan?.quickCheckEnabled ?? false,
-  });
 
   const navTop = insetTop + NAV_GAP;
   const artwork = getPlanArtworkFrame({
@@ -106,34 +81,29 @@ export function PlanOverviewScreen() {
     statusBarLine: insetTop / 2,
   });
 
-  const currentMinutes = days.find(({ day }) => day.id === currentDay?.id)?.minutes ?? 0;
-  const words =
-    plan && progress && currentDay
-      ? describePlanHero({
-          status: plan.status,
-          currentDay: currentDay.dayNumber,
-          totalDays: progress.totalDays,
-          dayTitle: currentDay.reading.title,
-          minutes: currentMinutes,
-        })
-      : null;
-  const openDay = (dayNumber: number) => router.push(studyHref(planId, dayNumber));
-  const openCurrentDay = () => currentDay && openDay(currentDay.dayNumber);
-
   // Continue in the tab bar, once the hero's has scrolled up to the nav buttons.
   useTabBarAccessory(
     {
-      label: words?.action ?? "",
+      label: view.continueLabel ?? "",
       testID: "plan-overview-tab-bar-continue",
       icon: BookOpen,
-      onPress: openCurrentDay,
+      onPress: view.openCurrentDay,
     },
-    handedOff && words !== null,
+    handedOff && view.continueLabel !== null,
   );
 
-  if (!plan || !progress) return null;
-  const colors = sermon?.thumbnailColors ?? [];
-  const light = prefersLightInk(colors.at(0) ?? theme.colors.featureBackdrop);
+  if (!view.found) {
+    return (
+      <NotFoundScreen
+        testID="plan-overview-not-found"
+        title="This plan isn't here"
+        message="It may have been removed, or the link is out of date."
+        actionLabel="Go back"
+        onAction={view.goBack}
+      />
+    );
+  }
+  const { light } = view;
 
   return (
     <Screen testID="plan-overview-screen" edges={["left", "right"]}>
@@ -145,48 +115,33 @@ export function PlanOverviewScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
         >
-          {words && (
+          {view.hero && (
             <PlanHero
-              plan={{
-                title: plan.title,
-                church: sermon?.church ?? null,
-                thumbnailUrl: sermon?.thumbnailUrl ?? null,
-                colors,
-                words,
-                totalDays: progress.totalDays,
-                completedDayCount: progress.completedDayCount,
-              }}
+              plan={view.hero}
               artwork={artwork}
               motion={heroMotion}
-              onContinue={openCurrentDay}
+              onContinue={view.openCurrentDay}
             />
           )}
 
           {/* Where you are at a glance, and what the day picked holds. */}
           <View style={styles.days}>
             <PlanJourney
-              totalDays={progress.totalDays}
-              tiles={days.map(({ day }) => describeDayTile(day, currentDay?.dayNumber ?? null))}
-              selected={selectedNumber}
-              onSelect={(dayNumber) => {
-                tapFeedback();
-                pickDay(dayNumber);
-              }}
+              totalDays={view.totalDays}
+              tiles={view.tiles}
+              selected={view.selectedNumber}
+              onSelect={view.pickDay}
             />
-            {selected && (
+            {view.selected && (
               <SelectedDay
                 testID="plan-overview-selected-day"
-                contentKey={selected.day.id}
+                contentKey={view.selected.day.id}
                 stepTestIDPrefix="plan-overview-step"
-                title={selected.day.reading.title}
-                header={selected.header}
-                steps={selected.steps}
-                quickCheck={selected.quickCheck}
-                onOpenStep={(key) =>
-                  key === "quickCheck"
-                    ? router.push(quickCheckHref(planId, selected.day.dayNumber))
-                    : openDay(selected.day.dayNumber)
-                }
+                title={view.selected.day.reading.title}
+                header={view.selected.header}
+                steps={view.selected.steps}
+                quickCheck={view.selected.quickCheck}
+                onOpenStep={view.openStep}
               />
             )}
           </View>
@@ -211,7 +166,8 @@ export function PlanOverviewScreen() {
         overlay={light ? "dark" : "light"}
         top={navTop}
         style={heroNavStyle}
-        onBack={() => router.back()}
+        onBack={view.goBack}
+        onMore={view.more.show}
       />
       <PlanNav
         testIDs={{
@@ -223,7 +179,15 @@ export function PlanOverviewScreen() {
         shown={navOverPage}
         top={navTop}
         style={pageNavStyle}
-        onBack={() => router.back()}
+        onBack={view.goBack}
+        onMore={view.more.show}
+      />
+      <PlanMoreMenu
+        open={view.more.open}
+        onClose={view.more.close}
+        saved={view.more.saved}
+        items={view.more.items}
+        anchor={{ top: navTop + NAV_BUTTON + MENU_GAP, right: PAGE_INSET }}
       />
 
       {/* Only while this is the screen shown. */}

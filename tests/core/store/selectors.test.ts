@@ -15,11 +15,14 @@ import {
   getPlanDay,
   getPlanDays,
   getPlanProgress,
+  getPlanSummary,
   getProgressForDateRange,
   getProgressTotals,
+  getQuickCheckStanding,
   getQuestionResult,
   getQuizAttempt,
   getQuizForDay,
+  getQuizQuestions,
   getQuizScore,
   getQuizStatus,
   getReflectionsForDay,
@@ -27,7 +30,9 @@ import {
   getSermonForPlan,
   getStreak,
   getWeeklyCompletionCounts,
+  isChoiceCorrect,
   isGeneratingPlan,
+  type AppAction,
   type AppState,
 } from "@/core/store";
 import { SAMPLE_PLAN_ID } from "@/core/mock-data";
@@ -321,5 +326,114 @@ describe("isGeneratingPlan", () => {
     };
 
     expect(isGeneratingPlan({ ...building, generation })).toBe(false);
+  });
+});
+
+describe("getQuickCheckStanding", () => {
+  const savedDay = getPlanDay(state, SAVED, 1)?.id ?? "";
+  const quiz = getQuizForDay(state, savedDay);
+  const quizId = quiz?.id ?? "";
+
+  it("is null for a day without a quiz", () => {
+    expect(getQuickCheckStanding(state, "no-such-day")).toBeNull();
+  });
+
+  it("is not started, with nothing answered, before any attempt", () => {
+    expect(getQuickCheckStanding(state, savedDay)).toEqual({
+      status: "notStarted",
+      questionCount: getQuizQuestions(state, quizId).length,
+      answeredCount: 0,
+      correctCount: 0,
+    });
+  });
+
+  it("counts a submitted answer, and whether it was right", () => {
+    const [first] = getQuizQuestions(state, quizId);
+    const at = "2026-09-23T07:00:00.000Z";
+    const answered = [
+      { type: "quiz/startAttempt", quizId, attemptId: "attempt-new", at },
+      {
+        type: "quiz/selectAnswer",
+        attemptId: "attempt-new",
+        choiceId: first?.correctChoiceId ?? "",
+        at,
+      },
+      { type: "quiz/submitAnswer", attemptId: "attempt-new", answerId: "answer-new", at },
+    ].reduce((current, action) => appReducer(current, action as AppAction), state);
+
+    expect(getQuickCheckStanding(answered, savedDay)).toEqual({
+      status: "inProgress",
+      questionCount: getQuizQuestions(state, quizId).length,
+      answeredCount: 1,
+      correctCount: 1,
+    });
+  });
+});
+
+describe("getPlanSummary", () => {
+  it("sums a finished plan: its days, written notes, and each quiz's latest attempt", () => {
+    // 7 days done; 7 reflections answered; 7 quizzes of 3 questions; latest attempts
+    // got 3 + 2 + 2 + 3 + 2 + 1 (day 6's is still open) + 3 right.
+    expect(getPlanSummary(state, COMPLETED)).toEqual({
+      completedDays: 7,
+      totalDays: 7,
+      notes: 7,
+      quizCorrect: 16,
+      quizTotal: 21,
+    });
+  });
+
+  it("counts a plan under way as far as it has gone", () => {
+    expect(getPlanSummary(state, ACTIVE)).toEqual({
+      completedDays: 1,
+      totalDays: 6,
+      notes: 2,
+      quizCorrect: 1,
+      quizTotal: 17,
+    });
+  });
+
+  it("counts no quiz right for a quiz not yet taken", () => {
+    expect(getPlanSummary(state, SAVED)).toEqual({
+      completedDays: 0,
+      totalDays: 1,
+      notes: 0,
+      quizCorrect: 0,
+      quizTotal: 2,
+    });
+  });
+
+  it("has no quizzes to count for a plan without any", () => {
+    expect(getPlanSummary(state, "plan-still-praying")).toEqual({
+      completedDays: 0,
+      totalDays: 3,
+      notes: 0,
+      quizCorrect: 0,
+      quizTotal: 0,
+    });
+  });
+
+  it("is null for an unknown plan", () => {
+    expect(getPlanSummary(state, "plan-nope")).toBeNull();
+  });
+});
+
+describe("isChoiceCorrect", () => {
+  const quizId =
+    getQuizForDay(state, getPlanDay(state, "plan-overcome-temptation", 1)?.id ?? "")?.id ?? "";
+  const [question] = getQuizQuestions(state, quizId);
+  const wrongChoice = question?.choices.find((choice) => choice.id !== question.correctChoiceId);
+
+  it("is true for a question's correct choice", () => {
+    expect(isChoiceCorrect(state, question?.id ?? "", question?.correctChoiceId ?? "")).toBe(true);
+  });
+
+  it("is false for another choice of the same question", () => {
+    expect(wrongChoice).toBeDefined();
+    expect(isChoiceCorrect(state, question?.id ?? "", wrongChoice?.id ?? "")).toBe(false);
+  });
+
+  it("is false for a question that doesn't exist", () => {
+    expect(isChoiceCorrect(state, "no-such-question", "no-such-choice")).toBe(false);
   });
 });

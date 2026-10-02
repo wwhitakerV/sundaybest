@@ -1,15 +1,12 @@
 import { StyleSheet, View } from "react-native";
-import { HandHeart } from "lucide-react-native";
 
 import type { Prayer } from "@/types/domain";
-import { space, useTheme } from "@/theme";
+import { PrayerHeading } from "@/entities/study";
+import { space } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyDriftIn } from "./StudyDriftIn";
-import { SFProTitle } from "@/ui/typography/SFProTitle";
 import { SerifBody } from "@/ui/typography/SerifBody";
-
-const BADGE_SIZE = 52;
 
 export type PrayStepProps = {
   dayNumber: number;
@@ -20,22 +17,11 @@ export type PrayStepProps = {
 
 /** Daily Study's Pray step: the day's prayer. */
 export function PrayStep({ dayNumber, prayer, followStyle }: PrayStepProps) {
-  const theme = useTheme();
-
   return (
     <View testID="study-pray-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label="Pray" />
       <StudyDriftIn order={1}>
-        <View style={styles.titleRow}>
-          <View style={[styles.badge, { backgroundColor: theme.colors.controlPrimary }]}>
-            <HandHeart
-              size={24}
-              color={theme.colors.onControlPrimary}
-              strokeWidth={theme.icon.strokeWidth}
-            />
-          </View>
-          <SFProTitle style={styles.title}>{prayer.title}</SFProTitle>
-        </View>
+        <PrayerHeading title={prayer.title} />
       </StudyDriftIn>
       <StudyFollow style={followStyle}>
         <SerifBody>{prayer.text}</SerifBody>
@@ -46,13 +32,4 @@ export function PrayStep({ dayNumber, prayer, followStyle }: PrayStepProps) {
 
 const styles = StyleSheet.create({
   body: { gap: space[16] },
-  titleRow: { flexDirection: "row", alignItems: "center", gap: space[14] },
-  title: { flexShrink: 1 },
-  badge: {
-    width: BADGE_SIZE,
-    height: BADGE_SIZE,
-    borderRadius: BADGE_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
 });

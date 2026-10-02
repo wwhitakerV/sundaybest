@@ -6,7 +6,7 @@ import { StreakBurst } from "@/ui/burst/StreakBurst";
 import { space, useTheme } from "@/theme";
 import { makeRadialStreaks } from "@/utils/burst/makeRadialStreaks";
 import { useSpringIn } from "../hooks/use-spring-in";
-import type { CaptionState } from "../logic/story";
+import type { CaptionState } from "../logic/story-screens";
 import { WELCOME_STEPS } from "../logic/welcome-steps";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { Span } from "@/ui/typography/Span";

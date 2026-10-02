@@ -3,7 +3,9 @@ import type { Id, IsoDate, Plan, PlanDay, Weekday } from "@/types/domain";
 import { addDays, compareIso, getWeekday, getWeekStart, listDates, toIsoDate } from "../dates";
 import type { AppState } from "../state";
 import { findById, listAll } from "../table";
+import { getReflectionsForDay } from "./content";
 import { getActivePlan, getCurrentPlanDay, getPlanDays } from "./plans";
+import { getQuizAttempt, getQuizQuestions, getQuizScore, getQuizzesForPlan } from "./quizzes";
 
 /** How far through one plan the user is — all worked out from its days. */
 export type PlanProgress = {
@@ -133,5 +135,36 @@ export function getProgressTotals(state: AppState): ProgressTotals {
   return {
     completedDayCount: getCompletedDays(state).length,
     completedPlanCount: listAll(state.plans).filter((plan) => plan.status === "completed").length,
+  };
+}
+
+/** What a plan added up to: its days done, the reflections written, and its Quick Checks' score. */
+export type PlanSummary = {
+  completedDays: number;
+  totalDays: number;
+  /** Reflection questions answered across its days. */
+  notes: number;
+  /** Right answers in each Quick Check's latest attempt, summed. */
+  quizCorrect: number;
+  /** Questions across all its Quick Checks. */
+  quizTotal: number;
+};
+
+export function getPlanSummary(state: AppState, planId: Id): PlanSummary | null {
+  const progress = getPlanProgress(state, planId);
+  if (!progress) return null;
+  const notes = getPlanDays(state, planId)
+    .flatMap((day) => getReflectionsForDay(state, day.id))
+    .filter((reflection) => reflection.answer !== null).length;
+  const quizzes = getQuizzesForPlan(state, planId);
+  return {
+    completedDays: progress.completedDayCount,
+    totalDays: progress.totalDays,
+    notes,
+    quizCorrect: quizzes.reduce((sum, quiz) => {
+      const attempt = getQuizAttempt(state, quiz.id);
+      return sum + (attempt ? (getQuizScore(state, attempt.id)?.correct ?? 0) : 0);
+    }, 0),
+    quizTotal: quizzes.reduce((sum, quiz) => sum + getQuizQuestions(state, quiz.id).length, 0),
   };
 }

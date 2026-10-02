@@ -39,11 +39,16 @@ export function toneColor(colors: Theme["colors"], tone: Tone): string {
 }
 
 /** A type style at the reader's text size: as designed at 1; sizes and leading scaled otherwise. */
-export function scaleTypeStyle(type: TextStyle, scale: number): TextStyle {
-  if (scale === 1) return type;
+export function scaleTypeStyle(type: TextStyle, scale: number, offset = 0): TextStyle {
+  if (scale === 1 && offset === 0) return type;
+  if (type.fontSize === undefined) return type;
+  const designed = type.fontSize * scale;
+  const fontSize = designed + offset;
   return {
     ...type,
-    ...(type.fontSize !== undefined && { fontSize: type.fontSize * scale }),
-    ...(type.lineHeight !== undefined && { lineHeight: type.lineHeight * scale }),
+    fontSize,
+    ...(type.lineHeight !== undefined && {
+      lineHeight: Math.round((type.lineHeight * scale * fontSize) / designed),
+    }),
   };
 }

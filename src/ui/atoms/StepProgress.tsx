@@ -16,12 +16,12 @@ type LineInk = "light" | "dark";
 function segmentColor(state: StepState, theme: Theme, ink: LineInk | undefined): string {
   switch (state) {
     case "completed":
-      return ink === "light" ? theme.colors.inkOnDark : theme.palette.black;
+      return ink === "light" ? theme.colors.inkOnDark : theme.colors.text;
     case "active":
       return theme.colors.accent;
     case "upcoming":
       if (ink === "light") return theme.colors.inkOnDarkFaint;
-      return ink === "dark" ? theme.colors.inkOnLightFaint : theme.palette.greyLightest;
+      return ink === "dark" ? theme.colors.inkOnLightFaint : theme.colors.divider;
   }
 }
 

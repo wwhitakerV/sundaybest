@@ -1,8 +1,11 @@
-import { Modal, StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View, useWindowDimensions } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { Flame } from "lucide-react-native";
 
+import { usePresence } from "@/hooks/use-presence";
 import { Button } from "@/ui/atoms/Button";
-import { radius, space, useTheme } from "@/theme";
+import { SheetGrabber } from "@/ui/atoms/SheetGrabber";
+import { motion, radius, space, useTheme } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
 
@@ -15,7 +18,8 @@ export type CaptionsSheetProps = {
 
 /**
  * "This video doesn't have captions yet": a sheet over New Plan, with the
- * link and its sermon still showing, dimmed, behind it.
+ * link and its sermon still showing, dimmed, behind it. It slides up from the
+ * bottom edge as the page dims, as iOS's sheets do, and back down as it goes.
  */
 export function CaptionsSheet({
   visible,
@@ -24,16 +28,24 @@ export function CaptionsSheet({
   testID,
 }: CaptionsSheetProps) {
   const theme = useTheme();
+  const { height } = useWindowDimensions();
+  const { mounted, progress } = usePresence(visible, motion.sheet);
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
+  // From just below the screen: the sheet is never taller than it.
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: (1 - progress.get()) * height }],
+  }));
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onTryAnotherLink}>
-      <View
-        testID={testID}
-        style={[styles.scrim, { backgroundColor: theme.colors.mediaScrim }]}
-        accessibilityViewIsModal
-      >
-        <View style={[styles.sheet, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.grabber, { backgroundColor: theme.colors.divider }]} />
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={onTryAnotherLink}>
+      <View testID={testID} style={styles.root} accessibilityViewIsModal>
+        <Animated.View
+          style={[styles.scrim, { backgroundColor: theme.colors.mediaScrim }, scrimStyle]}
+        />
+        <Animated.View
+          style={[styles.sheet, { backgroundColor: theme.colors.background }, sheetStyle]}
+        >
+          <SheetGrabber testID={`${testID}-grabber`} />
           <View style={[styles.icon, { backgroundColor: theme.colors.segmentBackground }]}>
             <Flame size={28} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
           </View>
@@ -57,19 +69,18 @@ export function CaptionsSheet({
               onPress={onRemindLater}
             />
           </View>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
-/** iOS's own sheet grabber, drawn to match it. */
-const GRABBER = { width: 40, height: 5, radius: 3 } as const;
 /** The round badge over the sheet's title. */
 const ICON_SIZE = 64;
 
 const styles = StyleSheet.create({
-  scrim: { flex: 1, justifyContent: "flex-end" },
+  root: { flex: 1, justifyContent: "flex-end" },
+  scrim: { ...StyleSheet.absoluteFill },
   sheet: {
     borderTopLeftRadius: radius[36],
     borderTopRightRadius: radius[36],
@@ -78,14 +89,8 @@ const styles = StyleSheet.create({
     paddingBottom: space[40],
     gap: space[16],
   },
-  grabber: {
-    alignSelf: "center",
-    width: GRABBER.width,
-    height: GRABBER.height,
-    borderRadius: GRABBER.radius,
-    marginBottom: space[12],
-  },
   icon: {
+    marginTop: space[12],
     width: ICON_SIZE,
     height: ICON_SIZE,
     borderRadius: ICON_SIZE / 2,

@@ -20,8 +20,10 @@ export type CompactButtonProps = {
    * button, dark words), `dark` for a light one (a black button, white words).
    * `accent` is the brand red with white words, for the one action a featured
    * card leads to.
+   * `soft` is a quiet pill — a soft fill, a hairline edge, dark words — beside
+   * a black one.
    */
-  tone: "light" | "dark" | "accent";
+  tone: "light" | "dark" | "accent" | "soft";
   /** Where it sits in its row: centred (the default), or at the start. */
   align?: "center" | "start";
   onPress: () => void;
@@ -47,10 +49,12 @@ export function CompactButton({
   const fill =
     tone === "accent"
       ? theme.colors.accent
-      : tone === "light"
-        ? theme.colors.inkOnDark
-        : theme.colors.inkOnLight;
-  const inkTone: Tone = tone === "light" ? "inkOnLight" : "inkOnDark";
+      : tone === "soft"
+        ? theme.colors.segmentBackground
+        : tone === "light"
+          ? theme.colors.inkOnDark
+          : theme.colors.inkOnLight;
+  const inkTone: Tone = tone === "light" || tone === "soft" ? "inkOnLight" : "inkOnDark";
   const ink = toneColor(theme.colors, inkTone);
   const icon = Icon && (
     <Icon size={iconOnly ? 20 : 16} color={ink} strokeWidth={theme.icon.strokeWidth} />
@@ -67,6 +71,7 @@ export function CompactButton({
         iconOnly && styles.round,
         align === "start" && styles.start,
         { backgroundColor: fill, borderRadius: radius.pill },
+        tone === "soft" && [styles.soft, { borderColor: theme.colors.containerBorder }],
       ]}
     >
       {iconPosition === "start" && icon}
@@ -91,5 +96,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   round: { width: HEIGHT, paddingHorizontal: 0 },
+  soft: { borderWidth: 1 },
   start: { alignSelf: "flex-start" },
 });

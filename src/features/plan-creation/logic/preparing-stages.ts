@@ -1,5 +1,6 @@
 import type { PlanGenerationStatus } from "@/types/domain";
 import { GENERATION_STAGES } from "@/core/store";
+import { formatPlanLength } from "@/entities/plan";
 
 /** A row of Preparing's checklist: done, being worked on, or still to come. */
 type StageRowState = "done" | "active" | "pending";
@@ -39,7 +40,7 @@ export function getPreparingRows(
     { key: "findingScripture", label: "Finding the Scripture" },
     {
       key: "writingDays",
-      label: `Writing your ${lengthDays} ${lengthDays === 1 ? "day" : "days"}`,
+      label: `Writing your ${formatPlanLength(lengthDays)}`,
     },
     ...(quickCheckEnabled ? [{ key: "buildingQuiz" as const, label: "Building your quiz" }] : []),
   ];

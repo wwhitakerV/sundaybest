@@ -3,6 +3,7 @@ import { BookOpen, ChevronRight, CircleCheck } from "lucide-react-native";
 
 import { radius, space, useTheme } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
+import { formatDay } from "@/entities/plan";
 
 const BADGE = 60;
 
@@ -55,7 +56,7 @@ export function UpNextCard({
           <SFProBody variant="listItem" numberOfLines={1}>
             {title}
           </SFProBody>
-          <SFProBody tone="textMuted">{`Day ${dayNumber}, ${minutes} min`}</SFProBody>
+          <SFProBody tone="textMuted">{`${formatDay(dayNumber)}, ${minutes} min`}</SFProBody>
         </View>
         <View style={styles.percent}>
           <CircleCheck size={20} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
@@ -76,7 +77,7 @@ export function UpNextCard({
           <View />
         )}
         <View style={styles.day}>
-          <SFProBody variant="listItem">{`Day ${dayNumber}`}</SFProBody>
+          <SFProBody variant="listItem">{formatDay(dayNumber)}</SFProBody>
           <ChevronRight size={20} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
         </View>
       </View>

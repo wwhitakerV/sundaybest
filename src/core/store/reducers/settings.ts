@@ -56,3 +56,37 @@ export function updateTextSize(state: AppState, action: Action<"settings/textSiz
     settings: { ...state.settings, textSize: action.textSize, updatedAt: action.at },
   };
 }
+
+/** How far the Daily Study's text may grow or shrink: 2pt a step, within reason. */
+export const READING_TEXT_SIZE = { min: -4, max: 8, step: 2 } as const;
+
+/** Whether `offset` is a size the study's text may take: on a step, within the limits. */
+export function isReadingTextOffset(offset: number): boolean {
+  const { min, max, step } = READING_TEXT_SIZE;
+  return Number.isInteger(offset) && (offset - min) % step === 0 && offset >= min && offset <= max;
+}
+
+/** The Daily Study's text size — only on a step, and only within the limits. */
+export function updateReadingTextOffset(
+  state: AppState,
+  action: Action<"settings/readingTextOffset">,
+): AppState {
+  const { offset } = action;
+  if (!isReadingTextOffset(offset) || offset === state.settings.readingTextOffset) return state;
+  return {
+    ...state,
+    settings: { ...state.settings, readingTextOffset: offset, updatedAt: action.at },
+  };
+}
+
+/** The paper the Daily Study is read on. */
+export function updateReadingPaper(
+  state: AppState,
+  action: Action<"settings/readingPaper">,
+): AppState {
+  if (state.settings.readingPaper === action.paper) return state;
+  return {
+    ...state,
+    settings: { ...state.settings, readingPaper: action.paper, updatedAt: action.at },
+  };
+}

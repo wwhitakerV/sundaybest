@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Easing, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
-import { SCROLL } from "../logic/scenes";
+import { SCROLL } from "../logic/lift-timing";
 
 /**
  * A mock screen's content scrolling, as a finger-flick would leave it: eases

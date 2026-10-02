@@ -1,9 +1,16 @@
 /** Design tokens. Every colour has a light and a dark value. */
+import type { ReadingPaper } from "@/types/domain";
 
 import { fonts } from "./fonts";
 
 const palette = {
   white: "#FFFFFF",
+  // Reading papers (READING_PAPERS): three warm off-whites, and a dark one
+  // softer than night's.
+  paperIvory: "#FBF8F1",
+  paperCream: "#F5EEDF",
+  paperSepia: "#EBDFC6",
+  paperDusk: "#2A2B30",
   ink900: "#10131A",
   ink600: "#4A5160",
   ink300: "#9AA1B1",
@@ -13,7 +20,7 @@ const palette = {
   accent: "#D62626",
   lightIcon: "#d2d2d0",
   // A quiet grey that still reads as a line on white — lighter than
-  // `lightIcon`, firmer than the brand's `greyLightest`. Not from the brand
+  // `lightIcon`, firmer than `mist`. Not from the brand
   // spec: set for Plan Detail's step sequence.
   greyLight: "#E4E4E7",
   // Brand palette. Fixed values, not theme-dependent — same as `accent`
@@ -24,10 +31,18 @@ const palette = {
   green: "#1FD19B",
   darkgrey: "#55555D",
   grey: "#8A8A92",
-  greyLightest: "#F7F1F1",
   // Navigation-chrome ink. Close to but distinct from `black` above — the
   // header/title/icon spec calls for this exact value, not the brand black.
   ink: "#111113",
+  // Lines on the page, cool like `paper` and never warm: a row's hairline,
+  // a container's edge, and a sheet's grabber — each a step darker than the
+  // last. Each has a dark twin, the same steps up from a dark surface.
+  mist: "#EFF0F3",
+  cardEdge: "#E7E8EB",
+  grabber: "#C5C6CA",
+  mistOnDark: "#24272E",
+  cardEdgeOnDark: "#33363C",
+  grabberOnDark: "#52555E",
   // Overlay tints used by header icon buttons, the tab bar, and segmented
   // controls in the light theme — black-on-white, per spec.
   hairline: "rgba(0, 0, 0, 0.06)",
@@ -127,16 +142,22 @@ type ColorTokens = {
   border: string;
   /** A heavier edge, for a control that should stand out from the chrome around it. */
   borderStrong: string;
-  /** Hairline rules between list rows. Lighter than `border`. */
+  /** Hairline rules between list rows. Darker than `surface`, lighter than `containerBorder`. */
   divider: string;
+  /**
+   * The edge of a card or grouped container — Settings' groups, `Card`, the
+   * soft buttons. One token, so every container's edge is the same line.
+   */
+  containerBorder: string;
+  /** A sheet's drag indicator: quiet, but plainly there. */
+  grabber: string;
+  /** The unfilled track of a ring or a scale, and a ring not yet earned. */
+  progressTrack: string;
   accent: string;
   /**
-   * Text and icons set on `accent` — the step you're on, on Plan Detail's day,
-   * and the filter pill picked on Plans.
+   * Text and icons set on `accent` — the step you're on, on Plan Detail's day.
    */
   onAccent: string;
-  /** A filter pill not picked (Plans' All/In progress/Done/Saved): a soft off-white. */
-  pillBackground: string;
   /**
    * The quiet line a sequence runs along — joining the steps of Plan
    * Detail's day — and the ring of a step still to come on it.
@@ -269,10 +290,12 @@ const lightColors: ColorTokens = {
   textInactive: palette.darkgrey,
   border: palette.ink300,
   borderStrong: palette.darkgrey,
-  divider: palette.greyLightest,
+  divider: palette.mist,
+  containerBorder: palette.cardEdge,
+  grabber: palette.grabber,
+  progressTrack: palette.greyLight,
   accent: palette.accent,
   onAccent: palette.white,
-  pillBackground: palette.greyLightest,
   sequenceLine: palette.greyLight,
   controlPrimary: palette.black,
   onControlPrimary: palette.white,
@@ -343,10 +366,12 @@ const darkColors: ColorTokens = {
   textInactive: palette.darkgrey,
   border: palette.ink600,
   borderStrong: palette.grey,
-  divider: palette.slate700,
+  divider: palette.mistOnDark,
+  containerBorder: palette.cardEdgeOnDark,
+  grabber: palette.grabberOnDark,
+  progressTrack: palette.ink600,
   accent: palette.accent,
   onAccent: palette.white,
-  pillBackground: palette.slate700,
   sequenceLine: palette.ink600,
   controlPrimary: palette.white,
   onControlPrimary: palette.black,
@@ -455,6 +480,27 @@ export const radius = {
   32: 32,
   36: 36,
   pill: 999,
+} as const;
+
+/**
+ * Motion, the same in every theme. `snap` and `sheet` are critically damped
+ * and clamped: a thing that moves lands and stops — no bounce for the eye to
+ * chase. `slide` keeps the least give, for an outline moving between choices.
+ * Spread into Reanimated's `withSpring` with `reduceMotion` added.
+ */
+export const motion = {
+  /** A marker landing on what's picked: a scale's dot, a filter's outline. */
+  snap: { duration: 200, dampingRatio: 1, overshootClamping: true },
+  /**
+   * An outline sliding to what's picked — Plan Detail's day, the paper, the
+   * tab, Plans' filter: one spring, quick with the least give, so every
+   * selection in the app moves alike.
+   */
+  slide: { damping: 18, stiffness: 220, mass: 0.8 },
+  /** A sheet rising from the bottom edge, as iOS's own do. */
+  sheet: { duration: 380, dampingRatio: 1, overshootClamping: true },
+  /** How long anything takes to leave: a sheet sliding down, a menu fading. */
+  exitMs: 200,
 } as const;
 
 /** The heights controls repeat. */
@@ -612,6 +658,13 @@ const typography = {
    * wordmark.
    */
   dayStrip: { fontFamily: fonts.metaLabel, fontSize: 19, fontWeight: "500", letterSpacing: -0.19 },
+  /** The date opposite the wordmark on Home: the day strip's mono, a size under the wordmark. */
+  headerDate: {
+    fontFamily: fonts.metaLabel,
+    fontSize: 15,
+    fontWeight: "500",
+    letterSpacing: -0.15,
+  },
   /** Supporting copy and footnotes. Spec 11/1.45/0.02em, IBM Plex Mono. */
   supporting: {
     fontFamily: fonts.metaBody,
@@ -687,6 +740,8 @@ const elevation = {
   card: { shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 16 },
   /** A book lying on the page: an exam subject's folio. */
   folio: { shadowOffset: { width: 0, height: 18 }, shadowOpacity: 0.14, shadowRadius: 16 },
+  /** A menu floating over the page: a soft, wide shadow. */
+  menu: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 24 },
 } as const;
 
 /**
@@ -707,12 +762,9 @@ export const lightTheme = {
 } as const;
 
 /**
- * Not read by `useTheme()` right now — dark mode is a deliberate future
- * feature with its own design, not a response to the OS colour scheme (see
- * `use-theme.ts`). Kept defined rather than deleted so the values exist when
- * that work starts.
- *
- * @public
+ * Read only on a dark reading paper (`getReadingTheme`) for now — app-wide
+ * dark mode is a deliberate future feature with its own design, not a
+ * response to the OS colour scheme (see `use-theme.ts`).
  */
 export const darkTheme = {
   name: "dark",
@@ -726,3 +778,22 @@ export const darkTheme = {
 } as const;
 
 export type Theme = typeof lightTheme | typeof darkTheme;
+
+/**
+ * The papers the Daily Study can be read on, in the reading sheet's order: a
+ * light paper keeps the light theme's ink, a dark one takes the dark theme's
+ * (`getReadingTheme`). Fixed colours, the same whatever the app's theme.
+ */
+export const READING_PAPERS: readonly {
+  id: ReadingPaper;
+  label: string;
+  background: string;
+  dark: boolean;
+}[] = [
+  { id: "white", label: "White", background: palette.white, dark: false },
+  { id: "ivory", label: "Ivory", background: palette.paperIvory, dark: false },
+  { id: "cream", label: "Cream", background: palette.paperCream, dark: false },
+  { id: "sepia", label: "Sepia", background: palette.paperSepia, dark: false },
+  { id: "dusk", label: "Dusk", background: palette.paperDusk, dark: true },
+  { id: "night", label: "Night", background: palette.slate900, dark: true },
+];

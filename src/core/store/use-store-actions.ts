@@ -12,10 +12,11 @@ import type {
   PlanGenerationStatus,
   PlanLength,
   StudyStep,
+  ReadingPaper,
   TextSize,
 } from "@/types/domain";
 
-import type { AppAction, GeneratedPlanContent, PlanChanges } from "./actions";
+import type { AppAction, GeneratedPlanContent, PlanChanges, ReflectionWrite } from "./actions";
 import { useAppDispatch } from "./AppStoreProvider";
 import { createId, getNow, getToday } from "./clock";
 
@@ -32,15 +33,22 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
   return {
     // Plans ------------------------------------------------------------------
 
-    /** Starts a draft plan from a pasted link. Returns its ID (the plan exists if it was accepted). */
-    createPlan: (input: {
+    /** Makes a plan and starts building it — one step. Returns the new plan's ID. */
+    createAndBuildPlan: (input: {
       sourceUrl: string;
       title: string;
       lengthDays: PlanLength;
       quickCheckEnabled: boolean;
     }): Id => {
       const planId = createId("plan");
-      dispatch({ type: "plan/create", planId, sermonId: createId("sermon"), ...input, at: at() });
+      dispatch({
+        type: "plan/createAndBuild",
+        planId,
+        sermonId: createId("sermon"),
+        generationId: createId("generation"),
+        ...input,
+        at: at(),
+      });
       return planId;
     },
     updatePlan: (planId: Id, changes: PlanChanges) => {
@@ -71,24 +79,16 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     updatePlanDay: (dayId: Id, completedStep: StudyStep) => {
       dispatch({ type: "planDay/update", dayId, completedStep, today: today(), at: at() });
     },
-    completePlanDay: (dayId: Id) => {
-      dispatch({ type: "planDay/complete", dayId, today: today(), at: at() });
+    /** Finishes the day from the study: its prayer prayed, then the day complete — one step. */
+    finishPlanDay: (dayId: Id, prayerId: Id | null) => {
+      dispatch({ type: "planDay/finish", dayId, prayerId, today: today(), at: at() });
     },
 
     // Reflections and prayer ---------------------------------------------------
 
-    saveReflection: (reflectionId: Id, answer: string) => {
-      dispatch({ type: "reflection/save", reflectionId, answer, at: at() });
-    },
-    updateReflection: (reflectionId: Id, answer: string) => {
-      dispatch({ type: "reflection/update", reflectionId, answer, at: at() });
-    },
-    /** Takes an answer back — the question is unanswered again. */
-    clearReflection: (reflectionId: Id) => {
-      dispatch({ type: "reflection/clear", reflectionId, at: at() });
-    },
-    markPrayed: (prayerId: Id) => {
-      dispatch({ type: "prayer/markPrayed", prayerId, at: at() });
+    /** Writes everything typed this visit at once. */
+    commitReflections: (writes: readonly ReflectionWrite[]) => {
+      dispatch({ type: "reflection/commit", writes, at: at() });
     },
 
     // Quizzes ------------------------------------------------------------------
@@ -135,17 +135,22 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
 
     // Settings -----------------------------------------------------------------
 
-    updateReminderEnabled: (reminderId: Id, enabled: boolean) => {
-      dispatch({ type: "settings/reminderEnabled", reminderId, enabled, at: at() });
-    },
-    updateReminderTime: (reminderId: Id, time: LocalTime) => {
-      dispatch({ type: "settings/reminderTime", reminderId, time, at: at() });
+    /** Turns the reminder on at a time — one step. */
+    turnOnReminderAt: (reminderId: Id, time: LocalTime) => {
+      dispatch({ type: "settings/reminderOn", reminderId, time, at: at() });
     },
     updateBibleTranslation: (translation: BibleTranslation) => {
       dispatch({ type: "settings/bibleTranslation", translation, at: at() });
     },
     updateTextSize: (textSize: TextSize) => {
       dispatch({ type: "settings/textSize", textSize, at: at() });
+    },
+    /** The Daily Study's text size: points from its designed size (`READING_TEXT_SIZE`). */
+    setReadingTextOffset: (offset: number) => {
+      dispatch({ type: "settings/readingTextOffset", offset, at: at() });
+    },
+    setReadingPaper: (paper: ReadingPaper) => {
+      dispatch({ type: "settings/readingPaper", paper, at: at() });
     },
 
     // Progress -----------------------------------------------------------------
@@ -184,7 +189,7 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
 
 export type StoreActions = ReturnType<typeof createStoreActions>;
 
-/** The store's actions, for a component: `const { completePlanDay } = useStoreActions()`. */
+/** The store's actions, for a component: `const { finishPlanDay } = useStoreActions()`. */
 export function useStoreActions(): StoreActions {
   const dispatch = useAppDispatch();
   return useMemo(() => createStoreActions(dispatch), [dispatch]);

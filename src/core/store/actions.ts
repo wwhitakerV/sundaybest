@@ -15,12 +15,18 @@ import type {
   Prayer,
   Quiz,
   QuizQuestion,
+  ReadingPaper,
   Reflection,
   ScripturePassage,
   SermonSource,
   StudyStep,
   TextSize,
 } from "@/types/domain";
+
+/** One change to a reflection's answer: a first answer, a change to one, or one taken back. */
+export type ReflectionWrite =
+  | { kind: "save" | "update"; reflectionId: Id; answer: string }
+  | { kind: "clear"; reflectionId: Id };
 
 /** What a user can change about a plan (length and Quick Check only while it's a draft). */
 export type PlanChanges = Partial<{
@@ -75,6 +81,17 @@ export type AppAction =
       lengthDays: PlanLength;
       quickCheckEnabled: boolean;
     } & At)
+  // A plan made and its build started, in one step.
+  | ({
+      type: "plan/createAndBuild";
+      planId: Id;
+      sermonId: Id;
+      generationId: Id;
+      sourceUrl: string;
+      title: string;
+      lengthDays: PlanLength;
+      quickCheckEnabled: boolean;
+    } & At)
   | ({ type: "plan/update"; planId: Id; changes: PlanChanges } & At)
   | ({ type: "plan/start"; planId: Id; today: IsoDate } & At)
   | ({ type: "plan/complete"; planId: Id } & At)
@@ -85,11 +102,15 @@ export type AppAction =
   | ({ type: "planDay/start"; dayId: Id; today: IsoDate } & At)
   | ({ type: "planDay/update"; dayId: Id; completedStep: StudyStep; today: IsoDate } & At)
   | ({ type: "planDay/complete"; dayId: Id; today: IsoDate } & At)
+  // The day finished from the study: its prayer prayed, then the day complete, in one step.
+  | ({ type: "planDay/finish"; dayId: Id; prayerId: Id | null; today: IsoDate } & At)
   // Reflections and prayer
   | ({ type: "reflection/save"; reflectionId: Id; answer: string } & At)
   | ({ type: "reflection/update"; reflectionId: Id; answer: string } & At)
   | ({ type: "reflection/clear"; reflectionId: Id } & At)
   | ({ type: "prayer/markPrayed"; prayerId: Id } & At)
+  // Everything typed this visit, written at once.
+  | ({ type: "reflection/commit"; writes: readonly ReflectionWrite[] } & At)
   // Quizzes
   | ({ type: "quiz/startAttempt"; quizId: Id; attemptId: Id } & At)
   | ({ type: "quiz/selectAnswer"; attemptId: Id; choiceId: Id } & At)
@@ -112,8 +133,12 @@ export type AppAction =
   // Settings
   | ({ type: "settings/reminderEnabled"; reminderId: Id; enabled: boolean } & At)
   | ({ type: "settings/reminderTime"; reminderId: Id; time: LocalTime } & At)
+  // The reminder turned on at a time, in one step.
+  | ({ type: "settings/reminderOn"; reminderId: Id; time: LocalTime } & At)
   | ({ type: "settings/bibleTranslation"; translation: BibleTranslation } & At)
   | ({ type: "settings/textSize"; textSize: TextSize } & At)
+  | ({ type: "settings/readingTextOffset"; offset: number } & At)
+  | ({ type: "settings/readingPaper"; paper: ReadingPaper } & At)
   // Progress
   | ({ type: "progress/recordDayCompletion"; dayId: Id; today: IsoDate } & At)
   | ({ type: "progress/recordQuizCompletion"; attemptId: Id } & At)

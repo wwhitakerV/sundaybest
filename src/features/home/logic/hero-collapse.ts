@@ -1,4 +1,4 @@
-import { HERO_BOTTOM_SPACE } from "@/ui/hero/hero-layout";
+import { HERO_BOTTOM_SPACE } from "@/entities/plan";
 import { radius } from "@/theme";
 import { clampUnit } from "@/utils/motion/clampUnit";
 

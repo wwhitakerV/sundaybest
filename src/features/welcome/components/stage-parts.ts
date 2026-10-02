@@ -1,17 +1,19 @@
 import type { ComponentType } from "react";
 
+import { PASSAGE_CARD_RADIUS } from "@/entities/scripture";
+import { SERMON_CLIP_RADIUS } from "@/entities/sermon";
 import type { LiftBacking } from "../logic/lift";
 import type { LiftPieceProps } from "../logic/lift-piece";
 import { LIFT_RIM } from "../logic/fan-geometry";
 import type { MockScreenProps } from "../logic/mock-page";
 import type { StoryCardKey, StoryScreen } from "../logic/story";
 import { ANSWER_BOX_RADIUS, AnswerBox } from "./lifts/AnswerBox";
-import { LISTEN_CARD_RADIUS, ListenCard } from "./lifts/ListenCard";
+import { ListenCard } from "./lifts/ListenCard";
 import { PASTE_FIELD_RADIUS, PasteField } from "./lifts/PasteField";
 import { PlanSetup } from "./lifts/PlanSetup";
 import { PrayerLines } from "./lifts/PrayerLines";
 import { QUIZ_OPTION_RADIUS, QuizOptions } from "./lifts/QuizOptions";
-import { VERSE_CARD_RADIUS, VerseCard } from "./lifts/VerseCard";
+import { VerseCard } from "./lifts/VerseCard";
 import { NewPlanMock } from "./mocks/NewPlanMock";
 import { QuickCheckMock } from "./mocks/QuickCheckMock";
 import { StudyMock } from "./mocks/StudyMock";
@@ -63,9 +65,9 @@ export function getLiftParts(key: StoryCardKey): readonly LiftPart[] {
       return [liftOntoCard(PlanSetup, 12, 24)];
     case "read":
       // Rests a little higher than the rest.
-      return [{ ...lift(ListenCard, LISTEN_CARD_RADIUS), raise: 24 }];
+      return [{ ...lift(ListenCard, SERMON_CLIP_RADIUS), raise: 24 }];
     case "scripture":
-      return [lift(VerseCard, VERSE_CARD_RADIUS)];
+      return [lift(VerseCard, PASSAGE_CARD_RADIUS)];
     case "reflect":
       return [lift(AnswerBox, ANSWER_BOX_RADIUS)];
     case "pray":

@@ -7,7 +7,7 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-import { LIFT } from "../logic/scenes";
+import { LIFT } from "../logic/lift-timing";
 import type { LiftLayout } from "../logic/lift";
 
 // Jumping off: quick, with a little overshoot, like it springs free.

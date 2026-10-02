@@ -1,4 +1,6 @@
+import { useContext } from "react";
 import { StyleSheet, View } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { CircleCheck, CircleX } from "lucide-react-native";
 
 import type { QuizQuestion } from "@/types/domain";
@@ -30,6 +32,8 @@ export function QuickCheckFeedback({
   onAction,
 }: QuickCheckFeedbackProps) {
   const theme = useTheme();
+  // The screen keeps clear of the home indicator; the panel's colour runs on under it.
+  const bottomInset = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   const right = result === "correct";
   const tone: Tone = right ? "correct" : "incorrect";
   const ink = toneColor(theme.colors, tone);
@@ -41,6 +45,7 @@ export function QuickCheckFeedback({
       testID="quick-check-feedback"
       style={[
         styles.panel,
+        { marginBottom: -(bottomInset + EDGE), paddingBottom: bottomInset + EDGE },
         {
           backgroundColor: right ? theme.colors.correctSurface : theme.colors.incorrectSurface,
           borderColor: right ? theme.colors.correctBorder : theme.colors.incorrectBorder,
@@ -59,14 +64,21 @@ export function QuickCheckFeedback({
   );
 }
 
+/**
+ * The panel's edge. It's drawn all the way round — a top edge alone fades out
+ * where the corners curve — and the panel reaches this far past the screen's
+ * sides and bottom, so only its top and the curves show.
+ */
+const EDGE = 1;
+
 const styles = StyleSheet.create({
   // Runs to the screen's edges, past the page inset, with rounded top corners.
   panel: {
-    marginHorizontal: -PAGE_INSET,
-    paddingHorizontal: PAGE_INSET,
+    marginHorizontal: -(PAGE_INSET + EDGE),
+    paddingHorizontal: PAGE_INSET + EDGE,
     paddingTop: space[24],
     gap: space[16],
-    borderTopWidth: 1,
+    borderWidth: EDGE,
     borderTopLeftRadius: radius[36],
     borderTopRightRadius: radius[36],
   },

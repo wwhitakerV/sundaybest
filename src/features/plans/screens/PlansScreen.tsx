@@ -1,54 +1,24 @@
-import { useState } from "react";
 import { FlatList, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
-import { Divider } from "@/ui/atoms/Divider";
 import { FilterPills } from "@/ui/molecules/FilterPills";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { space } from "@/theme";
-import {
-  getCompletedPlans,
-  getInProgressPlans,
-  getLibraryPlans,
-  getPlanProgress,
-  getSermonForPlan,
-  getUserPlans,
-  useAppSelector,
-} from "@/core/store";
 import { LibraryPlanCard } from "../components/LibraryPlanCard";
-import { describeLibraryPlan } from "../logic/library";
-import { getPlanFilterOptions, getPlansForFilter } from "../logic/plan-filters";
-import { planOverviewHref } from "../logic/routes";
+import { PlansEmpty } from "../components/PlansEmpty";
+import { usePlansLibrary } from "../hooks/use-plans-library";
 
 /**
  * The library: the user's plans, filtered by pills — All, In progress, Done,
  * Saved — each list and count read from the store's selectors. The plans run
- * down the page one to a row (`LibraryPlanCard`): its sermon's thumbnail at
- * 16:9, its title, and where it stands, a thin line between each. A plan
- * opens to its overview.
+ * down the page one to a card (`LibraryPlanCard`): its sermon's thumbnail at
+ * 16:9, a dial of how much is done beside its title, and where it stands —
+ * with Continue (a plan under way) or Start (one not started) straight into
+ * its study. A card opens its plan's overview. A filter with nothing in it
+ * says so (`PlansEmpty`).
  */
 export function PlansScreen() {
-  const router = useRouter();
-  const [filter, setFilter] = useState("All");
-  const cards = useAppSelector((state) =>
-    getPlansForFilter(state, filter).map((plan) => {
-      const currentDayNumber = getPlanProgress(state, plan.id)?.currentDayNumber ?? 1;
-      return {
-        plan,
-        thumbnailUrl: getSermonForPlan(state, plan.id)?.thumbnailUrl ?? null,
-        look: describeLibraryPlan(plan, { currentDayNumber }),
-      };
-    }),
-  );
-  const filters = useAppSelector((state) =>
-    getPlanFilterOptions({
-      all: getUserPlans(state).length,
-      inProgress: getInProgressPlans(state).length,
-      done: getCompletedPlans(state).length,
-      saved: getLibraryPlans(state).length,
-    }),
-  );
+  const { filter, setFilter, filters, cards, empty, openPlan, actionFor } = usePlansLibrary();
 
   return (
     <Screen testID="plans-screen" padded>
@@ -65,19 +35,23 @@ export function PlansScreen() {
       <FlatList
         data={cards}
         keyExtractor={({ plan }) => plan.id}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { gap: space[16] }]}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => (
-          <Divider testID="plans-divider" style={{ marginVertical: space[24] }} />
-        )}
-        renderItem={({ item: { plan, thumbnailUrl, look } }) => (
+        ListEmptyComponent={<PlansEmpty testID="plans-empty" {...empty} />}
+        renderItem={({ item }) => (
           <LibraryPlanCard
-            testID={`plans-item-${plan.id}`}
-            thumbnailTestID={`plans-thumbnail-${plan.id}`}
-            title={plan.title}
-            thumbnailUrl={thumbnailUrl}
-            look={look}
-            onPress={() => router.push(planOverviewHref(plan.id))}
+            testID={`plans-item-${item.plan.id}`}
+            thumbnailTestID={`plans-thumbnail-${item.plan.id}`}
+            progressTestID={`plans-progress-${item.plan.id}`}
+            actionTestID={`plans-action-${item.plan.id}`}
+            title={item.plan.title}
+            church={item.church}
+            thumbnailUrl={item.thumbnailUrl}
+            look={item.look}
+            percent={item.percent}
+            done={item.done}
+            onPress={() => openPlan(item.plan.id)}
+            {...actionFor(item)}
           />
         )}
       />

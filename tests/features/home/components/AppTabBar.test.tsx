@@ -7,7 +7,7 @@ import { tapFeedback } from "@/core/haptics/haptics";
 import { AppTabBar } from "@/features/home/components/AppTabBar";
 import type { TabBarProps } from "@/ui/organisms/tab-bar/TabBar";
 
-jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn(), sparkBuzz: jest.fn() }));
+jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),

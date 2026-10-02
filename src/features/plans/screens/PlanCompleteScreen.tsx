@@ -1,43 +1,86 @@
-import { Screen } from "@/ui/organisms/Screen";
-import { Button } from "@/ui/atoms/Button";
-import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
-import { useModalSession } from "@/hooks/use-modal-session";
-import { SFProBody } from "@/ui/typography/SFProBody";
+import { StyleSheet, View } from "react-native";
+import { Plus, Share, X } from "lucide-react-native";
 
-/** The end of a plan, inside the Daily Study session. Every action leaves the session. */
+import { space } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
+import { CompactButton } from "@/ui/atoms/CompactButton";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { StatCard } from "@/ui/molecules/StatCard";
+import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { PlanCompleteFlame } from "../components/PlanCompleteFlame";
+import { StudyNotFound } from "../components/StudyNotFound";
+import { usePlanComplete } from "../hooks/use-plan-complete";
+
+/**
+ * The end of a plan, inside the Daily Study session: its flame — the app's
+ * one filled flame — what it added up to (days, notes, Quick Check), and a
+ * nudge on to next week's sermon. Close (top left) goes back to the plan. A
+ * milestone page (`MilestoneScreen`). What each does: `usePlanComplete`.
+ */
 export function PlanCompleteScreen() {
-  const session = useModalSession();
+  const view = usePlanComplete();
+  if (!view.found) return <StudyNotFound testID="plan-complete-not-found" />;
+  const { summary } = view;
 
   return (
-    <Screen testID="plan-complete-screen" padded>
-      <ScreenHeader testID="plan-complete" title="Plan complete" />
+    <MilestoneScreen
+      testID="plan-complete-screen"
+      header={
+        <HeaderIconButton
+          testID="plan-complete-close-button"
+          icon={X}
+          accessibilityLabel="Close"
+          onPress={view.close}
+        />
+      }
+      mark={<PlanCompleteFlame testID="plan-complete-flame" />}
+      title="Plan complete"
+    >
+      <View style={styles.stats}>
+        <StatCard
+          testID="plan-complete-days"
+          value={`${summary.completedDays}/${summary.totalDays}`}
+          label="Days"
+        />
+        <StatCard testID="plan-complete-notes" value={String(summary.notes)} label="Notes" />
+        <StatCard
+          testID="plan-complete-quiz"
+          value={`${summary.quizCorrect}/${summary.quizTotal}`}
+          label="Quiz"
+        />
+      </View>
 
-      <SFProBody>...</SFProBody>
-
-      <Button
-        testID="plan-complete-share-button"
-        label="Share"
-        variant="secondary"
-        // Mocked action only — no real share sheet in this navigation build.
-        onPress={() => undefined}
-      />
-      <Button
-        testID="plan-complete-plans-button"
-        label="Plans"
-        onPress={() => session.exitTo("/(tabs)/plans")}
-      />
-      <Button
-        testID="plan-complete-add-sermon-button"
-        label="Add sermon"
-        variant="secondary"
-        onPress={() => session.exitTo("/(plan-creation)/paste-sermon")}
-      />
-      <Button
-        testID="plan-complete-home-button"
-        label="Home"
-        variant="secondary"
-        onPress={() => session.exitTo("/(tabs)/home")}
-      />
-    </Screen>
+      <Card style={styles.next}>
+        <MonoLabel tone="textMuted">Sunday&apos;s coming</MonoLabel>
+        <SFProTitle variant="preview">
+          Add next week&apos;s sermon and keep your streak going.
+        </SFProTitle>
+        <View style={styles.actions}>
+          <CompactButton
+            testID="plan-complete-add-sermon-button"
+            label="Add sermon"
+            icon={Plus}
+            tone="dark"
+            onPress={view.addSermon}
+          />
+          {/* Sharing isn't built yet. */}
+          <CompactButton
+            testID="plan-complete-share-button"
+            label="Share"
+            icon={Share}
+            tone="soft"
+            onPress={() => undefined}
+          />
+        </View>
+      </Card>
+    </MilestoneScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  stats: { flexDirection: "row", gap: space[12] },
+  next: { padding: space[24], gap: space[16] },
+  actions: { flexDirection: "row", gap: space[12] },
+});

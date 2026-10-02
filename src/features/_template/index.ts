@@ -4,4 +4,4 @@
  *
  * Deep imports such as `@/features/<name>/screens/Thing` are blocked by lint.
  */
-export {};
+export { ExampleScreen } from "./screens/ExampleScreen";

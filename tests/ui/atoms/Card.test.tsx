@@ -1,4 +1,4 @@
-import { render, screen } from "@tests/helpers/render";
+import { render, screen, fireEvent } from "@tests/helpers/render";
 import { Text } from "react-native";
 
 import { lightTheme } from "@/theme/tokens";
@@ -30,8 +30,14 @@ describe("Card", () => {
       borderWidth: 1,
       borderRadius: 28,
       backgroundColor: colors.surface,
-      borderColor: colors.divider,
+      borderColor: colors.containerBorder,
     });
+  });
+
+  it("keeps the container border when filled with the page colour", () => {
+    render(<Card testID="card" fill="page" />);
+
+    expect(screen.getByTestId("card")).toHaveStyle({ borderColor: colors.containerBorder });
   });
 
   it("takes the corner radius it is given", () => {
@@ -60,5 +66,37 @@ describe("Card", () => {
     render(<Card testID="card" accessibilityRole="radiogroup" />);
 
     expect(screen.getByTestId("card")).toHaveProp("accessibilityRole", "radiogroup");
+  });
+
+  describe("tappable", () => {
+    it("calls onPress when pressed", () => {
+      const onPress = jest.fn();
+      render(<Card testID="card" onPress={onPress} accessibilityLabel="A plan" />);
+
+      fireEvent.press(screen.getByTestId("card"));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    it("is a button, named by its label", () => {
+      render(<Card testID="card" onPress={() => undefined} accessibilityLabel="A plan" />);
+
+      expect(screen.getByRole("button", { name: "A plan" })).toBeOnTheScreen();
+    });
+
+    it("keeps its shell's edge and fill", () => {
+      render(<Card testID="card" onPress={() => undefined} accessibilityLabel="A plan" />);
+
+      expect(screen.getByTestId("card")).toHaveStyle({
+        borderColor: colors.containerBorder,
+        backgroundColor: colors.surface,
+      });
+    });
+  });
+
+  it("draws no edge when asked for none", () => {
+    render(<Card testID="card" edge={false} />);
+
+    expect(screen.getByTestId("card")).toHaveStyle({ borderWidth: 0 });
   });
 });
