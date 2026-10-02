@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 
 import { planOverviewHref } from "@/entities/plan";
 import { tapFeedback } from "@/core/haptics/haptics";
-import { getSamplePlan, getUserPlans, useAppSelector } from "@/core/store";
+import { getSamplePlan, getUserPlans, useAppSelector, useStoreActions } from "@/core/store";
 import { getStartRoutes } from "../logic/start";
 
 /**
@@ -18,6 +18,7 @@ export function useWelcomeStart() {
   const router = useRouter();
   const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
   const sample = useAppSelector(getSamplePlan);
+  const { completeOnboarding } = useStoreActions();
   const [starting, setStarting] = useState(false);
   // Read synchronously, so two presses in one frame still go once.
   const startingNow = useRef(false);
@@ -41,6 +42,7 @@ export function useWelcomeStart() {
       if (startingNow.current) return;
       startingNow.current = true;
       tapFeedback();
+      completeOnboarding();
       setStarting(true);
       frame.current = requestAnimationFrame(() => {
         frame.current = null;
@@ -48,7 +50,9 @@ export function useWelcomeStart() {
       });
     },
     seeSample: () => {
-      if (sample) router.push(planOverviewHref(sample.id));
+      if (!sample) return;
+      completeOnboarding();
+      router.push(planOverviewHref(sample.id));
     },
   };
 }

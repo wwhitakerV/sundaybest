@@ -1,7 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
 
 import { parseStudyParams } from "@/entities/plan";
-import { getPlanById, getPlanDay, useAppSelector } from "@/core/store";
+import { isDayLockedForStudy } from "../logic/day-rail";
+import { getPlanById, getPlanDay, getPlanDays, useAppSelector, useToday } from "@/core/store";
 
 /**
  * The Daily Study session's route — `planId`, and `day` on the per-day
@@ -16,6 +17,9 @@ export function useStudyRoute() {
   const dayNumber = params?.dayNumber ?? 0;
   const plan = useAppSelector((state) => (params ? getPlanById(state, planId) : null));
   const planDay = useAppSelector((state) => (params ? getPlanDay(state, planId, dayNumber) : null));
+  const days = useAppSelector((state) => (params ? getPlanDays(state, planId) : []));
+  const today = useToday();
+  const locked = planDay ? isDayLockedForStudy(planDay, days, today) : true;
 
-  return { planId, dayNumber, plan, day: planDay };
+  return { planId, dayNumber, plan, day: locked ? null : planDay };
 }

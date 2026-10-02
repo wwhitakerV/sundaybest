@@ -1,8 +1,9 @@
 import type { IsoDate, IsoDateTime, Plan, SermonPlatform, SermonSource } from "@/types/domain";
+import { addDays } from "@/utils/dates/addDays";
 
 import type { AppAction } from "../actions";
 import type { AppState } from "../state";
-import { findById, listAll, withRecord, withoutRecord } from "../table";
+import { findById, listAll, withRecord, withRecords, withoutRecord } from "../table";
 import { canMovePlan } from "../transitions";
 
 type Action<Type extends AppAction["type"]> = Extract<AppAction, { type: Type }>;
@@ -39,7 +40,13 @@ function detectPlatform(url: string): SermonPlatform {
 /** A new draft plan, and its sermon as far as it's known, filled in once the plan is built. */
 export function createPlan(state: AppState, action: Action<"plan/create">): AppState {
   const url = action.sourceUrl.trim();
-  if (!url || findById(state.plans, action.planId) || findById(state.sermons, action.sermonId)) {
+  const platform = detectPlatform(url);
+  if (
+    !url ||
+    platform !== "youtube" ||
+    findById(state.plans, action.planId) ||
+    findById(state.sermons, action.sermonId)
+  ) {
     return state;
   }
   const sermon: SermonSource = {
@@ -47,7 +54,7 @@ export function createPlan(state: AppState, action: Action<"plan/create">): AppS
     createdAt: action.at,
     updatedAt: action.at,
     url,
-    platform: detectPlatform(url),
+    platform,
     title: action.title,
     church: null,
     thumbnailUrl: null,
@@ -105,7 +112,22 @@ export function updatePlan(state: AppState, action: Action<"plan/update">): AppS
 
 export function startPlan(state: AppState, action: Action<"plan/start">): AppState {
   const plan = findById(state.plans, action.planId);
-  return plan ? withPlan(state, plan, started(plan, action.today, action.at)) : state;
+  if (!plan) return state;
+  const nextPlan = started(plan, action.today, action.at);
+  if (nextPlan === plan) return state;
+
+  const days = listAll(state.planDays)
+    .filter((day) => day.planId === plan.id)
+    .map((day) => ({
+      ...day,
+      scheduledOn: addDays(action.today, day.dayNumber - 1),
+      updatedAt: action.at,
+    }));
+
+  const withStartedPlan = withPlan(state, plan, nextPlan);
+  return days.length === 0
+    ? withStartedPlan
+    : { ...withStartedPlan, planDays: withRecords(withStartedPlan.planDays, days) };
 }
 
 /** Only an active plan with every one of its days done. */

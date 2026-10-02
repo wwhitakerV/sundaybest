@@ -1,3 +1,5 @@
+import type { Weekday } from "@/types/domain";
+
 import type { AppAction } from "../actions";
 import type { AppState } from "../state";
 import { findById, withRecord } from "../table";
@@ -35,6 +37,25 @@ export function updateReminderTime(
       time: action.time,
       updatedAt: action.at,
     }),
+  };
+}
+
+
+export function updateReminderDays(
+  state: AppState,
+  action: Action<"settings/reminderDays">,
+): AppState {
+  const reminder = findById(state.reminders, action.reminderId);
+  if (!reminder) return state;
+  const allowed: readonly Weekday[] = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const unique = allowed.filter((day) => action.days.includes(day));
+  if (unique.length === 0) return state;
+  const unchanged =
+    unique.length === reminder.days.length && unique.every((day, index) => reminder.days[index] === day);
+  if (unchanged) return state;
+  return {
+    ...state,
+    reminders: withRecord(state.reminders, { ...reminder, days: unique, updatedAt: action.at }),
   };
 }
 
@@ -88,5 +109,47 @@ export function updateReadingPaper(
   return {
     ...state,
     settings: { ...state.settings, readingPaper: action.paper, updatedAt: action.at },
+  };
+}
+
+
+export function updateTheme(state: AppState, action: Action<"settings/theme">): AppState {
+  if (state.settings.theme === action.theme) return state;
+  return {
+    ...state,
+    settings: { ...state.settings, theme: action.theme, updatedAt: action.at },
+  };
+}
+
+export function updateDefaultPlanLength(
+  state: AppState,
+  action: Action<"settings/defaultPlanLength">,
+): AppState {
+  if (state.settings.defaultPlanLength === action.lengthDays) return state;
+  return {
+    ...state,
+    settings: { ...state.settings, defaultPlanLength: action.lengthDays, updatedAt: action.at },
+  };
+}
+
+export function updateQuickCheckByDefault(
+  state: AppState,
+  action: Action<"settings/quickCheckByDefault">,
+): AppState {
+  if (state.settings.quickCheckByDefault === action.enabled) return state;
+  return {
+    ...state,
+    settings: { ...state.settings, quickCheckByDefault: action.enabled, updatedAt: action.at },
+  };
+}
+
+export function updateHapticsEnabled(
+  state: AppState,
+  action: Action<"settings/hapticsEnabled">,
+): AppState {
+  if (state.settings.hapticsEnabled === action.enabled) return state;
+  return {
+    ...state,
+    settings: { ...state.settings, hapticsEnabled: action.enabled, updatedAt: action.at },
   };
 }

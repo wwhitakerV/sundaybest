@@ -3,8 +3,9 @@ import type { BibleTranslation } from "./scripture";
 import type { PlanLength } from "./plan";
 
 /**
- * The person using the app on this device. There are no accounts or sign-in:
- * this is a local profile, created the first time the app opens.
+ * The person using this install. The production backend can create this user
+ * anonymously from the attested install; Sign in with Apple can later link the
+ * anonymous user for cross-device restore without changing the app-facing shape.
  */
 export type User = Entity & {
   /** What the app calls them, if they've said. */

@@ -1,6 +1,6 @@
 import type { AppAction } from "../actions";
 import type { AppState } from "../state";
-import { completePlanDay } from "./days";
+import { completePlanDay, updatePlanDay } from "./days";
 import { clearReflection, markPrayed, saveReflection, updateReflection } from "./devotion";
 import { startPlanGeneration } from "./generation";
 import { createPlan } from "./plans";
@@ -20,7 +20,16 @@ type Action<Type extends AppAction["type"]> = Extract<AppAction, { type: Type }>
  */
 export function finishPlanDay(state: AppState, action: Action<"planDay/finish">): AppState {
   const { dayId, prayerId, today, at } = action;
-  const prayed = prayerId ? markPrayed(state, { type: "prayer/markPrayed", prayerId, at }) : state;
+  const stepped = updatePlanDay(state, {
+    type: "planDay/update",
+    dayId,
+    completedStep: "pray",
+    today,
+    at,
+  });
+  const prayed = prayerId
+    ? markPrayed(stepped, { type: "prayer/markPrayed", prayerId, at })
+    : stepped;
   return completePlanDay(prayed, { type: "planDay/complete", dayId, today, at });
 }
 

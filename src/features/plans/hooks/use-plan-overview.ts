@@ -16,9 +16,10 @@ import {
   getPlanProgress,
   getSermonForPlan,
   useAppSelector,
+  useToday,
 } from "@/core/store";
 import { useTheme } from "@/theme";
-import { describeDayTile, type DayStepKey } from "../logic/day-rail";
+import { describeDayTile, isDayLockedForStudy, type DayStepKey } from "../logic/day-rail";
 import { usePlanMoreMenu } from "./use-plan-more-menu";
 import { useSelectedDay } from "./use-selected-day";
 
@@ -40,10 +41,13 @@ export function usePlanOverview() {
     getPlanDays(state, planId).map((day) => ({ day, minutes: getDayMinutes(state, day.id) })),
   );
   const more = usePlanMoreMenu(planId);
+  const today = useToday();
+  const dayRecords = days.map(({ day }) => day);
   const { selectedNumber, pickDay, selected } = useSelectedDay({
     days,
     currentDayNumber: currentDay?.dayNumber ?? null,
     quickCheckEnabled: plan?.quickCheckEnabled ?? false,
+    today,
   });
 
   const currentMinutes = days.find(({ day }) => day.id === currentDay?.id)?.minutes ?? 0;
@@ -85,7 +89,11 @@ export function usePlanOverview() {
     },
     continueLabel: words?.action ?? null,
     light: getHeroPalette(colors, theme.colors.featureBackdrop).light,
-    tiles: days.map(({ day }) => describeDayTile(day, currentDay?.dayNumber ?? null)),
+    tiles: days.map(({ day }) =>
+      describeDayTile(day, currentDay?.dayNumber ?? null, {
+        locked: isDayLockedForStudy(day, dayRecords, today),
+      }),
+    ),
     selectedNumber,
     selected,
     pickDay: (dayNumber: number) => {

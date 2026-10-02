@@ -21,6 +21,8 @@ import type {
   SermonSource,
   StudyStep,
   TextSize,
+  ThemePreference,
+  Weekday,
 } from "@/types/domain";
 
 /** One change to a reflection's answer: a first answer, a change to one, or one taken back. */
@@ -70,6 +72,9 @@ type At = { at: IsoDateTime };
  * day, finishing a quiz with questions unanswered, …) changes nothing.
  */
 export type AppAction =
+  // User
+  | ({ type: "user/displayName"; displayName: string | null } & At)
+  | ({ type: "user/completeOnboarding" } & At)
   // Plans
   | ({
       type: "plan/create";
@@ -133,10 +138,15 @@ export type AppAction =
   // Settings
   | ({ type: "settings/reminderEnabled"; reminderId: Id; enabled: boolean } & At)
   | ({ type: "settings/reminderTime"; reminderId: Id; time: LocalTime } & At)
+  | ({ type: "settings/reminderDays"; reminderId: Id; days: Weekday[] } & At)
   // The reminder turned on at a time, in one step.
   | ({ type: "settings/reminderOn"; reminderId: Id; time: LocalTime } & At)
   | ({ type: "settings/bibleTranslation"; translation: BibleTranslation } & At)
   | ({ type: "settings/textSize"; textSize: TextSize } & At)
+  | ({ type: "settings/theme"; theme: ThemePreference } & At)
+  | ({ type: "settings/defaultPlanLength"; lengthDays: PlanLength } & At)
+  | ({ type: "settings/quickCheckByDefault"; enabled: boolean } & At)
+  | ({ type: "settings/hapticsEnabled"; enabled: boolean } & At)
   | ({ type: "settings/readingTextOffset"; offset: number } & At)
   | ({ type: "settings/readingPaper"; paper: ReadingPaper } & At)
   // Progress

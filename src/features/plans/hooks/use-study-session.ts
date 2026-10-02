@@ -73,6 +73,7 @@ export function useStudySession() {
       // The reading's done; the day waits on its Quick Check, which finishes it.
       tapFeedback();
       actions.updatePlanDay(studyDay.id, "pray");
+      if (prayer) actions.markPrayerPrayed(prayer.id);
       router.replace(quickCheckHref(planId, dayNumber));
     } else if (action.type === "finish") {
       successFeedback();

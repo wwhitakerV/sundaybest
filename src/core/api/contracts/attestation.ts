@@ -83,63 +83,28 @@ export const refreshRequestSchema = z.object({
 export type RefreshRequest = z.infer<typeof refreshRequestSchema>;
 
 // ---------------------------------------------------------------------------
-// Errors
+// POST /session/bootstrap
 // ---------------------------------------------------------------------------
 
-export const API_ERROR_CODES = [
-  "CHALLENGE_EXPIRED",
-  "CHALLENGE_UNKNOWN",
-  "ATTESTATION_INVALID",
-  "ASSERTION_INVALID",
-  "KEY_UNKNOWN",
-  "KEY_REVOKED",
-  "REFRESH_TOKEN_INVALID",
-  "RATE_LIMITED",
-  "UNSUPPORTED_BUNDLE",
-  "INTERNAL",
-] as const;
-
-export type ApiErrorCode = (typeof API_ERROR_CODES)[number];
-
 /**
- * Codes worth retrying. Everything else is final.
- *
- * The distinction is load-bearing, not cosmetic: a client that retries
- * `ATTESTATION_INVALID` in a loop has turned its own failure into a
- * denial-of-service attack on its backend, and one that gives up on
- * `RATE_LIMITED` is broken for the rest of the hour.
+ * Restores a session when this install still has a valid App Attest key but no
+ * refresh token (first API use after keychain cleanup, rotation failure, etc.).
  */
-export const RETRYABLE_ERROR_CODES: ReadonlySet<ApiErrorCode> = new Set([
-  "CHALLENGE_EXPIRED",
-  "CHALLENGE_UNKNOWN",
-  "RATE_LIMITED",
-  "INTERNAL",
-]);
-
-export function isRetryableErrorCode(code: ApiErrorCode): boolean {
-  return RETRYABLE_ERROR_CODES.has(code);
-}
-
-/**
- * An unknown code degrades to `INTERNAL` instead of failing the parse.
- *
- * A server that adds an error code must not make the client crash on the very
- * response that was reporting a problem, and `INTERNAL` is the conservative
- * reading of "something we do not recognise went wrong": back off and retry,
- * rather than assuming it is fatal or assuming it is fine.
- */
-const apiErrorCodeSchema = z
-  .string()
-  .transform((value): ApiErrorCode => {
-    const known = API_ERROR_CODES.find((code) => code === value);
-    return known ?? "INTERNAL";
-  })
-  .pipe(z.enum(API_ERROR_CODES));
-
-export const apiErrorEnvelopeSchema = z.object({
-  error: z.object({
-    code: apiErrorCodeSchema,
-    /** For logs only. The client branches on `code`. May be absent. */
-    message: z.string().max(1024).optional(),
-  }),
+export const bootstrapSessionRequestSchema = z.object({
+  keyId: keyIdSchema,
+  assertion: attestationBlobSchema,
+  challenge: challengeSchema,
 });
+
+export type BootstrapSessionRequest = z.infer<typeof bootstrapSessionRequestSchema>;
+
+// Error codes are shared by the whole API, not only attestation. Re-export
+// them here for compatibility with the security modules that historically
+// imported from this contract.
+export {
+  API_ERROR_CODES,
+  RETRYABLE_ERROR_CODES,
+  apiErrorEnvelopeSchema,
+  isRetryableErrorCode,
+  type ApiErrorCode,
+} from "./errors";

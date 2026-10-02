@@ -4,7 +4,7 @@ import type { Attestation } from "../security/attestation/attestation";
 import type { IntegrityState } from "../security/integrity/policy";
 import type { SessionManager } from "../security/session/session";
 import { ApiError } from "./api-error";
-import { apiErrorEnvelopeSchema, type ApiErrorCode } from "./contracts/attestation";
+import { apiErrorEnvelopeSchema, type ApiErrorCode } from "./contracts/errors";
 
 /**
  * The app's HTTP client.
@@ -46,6 +46,8 @@ interface RequestOptions<T> {
   sensitive?: boolean;
   /** Allows the one retry for a method that is not idempotent by default. */
   idempotent?: boolean;
+  /** Stable per logical mutation. The server uses it to collapse duplicate creates/writes. */
+  idempotencyKey?: string;
   timeoutMs?: number;
   signal?: AbortSignal;
 }
@@ -72,6 +74,8 @@ export function createApiClient({
     }
 
     const headers = new Headers({ Accept: "application/json" });
+
+    if (options.idempotencyKey) headers.set("Idempotency-Key", options.idempotencyKey);
 
     const token = await session.getAccessToken();
     if (token.status !== "ok") throw sessionFailureToApiError(token);

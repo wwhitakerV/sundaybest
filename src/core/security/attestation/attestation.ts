@@ -9,7 +9,8 @@ import type {
  * App attestation: proving to the backend that a request came from a genuine,
  * unmodified build of this app on real Apple hardware.
  *
- * The app has no accounts, so this is the *only* identity the backend gets. See
+ * Before optional account linking, the attested install is the backend's bootstrap
+ * identity and is used to create/recover an anonymous user. See
  * [docs/security/threat-model.md](../../../../docs/security/threat-model.md) for
  * what that does and does not buy, and
  * [docs/api/attestation.md](../../../../docs/api/attestation.md) for the server

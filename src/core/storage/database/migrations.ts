@@ -21,7 +21,7 @@ export interface Migration {
 /**
  * Every migration, in order.
  *
- * Empty: prompt 7 builds the runner, not a schema. Rules for adding one:
+ * Rules for adding one:
  *
  * - **Append only.** Versions are consecutive from 1 and never reordered,
  *   renumbered, or removed. A shipped migration has already run on real devices,
@@ -31,7 +31,58 @@ export interface Migration {
  *   device is a data-loss event with no operator present to supervise it; if a
  *   migration is wrong, the fix is another migration.
  */
-export const MIGRATIONS: readonly Migration[] = [];
+export const MIGRATIONS: readonly Migration[] = [
+  {
+    version: 1,
+    name: "real-data-cache-and-outbox",
+    async up(db) {
+      // Server data is cached as contract-shaped JSON and parsed with Zod on
+      // read. This avoids maintaining a second copy of the backend relational
+      // model on the phone while still making opened plans available offline.
+      await db.execute(`
+        CREATE TABLE api_resource_cache (
+          cache_key TEXT PRIMARY KEY NOT NULL,
+          resource_type TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          server_updated_at TEXT,
+          cached_at TEXT NOT NULL
+        )
+      `);
+      await db.execute(
+        "CREATE INDEX api_resource_cache_type_idx ON api_resource_cache(resource_type)",
+      );
+
+      // Reflection answers are intentionally device-only. They never enter the
+      // mutation outbox and therefore can never be uploaded by the sync layer.
+      await db.execute(`
+        CREATE TABLE reflection_answers (
+          reflection_id TEXT PRIMARY KEY NOT NULL,
+          answer TEXT NOT NULL,
+          answered_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
+
+      // Offline-safe server mutations. Each logical mutation owns a stable
+      // idempotency key, so replay after reconnect cannot duplicate a write.
+      await db.execute(`
+        CREATE TABLE mutation_outbox (
+          id TEXT PRIMARY KEY NOT NULL,
+          kind TEXT NOT NULL,
+          entity_key TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          idempotency_key TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL,
+          attempt_count INTEGER NOT NULL DEFAULT 0,
+          last_error_code TEXT
+        )
+      `);
+      await db.execute(
+        "CREATE INDEX mutation_outbox_created_idx ON mutation_outbox(created_at)",
+      );
+    },
+  },
+];
 
 export class MigrationError extends Error {
   constructor(message: string, cause?: unknown) {

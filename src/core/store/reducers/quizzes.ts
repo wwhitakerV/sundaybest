@@ -38,6 +38,10 @@ export function startQuizAttempt(state: AppState, action: Action<"quiz/startAtte
   const first = quiz ? questionsOf(state, quiz.id).at(0) : undefined;
   if (!quiz || !plan || !first || findById(state.quizAttempts, action.attemptId)) return state;
   if (!["ready", "active", "completed"].includes(plan.status)) return state;
+  if (quiz.planDayId) {
+    const day = findById(state.planDays, quiz.planDayId);
+    if (!day || !day.completedSteps.includes("pray")) return state;
+  }
   const alreadyOpen = listAll(state.quizAttempts).some(
     (attempt) => attempt.quizId === quiz.id && attempt.status === "inProgress",
   );

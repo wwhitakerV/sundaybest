@@ -1,4 +1,4 @@
-import { isRetryableErrorCode, type ApiErrorCode } from "./contracts/attestation";
+import { isRetryableErrorCode, type ApiErrorCode } from "./contracts/errors";
 
 /**
  * What shape of failure this was, independent of which documented error code the

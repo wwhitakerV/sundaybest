@@ -1,0 +1,248 @@
+import type { ApiClient } from "./client";
+import {
+  archivePlanResponseSchema,
+  completeOnboardingResponseSchema,
+  completeQuizAttemptResponseSchema,
+  completeStudyDayResponseSchema,
+  completeStudyStepRequestSchema,
+  completeStudyStepResponseSchema,
+  createPlanRequestSchema,
+  createPlanResponseSchema,
+  getMeResponseSchema,
+  getPlanGenerationResponseSchema,
+  getPlanResponseSchema,
+  getQuizAttemptResponseSchema,
+  getRemindersResponseSchema,
+  getSettingsResponseSchema,
+  getStudyDayResponseSchema,
+  listPlansResponseSchema,
+  mutationAckSchema,
+  removeSavedPlanResponseSchema,
+  resolveSermonRequestSchema,
+  resolveSermonResponseSchema,
+  retryPlanGenerationResponseSchema,
+  savePlanResponseSchema,
+  startPlanResponseSchema,
+  startQuizAttemptResponseSchema,
+  submitQuizAnswerRequestSchema,
+  submitQuizAnswerResponseSchema,
+  updateMeRequestSchema,
+  updateReminderRequestSchema,
+  updateSettingsRequestSchema,
+  updateReminderResponseSchema,
+  type ReminderKind,
+  type UpdateMeRequest,
+  type UpdateReminderRequest,
+  type UpdateSettingsRequest,
+  type ResolveSermonRequest,
+  type CreatePlanRequest,
+} from "./contracts";
+
+/**
+ * Typed façade over the REST API. Features call this, never hand-build URLs or
+ * cast JSON. Request bodies are validated before leaving the device and every
+ * response is parsed again at the trust boundary by ApiClient.
+ */
+export function createSundayBestApi(client: ApiClient) {
+  return {
+    user: {
+      getMe: () => client.request({ path: "/v1/me", schema: getMeResponseSchema }),
+      updateMe: (input: UpdateMeRequest, idempotencyKey: string) =>
+        client.request({
+          path: "/v1/me",
+          method: "PATCH",
+          body: updateMeRequestSchema.parse(input),
+          schema: getMeResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      completeOnboarding: (idempotencyKey: string) =>
+        client.request({
+          path: "/v1/me/onboarding/complete",
+          method: "POST",
+          schema: completeOnboardingResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      deleteMe: (idempotencyKey: string) =>
+        client.request({
+          path: "/v1/me",
+          method: "DELETE",
+          schema: mutationAckSchema,
+          sensitive: true,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    settings: {
+      get: () => client.request({ path: "/v1/me/settings", schema: getSettingsResponseSchema }),
+      update: (input: UpdateSettingsRequest, idempotencyKey: string) =>
+        client.request({
+          path: "/v1/me/settings",
+          method: "PATCH",
+          body: updateSettingsRequestSchema.parse(input),
+          schema: getSettingsResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    reminders: {
+      list: () => client.request({ path: "/v1/me/reminders", schema: getRemindersResponseSchema }),
+      update: (kind: ReminderKind, input: UpdateReminderRequest, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/me/reminders/${encodeURIComponent(kind)}`,
+          method: "PUT",
+          body: updateReminderRequestSchema.parse(input),
+          schema: updateReminderResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    sermons: {
+      resolve: (input: ResolveSermonRequest, idempotencyKey: string) =>
+        client.request({
+          path: "/v1/sermons/resolve",
+          method: "POST",
+          body: resolveSermonRequestSchema.parse(input),
+          schema: resolveSermonResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    plans: {
+      list: () => client.request({ path: "/v1/plans", schema: listPlansResponseSchema }),
+      get: (planId: string) =>
+        client.request({ path: `/v1/plans/${encodeURIComponent(planId)}`, schema: getPlanResponseSchema }),
+      create: (input: CreatePlanRequest, idempotencyKey: string) =>
+        client.request({
+          path: "/v1/plans",
+          method: "POST",
+          body: createPlanRequestSchema.parse(input),
+          schema: createPlanResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      start: (planId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/start`,
+          method: "POST",
+          schema: startPlanResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      archive: (planId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/archive`,
+          method: "POST",
+          schema: archivePlanResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      save: (planId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/saved`,
+          method: "PUT",
+          schema: savePlanResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      removeSaved: (planId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/saved`,
+          method: "DELETE",
+          schema: removeSavedPlanResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    generations: {
+      get: (generationId: string) =>
+        client.request({
+          path: `/v1/plan-generations/${encodeURIComponent(generationId)}`,
+          schema: getPlanGenerationResponseSchema,
+        }),
+      retry: (generationId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plan-generations/${encodeURIComponent(generationId)}/retry`,
+          method: "POST",
+          schema: retryPlanGenerationResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    study: {
+      getDay: (planId: string, dayNumber: number) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/days/${dayNumber}`,
+          schema: getStudyDayResponseSchema,
+        }),
+      completeStep: (
+        planId: string,
+        dayNumber: number,
+        step: "read" | "scripture" | "reflect" | "pray",
+        idempotencyKey: string,
+      ) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/days/${dayNumber}/steps/${step}`,
+          method: "PUT",
+          body: completeStudyStepRequestSchema.parse({ step }),
+          schema: completeStudyStepResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      completeDay: (planId: string, dayNumber: number, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}/days/${dayNumber}/complete`,
+          method: "POST",
+          schema: completeStudyDayResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+
+    quizzes: {
+      startAttempt: (quizId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/quizzes/${encodeURIComponent(quizId)}/attempts`,
+          method: "POST",
+          schema: startQuizAttemptResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      getAttempt: (attemptId: string) =>
+        client.request({
+          path: `/v1/quiz-attempts/${encodeURIComponent(attemptId)}`,
+          schema: getQuizAttemptResponseSchema,
+        }),
+      submitAnswer: (
+        attemptId: string,
+        input: { questionId: string; choiceId: string },
+        idempotencyKey: string,
+      ) =>
+        client.request({
+          path: `/v1/quiz-attempts/${encodeURIComponent(attemptId)}/answers`,
+          method: "POST",
+          body: submitQuizAnswerRequestSchema.parse(input),
+          schema: submitQuizAnswerResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      completeAttempt: (attemptId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/quiz-attempts/${encodeURIComponent(attemptId)}/complete`,
+          method: "POST",
+          schema: completeQuizAttemptResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+    },
+  } as const;
+}
+
+export type SundayBestApi = ReturnType<typeof createSundayBestApi>;

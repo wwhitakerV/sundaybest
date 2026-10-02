@@ -1,4 +1,4 @@
-import type { PlanDay, StudyStep } from "@/types/domain";
+import type { IsoDate, PlanDay, StudyStep } from "@/types/domain";
 import { formatShortDate } from "@/utils/dates/formatShortDate";
 import { STUDY_STEPS } from "./study-steps";
 import { formatDay } from "@/entities/plan";
@@ -8,6 +8,21 @@ import type { QuickCheckStanding } from "@/core/store";
  * Plan Detail's days: a row of tiles — where you are at a glance — and, for
  * the day picked, its four study steps and which are done, and its Quick Check.
  */
+
+
+/** Whether a scheduled day is still unavailable: future-dated or blocked by an earlier unfinished day. */
+export function isDayLockedForStudy(
+  day: Pick<PlanDay, "dayNumber" | "status" | "scheduledOn">,
+  days: readonly Pick<PlanDay, "dayNumber" | "status">[],
+  today: IsoDate,
+): boolean {
+  if (day.status !== "locked") return false;
+  const due = day.scheduledOn !== null && day.scheduledOn <= today;
+  if (!due) return true;
+  return days.some(
+    (candidate) => candidate.dayNumber < day.dayNumber && candidate.status !== "completed",
+  );
+}
 
 /** How a day's tile reads: its number, its date, its mark, and whether it's the day the plan's on. */
 export type DayTileLook = {
@@ -24,8 +39,9 @@ export type DayTileLook = {
 export function describeDayTile(
   day: Pick<PlanDay, "dayNumber" | "status" | "scheduledOn">,
   currentDayNumber: number | null,
+  { locked = day.status === "locked" }: { locked?: boolean } = {},
 ): DayTileLook {
-  const mark = day.status === "completed" ? "done" : day.status === "locked" ? "locked" : null;
+  const mark = day.status === "completed" ? "done" : locked ? "locked" : null;
   const today = mark === null && day.dayNumber === currentDayNumber;
   const date = day.scheduledOn ? formatShortDate(day.scheduledOn) : null;
   const standing = mark === "done" ? "done" : mark === "locked" ? "locked" : today ? "today" : null;
@@ -93,7 +109,7 @@ function countQuestions(count: number): string {
 export function describeDaySteps(
   day: Pick<PlanDay, "status" | "completedSteps">,
   content: { readingTitle: string; scriptureReference: string | null; reflectionCount: number },
-  { today }: { today: boolean },
+  { today, locked = day.status === "locked" }: { today: boolean; locked?: boolean },
 ): StudyStepLook[] {
   const { readingTitle, scriptureReference, reflectionCount } = content;
   const details = new Map<StudyStep, string | null>([
@@ -107,7 +123,7 @@ export function describeDaySteps(
     : undefined;
   return STUDY_STEPS.map(({ key, label }) => {
     const status: StudyStepLook["status"] =
-      day.status === "locked"
+      locked
         ? "locked"
         : day.completedSteps.includes(key)
           ? "done"
@@ -120,25 +136,28 @@ export function describeDaySteps(
 
 /**
  * A day's Quick Check, for after its study — none without one. It opens once
- * the day's done ("After Pray" till then); then it's the next thing to do,
+ * Pray is complete ("After Pray" till then); then it's the next thing to do,
  * with how many questions it asks, or how many are answered; taken, it's
  * done, with how many were right, and opens to look back on. A locked day's
  * is locked.
  */
 export function describeQuickCheckStep(
-  day: Pick<PlanDay, "status">,
+  day: Pick<PlanDay, "status" | "completedSteps">,
   quiz: QuickCheckStanding | null,
+  { locked = day.status === "locked" }: { locked?: boolean } = {},
 ): QuickCheckLook | null {
   if (!quiz) return null;
   const { status, questionCount, answeredCount, correctCount } = quiz;
   const label = "Quick Check";
-  if (day.status === "locked") {
+  if (locked) {
     return describeStep("quickCheck", label, countQuestions(questionCount), "locked");
   }
   if (status === "completed") {
     return describeStep("quickCheck", label, `${correctCount} of ${questionCount} correct`, "done");
   }
-  if (day.status !== "completed") return describeStep("quickCheck", label, "After Pray", "waiting");
+  if (!day.completedSteps.includes("pray")) {
+    return describeStep("quickCheck", label, "After Pray", "waiting");
+  }
   return describeStep(
     "quickCheck",
     label,
@@ -163,10 +182,14 @@ export type DayHeaderLook = {
  */
 export function describeDayHeader(
   day: Pick<PlanDay, "status" | "completedAt">,
-  { minutes, steps }: { minutes: number; steps: readonly Pick<StudyStepLook, "status">[] },
+  {
+    minutes,
+    steps,
+    locked = day.status === "locked",
+  }: { minutes: number; steps: readonly Pick<StudyStepLook, "status">[]; locked?: boolean },
 ): DayHeaderLook {
   const length = `${minutes} min`;
-  if (day.status === "locked") return { locked: true, meta: length };
+  if (locked) return { locked: true, meta: length };
   if (day.status === "completed") {
     const finished = day.completedAt ? `Finished ${formatShortDate(day.completedAt)}` : "Finished";
     return { locked: false, meta: `${length} · ${finished}` };

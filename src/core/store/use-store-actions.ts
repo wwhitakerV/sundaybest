@@ -14,6 +14,8 @@ import type {
   StudyStep,
   ReadingPaper,
   TextSize,
+  ThemePreference,
+  Weekday,
 } from "@/types/domain";
 
 import type { AppAction, GeneratedPlanContent, PlanChanges, ReflectionWrite } from "./actions";
@@ -31,6 +33,15 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
   const today = getToday;
 
   return {
+    // User -------------------------------------------------------------------
+
+    setDisplayName: (displayName: string | null) => {
+      dispatch({ type: "user/displayName", displayName, at: at() });
+    },
+    completeOnboarding: () => {
+      dispatch({ type: "user/completeOnboarding", at: at() });
+    },
+
     // Plans ------------------------------------------------------------------
 
     /** Makes a plan and starts building it — one step. Returns the new plan's ID. */
@@ -90,6 +101,9 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     commitReflections: (writes: readonly ReflectionWrite[]) => {
       dispatch({ type: "reflection/commit", writes, at: at() });
     },
+    markPrayerPrayed: (prayerId: Id) => {
+      dispatch({ type: "prayer/markPrayed", prayerId, at: at() });
+    },
 
     // Quizzes ------------------------------------------------------------------
 
@@ -135,6 +149,15 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
 
     // Settings -----------------------------------------------------------------
 
+    setReminderEnabled: (reminderId: Id, enabled: boolean) => {
+      dispatch({ type: "settings/reminderEnabled", reminderId, enabled, at: at() });
+    },
+    setReminderTime: (reminderId: Id, time: LocalTime) => {
+      dispatch({ type: "settings/reminderTime", reminderId, time, at: at() });
+    },
+    setReminderDays: (reminderId: Id, days: Weekday[]) => {
+      dispatch({ type: "settings/reminderDays", reminderId, days, at: at() });
+    },
     /** Turns the reminder on at a time — one step. */
     turnOnReminderAt: (reminderId: Id, time: LocalTime) => {
       dispatch({ type: "settings/reminderOn", reminderId, time, at: at() });
@@ -144,6 +167,18 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     },
     updateTextSize: (textSize: TextSize) => {
       dispatch({ type: "settings/textSize", textSize, at: at() });
+    },
+    updateTheme: (theme: ThemePreference) => {
+      dispatch({ type: "settings/theme", theme, at: at() });
+    },
+    updateDefaultPlanLength: (lengthDays: PlanLength) => {
+      dispatch({ type: "settings/defaultPlanLength", lengthDays, at: at() });
+    },
+    updateQuickCheckByDefault: (enabled: boolean) => {
+      dispatch({ type: "settings/quickCheckByDefault", enabled, at: at() });
+    },
+    updateHapticsEnabled: (enabled: boolean) => {
+      dispatch({ type: "settings/hapticsEnabled", enabled, at: at() });
     },
     /** The Daily Study's text size: points from its designed size (`READING_TEXT_SIZE`). */
     setReadingTextOffset: (offset: number) => {

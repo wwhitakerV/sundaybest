@@ -32,11 +32,16 @@ import {
 } from "./reducers/quizzes";
 import {
   updateBibleTranslation,
+  updateDefaultPlanLength,
+  updateHapticsEnabled,
+  updateQuickCheckByDefault,
+  updateReminderDays,
   updateReminderEnabled,
   updateReminderTime,
   updateReadingPaper,
   updateReadingTextOffset,
   updateTextSize,
+  updateTheme,
 } from "./reducers/settings";
 import {
   commitReflections,
@@ -44,6 +49,7 @@ import {
   finishPlanDay,
   turnOnReminderAt,
 } from "./reducers/operations";
+import { completeOnboarding, updateDisplayName } from "./reducers/user";
 import type { AppState } from "./state";
 
 /**
@@ -54,6 +60,11 @@ import type { AppState } from "./state";
  */
 export function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
+    case "user/displayName":
+      return updateDisplayName(state, action);
+    case "user/completeOnboarding":
+      return completeOnboarding(state, action);
+
     case "plan/create":
       return createPlan(state, action);
     case "plan/update":
@@ -119,12 +130,22 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return updateReminderEnabled(state, action);
     case "settings/reminderTime":
       return updateReminderTime(state, action);
+    case "settings/reminderDays":
+      return updateReminderDays(state, action);
     case "settings/reminderOn":
       return turnOnReminderAt(state, action);
     case "settings/bibleTranslation":
       return updateBibleTranslation(state, action);
     case "settings/textSize":
       return updateTextSize(state, action);
+    case "settings/theme":
+      return updateTheme(state, action);
+    case "settings/defaultPlanLength":
+      return updateDefaultPlanLength(state, action);
+    case "settings/quickCheckByDefault":
+      return updateQuickCheckByDefault(state, action);
+    case "settings/hapticsEnabled":
+      return updateHapticsEnabled(state, action);
     case "settings/readingTextOffset":
       return updateReadingTextOffset(state, action);
     case "settings/readingPaper":

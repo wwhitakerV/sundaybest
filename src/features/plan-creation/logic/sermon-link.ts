@@ -3,6 +3,7 @@ export type LinkCheck = { valid: true; url: string } | { valid: false; message: 
 
 const EMPTY_MESSAGE = "Paste a link to a sermon video.";
 const INVALID_MESSAGE = "That doesn't look like a link. Try copying it again.";
+const UNSUPPORTED_MESSAGE = "For now, paste a YouTube sermon link.";
 
 /**
  * A light check of a pasted sermon link: trimmed, with `https://` added if
@@ -17,7 +18,14 @@ export function checkSermonLink(input: string): LinkCheck {
   const labels = (host.split(":").at(0) ?? "").split(".");
   const looksValid =
     !/\s/.test(url) && labels.length >= 2 && labels.every((label) => /^[a-z0-9-]+$/i.test(label));
-  return looksValid ? { valid: true, url } : { valid: false, message: INVALID_MESSAGE };
+  if (!looksValid) return { valid: false, message: INVALID_MESSAGE };
+  const hostname = (host.split(":").at(0) ?? "").toLowerCase();
+  const youtube =
+    hostname === "youtube.com" ||
+    hostname.endsWith(".youtube.com") ||
+    hostname === "youtu.be" ||
+    hostname.endsWith(".youtu.be");
+  return youtube ? { valid: true, url } : { valid: false, message: UNSUPPORTED_MESSAGE };
 }
 
 /** A link cut down to its last part for the preview row: `…/watch?v=Qm81xRz4`. */
