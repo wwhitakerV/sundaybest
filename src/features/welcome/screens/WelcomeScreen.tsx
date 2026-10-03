@@ -19,7 +19,8 @@ export function WelcomeScreen() {
   // on its opening — the first screen on stage — and the steps are listed instead.
   const reduceMotion = useReduceMotion();
   // It plays only while the screen can be seen, and starts over on every
-  // visit: once covered it's unmounted (its timers and animations with it),
+  // visit: the moment the screen starts being left it holds still where it
+  // is — staying drawn, so nothing tears down under what arrives over it —
   // and it mounts fresh once the screen has come back and settled.
   const visit = useVisit();
   const { start, starting, seeSample } = useWelcomeStart();
@@ -56,17 +57,13 @@ export function WelcomeScreen() {
           <Span tone="textMuted">study the sermons you love.</Span>
         </DisplayTitle>
 
-        {visit.visible ? (
-          <IntroStory
-            key={visit.count}
-            testID="welcome-screen-fan"
-            paused={reduceMotion}
-            style={reduceMotion ? styles.stillFan : styles.stage}
-          />
-        ) : (
-          // Holds its place while out of view, so the page doesn't reflow.
-          <View style={reduceMotion ? styles.stillFan : styles.stage} />
-        )}
+        <IntroStory
+          key={visit.count}
+          testID="welcome-screen-fan"
+          paused={reduceMotion}
+          frozen={!visit.playing}
+          style={reduceMotion ? styles.stillFan : styles.stage}
+        />
 
         {reduceMotion && <WelcomeSteps />}
 

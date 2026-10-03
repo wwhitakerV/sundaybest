@@ -60,6 +60,8 @@ export type ScreenFanProps = {
   phase: StoryPhase;
   /** Whether the story is playing (not held still for Reduce Motion): shows its progress line. */
   playing?: boolean;
+  /** Stops the turn's clock where it is (the screen being left). */
+  frozen?: boolean;
   testID?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -83,7 +85,7 @@ export type ScreenFanProps = {
  * describing the three steps, and never takes touches.
  */
 // `playing` only shows the progress line, which is switched off for now.
-export function ScreenFan({ phase, testID, style }: ScreenFanProps) {
+export function ScreenFan({ phase, frozen = false, testID, style }: ScreenFanProps) {
   // The stage flexes with the page, so it's laid out from its measured size —
   // until the first layout, from the screen's size. The screen is always at
   // least as tall as the stage, so the phone's entrance — which starts a
@@ -114,7 +116,7 @@ export function ScreenFan({ phase, testID, style }: ScreenFanProps) {
   const { anchors, onAnchor } = useLiftAnchors();
 
   const turnKey = phase.kind === "focus" ? phase.card : null;
-  const turnElapsedMs = useSceneClock(turnKey, CLOCK_QUIET_MS);
+  const turnElapsedMs = useSceneClock(turnKey, CLOCK_QUIET_MS, frozen);
 
   const { screen, screenStep, studyScroll, getScrollOf } = useStageScroll({
     phase,

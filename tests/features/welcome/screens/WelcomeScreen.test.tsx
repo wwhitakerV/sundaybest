@@ -6,6 +6,7 @@ import type * as ExpoRouter from "expo-router";
 import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
 import { tapFeedback } from "@/core/haptics/haptics";
+import { STORY_BEATS } from "@/features/welcome/logic/story";
 import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
 
 jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
@@ -19,9 +20,25 @@ jest.mock("expo-router", () => ({
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 
+type Listener = (event: { data?: { closing?: boolean } }) => void;
+const listeners = new Map<string, Listener[]>();
+
+/** Fires the navigation event the way the native stack would. */
+function fire(name: string, event: Parameters<Listener>[0] = {}) {
+  act(() => {
+    for (const listener of listeners.get(name) ?? []) listener(event);
+  });
+}
+
 beforeEach(() => {
-  // Welcome listens for its own transitions to restart the intro on each visit.
-  jest.mocked(useNavigation).mockReturnValue({ addListener: () => () => undefined });
+  listeners.clear();
+  // Welcome listens for its own navigation events to restart the intro on each visit.
+  jest.mocked(useNavigation).mockReturnValue({
+    addListener: (name: string, listener: Listener) => {
+      listeners.set(name, [...(listeners.get(name) ?? []), listener]);
+      return () => undefined;
+    },
+  });
   mockPush.mockClear();
   jest
     .mocked(useRouter)
@@ -184,5 +201,36 @@ describe("WelcomeScreen", () => {
       pathname: "/(tabs)/plans/[planId]",
       params: { planId: SAMPLE_PLAN_ID },
     });
+  });
+
+  it("keeps the intro on screen while it's being left", () => {
+    render(<WelcomeScreen />);
+
+    fire("blur");
+    fire("transitionEnd", { data: { closing: true } });
+
+    expect(screen.getByTestId("welcome-screen-fan")).toBeVisible();
+  });
+
+  it("holds the intro still once it's being left", () => {
+    jest.useFakeTimers();
+    const arriveMs = STORY_BEATS[0]?.holdMs ?? 0;
+    const pasteMs = STORY_BEATS[1]?.holdMs ?? 0;
+    render(<WelcomeScreen />);
+    act(() => {
+      jest.advanceTimersByTime(arriveMs + 1);
+    });
+    expect(screen.getByTestId("welcome-screen-fan-caption")).toHaveTextContent(
+      "Paste any sermon link",
+    );
+
+    fire("blur");
+    act(() => {
+      jest.advanceTimersByTime(pasteMs + 1000);
+    });
+
+    expect(screen.getByTestId("welcome-screen-fan-caption")).toHaveTextContent(
+      "Paste any sermon link",
+    );
   });
 });

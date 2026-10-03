@@ -7,6 +7,8 @@ import { ScreenFan } from "./ScreenFan";
 export type IntroStoryProps = {
   /** Holds the story still on its opening (Reduce Motion). */
   paused: boolean;
+  /** Holds the story still wherever it is (the screen being left). */
+  frozen?: boolean;
   testID?: string;
   style?: StyleProp<ViewStyle>;
 };
@@ -16,8 +18,15 @@ export type IntroStoryProps = {
  * the story's beats, the scene clock, every animation — lives and dies with
  * it, so mounting it afresh (a new `key`) starts the story from the start.
  */
-export function IntroStory({ paused, testID, style }: IntroStoryProps) {
-  const phase = useStoryPhase(STORY_BEATS, paused);
+export function IntroStory({ paused, frozen = false, testID, style }: IntroStoryProps) {
+  const phase = useStoryPhase(STORY_BEATS, paused, frozen);
 
-  return <ScreenFan phase={phase} {...(testID && { testID })} {...(style && { style })} />;
+  return (
+    <ScreenFan
+      phase={phase}
+      frozen={frozen}
+      {...(testID && { testID })}
+      {...(style && { style })}
+    />
+  );
 }

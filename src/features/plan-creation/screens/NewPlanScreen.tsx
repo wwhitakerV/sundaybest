@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Link2, Search, type LucideIcon } from "lucide-react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 
@@ -8,35 +9,35 @@ import { useStepTransition } from "@/hooks/use-step-transition";
 import { CaptionsSheet } from "../components/CaptionsSheet";
 import { useNewPlanFlow } from "../hooks/use-new-plan-flow";
 import { DayCountPicker } from "../components/DayCountPicker";
+import { FIELD_ICON_CENTRE } from "../components/field-geometry";
 import { HowToCopyCard } from "../components/HowToCopyCard";
 import { PlanCreationHeader } from "../components/PlanCreationHeader";
 import { QuickCheckToggle } from "../components/QuickCheckToggle";
 import { SermonLinkField } from "../components/SermonLinkField";
 import { SermonPreview } from "../components/SermonPreview";
+import { SermonSearchField } from "../components/SermonSearchField";
+import { SermonSearchResults } from "../components/SermonSearchResults";
 import { formatDuration } from "@/utils/time/formatDuration";
 import { NEW_PLAN_STEPS } from "../logic/new-plan-steps";
 import { shortenLink } from "../logic/sermon-link";
-import { space } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
 
 /**
- * New Plan: paste a sermon link, then see its sermon, pick how many days, and
- * choose whether to add a Quick Check. One screen with internal step state —
- * the same pattern as Daily Study and Quick Check: the header and action stay
- * put, only the body cross-fades (`useStepTransition`). If the video turns
- * out to have no captions, a sheet says so.
- *
- * The first screen of the New Plan full-screen modal (`src/app/(plan-creation)`).
- * The flow and what each control does: `useNewPlanFlow`.
+ * New Plan: choose a sermon by pasting its link or searching the temporary
+ * frontend catalogue, then explicitly Continue into the shared preview/build
+ * path. Selecting a search row alone never advances or starts generation.
  */
 export function NewPlanScreen() {
   const flow = useNewPlanFlow();
+  const theme = useTheme();
   const focused = useIsFocused();
   const { renderedStep, bodyStyle } = useStepTransition(flow.stepIndex);
   const { state, shownChecked } = flow;
   const current = NEW_PLAN_STEPS.at(flow.stepIndex) ?? NEW_PLAN_STEPS[0];
   const body = NEW_PLAN_STEPS.at(renderedStep) ?? NEW_PLAN_STEPS[0];
+  const searching = state.inputMode === "search";
 
   return (
     <Screen testID="new-plan-screen" padded>
@@ -55,18 +56,58 @@ export function NewPlanScreen() {
       >
         <Animated.View testID={`${body.key}-body`} style={[styles.body, bodyStyle]}>
           {renderedStep === 0 ? (
-            <>
-              <SFProTitle>Paste a sermon link</SFProTitle>
-              <SFProBody tone="textMuted">Any public sermon video with captions works.</SFProBody>
-              <SermonLinkField
-                testID="paste-sermon-link-input"
-                value={state.link}
-                onChangeText={flow.changeLink}
-                onPaste={() => void flow.paste()}
-                error={state.step === "paste" ? state.linkError : null}
-              />
-              <HowToCopyCard />
-            </>
+            searching ? (
+              <>
+                <SFProTitle>Find a sermon</SFProTitle>
+                <SFProBody tone="textMuted">
+                  Search by pastor, church, topic, or sermon title.
+                </SFProBody>
+                <SermonSearchField
+                  testID="search-sermons-input"
+                  value={state.searchQuery}
+                  onChangeText={flow.changeSearchQuery}
+                  onSubmit={flow.submitSearch}
+                  onClear={flow.clearSearch}
+                />
+                <InputModeAction
+                  testID="new-plan-paste-instead"
+                  icon={Link2}
+                  label="Paste a sermon link instead"
+                  onPress={flow.showPaste}
+                  color={theme.colors.textInactive}
+                  strokeWidth={theme.icon.strokeWidth}
+                />
+                <SermonSearchResults
+                  testID="sermon-search-results"
+                  query={state.searchQuery}
+                  results={flow.searchResults}
+                  status={flow.searchStatus}
+                  selectedId={state.searchSelection?.id ?? null}
+                  onSelect={flow.selectSearchResult}
+                />
+              </>
+            ) : (
+              <>
+                <SFProTitle>Paste a sermon link</SFProTitle>
+                <SFProBody tone="textMuted">Any public sermon video with captions works.</SFProBody>
+                <SermonLinkField
+                  testID="paste-sermon-link-input"
+                  value={state.link}
+                  onChangeText={flow.changeLink}
+                  onPaste={() => void flow.paste()}
+                  error={state.step === "paste" ? state.linkError : null}
+                />
+                <InputModeAction
+                  testID="new-plan-search-instead"
+                  icon={Search}
+                  label="Search for a sermon instead"
+                  onPress={flow.showSearch}
+                  color={theme.colors.textInactive}
+                  strokeWidth={theme.icon.strokeWidth}
+                />
+                <HowToCopyCard />
+              </>
+            )
           ) : (
             shownChecked && (
               <>
@@ -98,7 +139,7 @@ export function NewPlanScreen() {
         <Button
           testID={current.actionTestID}
           label={current.actionLabel}
-          disabled={state.step === "paste" && state.link.trim() === ""}
+          disabled={!flow.canContinue}
           onPress={flow.next}
         />
       </View>
@@ -114,9 +155,58 @@ export function NewPlanScreen() {
   );
 }
 
+/** The switch's icon: a size under the field's, so it reads as the quieter choice. */
+const MODE_ICON = 18;
+
+type InputModeActionProps = {
+  testID: string;
+  icon: LucideIcon;
+  label: string;
+  onPress: () => void;
+  color: string;
+  strokeWidth: number;
+};
+
+/** Quietly switches the first step's input method without competing with Continue. */
+function InputModeAction({
+  testID,
+  icon: Icon,
+  label,
+  onPress,
+  color,
+  strokeWidth,
+}: InputModeActionProps) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.modeAction, { opacity: pressed ? 0.55 : 1 }]}
+    >
+      <Icon size={MODE_ICON} color={color} strokeWidth={strokeWidth} />
+      <SFProBody variant="detail" tone="textInactive">
+        {label}
+      </SFProBody>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingBottom: space[16] },
   body: { gap: space[16] },
+  modeAction: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space[8],
+    // Its icon centred under the field's.
+    paddingLeft: FIELD_ICON_CENTRE - MODE_ICON / 2,
+    paddingRight: space[6],
+    paddingVertical: space[4],
+    // Room under it, before what the step shows next.
+    marginBottom: space[16],
+  },
   action: { paddingBottom: space[8] },
 });

@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Keyboard, Pressable, StyleSheet, View } from "react-native";
 import { ClipboardPaste, Link2 } from "lucide-react-native";
 
 import { radius, space, useTheme } from "@/theme";
 import { MonoBody } from "@/ui/typography/MonoBody";
 import { SFProLabel } from "@/ui/typography/SFProLabel";
 import { TextField } from "@/ui/typography/TextField";
+import { FIELD_EDGE, FIELD_ICON, FIELD_ICON_INSET } from "./field-geometry";
 
 export type SermonLinkFieldProps = {
   value: string;
@@ -37,11 +38,16 @@ export function SermonLinkField({
           },
         ]}
       >
-        <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
+        <Link2
+          size={FIELD_ICON}
+          color={theme.colors.textMuted}
+          strokeWidth={theme.icon.strokeWidth}
+        />
         <TextField
           testID={testID}
           value={value}
           onChangeText={onChangeText}
+          onSubmitEditing={Keyboard.dismiss}
           placeholder="Sermon link"
           autoCapitalize="none"
           autoCorrect={false}
@@ -88,11 +94,11 @@ const styles = StyleSheet.create({
   wrap: { gap: space[8] },
   field: {
     minHeight: 64,
-    borderWidth: 1,
+    borderWidth: FIELD_EDGE,
     borderRadius: radius[32],
     flexDirection: "row",
     alignItems: "center",
-    paddingLeft: space[20],
+    paddingLeft: FIELD_ICON_INSET,
     paddingRight: space[8],
     gap: space[12],
   },

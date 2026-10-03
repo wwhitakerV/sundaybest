@@ -7,6 +7,7 @@ import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
 import { errorFeedback, selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { getPlanGeneration, getUserSettings, useAppSelector, useStoreActions } from "@/core/store";
 import { lookUpSermon } from "../data/look-up-sermon";
+import type { SermonSearchResult } from "../data/search-sermons";
 import {
   getNewPlanStepIndex,
   initialNewPlanState,
@@ -15,13 +16,12 @@ import {
 } from "../logic/new-plan-flow";
 import { preparingHref } from "../logic/routes";
 import { checkSermonLink } from "../logic/sermon-link";
+import { useSermonSearch } from "./use-sermon-search";
 
 /**
  * New Plan's view model: where the flow is (`newPlanReducer`), and the
- * user's intents. Continue checks the pasted link and previews its sermon;
- * "Create my plan" makes the plan and starts building it in one step, then
- * hands off to Preparing. If the video turns out to have no captions,
- * Preparing hands back here and `noCaptions` says so.
+ * user's intents. Paste and search stay separate on step one, then Continue
+ * explicitly commits either source into the same preview/build path.
  */
 export function useNewPlanFlow() {
   const router = useRouter();
@@ -34,11 +34,19 @@ export function useNewPlanFlow() {
     { days: settings.defaultPlanLength, quickCheck: settings.quickCheckByDefault },
     initialNewPlanState,
   );
+  const search = useSermonSearch(
+    state.searchQuery,
+    state.step === "paste" && state.inputMode === "search",
+  );
+
   // The preview stays drawn while it fades out after Back; a fresh start clears it.
   const [shownChecked, setShownChecked] = useState<CheckedLink | null>(null);
   if (state.step === "preview" && state.checked !== shownChecked) setShownChecked(state.checked);
 
   const stepIndex = getNewPlanStepIndex(state);
+  const canContinue =
+    state.step === "preview" ||
+    (state.inputMode === "search" ? state.searchSelection !== null : state.link.trim() !== "");
   const noCaptions =
     state.planId !== null &&
     generation?.planId === state.planId &&
@@ -62,17 +70,38 @@ export function useNewPlanFlow() {
       router.push(preparingHref(planId));
       return;
     }
+
+    if (state.inputMode === "search") {
+      if (!state.searchSelection) return;
+      tapFeedback();
+      dispatch({ type: "linkAccepted", checked: state.searchSelection.checked });
+      return;
+    }
+
     const result = checkSermonLink(state.link);
     if (!result.valid) {
       errorFeedback();
       dispatch({ type: "linkRejected", message: result.message });
-    } else {
-      tapFeedback();
-      dispatch({
-        type: "linkAccepted",
-        checked: { url: result.url, sermon: lookUpSermon(result.url) },
-      });
+      return;
     }
+
+    tapFeedback();
+    dispatch({
+      type: "linkAccepted",
+      checked: { url: result.url, sermon: lookUpSermon(result.url) },
+    });
+  }
+
+  function selectSearchResult(result: SermonSearchResult) {
+    if (state.step !== "paste" || state.inputMode !== "search") return;
+    if (state.searchSelection?.id !== result.id) selectionFeedback();
+    dispatch({
+      type: "searchResultSelected",
+      selection: {
+        id: result.id,
+        checked: { url: result.url, sermon: result.sermon },
+      },
+    });
   }
 
   return {
@@ -80,7 +109,17 @@ export function useNewPlanFlow() {
     stepIndex,
     shownChecked,
     noCaptions,
+    canContinue,
+    searchResults: search.results,
+    searchStatus: search.status,
+    submitSearch: search.submit,
     changeLink,
+    showSearch: () => dispatch({ type: "inputModeChanged", inputMode: "search" }),
+    showPaste: () => dispatch({ type: "inputModeChanged", inputMode: "paste" }),
+    changeSearchQuery: (searchQuery: string) =>
+      dispatch({ type: "searchQueryChanged", searchQuery }),
+    clearSearch: () => dispatch({ type: "searchQueryChanged", searchQuery: "" }),
+    selectSearchResult,
     paste: async () => {
       const copied = await readClipboardText();
       if (copied) changeLink(copied);
