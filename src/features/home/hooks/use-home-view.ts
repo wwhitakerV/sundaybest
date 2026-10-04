@@ -5,6 +5,7 @@ import {
   describePlanHero,
   formatDay,
   planOverviewHref,
+  studyHref,
 } from "@/entities/plan";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { usePlansQuery } from "@/core/api/queries";
@@ -68,6 +69,8 @@ export function useHomeView() {
     sample: sample ? { id: sample.id, title: sample.title, detail: describeApiPlan(sample) } : null,
     flight: plan ? { thumbnailUrl: plan.sermon.thumbnailUrl } : null,
     loading: plansQuery.isPending,
+    error: plansQuery.data === undefined ? plansQuery.error : null,
+    retry: () => void plansQuery.refetch(),
     openPlan: (planId: string) => router.push(planOverviewHref(planId)),
     openSample: () => {
       if (sample) router.push(planOverviewHref(sample.id));
@@ -76,13 +79,10 @@ export function useHomeView() {
       tapFeedback();
       router.push(NEW_PLAN_HREF);
     },
-    // Daily Study becomes server-backed in the next slice. Until then, Continue
-    // enters the real plan detail rather than sending a server UUID into the
-    // still-legacy Study store.
     continueToday: () => {
       if (!active) return;
       tapFeedback();
-      router.push(planOverviewHref(active.planId));
+      router.push(studyHref(active.planId, active.currentDay));
     },
   };
 }

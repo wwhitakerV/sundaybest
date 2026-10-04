@@ -34,6 +34,7 @@ export type StudyNavProps = {
   onNext: () => void;
   /** Replaces the forward arrow with a trophy + this label on the last step. */
   finishLabel?: string;
+  disabled?: boolean;
   testID?: string;
 };
 
@@ -42,7 +43,14 @@ export type StudyNavProps = {
  * Finish). Same floating capsule as the main tab bar. Plays its entrance
  * once on mount via `useStudyNavEntrance`.
  */
-export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: StudyNavProps) {
+export function StudyNav({
+  step,
+  onPrevious,
+  onNext,
+  finishLabel,
+  disabled = false,
+  testID,
+}: StudyNavProps) {
   const theme = useTheme();
   const { entranceStyle, showSparks } = useStudyNavEntrance();
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
@@ -95,7 +103,8 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           accessibilityRole="button"
           accessibilityLabel="Previous"
           onPress={onPrevious}
-          style={[styles.side, styles.sideStart]}
+          disabled={disabled}
+          style={[styles.side, styles.sideStart, disabled && styles.disabled]}
         >
           <ArrowLeft
             size={ARROW_ICON_SIZE}
@@ -122,7 +131,8 @@ export function StudyNav({ step, onPrevious, onNext, finishLabel, testID }: Stud
           accessibilityRole="button"
           accessibilityLabel={finishLabel ?? "Next"}
           onPress={onNext}
-          style={[styles.side, styles.sideEnd]}
+          disabled={disabled}
+          style={[styles.side, styles.sideEnd, disabled && styles.disabled]}
         >
           <SFProBody variant="label">{finishLabel ? "Finish" : "Next"}</SFProBody>
 
@@ -166,4 +176,5 @@ const styles = StyleSheet.create({
   },
   sideStart: { justifyContent: "flex-start" },
   sideEnd: { justifyContent: "flex-end" },
+  disabled: { opacity: 0.45 },
 });

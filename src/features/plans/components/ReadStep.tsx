@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import type { DayReading } from "@/types/domain";
+import type { StudyReading } from "../types";
 import { SermonClipCard } from "@/entities/sermon";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
@@ -12,7 +12,7 @@ import { SFProBody } from "@/ui/typography/SFProBody";
 
 export type ReadStepProps = {
   dayNumber: number;
-  reading: DayReading;
+  reading: StudyReading;
   /** Brings the reading in a beat after its title. */
   followStyle?: FollowStyle;
 };

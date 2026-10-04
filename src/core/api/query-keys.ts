@@ -3,6 +3,7 @@ export const apiQueryKeys = {
   me: ["api", "me"] as const,
   settings: ["api", "settings"] as const,
   reminders: ["api", "reminders"] as const,
+  planRoot: ["api", "plans"] as const,
   plans: ["api", "plans"] as const,
   progressRoot: ["api", "progress"] as const,
   progress: (weekStart: string) => ["api", "progress", weekStart] as const,
@@ -11,5 +12,6 @@ export const apiQueryKeys = {
   generation: (generationId: string) => ["api", "plan-generations", generationId] as const,
   studyDay: (planId: string, dayNumber: number) =>
     ["api", "plans", planId, "days", dayNumber] as const,
+  quizSession: (quizId: string) => ["api", "quizzes", quizId, "session"] as const,
   quizAttempt: (attemptId: string) => ["api", "quiz-attempts", attemptId] as const,
 } as const;

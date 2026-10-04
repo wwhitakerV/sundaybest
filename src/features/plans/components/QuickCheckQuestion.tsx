@@ -1,9 +1,10 @@
 import { StyleSheet, View } from "react-native";
 
-import type { Id, QuizQuestion } from "@/types/domain";
+import type { Id } from "@/types/domain";
 import { space } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { getChoiceLook, getQuestionKicker, splitVersePrompt } from "../logic/quick-check";
+import type { QuickCheckQuestionView } from "../types";
 import { QuickCheckChoice } from "./QuickCheckChoice";
 import { QuickCheckWordChip } from "./QuickCheckWordChip";
 import { MonoBody } from "@/ui/typography/MonoBody";
@@ -12,7 +13,7 @@ import { SerifBody } from "@/ui/typography/SerifBody";
 import { Span } from "@/ui/typography/Span";
 
 export type QuickCheckQuestionProps = {
-  question: QuizQuestion;
+  question: QuickCheckQuestionView;
   /** The choice picked and not yet checked, if any. */
   selectedChoiceId: Id | null;
   /** The choice it was answered with, once checked. */
@@ -22,8 +23,8 @@ export type QuickCheckQuestionProps = {
 
 /**
  * One Quick Check question as its kind asks: a prompt with lettered choices,
- * or a verse with a blank and the words that might fill it. Picking,
- * checking, and the reveal all come in as state; this only lays them out.
+ * or a verse with a blank and the words that might fill it. The correct answer
+ * arrives only after the server checks the submitted choice.
  */
 export function QuickCheckQuestion({
   question,
@@ -108,7 +109,6 @@ const styles = StyleSheet.create({
   body: { gap: space[16] },
   choices: { gap: space[12], marginTop: space[8] },
   verseCard: { paddingHorizontal: space[28], paddingVertical: space[24] },
-  // The blank, filled or not: an underlined space the chosen words drop into.
   blank: { textDecorationLine: "underline" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space[12], marginTop: space[8] },
 });

@@ -1,11 +1,35 @@
-/** Types owned by this slice. Anything another slice needs must be re-exported from `index.ts`. */
-import type { PlanDay, Prayer, Reflection, ScripturePassage } from "@/types/domain";
+import type {
+  ApiQuiz,
+  ApiQuizAnswerFeedback,
+  ApiQuizScore,
+  ApiStudyDay,
+} from "@/core/api/contracts";
+import type { Id } from "@/types/domain";
 
-/** Everything one day's Daily Study shows, from the store. */
+/** Study content shaped exactly for the existing UI, sourced from the API. */
+export type StudyReflection = ApiStudyDay["reflectionPrompts"][number];
+export type StudyPrayer = ApiStudyDay["prayer"];
+export type StudyScripture = ApiStudyDay["scripture"];
+export type StudyReading = ApiStudyDay["reading"];
+
 export type StudyDayContent = {
-  day: PlanDay;
-  /** In the user's Bible translation where the passage is there in it. */
-  scripture: ScripturePassage | null;
-  reflections: Reflection[];
-  prayer: Prayer | null;
+  day: Pick<ApiStudyDay, "id" | "planId" | "dayNumber" | "reading" | "progress">;
+  scripture: StudyScripture;
+  reflections: StudyReflection[];
+  prayer: StudyPrayer;
 };
+
+export type QuestionResult = "unanswered" | "correct" | "incorrect";
+export type QuizStatus = "notStarted" | "inProgress" | "completed";
+
+/**
+ * Public questions do not contain answer keys. Once a question is answered,
+ * its server-returned feedback is merged into this view shape for rendering.
+ */
+export type QuickCheckQuestionView = ApiQuiz["questions"][number] & {
+  correctChoiceId: Id | null;
+  explanation: string | null;
+};
+
+export type QuickCheckAnswerView = ApiQuizAnswerFeedback;
+export type QuickCheckScoreView = ApiQuizScore;

@@ -39,21 +39,17 @@ export const quizAttemptSchema = z.object({
   completedAt: isoDateTimeSchema.nullable(),
 });
 
-export const startQuizAttemptResponseSchema = z.object({
-  quiz: quizSchema,
-  attempt: quizAttemptSchema,
+export const quizScoreSchema = z.object({
+  correct: z.number().int().nonnegative(),
+  total: z.number().int().positive(),
+  percentage: z.number().int().min(0).max(100),
 });
 
-export const getQuizAttemptResponseSchema = startQuizAttemptResponseSchema;
-
-export const submitQuizAnswerRequestSchema = z
-  .object({
-    questionId: apiIdSchema,
-    choiceId: apiIdSchema,
-  })
-  .strict();
-
-export const submitQuizAnswerResponseSchema = z.object({
+/**
+ * Feedback for a submitted answer. It is intentionally separate from the
+ * public question so unopened questions never carry their answer key.
+ */
+export const quizAnswerFeedbackSchema = z.object({
   answerId: apiIdSchema,
   questionId: apiIdSchema,
   choiceId: apiIdSchema,
@@ -64,14 +60,37 @@ export const submitQuizAnswerResponseSchema = z.object({
   answeredAt: isoDateTimeSchema,
 });
 
+/**
+ * The resumable Quick Check session. Existing answer feedback is returned so
+ * closing/reopening a quiz can faithfully reconstruct what the user already
+ * answered without shipping answer keys for untouched questions.
+ */
+export const quizSessionResponseSchema = z.object({
+  quiz: quizSchema,
+  attempt: quizAttemptSchema,
+  answers: z.array(quizAnswerFeedbackSchema),
+  score: quizScoreSchema.nullable(),
+});
+
+export const startQuizAttemptResponseSchema = quizSessionResponseSchema;
+export const getQuizAttemptResponseSchema = quizSessionResponseSchema;
+
+export const submitQuizAnswerRequestSchema = z
+  .object({
+    questionId: apiIdSchema,
+    choiceId: apiIdSchema,
+  })
+  .strict();
+
+export const submitQuizAnswerResponseSchema = quizAnswerFeedbackSchema;
+
 export const completeQuizAttemptResponseSchema = z.object({
   attempt: quizAttemptSchema,
-  score: z.object({
-    correct: z.number().int().nonnegative(),
-    total: z.number().int().positive(),
-    percentage: z.number().int().min(0).max(100),
-  }),
+  score: quizScoreSchema,
 });
 
 export type ApiQuiz = z.infer<typeof quizSchema>;
 export type ApiQuizAttempt = z.infer<typeof quizAttemptSchema>;
+export type ApiQuizAnswerFeedback = z.infer<typeof quizAnswerFeedbackSchema>;
+export type ApiQuizScore = z.infer<typeof quizScoreSchema>;
+export type ApiQuizSession = z.infer<typeof quizSessionResponseSchema>;

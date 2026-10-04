@@ -82,6 +82,34 @@ export const MIGRATIONS: readonly Migration[] = [
       );
     },
   },
+  {
+    version: 2,
+    name: "scope-private-reflections-to-user",
+    async up(db) {
+      // v1 introduced reflection storage before it was connected to the UI.
+      // Rebuild it now with user ownership before private writing ships. A
+      // shared/sample reflection prompt has the same content id for everyone,
+      // so reflection_id alone cannot be the privacy boundary on a device that
+      // may eventually switch or link accounts.
+      await db.execute("ALTER TABLE reflection_answers RENAME TO reflection_answers_v1");
+      await db.execute(`
+        CREATE TABLE reflection_answers (
+          user_id TEXT NOT NULL,
+          reflection_id TEXT NOT NULL,
+          answer TEXT NOT NULL,
+          answered_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, reflection_id)
+        )
+      `);
+      // Phase 3 is the first release that writes reflection answers, so there
+      // is no user-authored v1 data to migrate safely without an owner id.
+      await db.execute("DROP TABLE reflection_answers_v1");
+      await db.execute(
+        "CREATE INDEX reflection_answers_user_idx ON reflection_answers(user_id)",
+      );
+    },
+  },
 ];
 
 export class MigrationError extends Error {

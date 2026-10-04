@@ -1,25 +1,30 @@
 import { useLocalSearchParams } from "expo-router";
 
+import { usePlanQuery, useStudyDayQuery } from "@/core/api/queries";
 import { parseStudyParams } from "@/entities/plan";
-import { isDayLockedForStudy } from "../logic/day-rail";
-import { getPlanById, getPlanDay, getPlanDays, useAppSelector, useToday } from "@/core/store";
 
 /**
- * The Daily Study session's route — `planId`, and `day` on the per-day
- * routes — checked (`parseStudyParams`), and the plan and day it points at,
- * from the store: null for either that doesn't exist, or when the params
- * aren't a plan and a day. Every screen in the session reads its context
- * from here, so it's the same plan and day however the user moves through it.
+ * The server-backed Daily Study route. The API is authoritative for whether a
+ * day is reachable; a future/blocked day returns an API error rather than being
+ * recreated from client-side scheduling rules.
  */
 export function useStudyRoute() {
   const params = parseStudyParams(useLocalSearchParams());
   const planId = params?.planId ?? "";
   const dayNumber = params?.dayNumber ?? 0;
-  const plan = useAppSelector((state) => (params ? getPlanById(state, planId) : null));
-  const planDay = useAppSelector((state) => (params ? getPlanDay(state, planId, dayNumber) : null));
-  const days = useAppSelector((state) => (params ? getPlanDays(state, planId) : []));
-  const today = useToday();
-  const locked = planDay ? isDayLockedForStudy(planDay, days, today) : true;
+  const planQuery = usePlanQuery(planId);
+  const dayQuery = useStudyDayQuery(planId, dayNumber);
 
-  return { planId, dayNumber, plan, day: locked ? null : planDay };
+  return {
+    planId,
+    dayNumber,
+    requestedStep: params?.step ?? null,
+    plan: planQuery.data?.plan ?? null,
+    day: dayQuery.data?.day ?? null,
+    loading: Boolean(params) && (planQuery.isPending || dayQuery.isPending),
+    error: planQuery.error ?? dayQuery.error ?? null,
+    refetch: async () => {
+      await Promise.all([planQuery.refetch(), dayQuery.refetch()]);
+    },
+  } as const;
 }

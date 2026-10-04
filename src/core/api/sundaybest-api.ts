@@ -224,6 +224,11 @@ export function createSundayBestApi(client: ApiClient) {
     },
 
     quizzes: {
+      getCurrentAttempt: (quizId: string) =>
+        client.request({
+          path: `/v1/quizzes/${encodeURIComponent(quizId)}/attempt`,
+          schema: getQuizAttemptResponseSchema,
+        }),
       startAttempt: (quizId: string, idempotencyKey: string) =>
         client.request({
           path: `/v1/quizzes/${encodeURIComponent(quizId)}/attempts`,

@@ -1,8 +1,10 @@
 import { StatusBar, StyleSheet, View } from "react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
+
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
-import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
+import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
+import { ContentPending } from "@/ui/molecules/ContentPending";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { ActivePlanBar } from "../components/ActivePlanBar";
 import { ActivePlanHero } from "../components/ActivePlanHero";
@@ -47,14 +49,14 @@ export function HomeScreen() {
     phase,
   } = useHeroCollapse();
 
-  if (view.loading) return <LoadingScreen />;
+  if (view.error) {
+    return (
+      <ScreenLoadError testID="home-load-error" title="Couldn't load Home" onRetry={view.retry} />
+    );
+  }
 
   return (
     <View style={styles.root}>
-      {/* Built like an iOS scroll screen: the scroll view runs edge to edge,
-          and the header and content apply the page inset themselves. The
-          header never moves; the content scrolls up *over* it (see
-          `styles.scroll`), and it fades as the content comes. */}
       <Screen testID="home-tab-screen" padded="vertical">
         <Animated.View
           testID="home-tab-header"
@@ -70,8 +72,6 @@ export function HomeScreen() {
 
         <Animated.ScrollView
           testID="home-tab-scroll"
-          // A flick that would stop mid-collapse glides on to fully open or
-          // fully in; one that would carry past it coasts on as it would.
           onContentSizeChange={onContentSizeChange}
           snapToOffsets={snapOffsets}
           snapToStart={false}
@@ -83,40 +83,46 @@ export function HomeScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {view.active ? (
-            <ActivePlanHero
-              plan={view.active.hero}
-              href={view.active.href}
-              onContinue={view.continueToday}
-              motion={heroMotion}
-            />
+          {view.loading ? (
+            <ContentPending testID="home-content-pending" />
           ) : (
-            <StartHereCard onAddSermon={view.addSermon} />
-          )}
-
-          {view.hasPlans ? (
-            <PlanList plans={view.plans} onOpenPlan={view.openPlan} />
-          ) : (
-            view.sample && (
-              <View style={styles.sample}>
-                <SFProBody tone="textMuted" style={styles.label}>
-                  Try a sample
-                </SFProBody>
-                <PlanRow
-                  testID="home-tab-sample-plan"
-                  title={view.sample.title}
-                  detail={view.sample.detail}
-                  done={false}
-                  onPress={view.openSample}
+            <>
+              {view.active ? (
+                <ActivePlanHero
+                  plan={view.active.hero}
+                  href={view.active.href}
+                  onContinue={view.continueToday}
+                  motion={heroMotion}
                 />
-              </View>
-            )
+              ) : (
+                <StartHereCard onAddSermon={view.addSermon} />
+              )}
+
+              {view.hasPlans ? (
+                <PlanList plans={view.plans} onOpenPlan={view.openPlan} />
+              ) : (
+                view.sample && (
+                  <View style={styles.sample}>
+                    <SFProBody tone="textMuted" style={styles.label}>
+                      Try a sample
+                    </SFProBody>
+
+                    <PlanRow
+                      testID="home-tab-sample-plan"
+                      title={view.sample.title}
+                      detail={view.sample.detail}
+                      done={false}
+                      onPress={view.openSample}
+                    />
+                  </View>
+                )
+              )}
+            </>
           )}
         </Animated.ScrollView>
       </Screen>
 
-      {/* Over everything, from the very top of the phone. */}
-      {view.active && (
+      {!view.loading && view.active && (
         <ActivePlanBar
           plan={view.active.bar}
           topInset={insetTop}
@@ -125,17 +131,19 @@ export function HomeScreen() {
           onContinue={view.continueToday}
         />
       )}
-      {view.flight && <ArtworkFlight thumbnailUrl={view.flight.thumbnailUrl} style={flightStyle} />}
-      {/* Light over the plan's colour — only while Home's the screen shown. */}
-      {isFocused && phase.lightStatusBar && <StatusBar barStyle="light-content" />}
+
+      {!view.loading && view.flight && (
+        <ArtworkFlight thumbnailUrl={view.flight.thumbnailUrl} style={flightStyle} />
+      )}
+
+      {isFocused && !view.loading && phase.lightStatusBar && <StatusBar barStyle="light-content" />}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  // As tall as a header button, though it holds none now Settings is a tab —
-  // so the featured plan below keeps its place.
+
   header: {
     minHeight: HEADER_HEIGHT,
     flexDirection: "row",
@@ -143,16 +151,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: PAGE_INSET,
   },
-  // Unclipped: content scrolled past the scroll view's top keeps drawing,
-  // over the header — which, drawn first, sits beneath it. Touches only land
-  // inside the scroll view's own frame, so the header's button still works.
-  scroll: { flex: 1, overflow: "visible" },
+
+  scroll: {
+    flex: 1,
+    overflow: "visible",
+  },
+
   content: {
     gap: space[28],
     paddingHorizontal: PAGE_INSET,
     paddingTop: CONTENT_TOP,
     paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
   },
-  sample: { gap: space[12] },
-  label: { marginLeft: space[6] },
+
+  sample: {
+    gap: space[12],
+  },
+
+  label: {
+    marginLeft: space[6],
+  },
 });

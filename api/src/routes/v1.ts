@@ -471,6 +471,14 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     );
   });
 
+  app.get("/v1/quizzes/:quizId/attempt", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const { quizId } = parseWithSchema(quizParamSchema, request.params);
+    return getQuizAttemptResponseSchema.parse(
+      await quizService.getCurrentAttempt(auth.userId, quizId),
+    );
+  });
+
   app.post("/v1/quizzes/:quizId/attempts", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { quizId } = parseWithSchema(quizParamSchema, request.params);

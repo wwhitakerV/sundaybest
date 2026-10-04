@@ -2,7 +2,7 @@ import type { IsoDate, PlanDay, StudyStep } from "@/types/domain";
 import { formatShortDate } from "@/utils/dates/formatShortDate";
 import { STUDY_STEPS } from "./study-steps";
 import { formatDay } from "@/entities/plan";
-import type { QuickCheckStanding } from "@/core/store";
+import type { ApiQuickCheckStanding } from "@/core/api/contracts";
 
 /**
  * Plan Detail's days: a row of tiles — where you are at a glance — and, for
@@ -143,7 +143,7 @@ export function describeDaySteps(
  */
 export function describeQuickCheckStep(
   day: Pick<PlanDay, "status" | "completedSteps">,
-  quiz: QuickCheckStanding | null,
+  quiz: ApiQuickCheckStanding | null,
   { locked = day.status === "locked" }: { locked?: boolean } = {},
 ): QuickCheckLook | null {
   if (!quiz) return null;

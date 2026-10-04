@@ -2,18 +2,22 @@ import { useCallback, useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 
-import { useCompleteOnboardingMutation } from "@/core/api/queries";
+import { useCompleteOnboardingMutation, usePlansQuery } from "@/core/api/queries";
 import { tapFeedback } from "@/core/haptics/haptics";
-import { getSamplePlan, getUserPlans, useAppSelector, useStoreActions } from "@/core/store";
 import { planOverviewHref } from "@/entities/plan";
+import {
+  getApiSamplePlan,
+  getApiUserPlans,
+} from "@/features/plans/logic/api-plan-collections";
 import { getStartRoutes } from "../logic/start";
 
-/** Welcome's two ways in, with onboarding persisted to the real user profile first. */
+/** Welcome's two ways in, backed entirely by the real API plan/user state. */
 export function useWelcomeStart() {
   const router = useRouter();
-  const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
-  const sample = useAppSelector(getSamplePlan);
-  const { completeOnboarding: completeLocalOnboarding } = useStoreActions();
+  const plansQuery = usePlansQuery();
+  const allPlans = plansQuery.data?.plans ?? [];
+  const hasPlans = getApiUserPlans(allPlans).length > 0;
+  const sample = getApiSamplePlan(allPlans);
   const onboarding = useCompleteOnboardingMutation();
   const [starting, setStarting] = useState(false);
   const startingNow = useRef(false);
@@ -34,9 +38,6 @@ export function useWelcomeStart() {
   async function persistOnboarding(): Promise<boolean> {
     try {
       await onboarding.mutateAsync();
-      // Plans are still mock-backed in Phase 1, so keep their local store's
-      // onboarding bit aligned until that store is retired in the Plans slice.
-      completeLocalOnboarding();
       return true;
     } catch {
       Alert.alert("Couldn’t get started", "Make sure SundayBest can reach the API and try again.");

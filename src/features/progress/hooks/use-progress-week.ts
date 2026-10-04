@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 
 import { useProgressQuery, useRemindersQuery } from "@/core/api/queries";
-import { planOverviewHref } from "@/entities/plan";
+import { studyHref } from "@/entities/plan";
 import { selectionFeedback } from "@/core/haptics/haptics";
 import { useToday } from "@/core/store";
 import { addDays } from "@/utils/dates/addDays";
@@ -51,8 +51,10 @@ export function useProgressWeek() {
       : null,
     reminder,
     loading: progressQuery.isPending,
+    error: progressQuery.data === undefined ? progressQuery.error : null,
+    retry: () => void progressQuery.refetch(),
     openUpNext: () => {
-      if (upNext) router.push(planOverviewHref(upNext.plan.id));
+      if (upNext) router.push(studyHref(upNext.plan.id, upNext.day.dayNumber));
     },
   };
 }

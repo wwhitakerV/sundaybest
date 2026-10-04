@@ -1,25 +1,22 @@
-import type { QuizQuestion } from "@/types/domain";
 import { Button } from "@/ui/atoms/Button";
 import { FeedbackPanel } from "@/ui/organisms/FeedbackPanel";
 import type { QuickCheckAction } from "../logic/quick-check";
+import type { QuickCheckQuestionView } from "../types";
 
 export type QuickCheckFeedbackProps = {
-  /** How the question went — from the store, never worked out here. */
   result: "correct" | "incorrect";
-  question: QuizQuestion;
+  question: QuickCheckQuestionView;
   action: QuickCheckAction;
+  busy?: boolean;
   onAction: () => void;
 };
 
-/**
- * The verdict once a question's checked, rising from the bottom of the
- * screen in its colour (`FeedbackPanel`): "That's the one" or "Not quite",
- * why (the passage, then the explanation), and the way on.
- */
+/** The server-verified verdict and the way on. */
 export function QuickCheckFeedback({
   result,
   question,
   action,
+  busy = false,
   onAction,
 }: QuickCheckFeedbackProps) {
   const why = [question.scriptureReference, question.explanation].filter(Boolean).join(". ");
@@ -31,7 +28,12 @@ export function QuickCheckFeedback({
       title={result === "correct" ? "That's the one" : "Not quite"}
       {...(why && { detail: why })}
     >
-      <Button testID={action.testID} label={action.label} onPress={onAction} />
+      <Button
+        testID={action.testID}
+        label={action.label}
+        disabled={busy || !action.enabled}
+        onPress={onAction}
+      />
     </FeedbackPanel>
   );
 }

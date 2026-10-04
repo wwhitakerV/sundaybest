@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import type { Prayer } from "@/types/domain";
+import type { StudyPrayer } from "../types";
 import { PrayerHeading } from "@/entities/study";
 import { space } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
@@ -10,7 +10,7 @@ import { SerifBody } from "@/ui/typography/SerifBody";
 
 export type PrayStepProps = {
   dayNumber: number;
-  prayer: Prayer;
+  prayer: StudyPrayer;
   /** Brings the prayer in a beat after its title. */
   followStyle?: FollowStyle;
 };

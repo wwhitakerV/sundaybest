@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { StatusBar, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
+import { X } from "lucide-react-native";
 
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
+import { ContentPending } from "@/ui/molecules/ContentPending";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { TextSizeScope } from "@/ui/typography/TextSizeScope";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
@@ -14,46 +18,66 @@ import { StudyStepBody } from "../components/StudyStepBody";
 import { StudyDriftProvider } from "../components/StudyDriftIn";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
 import { useStepTransition } from "@/hooks/use-step-transition";
+import { useModalSession } from "@/hooks/use-modal-session";
 import { STUDY_STEPS, fromPageIndex, toPageIndex } from "../logic/study-steps";
 import { ThemeScope, getReadingTheme, space } from "@/theme";
 
-/**
- * Read, Scripture, Reflect, and Pray as one screen with internal step state.
- * A route per step would unmount the header, tracker, and nav on every
- * change (that was the old horizontal push); here they stay put and only
- * the body cross-fades (`useStepTransition`), calmly — each page's title,
- * then its content a beat later — since this is for reading.
- *
- * The first screen of the Daily Study session modal (`src/app/study`). What
- * it shows and what moving does: `useStudySession`.
- */
 export function StudyScreen() {
   const view = useStudySession();
-  // Whether the reading sheet is up: the screen's own, passing state.
+  const modal = useModalSession();
   const [readingOpen, setReadingOpen] = useState(false);
   const reduceMotion = useReduceMotion();
-  // Pages cross-fade like steps: the transition follows one running page
-  // number. Calm, for reading — each page's title, then the rest a beat later.
+
   const {
     renderedStep: renderedPage,
     bodyStyle,
     followStyle,
-  } = useStepTransition(toPageIndex(view.position, view.pages), { profile: "drift", reduceMotion });
+  } = useStepTransition(toPageIndex(view.position, view.pages), {
+    profile: "drift",
+    reduceMotion,
+  });
+
+  if (!view.found && view.loading) {
+    return (
+      <ScrollScreen
+        testID="study-screen"
+        header={
+          <ScreenHeader
+            testID="study-loading-header"
+            title="Daily study"
+            left={
+              <HeaderIconButton
+                testID="study-loading-close-button"
+                icon={X}
+                accessibilityLabel="Close"
+                onPress={modal.exit}
+              />
+            }
+          />
+        }
+        contentStyle={styles.loadingContent}
+      >
+        <ContentPending testID="study-content-pending" compact />
+      </ScrollScreen>
+    );
+  }
 
   if (!view.found) {
-    return <StudyNotFound testID="study-not-found" />;
+    return (
+      <StudyNotFound testID="study-not-found" error={Boolean(view.error)} onRetry={view.retry} />
+    );
   }
 
   const rendered = fromPageIndex(renderedPage, view.pages);
+
   const bodyStep = STUDY_STEPS.at(rendered.step) ?? STUDY_STEPS[0];
+
   const { reading } = view;
   const paper = getReadingTheme(reading.paper);
 
   return (
     <>
-      {/* The page, on its paper. The sheet stays in the app's own colours. */}
       <ThemeScope theme={paper}>
-        {/* A day's reading runs longer than the screen; the keyboard lifts the answer boxes. */}
         <ScrollScreen
           testID="study-screen"
           style={styles.clearBottomNav}
@@ -70,13 +94,15 @@ export function StudyScreen() {
             />
           }
           overlay={
-            // Floats over the foot of the page, clear of the reading (`clearBottomNav`).
             <StudyNav
               testID="study-nav"
               step={view.position.step}
-              {...(view.isLastPage && { finishLabel: "Finish" })}
+              {...(view.isLastPage && {
+                finishLabel: "Finish",
+              })}
               onPrevious={view.previous}
               onNext={view.next}
+              disabled={view.busy}
             />
           }
           contentStyle={styles.bodyContent}
@@ -84,7 +110,6 @@ export function StudyScreen() {
           automaticallyAdjustKeyboardInsets
         >
           <Animated.View style={bodyStyle}>
-            {/* The reading's own size; the header and nav stay as they are. */}
             <TextSizeScope offset={reading.textOffset}>
               <StudyDriftProvider revealKey={renderedPage} still={reduceMotion}>
                 <StudyStepBody
@@ -100,6 +125,7 @@ export function StudyScreen() {
           </Animated.View>
         </ScrollScreen>
       </ThemeScope>
+
       <ReadingSheet
         visible={readingOpen}
         onClose={() => setReadingOpen(false)}
@@ -108,13 +134,22 @@ export function StudyScreen() {
         paper={reading.paper}
         onPaperChange={reading.setPaper}
       />
-      {/* Light status bar text over a dark paper. */}
+
       {paper.name === "dark" && <StatusBar animated barStyle="light-content" />}
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  clearBottomNav: { paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
-  bodyContent: { paddingBottom: space[24] },
+  clearBottomNav: {
+    paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
+  },
+
+  bodyContent: {
+    paddingBottom: space[24],
+  },
+
+  loadingContent: {
+    paddingTop: space[24],
+  },
 });

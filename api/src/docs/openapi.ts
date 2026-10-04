@@ -898,6 +898,20 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         },
       },
 
+      "/v1/quizzes/{quizId}/attempt": {
+        get: {
+          tags: ["Quick Check"],
+          operationId: "getCurrentQuizAttempt",
+          summary: "Get the current Quick Check attempt without starting a new one",
+          security: auth,
+          parameters: [parameterRef("QuizId")],
+          responses: {
+            "200": ok("Quiz and attempt state", "GetQuizAttemptResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
       "/v1/quizzes/{quizId}/attempts": {
         post: {
           tags: ["Quick Check"],

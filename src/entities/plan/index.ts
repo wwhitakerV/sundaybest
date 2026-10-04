@@ -8,11 +8,13 @@ export { formatDay, formatDayOfTotal, formatPlanLength } from "./logic/plan-word
 export { describePlanHero } from "./logic/plan-hero";
 export {
   HOME_HREF,
+  PLANS_HREF,
   NEW_PLAN_HREF,
   dayCompleteHref,
   parsePlanParams,
   parseStudyParams,
   planOverviewHref,
+  planCompleteHref,
   quickCheckHref,
   studyHref,
 } from "./routes";

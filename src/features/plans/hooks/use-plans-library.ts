@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 
 import type { ApiPlanSummary } from "@/core/api/contracts";
 import { usePlansQuery, useStartPlanMutation } from "@/core/api/queries";
-import { planOverviewHref } from "@/entities/plan";
+import { planOverviewHref, studyHref } from "@/entities/plan";
 import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {
   getApiCompletedPlans,
@@ -58,17 +58,18 @@ export function usePlansLibrary() {
     router.push(planOverviewHref(planId));
   }
 
-  function continuePlan(planId: string) {
+  function continuePlan(planId: string, dayNumber: number) {
     tapFeedback();
-    // Study itself is the next migration slice. Keep server UUIDs out of the
-    // legacy study store and enter through the real plan overview for now.
-    openPlan(planId);
+    router.push(studyHref(planId, dayNumber));
   }
 
   function beginPlan(planId: string) {
     tapFeedback();
     startMutation.mutate(planId, {
-      onSuccess: () => openPlan(planId),
+      onSuccess: ({ plan }) => {
+        const dayNumber = plan.progress.currentDayNumber ?? plan.days.at(0)?.dayNumber ?? 1;
+        router.push(studyHref(plan.id, dayNumber));
+      },
     });
   }
 
@@ -82,12 +83,16 @@ export function usePlansLibrary() {
     cards: displayCards,
     empty: describeEmptyFilter(filter),
     loading: plansQuery.isPending,
+    error: plansQuery.data === undefined ? plansQuery.error : null,
+    retry: () => void plansQuery.refetch(),
     openPlan,
     continuePlan,
     startPlan: beginPlan,
     actionFor: ({ plan, continueDay, startable }: LibraryCard): { action?: CardAction } => {
       if (continueDay !== null) {
-        return { action: { label: "Continue", onPress: () => continuePlan(plan.id) } };
+        return {
+          action: { label: "Continue", onPress: () => continuePlan(plan.id, continueDay) },
+        };
       }
       return startable ? { action: { label: "Start", onPress: () => beginPlan(plan.id) } } : {};
     },

@@ -1,23 +1,18 @@
 import { StyleSheet, View } from "react-native";
 import { Check, X } from "lucide-react-native";
 
-import type { QuestionResult } from "@/core/store";
-import type { QuizQuestion } from "@/types/domain";
 import { space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { SFProBody } from "@/ui/typography/SFProBody";
+import type { QuestionResult, QuickCheckQuestionView } from "../types";
 
 const MARK_SIZE = 32;
 
 export type QuickCheckResultsProps = {
-  /** Each question, with how it went — from the store. */
-  results: readonly { question: QuizQuestion; result: QuestionResult }[];
+  results: readonly { question: QuickCheckQuestionView; result: QuestionResult }[];
 };
 
-/**
- * A finished Quick Check's questions, each marked right or wrong — under its
- * score on the results page. Also how a finished attempt looks opened again.
- */
+/** A finished Quick Check's questions, each marked right or wrong. */
 export function QuickCheckResults({ results }: QuickCheckResultsProps) {
   const theme = useTheme();
 

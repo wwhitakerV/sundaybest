@@ -1,9 +1,12 @@
+import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 import { ListChecks, X } from "lucide-react-native";
 
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
+import { ContentPending } from "@/ui/molecules/ContentPending";
+import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { Button } from "@/ui/atoms/Button";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { IconRing } from "@/ui/atoms/IconRing";
@@ -17,34 +20,60 @@ import { useQuickCheckSession } from "../hooks/use-quick-check-session";
 import { describeQuickCheckIntro, getScoreHeadline } from "../logic/quick-check";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
+import { space } from "@/theme";
 
-/**
- * A day's Quick Check. Its start and its results are milestone pages
- * (`MilestoneScreen`): the start just the day's quiz and Start, with a close
- * and no title; the results its score, how it went, and each question. In
- * between, one screen whose body cross-fades question to question
- * (`useStepTransition`), as the study does; the header and the action stay
- * put, and once checked the verdict rises from the bottom with the way on.
- *
- * What it shows and what each action does: `useQuickCheckSession`.
- */
 export function QuickCheckScreen() {
   const view = useQuickCheckSession();
   const reduceMotion = useReduceMotion();
-  // Calm, like the study it follows.
+
   const { renderedStep: renderedPage, bodyStyle } = useStepTransition(view.page, {
     profile: "calm",
     reduceMotion,
   });
 
-  if (!view.found) return <StudyNotFound testID="quick-check-not-found" />;
-  const { questions, attempt, status, currentIndex, current, currentResult, action, score } = view;
+  if (view.loading) {
+    return (
+      <ScrollScreen
+        testID="quick-check-screen"
+        header={
+          <ScreenHeader
+            testID="quick-check-loading-header"
+            title="Quick check"
+            left={
+              <HeaderIconButton
+                testID="quick-check-loading-close-button"
+                icon={X}
+                accessibilityLabel="Close"
+                onPress={view.close}
+              />
+            }
+          />
+        }
+        contentStyle={styles.loadingContent}
+      >
+        <ContentPending testID="quick-check-content-pending" compact />
+      </ScrollScreen>
+    );
+  }
+
+  if (!view.found) {
+    return (
+      <StudyNotFound
+        testID="quick-check-not-found"
+        error={Boolean(view.error)}
+        onRetry={view.retry}
+      />
+    );
+  }
+
+  const { questions, status, currentIndex, current, currentResult, action, score } = view;
+
   const actionButton = (
     <Button
       testID={action.testID}
       label={action.label}
-      disabled={!action.enabled}
-      onPress={() => view.act(action)}
+      disabled={view.busy || !action.enabled}
+      onPress={() => void view.act(action)}
     />
   );
 
@@ -62,7 +91,7 @@ export function QuickCheckScreen() {
         }
         mark={<IconRing testID="quick-check-intro" icon={ListChecks} />}
         title={`Day ${view.dayNumber} Quiz`}
-        subtitle={describeQuickCheckIntro(questions.length)}
+        subtitle={describeQuickCheckIntro(view.questionCount)}
         footer={actionButton}
       />
     );
@@ -88,8 +117,8 @@ export function QuickCheckScreen() {
     );
   }
 
-  // A question's page — none while the start is still fading out.
   const shown = renderedPage > 0 ? questions.at(renderedPage - 1) : undefined;
+
   const shownAnswer = shown && view.answers.find((answer) => answer.questionId === shown.id);
 
   return (
@@ -99,7 +128,10 @@ export function QuickCheckScreen() {
         <QuickCheckHeader
           testID="quick-check"
           total={questions.length}
-          progress={{ counter: currentIndex + 1, index: currentIndex }}
+          progress={{
+            counter: currentIndex + 1,
+            index: currentIndex,
+          }}
           onClose={view.close}
         />
       }
@@ -109,7 +141,8 @@ export function QuickCheckScreen() {
             result={currentResult}
             question={current}
             action={action}
-            onAction={() => view.act(action)}
+            busy={view.busy}
+            onAction={() => void view.act(action)}
           />
         ) : (
           <ScreenFooter testID="quick-check-footer">{actionButton}</ScreenFooter>
@@ -120,9 +153,7 @@ export function QuickCheckScreen() {
         {shown && (
           <QuickCheckQuestion
             question={shown}
-            selectedChoiceId={
-              shown.id === attempt?.currentQuestionId ? (attempt.selectedChoiceId ?? null) : null
-            }
+            selectedChoiceId={view.selectedFor(shown.id)}
             answeredChoiceId={shownAnswer?.choiceId ?? null}
             onPick={view.pick}
           />
@@ -131,3 +162,9 @@ export function QuickCheckScreen() {
     </ScrollScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContent: {
+    paddingTop: space[24],
+  },
+});

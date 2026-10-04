@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import type { Reflection } from "@/types/domain";
+import type { StudyReflection } from "../types";
 import { radius, space, useTheme } from "@/theme";
 import { ReflectionCard } from "@/entities/study";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
@@ -14,7 +14,7 @@ export type ReflectStepProps = {
   /** The day's reading title, heading the step. */
   title: string;
   /** The question on this page, and how many the day has. */
-  reflection: Reflection;
+  reflection: StudyReflection;
   total: number;
   /** What's in the answer box now: the user's draft, or the answer saved. */
   answer: string;

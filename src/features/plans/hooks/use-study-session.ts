@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 
 import type { Id, ReadingPaper } from "@/types/domain";
@@ -6,17 +7,12 @@ import { dayCompleteHref, quickCheckHref } from "@/entities/plan";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { selectionFeedback, successFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {
-  isReadingTextOffset,
-  getUserSettings,
-  getDayScripture,
-  getPrayerForDay,
-  getQuizForDay,
-  getQuizStatus,
-  getReflectionsForDay,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
-import { getAnswer, getReflectionWrites, type ReflectionDrafts } from "../logic/reflection-drafts";
+  useCompleteStudyDayMutation,
+  useCompleteStudyStepMutation,
+  useUpdateSettingsMutation,
+  useUserSettingsQuery,
+} from "@/core/api/queries";
+import { readingTextOffsetSchema } from "@/core/api/contracts";
 import {
   STUDY_STEPS,
   getNextStudyAction,
@@ -25,96 +21,220 @@ import {
   isLastStudyPage,
   type StudyNavAction,
   type StudyPosition,
+  type StudyStepKey,
 } from "../logic/study-steps";
+import { useReflectionAnswers } from "./use-reflection-answers";
 import { useStudyRoute } from "./use-study-route";
 
-/**
- * The Daily Study session's view model: the route's day, from the store —
- * its reading, its passage in the user's translation, its questions, its
- * prayer — where the user is in it, and what they've typed.
- *
- * Answers are typed into drafts and written to the store, all at once,
- * whenever the user moves — to another step, out of the study, or on Finish
- * — so they're there on coming back. Moving forward records the step just
- * done. Finish completes the day — its prayer prayed and the day complete in
- * one step, which records it, opens the next day, and completes the plan
- * after its last — then Day Complete *replaces* the study inside the
- * session. A day with a Quick Check still to take isn't done yet: Finish
- * hands on to the Quick Check instead, which completes the day when it's
- * done. Closing, or Previous on the first page, dismisses the
- * whole session.
- */
+/** Daily Study backed by the real API, with private reflection answers on-device only. */
 export function useStudySession() {
   const router = useRouter();
   const session = useModalSession();
-  const { planId, dayNumber, plan, day } = useStudyRoute();
-  const dayId = day?.id ?? "";
-  const scripture = useAppSelector((state) => getDayScripture(state, dayId));
-  const reflections = useAppSelector((state) => getReflectionsForDay(state, dayId));
-  const prayer = useAppSelector((state) => getPrayerForDay(state, dayId));
-  // A day with a Quick Check still to take isn't done until it's taken.
-  const quickCheckDue = useAppSelector((state) => {
-    const quiz = getQuizForDay(state, dayId);
-    return quiz !== null && getQuizStatus(state, quiz.id) !== "completed";
-  });
-  const settings = useAppSelector(getUserSettings);
-  const actions = useStoreActions();
+  const route = useStudyRoute();
+  const { planId, dayNumber, plan, day, requestedStep } = route;
+  const settingsQuery = useUserSettingsQuery();
+  const updateSettings = useUpdateSettingsMutation();
+  const settings = settingsQuery.data?.settings;
+  const reflectionIds = useMemo(
+    () => day?.reflectionPrompts.map(({ id }) => id) ?? [],
+    [day?.reflectionPrompts],
+  );
+  const reflections = useReflectionAnswers(reflectionIds);
+  const completeStep = useCompleteStudyStepMutation(planId, dayNumber);
+  const completeDay = useCompleteStudyDayMutation(planId, dayNumber);
+  const pages = getStudyPages(day?.reflectionPrompts.length ?? 0);
   const [position, setPosition] = useState<StudyPosition>({ step: 0, page: 0 });
-  const [drafts, setDrafts] = useState<ReflectionDrafts>({});
-  const pages = getStudyPages(reflections.length);
+  const initializedDay = useRef<string | null>(null);
+  const redirectedToQuiz = useRef<string | null>(null);
 
-  if (!plan || !day) return { found: false, position, pages } as const;
-  const studyDay = day;
+  const desiredPosition = getInitialPosition(
+    requestedStep,
+    day?.progress.completedSteps ?? [],
+  );
+  const effectivePosition =
+    day && initializedDay.current !== day.id ? desiredPosition : position;
 
-  function apply(action: StudyNavAction) {
-    actions.commitReflections(getReflectionWrites(reflections, drafts));
-    if (action.type === "exit") session.exit();
-    else if (action.type === "finish" && quickCheckDue) {
-      // The reading's done; the day waits on its Quick Check, which finishes it.
-      tapFeedback();
-      actions.updatePlanDay(studyDay.id, "pray");
-      if (prayer) actions.markPrayerPrayed(prayer.id);
-      router.replace(quickCheckHref(planId, dayNumber));
-    } else if (action.type === "finish") {
+  useEffect(() => {
+    if (!day || initializedDay.current === day.id) return;
+    initializedDay.current = day.id;
+    setPosition(desiredPosition);
+  }, [day, desiredPosition]);
+
+  const quickCheckDue = Boolean(day?.quickCheckId && day.progress.status !== "completed");
+  const allStudyStepsDone = STUDY_STEPS.every(({ key }) =>
+    day?.progress.completedSteps.includes(key),
+  );
+
+  // Continue resumes the next real thing due. An explicit step route always
+  // wins so completed study content can still be revisited from Plan Detail.
+  useEffect(() => {
+    if (
+      !day ||
+      requestedStep !== null ||
+      !day.quickCheckId ||
+      !allStudyStepsDone ||
+      !quickCheckDue ||
+      redirectedToQuiz.current === day.id
+    ) {
+      return;
+    }
+    redirectedToQuiz.current = day.id;
+    router.replace(quickCheckHref(planId, dayNumber));
+  }, [
+    allStudyStepsDone,
+    day,
+    dayNumber,
+    planId,
+    quickCheckDue,
+    requestedStep,
+    router,
+  ]);
+
+  const busy = completeStep.isPending || completeDay.isPending;
+  const redirectingToQuickCheck = Boolean(
+    day &&
+      requestedStep === null &&
+      day.quickCheckId &&
+      allStudyStepsDone &&
+      quickCheckDue,
+  );
+  const loading =
+    route.loading || settingsQuery.isPending || reflections.loading || redirectingToQuickCheck;
+
+  if (!plan || !day) {
+    return {
+      found: false,
+      loading,
+      error: route.error ?? settingsQuery.error,
+      retry: route.refetch,
+      position: effectivePosition,
+      pages,
+      busy,
+    } as const;
+  }
+
+  async function apply(action: StudyNavAction) {
+    if (busy) return;
+
+    if (action.type === "exit") {
+      session.exit();
+      return;
+    }
+
+    try {
+      if (action.type === "move") {
+        if (action.to.step > effectivePosition.step) {
+          const completedStep = STUDY_STEPS.at(effectivePosition.step)?.key;
+          const expectedStep = STUDY_STEPS.find(
+            ({ key }) => !day.progress.completedSteps.includes(key),
+          )?.key;
+          if (
+            completedStep &&
+            completedStep === expectedStep &&
+            !day.progress.completedSteps.includes(completedStep)
+          ) {
+            await completeStep.mutateAsync(completedStep);
+          }
+        }
+        tapFeedback();
+        setPosition(action.to);
+        return;
+      }
+
+      // Finish always records Pray before moving on. The mutation is idempotent,
+      // so revisiting a completed day is safe.
+      if (!day.progress.completedSteps.includes("pray")) {
+        const expectedStep = STUDY_STEPS.find(
+          ({ key }) => !day.progress.completedSteps.includes(key),
+        )?.key;
+        if (expectedStep !== "pray") {
+          Alert.alert(
+            "Finish the earlier steps first",
+            "Read, Scripture, Reflect and Pray are completed in order.",
+          );
+          return;
+        }
+        await completeStep.mutateAsync("pray");
+      }
+
+      if (quickCheckDue && day.quickCheckId) {
+        tapFeedback();
+        router.replace(quickCheckHref(planId, dayNumber));
+        return;
+      }
+
+      await completeDay.mutateAsync();
       successFeedback();
-      actions.finishPlanDay(studyDay.id, prayer?.id ?? null);
       router.replace(dayCompleteHref(planId, dayNumber));
-    } else {
-      tapFeedback();
-      const done = STUDY_STEPS.at(position.step);
-      if (action.to.step > position.step && done) actions.updatePlanDay(studyDay.id, done.key);
-      setPosition(action.to);
+    } catch {
+      Alert.alert(
+        "Couldn't update study",
+        "SundayBest couldn't save that progress. Check your connection and try again.",
+      );
     }
   }
 
   return {
     found: true,
+    loading,
+    error: route.error ?? settingsQuery.error,
+    retry: route.refetch,
     dayNumber,
     totalDays: plan.lengthDays,
-    position,
+    position: effectivePosition,
     pages,
-    isLastPage: isLastStudyPage(position, pages),
-    content: { day, scripture, reflections, prayer },
-    answerFor: (reflectionId: Id) => getAnswer(reflectionId, drafts, reflections),
+    isLastPage: isLastStudyPage(effectivePosition, pages),
+    busy,
+    content: {
+      day: {
+        id: day.id,
+        planId: day.planId,
+        dayNumber: day.dayNumber,
+        reading: day.reading,
+        progress: day.progress,
+      },
+      scripture: day.scripture,
+      reflections: day.reflectionPrompts,
+      prayer: day.prayer,
+    },
+    answerFor: (reflectionId: Id) => reflections.answerFor(reflectionId),
     changeAnswer: (reflectionId: Id, answer: string) =>
-      setDrafts((current) => ({ ...current, [reflectionId]: answer })),
-    previous: () => apply(getPreviousStudyAction(position, pages)),
-    next: () => apply(getNextStudyAction(position, pages)),
-    close: () => apply({ type: "exit" }),
-    /** How the page reads — its text size and paper — kept for every visit. */
+      reflections.changeAnswer(reflectionId, answer),
+    previous: () => void apply(getPreviousStudyAction(effectivePosition, pages)),
+    next: () => void apply(getNextStudyAction(effectivePosition, pages)),
+    close: () => void apply({ type: "exit" }),
     reading: {
-      textOffset: settings.readingTextOffset,
-      paper: settings.readingPaper,
+      textOffset: settings?.readingTextOffset ?? 0,
+      paper: settings?.readingPaper ?? "white",
       setTextOffset: (offset: number) => {
-        if (isReadingTextOffset(offset) && offset !== settings.readingTextOffset) {
-          selectionFeedback();
-        }
-        actions.setReadingTextOffset(offset);
+        const parsed = readingTextOffsetSchema.safeParse(offset);
+        if (!parsed.success || parsed.data === settings?.readingTextOffset) return;
+        selectionFeedback();
+        updateSettings.mutate({ readingTextOffset: parsed.data });
       },
       setPaper: (paper: ReadingPaper) => {
-        if (paper !== settings.readingPaper) selectionFeedback();
-        actions.setReadingPaper(paper);
+        if (paper === settings?.readingPaper) return;
+        selectionFeedback();
+        updateSettings.mutate({ readingPaper: paper });
       },
     },
   } as const;
+}
+
+function getInitialPosition(
+  requestedStep: StudyStepKey | null,
+  completedSteps: readonly StudyStepKey[],
+): StudyPosition {
+  if (requestedStep) {
+    const requestedIndex = STUDY_STEPS.findIndex(({ key }) => key === requestedStep);
+    return { step: Math.max(0, requestedIndex), page: 0 };
+  }
+
+  const firstIncomplete = STUDY_STEPS.findIndex(
+    ({ key }) => !completedSteps.includes(key),
+  );
+  return {
+    step: firstIncomplete === -1 ? STUDY_STEPS.length - 1 : firstIncomplete,
+    page: 0,
+  };
 }

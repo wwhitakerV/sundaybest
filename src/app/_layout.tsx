@@ -2,7 +2,6 @@ import { Stack } from "expo-router";
 
 import { AppProviders } from "@/core/providers/AppProviders";
 import { ErrorBoundary, SuspenseFallback } from "@/core/monitoring/error-boundary";
-import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 import { HeaderArrivalProvider } from "@/ui/header-entrance/HeaderArrivalProvider";
 import { headerEntranceLayout } from "@/ui/header-entrance/HeaderEntranceScope";
 import { HALF_SHEET_OPTIONS } from "@/ui/SheetLayout";
@@ -26,7 +25,7 @@ const TAB_ROOTS = [
 
 export default function RootLayout() {
   return (
-    <AppProviders fallback={<LoadingScreen />}>
+    <AppProviders>
       <HeaderArrivalProvider tabRoots={TAB_ROOTS}>
         <Stack screenOptions={{ headerShown: false }} screenLayout={headerEntranceLayout}>
           {/*
@@ -34,6 +33,14 @@ export default function RootLayout() {
            * screens are registered ahead of auto-discovered ones.
            */}
           <Stack.Screen name="index" />
+          {/*
+           * Tabs are the app's settled root. There is no card transition from
+           * the launch/onboarding route into them; on a cold return the native
+           * splash fades onto an already-mounted Home screen instead of exposing
+           * a root-stack slide underneath it. Tab-to-tab/navigation animations
+           * inside this navigator are unaffected.
+           */}
+          <Stack.Screen name="(tabs)" options={{ animation: "none" }} />
           {/*
            * The Daily Study session — study, Day Complete, Quick Check — is one
            * native full-screen modal with its own stack. Screens inside it push

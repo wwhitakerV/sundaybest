@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
-import type { ScripturePassage } from "@/types/domain";
+import type { StudyScripture } from "../types";
 import { PassageCard, PassageHeading } from "@/entities/scripture";
 import { space } from "@/theme";
 import { StudyFollow, type FollowStyle } from "./StudyFollow";
@@ -11,7 +11,7 @@ import { Span } from "@/ui/typography/Span";
 
 export type ScriptureStepProps = {
   dayNumber: number;
-  passage: ScripturePassage;
+  passage: StudyScripture;
   /** Brings the verses in a beat after the reference. */
   followStyle?: FollowStyle;
 };

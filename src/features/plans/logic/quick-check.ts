@@ -1,5 +1,5 @@
-import type { QuestionResult, QuizStatus } from "@/core/store";
-import type { Id, QuizQuestion } from "@/types/domain";
+import type { Id } from "@/types/domain";
+import type { QuestionResult, QuickCheckQuestionView, QuizStatus } from "../types";
 
 /**
  * How a choice looks:
@@ -10,20 +10,19 @@ import type { Id, QuizQuestion } from "@/types/domain";
 export type ChoiceLook = "idle" | "selected" | "correct" | "incorrect" | "faded";
 
 /**
- * How one choice shows, from the question's state: the choice picked now,
- * the choice the answer was checked with (null until checked), and the
- * question's right one. Whether the answer was right is the store's to say
- * (`getQuestionResult`); this only lays the reveal out choice by choice.
+ * How one choice shows, from the question's state. Unanswered questions never
+ * have an answer key on the device; the server reveals the correct choice only
+ * after an answer has been submitted.
  */
 export function getChoiceLook(input: {
   choiceId: Id;
   selectedChoiceId: Id | null;
   answeredChoiceId: Id | null;
-  correctChoiceId: Id;
+  correctChoiceId: Id | null;
 }): ChoiceLook {
   const { choiceId, selectedChoiceId, answeredChoiceId, correctChoiceId } = input;
   if (answeredChoiceId === null) return choiceId === selectedChoiceId ? "selected" : "idle";
-  if (choiceId === correctChoiceId) return "correct";
+  if (correctChoiceId !== null && choiceId === correctChoiceId) return "correct";
   return choiceId === answeredChoiceId ? "incorrect" : "faded";
 }
 
@@ -72,7 +71,9 @@ export function getQuickCheckAction(input: {
 }
 
 /** The line over a question: where it's from, or that it's a verse to finish. */
-export function getQuestionKicker(question: Pick<QuizQuestion, "kind" | "source">): string {
+export function getQuestionKicker(
+  question: Pick<QuickCheckQuestionView, "kind" | "source">,
+): string {
   if (question.kind === "finishTheVerse") return "Finish the verse";
   return question.source === "sermon" ? "From the sermon" : "From Scripture";
 }
@@ -116,8 +117,8 @@ export function describeChoice(
 }
 
 /**
- * Which page Quick Check is on: the start (0), each question (1…n), then the
- * score (n + 1).
+ * A running page number used only for the calm question-to-question body
+ * transition: 0 is the intro, 1..N are questions, and N+1 is the score.
  */
 export function getQuickCheckPage(input: {
   status: QuizStatus;
@@ -126,7 +127,7 @@ export function getQuickCheckPage(input: {
 }): number {
   const { status, currentIndex, questionCount } = input;
   if (status === "notStarted") return 0;
-  return status === "completed" ? questionCount + 1 : currentIndex + 1;
+  return status === "completed" ? questionCount + 1 : Math.max(0, currentIndex) + 1;
 }
 
 /** What the Quick Check's first page says it is: how many questions, on the day's study. */
