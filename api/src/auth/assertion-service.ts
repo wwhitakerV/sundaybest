@@ -16,7 +16,10 @@ export async function requireSensitiveAssertion(input: {
   db: Database;
   challenges: ChallengeService;
   verifier: AppAttestVerifier;
+  allowDevelopmentInstall?: boolean;
 }): Promise<void> {
+  if (input.allowDevelopmentInstall === true && input.auth.keyId.startsWith("dev:")) return;
+
   const keyId = readSingleHeader(input.request, "x-attestation-keyid");
   const assertion = readSingleHeader(input.request, "x-attestation-assertion");
   const challenge = readSingleHeader(input.request, "x-attestation-challenge");

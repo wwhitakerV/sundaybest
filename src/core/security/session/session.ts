@@ -19,7 +19,7 @@ const REFRESH_KEY = "session.refreshToken";
  */
 const EXPIRY_SKEW_MS = 60_000;
 
-type SessionResult =
+export type SessionResult =
   | { status: "ok"; accessToken: string }
   /** Session bootstrap could not recover a usable attested install. */
   | { status: "needs-attestation" }

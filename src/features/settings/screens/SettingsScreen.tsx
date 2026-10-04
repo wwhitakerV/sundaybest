@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { getFloatingNavBarClearance } from "@/ui/organisms/floatingNavBar";
@@ -9,6 +9,8 @@ import { space } from "@/theme";
 import { SettingsGroup } from "../components/SettingsGroup";
 import { useSettingsView } from "../hooks/use-settings-view";
 import { MonoBody } from "@/ui/typography/MonoBody";
+import { Button } from "@/ui/atoms/Button";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 /**
  * Settings, a tab of its own: the user's routine — daily reminder, Bible
@@ -18,7 +20,7 @@ import { MonoBody } from "@/ui/typography/MonoBody";
  */
 export function SettingsScreen() {
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
-  const { sections, version, open } = useSettingsView();
+  const { sections, version, loading, failed, retry, open } = useSettingsView();
 
   return (
     <Screen testID="settings-screen" padded="vertical">
@@ -33,7 +35,7 @@ export function SettingsScreen() {
         ]}
       >
         <TitleHeader title="Settings" />
-        {sections.map(({ title, rows }) => (
+        {sections?.map(({ title, rows }) => (
           <SettingsGroup
             key={title}
             title={title}
@@ -43,6 +45,15 @@ export function SettingsScreen() {
             }}
           />
         ))}
+        {loading && !sections ? (
+          <SFProBody tone="textMuted" testID="settings-loading">Loading preferences…</SFProBody>
+        ) : null}
+        {failed && !sections ? (
+          <View style={styles.error}>
+            <SFProBody tone="textMuted">Couldn’t load your preferences.</SFProBody>
+            <Button testID="settings-retry" label="Try again" variant="secondary" onPress={retry} />
+          </View>
+        ) : null}
         {version && (
           <MonoBody
             variant="supporting"
@@ -61,4 +72,5 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   inset: { paddingHorizontal: PAGE_INSET },
   centred: { textAlign: "center" },
+  error: { gap: space[16] },
 });

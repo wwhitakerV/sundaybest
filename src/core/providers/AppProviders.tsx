@@ -2,10 +2,13 @@ import { useEffect, useMemo, type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as SplashScreen from "expo-splash-screen";
 
+import { ApiProvider } from "@/core/api/ApiProvider";
 import { createQueryClient } from "@/core/api/query-client";
 import { useAppFonts } from "@/core/fonts/use-app-fonts";
 import { PlanBuilder } from "@/core/plan-builder";
 import { AppStoreProvider } from "@/core/store";
+import { LegacyPreferencesBridge } from "./LegacyPreferencesBridge";
+import { ServerPreferences } from "./ServerPreferences";
 
 // Side-effect import. `env.ts` validates and freezes the environment at module
 // scope, so importing it from the composition root is what makes a misconfigured
@@ -32,12 +35,10 @@ export type AppProvidersProps = {
 };
 
 /**
- * Single place every app-wide provider gets mounted — including the app
- * store (`@/core/store`), the single source of truth for application state.
- *
- * Integrity monitoring is deliberately **not** mounted here yet. It needs a
- * session to clear and a monitoring sink to report to, and neither is wired up —
- * `src/core/security/integrity` is ready for whichever prompt does that.
+ * Single place every app-wide provider gets mounted. Server-owned user and
+ * settings state flows through TanStack Query + `ApiProvider`; the legacy app
+ * store remains mounted for the still-mock-backed Plans/Study/Fun slices until
+ * each of those is migrated deliberately.
  *
  * Holds the native splash screen up until the app's fonts
  * (`src/theme/fonts.ts`) have loaded, rendering `fallback` in the gap between
@@ -63,10 +64,15 @@ export function AppProviders({ children, fallback }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppStoreProvider>
-        <PlanBuilder />
-        {children}
-      </AppStoreProvider>
+      <ApiProvider>
+        <ServerPreferences>
+          <AppStoreProvider>
+            <LegacyPreferencesBridge />
+            <PlanBuilder />
+            {children}
+          </AppStoreProvider>
+        </ServerPreferences>
+      </ApiProvider>
     </QueryClientProvider>
   );
 }

@@ -1,11 +1,15 @@
-/** Must remain byte-for-byte compatible with the mobile request-binding helper. */
+export type RequestAssertionBinding = {
+  method: string;
+  path: string;
+  body?: unknown;
+};
+
+/** Must remain byte-for-byte compatible with api/src/auth/request-binding.ts. */
 export function buildRequestAssertionPayload(
   challenge: string,
-  method: string,
-  path: string,
-  body: unknown,
+  binding: RequestAssertionBinding,
 ): string {
-  return `${challenge}\n${method.toUpperCase()}\n${path}\n${canonicalJson(body)}`;
+  return `${challenge}\n${binding.method.toUpperCase()}\n${binding.path}\n${canonicalJson(binding.body)}`;
 }
 
 function canonicalJson(value: unknown): string {

@@ -23,7 +23,7 @@ Copy `_template/` to start a slice:
 
 There is no slice store: state lives at its narrowest owner (AGENTS.md "State
 ownership") — local state in the component, workflow state in a `logic/`
-reducer driven by the view-model hook, facts in `@/core/store`.
+reducer driven by the view-model hook, server facts in TanStack Query through `@/core/api`, and still-mock-backed facts in `@/core/store`.
 
 Create a folder only when the slice has something to put in it. `_template/`
 shows the full shape; a real slice keeps just what it uses.

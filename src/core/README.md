@@ -21,9 +21,9 @@ fonts/        font loading
 haptics/      haptic vocabulary (selection, tap, outcomes) and the entrance buzz
 accessibility/ OS accessibility settings (Reduce Motion) and VoiceOver announcements
 links/        opens allowed outside links (Bible passages) in an in-app Safari sheet
-notifications/ notification permission (stubbed until expo-notifications lands)
+notifications/ local-notification permission and SundayBest reminder scheduling
 mock-data/    connected mock records for every screen, as `AppData` (see below)
-store/        the app store: state, reducer, selectors, provider (see below)
+store/        legacy/mock-backed Plans/Study/Fun state while those slices migrate (see below)
 plan-builder/ builds plans from sermon links, in the frontend for now (see below)
 ```
 
@@ -52,8 +52,10 @@ fails while listening to the message, `buildFails` fails every attempt, and
 
 ## `store/`
 
-The single source of truth for application state — React Context +
-`useReducer`, no library. `AppStoreProvider` (mounted in `AppProviders`) holds
+The legacy source of truth for the slices that are still mock-backed — React Context +
+`useReducer`, no library. Server-owned user/settings/reminder state now lives in
+TanStack Query through `core/api`; do not copy API responses back into this store.
+`AppStoreProvider` (mounted in `AppProviders`) holds
 `AppState`: normalized tables of facts, starting from `mock-data/`. Read it
 with `useAppSelector(selector)`; change it only through `useStoreActions()`
 (`createAndBuildPlan`, `finishPlanDay`, `submitQuizAnswer`, …). Components never

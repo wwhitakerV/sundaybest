@@ -32,17 +32,17 @@ cd api
 npm run dev:worker
 ```
 
-The API listens on `http://localhost:4100` by default.
+The API listens on `http://localhost:4100` by default. This repo maps the Docker PostgreSQL container to host port `5433` (`5433:5432`) so it does not collide with the existing Postgres.app instance on host port 5432. Keep `DATABASE_URL=postgres://sundaybest:sundaybest@localhost:5433/sundaybest` in your local `.env`.
 
 ### Development session
 
-App Attest does not work in the iOS Simulator. With `NODE_ENV=development` and `DEV_SESSION_ENABLED=true`, `POST /v1/dev/session` creates a disposable anonymous development install and returns normal access/refresh credentials. This endpoint is not registered in production and production startup rejects `DEV_SESSION_ENABLED=true`.
+Expo Go cannot mint App Attest credentials for the SundayBest bundle. With `NODE_ENV=development` and `DEV_SESSION_ENABLED=true`, `POST /v1/dev/session` creates an anonymous development install and returns normal access/refresh credentials. Supplying the same `installationId` reuses the same anonymous user, which lets a physical Expo Go install survive reloads without manufacturing a new user. This endpoint is not registered in production and production startup rejects `DEV_SESSION_ENABLED=true`.
 
 ## Mobile integration
 
-The API paths and response shapes match `src/core/api/contracts/*` and `src/core/api/sundaybest-api.ts` in the repo root. The mobile app remains mock-driven until its query/repository layer is deliberately switched over.
+The API paths and response shapes match `src/core/api/contracts/*` and `src/core/api/sundaybest-api.ts` in the repo root. User identity, onboarding, settings, and reminders are now API-backed through TanStack Query. Plans/Study remain mock-backed during the staged migration.
 
-The API uses `X-Client-Timezone` (IANA timezone, e.g. `America/New_York`) to enforce daily plan pacing. The updated mobile transport sends this automatically.
+The API uses `X-Client-Timezone` (IANA timezone, e.g. `America/New_York`) to enforce daily plan pacing. The mobile transport sends this automatically. During development, a physical phone configured with a loopback API URL rewrites only the host to Metro's LAN host so Expo Go can reach the Mac while preserving the API port.
 
 ## App Attest
 

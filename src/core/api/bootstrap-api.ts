@@ -2,7 +2,9 @@ import type { z } from "zod";
 
 import type { AttestationApi } from "../security/attestation/attestation";
 import type { SessionApi } from "../security/session/session";
+import type { DevelopmentSessionApi } from "../security/session/development-session";
 import { ApiError } from "./api-error";
+import { getDeviceTimeZone } from "../time/device-timezone";
 import {
   apiErrorEnvelopeSchema,
   bootstrapSessionRequestSchema,
@@ -15,7 +17,7 @@ import {
 
 const DEFAULT_TIMEOUT_MS = 15_000;
 
-export type BootstrapApi = AttestationApi & SessionApi;
+export type BootstrapApi = AttestationApi & SessionApi & DevelopmentSessionApi;
 
 export interface BootstrapApiDeps {
   baseUrl: string;
@@ -43,6 +45,7 @@ export function createBootstrapApi({
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
+          "X-Client-Timezone": getDeviceTimeZone(),
         },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(timeoutMs),
@@ -98,6 +101,14 @@ export function createBootstrapApi({
       return post(
         "/v1/session/bootstrap",
         bootstrapSessionRequestSchema.parse(request),
+        sessionCredentialsSchema,
+      );
+    },
+
+    createDevelopmentSession(input) {
+      return post(
+        "/v1/dev/session",
+        { installationId: input.installationId, timezone: input.timezone },
         sessionCredentialsSchema,
       );
     },

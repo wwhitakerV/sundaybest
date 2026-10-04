@@ -1,10 +1,11 @@
-/**
- * Stub. "Start day 1" is supposed to request native iOS notification
- * permission before continuing — a real system prompt, not an app screen.
- * `expo-notifications` is not installed yet (out of scope for this
- * navigation-only build); this keeps the call site in place so wiring the
- * real request later is a one-file change, not a new call site to find.
- */
-export async function requestNotificationPermission(): Promise<void> {
-  return Promise.resolve();
+import * as Notifications from "expo-notifications";
+
+/** Ask only when the user explicitly turns reminders on. */
+export async function requestNotificationPermission(): Promise<boolean> {
+  const current = await Notifications.getPermissionsAsync();
+  if (current.granted) return true;
+  if (!current.canAskAgain) return false;
+
+  const requested = await Notifications.requestPermissionsAsync();
+  return requested.granted;
 }

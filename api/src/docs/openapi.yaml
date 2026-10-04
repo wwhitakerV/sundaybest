@@ -3,7 +3,7 @@ info:
   title: SundayBest API
   version: 1.0.0
 servers:
-  - url: http://localhost:4100
+  - url: http://Walters-MacBook-Pro.local:4100
 components:
   securitySchemes:
     bearerAuth:
@@ -38,13 +38,13 @@ paths:
     get:
       operationId: healthLive
       responses:
-        '200': { description: Alive }
+        "200": { description: Alive }
   /health/ready:
     get:
       operationId: healthReady
       responses:
-        '200': { description: PostgreSQL reachable }
-        '503': { description: Not ready }
+        "200": { description: PostgreSQL reachable }
+        "503": { description: Not ready }
   /v1/attest/challenge:
     post:
       operationId: createAttestChallenge
@@ -56,179 +56,179 @@ paths:
               type: object
               properties: { keyId: { type: string } }
       responses:
-        '200': { description: One-time challenge }
+        "200": { description: One-time challenge }
   /v1/attest/verify:
     post:
       operationId: verifyAttestation
       responses:
-        '200': { description: New anonymous session }
+        "200": { description: New anonymous session }
   /v1/session/bootstrap:
     post:
       operationId: bootstrapSession
       responses:
-        '200': { description: Session restored from an attested key }
+        "200": { description: Session restored from an attested key }
   /v1/session/refresh:
     post:
       operationId: refreshSession
       responses:
-        '200': { description: Rotated session credentials }
+        "200": { description: Rotated session credentials }
   /v1/session/revoke:
     post:
       security: [{ bearerAuth: [] }]
       operationId: revokeSession
       responses:
-        '200': { description: Session revoked }
+        "200": { description: Session revoked }
   /v1/me:
     get:
       security: [{ bearerAuth: [] }]
       operationId: getMe
-      responses: { '200': { description: Current user } }
+      responses: { "200": { description: Current user } }
     patch:
       security: [{ bearerAuth: [] }]
       operationId: updateMe
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Updated user } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Updated user } }
     delete:
       security: [{ bearerAuth: [] }]
       operationId: deleteMe
       description: Requires request-bound App Attest assertion headers.
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: User data deleted } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: User data deleted } }
   /v1/me/onboarding/complete:
     post:
       security: [{ bearerAuth: [] }]
       operationId: completeOnboarding
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Onboarding completed } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Onboarding completed } }
   /v1/me/settings:
     get:
       security: [{ bearerAuth: [] }]
       operationId: getSettings
-      responses: { '200': { description: Settings } }
+      responses: { "200": { description: Settings } }
     patch:
       security: [{ bearerAuth: [] }]
       operationId: updateSettings
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Settings updated } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Settings updated } }
   /v1/me/reminders:
     get:
       security: [{ bearerAuth: [] }]
       operationId: listReminders
-      responses: { '200': { description: Reminder preferences } }
+      responses: { "200": { description: Reminder preferences } }
   /v1/me/reminders/{kind}:
     put:
       security: [{ bearerAuth: [] }]
       operationId: updateReminder
       parameters:
-        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
         - name: kind
           in: path
           required: true
           schema: { type: string, enum: [dailyStudy, quickCheck] }
-      responses: { '200': { description: Reminder updated } }
+      responses: { "200": { description: Reminder updated } }
   /v1/sermons/resolve:
     post:
       security: [{ bearerAuth: [] }]
       operationId: resolveSermon
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Resolved YouTube sermon metadata } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Resolved YouTube sermon metadata } }
   /v1/plans:
     get:
       security: [{ bearerAuth: [] }]
       operationId: listPlans
-      responses: { '200': { description: User-visible plans } }
+      responses: { "200": { description: User-visible plans } }
     post:
       security: [{ bearerAuth: [] }]
       operationId: createPlan
       description: Requires request-bound App Attest assertion headers; queues asynchronous generation.
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Plan generation accepted } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Plan generation accepted } }
   /v1/plans/{planId}:
     get:
       security: [{ bearerAuth: [] }]
       operationId: getPlan
-      responses: { '200': { description: Plan detail } }
+      responses: { "200": { description: Plan detail } }
   /v1/plans/{planId}/start:
     post:
       security: [{ bearerAuth: [] }]
       operationId: startPlan
       parameters:
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-        - { $ref: '#/components/parameters/ClientTimezone' }
-      responses: { '200': { description: Started plan with scheduled days } }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+        - { $ref: "#/components/parameters/ClientTimezone" }
+      responses: { "200": { description: Started plan with scheduled days } }
   /v1/plans/{planId}/archive:
     post:
       security: [{ bearerAuth: [] }]
       operationId: archivePlan
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Archived plan } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Archived plan } }
   /v1/plans/{planId}/saved:
     put:
       security: [{ bearerAuth: [] }]
       operationId: savePlan
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Saved } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Saved } }
     delete:
       security: [{ bearerAuth: [] }]
       operationId: unsavePlan
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Removed from saved } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Removed from saved } }
   /v1/plan-generations/{generationId}:
     get:
       security: [{ bearerAuth: [] }]
       operationId: getGeneration
-      responses: { '200': { description: Generation status } }
+      responses: { "200": { description: Generation status } }
   /v1/plan-generations/{generationId}/retry:
     post:
       security: [{ bearerAuth: [] }]
       operationId: retryGeneration
       description: Requires request-bound App Attest assertion headers.
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Failed generation queued again } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Failed generation queued again } }
   /v1/plans/{planId}/days/{dayNumber}:
     get:
       security: [{ bearerAuth: [] }]
       operationId: getStudyDay
-      parameters: [{ $ref: '#/components/parameters/ClientTimezone' }]
-      responses: { '200': { description: Study day in user's current Bible translation } }
+      parameters: [{ $ref: "#/components/parameters/ClientTimezone" }]
+      responses: { "200": { description: Study day in user's current Bible translation } }
   /v1/plans/{planId}/days/{dayNumber}/steps/{step}:
     put:
       security: [{ bearerAuth: [] }]
       operationId: completeStudyStep
       parameters:
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-        - { $ref: '#/components/parameters/ClientTimezone' }
-      responses: { '200': { description: Step completed } }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+        - { $ref: "#/components/parameters/ClientTimezone" }
+      responses: { "200": { description: Step completed } }
   /v1/plans/{planId}/days/{dayNumber}/complete:
     post:
       security: [{ bearerAuth: [] }]
       operationId: completeStudyDay
       parameters:
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-        - { $ref: '#/components/parameters/ClientTimezone' }
-      responses: { '200': { description: Day completed } }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+        - { $ref: "#/components/parameters/ClientTimezone" }
+      responses: { "200": { description: Day completed } }
   /v1/quizzes/{quizId}/attempts:
     post:
       security: [{ bearerAuth: [] }]
       operationId: startQuizAttempt
       parameters:
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-        - { $ref: '#/components/parameters/ClientTimezone' }
-      responses: { '200': { description: Quiz + attempt without answer keys } }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+        - { $ref: "#/components/parameters/ClientTimezone" }
+      responses: { "200": { description: Quiz + attempt without answer keys } }
   /v1/quiz-attempts/{attemptId}:
     get:
       security: [{ bearerAuth: [] }]
       operationId: getQuizAttempt
-      responses: { '200': { description: Attempt state } }
+      responses: { "200": { description: Attempt state } }
   /v1/quiz-attempts/{attemptId}/answers:
     post:
       security: [{ bearerAuth: [] }]
       operationId: submitQuizAnswer
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Immediate answer feedback } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Immediate answer feedback } }
   /v1/quiz-attempts/{attemptId}/complete:
     post:
       security: [{ bearerAuth: [] }]
       operationId: completeQuizAttempt
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
-      responses: { '200': { description: Completed attempt + score } }
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
+      responses: { "200": { description: Completed attempt + score } }

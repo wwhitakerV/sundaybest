@@ -21,6 +21,9 @@ const SECURE_STORAGE_SCHEMAS = {
     .string()
     .regex(/^[0-9a-f]{64}$/, "expected 64 lowercase hex characters (32 bytes)"),
 
+  /** Stable Expo Go development-install id. Not used by preview/production auth. */
+  "development.installationId": z.string().uuid(),
+
   /** Session refresh token. Rotated on every use. */
   "session.refreshToken": z.string().min(1).max(4096),
 } as const;

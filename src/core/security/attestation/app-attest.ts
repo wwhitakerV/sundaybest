@@ -1,4 +1,5 @@
 import { toApiError } from "../../api/api-error";
+import { buildRequestAssertionPayload, type RequestAssertionBinding } from "../../api/request-binding";
 import type { SecureStorage } from "../secure-storage/secure-storage";
 import type {
   AppAttestDevice,
@@ -131,7 +132,7 @@ export function createAppAttestation({
       return { status: "attested", keyId, credentials };
     },
 
-    async createAssertion(): Promise<AssertionResult> {
+    async createAssertion(binding?: RequestAssertionBinding): Promise<AssertionResult> {
       if (!enabled) return { status: "disabled" };
 
       let keyId: string | null;
@@ -169,7 +170,10 @@ export function createAppAttestation({
 
       let assertion: string;
       try {
-        assertion = await device.createAssertion(keyId, challenge);
+        assertion = await device.createAssertion(
+          keyId,
+          binding ? buildRequestAssertionPayload(challenge, binding) : challenge,
+        );
       } catch {
         return deviceFailure("assert");
       }

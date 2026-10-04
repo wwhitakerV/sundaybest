@@ -66,7 +66,12 @@ import { createStudyService } from "../services/study-service.js";
 import { createUserService } from "../services/user-service.js";
 
 const emptyObjectSchema = z.object({}).strict();
-const devSessionSchema = z.object({ timezone: z.string().optional() }).strict();
+const devSessionSchema = z
+  .object({
+    installationId: z.string().trim().min(1).max(128).optional(),
+    timezone: z.string().optional(),
+  })
+  .strict();
 
 export async function registerV1Routes(app: FastifyInstance, context: AppContext): Promise<void> {
   const { db } = context.database;
@@ -130,7 +135,12 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     app.post("/v1/dev/session", async (request) => {
       const body = parseWithSchema(devSessionSchema, request.body ?? {});
       if (body.timezone && !isValidTimeZone(body.timezone)) throw new AppError("VALIDATION_FAILED", "Invalid timezone");
-      return sessionCredentialsSchema.parse(await context.sessions.createDevelopmentInstall(body.timezone));
+      return sessionCredentialsSchema.parse(
+        await context.sessions.createDevelopmentInstall({
+          installationId: body.installationId,
+          timezone: body.timezone,
+        }),
+      );
     });
   }
 
@@ -163,7 +173,15 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
 
   app.delete("/v1/me", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    await requireSensitiveAssertion({ request, auth, db, challenges: context.challenges, verifier: context.verifier });
+    await requireSensitiveAssertion({
+      request,
+      auth,
+      db,
+      challenges: context.challenges,
+      verifier: context.verifier,
+      allowDevelopmentInstall:
+        context.env.NODE_ENV !== "production" && context.env.DEV_SESSION_ENABLED,
+    });
     return idempotent(request, context, auth.userId, "DELETE /v1/me", {}, async () => {
       await userService.delete(auth.userId);
       return mutationAckSchema.parse({ ok: true });
@@ -218,7 +236,15 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
 
   app.post("/v1/plans", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    await requireSensitiveAssertion({ request, auth, db, challenges: context.challenges, verifier: context.verifier });
+    await requireSensitiveAssertion({
+      request,
+      auth,
+      db,
+      challenges: context.challenges,
+      verifier: context.verifier,
+      allowDevelopmentInstall:
+        context.env.NODE_ENV !== "production" && context.env.DEV_SESSION_ENABLED,
+    });
     const body = parseWithSchema(createPlanRequestSchema, request.body);
     return idempotent(request, context, auth.userId, "POST /v1/plans", body, async (requestKey) =>
       createPlanResponseSchema.parse(await generationService.create(auth.userId, body, requestKey)),
@@ -267,7 +293,15 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
 
   app.post("/v1/plan-generations/:generationId/retry", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    await requireSensitiveAssertion({ request, auth, db, challenges: context.challenges, verifier: context.verifier });
+    await requireSensitiveAssertion({
+      request,
+      auth,
+      db,
+      challenges: context.challenges,
+      verifier: context.verifier,
+      allowDevelopmentInstall:
+        context.env.NODE_ENV !== "production" && context.env.DEV_SESSION_ENABLED,
+    });
     const { generationId } = parseWithSchema(generationParamSchema, request.params);
     return idempotent(request, context, auth.userId, `POST /v1/plan-generations/${generationId}/retry`, {}, async () =>
       retryPlanGenerationResponseSchema.parse({ generation: await generationService.retry(auth.userId, generationId) }),

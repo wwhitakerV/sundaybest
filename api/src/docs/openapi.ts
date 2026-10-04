@@ -43,6 +43,15 @@ import {
 
 const devSessionRequestSchema = z
   .object({
+    installationId: z
+      .string()
+      .min(1)
+      .max(128)
+      .meta({
+        description: "Stable development-install identifier. Reusing it reuses the same anonymous user.",
+        examples: ["swagger-local"],
+      })
+      .optional(),
     timezone: z
       .string()
       .min(1)
@@ -437,6 +446,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           description:
             "Available only when NODE_ENV is not production and DEV_SESSION_ENABLED=true. Swagger automatically authorizes itself with the returned accessToken.",
           requestBody: requestBody("DevSessionRequest", false, {
+            installationId: "swagger-local",
             timezone: "America/Chicago",
           }),
           responses: {

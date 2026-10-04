@@ -5,6 +5,7 @@ import type { IntegrityState } from "../security/integrity/policy";
 import type { SessionManager } from "../security/session/session";
 import { ApiError } from "./api-error";
 import { apiErrorEnvelopeSchema, type ApiErrorCode } from "./contracts/errors";
+import { getDeviceTimeZone } from "../time/device-timezone";
 
 /**
  * The app's HTTP client.
@@ -34,6 +35,8 @@ export interface ApiClientDeps {
   fetchImpl?: typeof fetch;
   /** Injected so backoff is tested without fake timers. */
   sleep?: (ms: number) => Promise<void>;
+  /** Development-only: the local API accepts dev installations without App Attest. */
+  allowUnsignedSensitive?: boolean;
 }
 
 interface RequestOptions<T> {
@@ -63,17 +66,25 @@ export function createApiClient({
   integrity,
   fetchImpl = fetch,
   sleep = defaultSleep,
+  allowUnsignedSensitive = false,
 }: ApiClientDeps): ApiClient {
   async function attempt<T>(options: RequestOptions<T>): Promise<T> {
     const method = options.method ?? "GET";
 
     // Refused before it leaves the device. Checked first so a compromised
     // device does not even mint an assertion.
-    if (options.sensitive === true && !integrity.isSensitiveAllowed()) {
+    if (
+      options.sensitive === true &&
+      !allowUnsignedSensitive &&
+      !integrity.isSensitiveAllowed()
+    ) {
       throw new ApiError("INTERNAL", undefined, { kind: "integrity" });
     }
 
-    const headers = new Headers({ Accept: "application/json" });
+    const headers = new Headers({
+      Accept: "application/json",
+      "X-Client-Timezone": getDeviceTimeZone(),
+    });
 
     if (options.idempotencyKey) headers.set("Idempotency-Key", options.idempotencyKey);
 
@@ -81,8 +92,12 @@ export function createApiClient({
     if (token.status !== "ok") throw sessionFailureToApiError(token);
     headers.set("Authorization", `Bearer ${token.accessToken}`);
 
-    if (options.sensitive === true) {
-      const assertion = await attestation.createAssertion();
+    if (options.sensitive === true && !allowUnsignedSensitive) {
+      const assertion = await attestation.createAssertion({
+        method,
+        path: options.path,
+        body: options.body,
+      });
       if (assertion.status !== "ok") throw assertionFailureToApiError(assertion);
 
       // Headers, not the body, so any method can carry them. Documented in

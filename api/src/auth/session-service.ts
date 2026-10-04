@@ -13,7 +13,10 @@ export interface SessionService {
   issueForInstallation(input: { userId: string; installationId: string }): Promise<SessionCredentials>;
   rotate(input: { keyId: string; refreshToken: string }): Promise<SessionCredentials>;
   revokeInstallation(installationId: string): Promise<void>;
-  createDevelopmentInstall(timezone?: string): Promise<SessionCredentials>;
+  createDevelopmentInstall(input: {
+    installationId?: string;
+    timezone?: string;
+  }): Promise<SessionCredentials>;
 }
 
 export function createSessionService(db: Database, jwt: JwtService, env: Env): SessionService {
@@ -113,22 +116,54 @@ export function createSessionService(db: Database, jwt: JwtService, env: Env): S
       });
     },
 
-    async createDevelopmentInstall(timezone) {
+    async createDevelopmentInstall(input) {
       if (env.NODE_ENV === "production" || !env.DEV_SESSION_ENABLED) {
         throw new AppError("NOT_FOUND", "Not found");
       }
-      const keyId = `dev:${crypto.randomUUID()}`;
+
+      const stableId = input.installationId?.trim() || crypto.randomUUID();
+      const keyId = `dev:${stableId}`;
+
+      const existingRows = await db
+        .select({
+          id: deviceInstallations.id,
+          userId: deviceInstallations.userId,
+        })
+        .from(deviceInstallations)
+        .where(eq(deviceInstallations.attestationKeyId, keyId))
+        .limit(1);
+
+      const existing = existingRows[0];
+      if (existing) {
+        await db
+          .update(deviceInstallations)
+          .set({
+            ...(input.timezone === undefined ? {} : { timezone: input.timezone }),
+            revokedAt: null,
+            lastSeenAt: new Date(),
+          })
+          .where(eq(deviceInstallations.id, existing.id));
+
+        return issue(existing.userId, existing.id);
+      }
+
       const created = await db.transaction(async (tx) => {
         const [user] = await tx.insert(users).values({}).returning({ id: users.id });
         if (!user) throw new AppError("INTERNAL");
         await tx.insert(userSettings).values({ userId: user.id });
         const [installation] = await tx
           .insert(deviceInstallations)
-          .values({ userId: user.id, attestationKeyId: keyId, publicKeyPem: "development-only", timezone })
+          .values({
+            userId: user.id,
+            attestationKeyId: keyId,
+            publicKeyPem: "development-only",
+            timezone: input.timezone,
+          })
           .returning({ id: deviceInstallations.id });
         if (!installation) throw new AppError("INTERNAL");
         return { userId: user.id, installationId: installation.id };
       });
+
       return issue(created.userId, created.installationId);
     },
   };

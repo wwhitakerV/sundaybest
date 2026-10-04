@@ -4,6 +4,7 @@ import type {
   SessionCredentials,
   VerifyAttestationRequest,
 } from "../../api/contracts/attestation";
+import type { RequestAssertionBinding } from "../../api/request-binding";
 
 /**
  * App attestation: proving to the backend that a request came from a genuine,
@@ -78,7 +79,7 @@ export interface Attestation {
    * Never cached: the whole point is that the challenge is single-use, so a
    * reused assertion is a replay.
    */
-  createAssertion(): Promise<AssertionResult>;
+  createAssertion(binding?: RequestAssertionBinding): Promise<AssertionResult>;
 
   /** Forgets the stored `keyId`, so the next `attest()` starts from scratch. */
   reset(): Promise<void>;
