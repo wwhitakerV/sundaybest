@@ -27,6 +27,8 @@ import {
   removeSavedPlanResponseSchema,
   resolveSermonRequestSchema,
   resolveSermonResponseSchema,
+  searchSermonsResponseSchema,
+  progressResponseSchema,
   retryPlanGenerationResponseSchema,
   savePlanResponseSchema,
   sessionCredentialsSchema,
@@ -165,6 +167,10 @@ export function buildOpenApiDocument(): Record<string, unknown> {
       {
         name: "Settings",
         description: "User settings and reminder preferences",
+      },
+      {
+        name: "Progress",
+        description: "Study history, streaks, totals, and what is up next",
       },
       {
         name: "Sermons",
@@ -371,6 +377,8 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         ResolveSermonRequest: jsonSchema(resolveSermonRequestSchema),
 
         ResolveSermonResponse: jsonSchema(resolveSermonResponseSchema),
+        SearchSermonsResponse: jsonSchema(searchSermonsResponseSchema),
+        ProgressResponse: jsonSchema(progressResponseSchema),
 
         ListPlansResponse: jsonSchema(listPlansResponseSchema),
 
@@ -633,6 +641,36 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         },
       },
 
+      "/v1/sermons/search": {
+        get: {
+          tags: ["Sermons"],
+          operationId: "searchSermons",
+          summary: "Search sermon videos",
+          description:
+            "Searches the SundayBest sermon catalog and, when YOUTUBE_API_KEY is configured, YouTube as well.",
+          security: auth,
+          parameters: [
+            {
+              name: "q",
+              in: "query",
+              required: true,
+              schema: { type: "string", minLength: 2, maxLength: 120 },
+              example: "temptation",
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 20, default: 10 },
+            },
+          ],
+          responses: {
+            "200": ok("Sermon search results", "SearchSermonsResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
       "/v1/sermons/resolve": {
         post: {
           tags: ["Sermons"],
@@ -643,6 +681,31 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           requestBody: requestBody("ResolveSermonRequest"),
           responses: {
             "200": ok("Sermon resolved", "ResolveSermonResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/me/progress": {
+        get: {
+          tags: ["Progress"],
+          operationId: "getProgress",
+          summary: "Get progress dashboard data",
+          description:
+            "Returns the requested seven-day activity window plus streak, totals, latest Quick Check score, and the active plan's next day.",
+          security: auth,
+          parameters: [
+            {
+              name: "weekStart",
+              in: "query",
+              required: false,
+              description: "First calendar date of the seven-day window. The client normally sends Sunday.",
+              schema: { type: "string", format: "date" },
+              example: "2026-10-04",
+            },
+          ],
+          responses: {
+            "200": ok("Progress dashboard", "ProgressResponse"),
             ...commonErrors,
           },
         },

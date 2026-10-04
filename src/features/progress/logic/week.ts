@@ -31,3 +31,9 @@ export function describeDate(date: string, today: string): string {
     date === today ? "Today" : date === addDays(today, 1) ? "Tomorrow" : formatWeekday(date);
   return `${name}, ${formatShortDate(date)}`;
 }
+
+
+/** Sunday that begins the week containing `date`. */
+export function getWeekStartSunday(date: string): string {
+  return addDays(date, -at(date).getUTCDay());
+}

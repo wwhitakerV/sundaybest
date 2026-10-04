@@ -2,6 +2,7 @@ import { StatusBar, StyleSheet, View } from "react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { ActivePlanBar } from "../components/ActivePlanBar";
 import { ActivePlanHero } from "../components/ActivePlanHero";
@@ -20,10 +21,10 @@ import { Wordmark } from "@/ui/typography/Wordmark";
 const HEADER_HEIGHT = controlHeight.hitTarget;
 
 /**
- * Home, from the store. With a plan under way: that plan featured up top,
+ * Home, from the API plan cache. With a plan under way: that plan featured up top,
  * full width in its sermon's colour (`ActivePlanHero`) — where it stands,
  * Continue straight into today's study, and its artwork zooming open into
- * Plan Detail — then all the user's plans. Scrolling up, the header fades
+ * Plan Detail — then all the user's server-backed plans. Scrolling up, the header fades
  * and the featured plan collapses into a plan bar pinned at the top
  * (`useHeroCollapse`), reversing on the way back. With
  * none: a card to add a sermon, and the sample to try (or their other plans,
@@ -45,6 +46,9 @@ export function HomeScreen() {
     flightStyle,
     phase,
   } = useHeroCollapse();
+
+  if (view.loading) return <LoadingScreen />;
+
   return (
     <View style={styles.root}>
       {/* Built like an iOS scroll screen: the scroll view runs edge to edge,
@@ -91,7 +95,7 @@ export function HomeScreen() {
           )}
 
           {view.hasPlans ? (
-            <PlanList onOpenPlan={view.openPlan} />
+            <PlanList plans={view.plans} onOpenPlan={view.openPlan} />
           ) : (
             view.sample && (
               <View style={styles.sample}>

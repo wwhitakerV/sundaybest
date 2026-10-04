@@ -40,9 +40,9 @@ Expo Go cannot mint App Attest credentials for the SundayBest bundle. With `NODE
 
 ## Mobile integration
 
-The API paths and response shapes match `src/core/api/contracts/*` and `src/core/api/sundaybest-api.ts` in the repo root. User identity, onboarding, settings, and reminders are now API-backed through TanStack Query. Plans/Study remain mock-backed during the staged migration.
+The API paths and response shapes match `src/core/api/contracts/*` and `src/core/api/sundaybest-api.ts` in the repo root. User identity, onboarding, settings, reminders, Home plan data, Plans, Plan Detail, and Progress are now API-backed through TanStack Query. Daily Study and Quick Check content/progress remain on the legacy local path until the next migration slice, so real server plan IDs are deliberately not sent into that store.
 
-The API uses `X-Client-Timezone` (IANA timezone, e.g. `America/New_York`) to enforce daily plan pacing. The mobile transport sends this automatically. During development, a physical phone configured with a loopback API URL rewrites only the host to Metro's LAN host so Expo Go can reach the Mac while preserving the API port.
+The API uses `X-Client-Timezone` (IANA timezone, e.g. `America/New_York`) to enforce daily plan pacing. The mobile transport sends this automatically. For a physical iPhone in Expo Go, point `EXPO_PUBLIC_API_URL` at the Mac's reachable Bonjour/LAN host (for example `http://Walters-MacBook-Pro.local:4100`).
 
 ## App Attest
 
@@ -57,6 +57,7 @@ The backend intentionally does **not** invent a transcript, copyrighted Bible tr
 - `TRANSCRIPT_PROVIDER_URL`
 - `PLAN_GENERATION_PROVIDER_URL`
 - `BIBLE_PROVIDER_URL`
+- `YOUTUBE_API_KEY` — optional during local development; enables live YouTube results for `GET /v1/sermons/search` in addition to the local sermon catalog
 
 Each can point at your chosen provider or at a tiny internal gateway. The provider contracts live in `src/providers/` and are Zod-validated before data is persisted. Development has a deterministic plan generator only for exercising the job pipeline; it is blocked in production.
 
@@ -143,4 +144,4 @@ The app server owns authentication and domain authorization. Put production traf
 - `GET /health/live` — process is alive
 - `GET /health/ready` — process can query PostgreSQL
 
-See `docs/openapi.yaml` for the HTTP surface and `docs/architecture.md` for the data-flow decisions.
+Run the API and open `http://localhost:4100/docs` for the canonical interactive Swagger surface, or `GET /openapi.json` for the generated OpenAPI document. See `src/docs/architecture.md` for the data-flow decisions.

@@ -3,6 +3,7 @@ export * from "./common.js";
 export * from "./errors.js";
 export * from "./generation.js";
 export * from "./plans.js";
+export * from "./progress.js";
 export * from "./quizzes.js";
 export * from "./sermons.js";
 export * from "./settings.js";

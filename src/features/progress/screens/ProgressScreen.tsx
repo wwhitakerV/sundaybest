@@ -1,6 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
+import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { StatCard } from "@/ui/molecules/StatCard";
@@ -15,12 +16,11 @@ import { SFProBody } from "@/ui/typography/SFProBody";
 import { Span } from "@/ui/typography/Span";
 
 /**
- * Progress, from the store's completion records and quiz attempts: a week
+ * Progress, from the server's completion records and quiz attempts: a week
  * at a time — which days something was finished, stepping back through the
  * history — then what's up next, the plan under way, and the totals (the
  * streak, every day done, the latest quiz score, plans finished). Nothing is
- * counted here: every number is a selector's, so finishing a day or a quiz
- * anywhere shows the moment it's done.
+ * counted here: every number is derived by the API so the dashboard stays consistent across sessions.
  */
 export function ProgressScreen() {
   const {
@@ -35,8 +35,11 @@ export function ProgressScreen() {
     upNext,
     reminder,
     openUpNext,
+    loading,
   } = useProgressWeek();
   const plansDone = totals.completedPlanCount;
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <ScrollScreen

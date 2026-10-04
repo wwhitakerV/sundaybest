@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
 import { ListScreen } from "@/ui/organisms/ListScreen";
+import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { FilterPills } from "@/ui/molecules/FilterPills";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
@@ -11,15 +12,16 @@ import { usePlansLibrary } from "../hooks/use-plans-library";
 
 /**
  * The library: the user's plans, filtered by pills — All, In progress, Done,
- * Saved — each list and count read from the store's selectors. The plans run
+ * Saved — each list and count derived from the API plan cache. The plans run
  * down the page one to a card (`LibraryPlanCard`): its sermon's thumbnail at
  * 16:9, a dial of how much is done beside its title, and where it stands —
- * with Continue (a plan under way) or Start (one not started) straight into
- * its study. A card opens its plan's overview. A filter with nothing in it
+ * with Continue (a plan under way) or Start (one not started) into the plan flow. A card opens its plan's overview. A filter with nothing in it
  * says so (`PlansEmpty`).
  */
 export function PlansScreen() {
-  const { filter, setFilter, filters, cards, empty, openPlan, actionFor } = usePlansLibrary();
+  const { filter, setFilter, filters, cards, empty, openPlan, actionFor, loading } = usePlansLibrary();
+
+  if (loading) return <LoadingScreen />;
 
   return (
     <ListScreen

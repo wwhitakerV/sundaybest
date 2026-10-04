@@ -1,15 +1,11 @@
 import type { Id, IsoDate, IsoDateTime } from "@/types/domain";
 
-import { STORE_TODAY } from "./state";
-
 /**
- * The store's clock and ID source — the only impure part of the store, kept
- * out of the reducer so it stays deterministic.
- *
- * While the data is mock data, "today" is the mock's fixed date and the time
- * of day is the real one, so new records line up with the mock history.
+ * The app's local clock and ID source — the only impure part of the legacy
+ * store. Server-owned plan pacing uses the device timezone through the API;
+ * legacy selectors use the same real local calendar date so the two layers do
+ * not disagree while migration is in progress.
  */
-
 let sequence = 0;
 
 /** A new ID for a record of `kind`: unique for the life of the app. */
@@ -19,9 +15,13 @@ export function createId(kind: string): Id {
 }
 
 export function getToday(): IsoDate {
-  return STORE_TODAY;
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function getNow(): IsoDateTime {
-  return `${getToday()}T${new Date().toISOString().slice(11)}`;
+  return new Date().toISOString();
 }

@@ -1,62 +1,60 @@
 import { useState } from "react";
 
-import {
-  getDayScripture,
-  getQuickCheckStanding,
-  getReflectionsForDay,
-  useAppSelector,
-} from "@/core/store";
-import type { IsoDate, PlanDay } from "@/types/domain";
+import type { ApiPlanDaySummary } from "@/core/api/contracts";
+import type { IsoDate } from "@/types/domain";
 import {
   describeDayHeader,
   describeDaySteps,
   describeDayTile,
   describeQuickCheckStep,
-  isDayLockedForStudy,
 } from "../logic/day-rail";
 
-/**
- * The day picked in Plan Detail's row of days — the one the plan's on, until
- * another's tapped — and what it holds: its header, its four study steps,
- * and apart from them its Quick Check, if it has one.
- */
+/** The day picked in a real API-backed Plan Detail. */
 export function useSelectedDay(input: {
-  days: readonly { day: PlanDay; minutes: number }[];
+  days: readonly ApiPlanDaySummary[];
   currentDayNumber: number | null;
   quickCheckEnabled: boolean;
   today: IsoDate;
 }) {
-  const { days, currentDayNumber, quickCheckEnabled, today: calendarToday } = input;
+  const { days, currentDayNumber, quickCheckEnabled } = input;
   const [pickedDay, setPickedDay] = useState<number | null>(null);
   const selectedNumber = pickedDay ?? currentDayNumber ?? 1;
-  const selected = days.find(({ day }) => day.dayNumber === selectedNumber) ?? null;
-  const day = selected?.day ?? null;
+  const day = days.find((candidate) => candidate.dayNumber === selectedNumber) ?? null;
   const pickDay = (dayNumber: number) => setPickedDay(dayNumber);
-  const content = useAppSelector((state) =>
-    day
-      ? {
-          readingTitle: day.reading.title,
-          scriptureReference: getDayScripture(state, day.id)?.reference ?? null,
-          reflectionCount: getReflectionsForDay(state, day.id).length,
-          quiz: getQuickCheckStanding(state, day.id),
-        }
-      : null,
-  );
 
-  if (!day || !content) return { selectedNumber, pickDay, selected: null };
-  const dayRecords = days.map(({ day: candidate }) => candidate);
-  const locked = isDayLockedForStudy(day, dayRecords, calendarToday);
-  const today = describeDayTile(day, currentDayNumber, { locked }).today;
-  const steps = describeDaySteps(day, content, { today, locked });
+  if (!day) return { selectedNumber, pickDay, selected: null };
+
+  const normalized = {
+    status: day.progress.status,
+    completedSteps: day.progress.completedSteps,
+    completedAt: day.progress.completedAt,
+    scheduledOn: day.progress.scheduledOn,
+    dayNumber: day.dayNumber,
+  } as const;
+  const locked = normalized.status === "locked";
+  const today = describeDayTile(normalized, currentDayNumber, { locked }).today;
+  const steps = describeDaySteps(
+    normalized,
+    {
+      readingTitle: day.reading.title,
+      scriptureReference: day.scriptureReference.reference,
+      reflectionCount: day.reflectionPrompts.length,
+    },
+    { today, locked },
+  );
 
   return {
     selectedNumber,
     pickDay,
     selected: {
       day,
-      header: describeDayHeader(day, { minutes: selected?.minutes ?? 0, steps, locked }),
+      header: describeDayHeader(normalized, { minutes: day.estimatedMinutes, steps, locked }),
       steps,
-      quickCheck: describeQuickCheckStep(day, quickCheckEnabled ? content.quiz : null, { locked }),
+      quickCheck: describeQuickCheckStep(
+        normalized,
+        quickCheckEnabled ? day.quickCheck : null,
+        { locked },
+      ),
     },
   };
 }

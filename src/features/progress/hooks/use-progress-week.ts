@@ -1,54 +1,33 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
 
+import { useProgressQuery, useRemindersQuery } from "@/core/api/queries";
 import { planOverviewHref } from "@/entities/plan";
 import { selectionFeedback } from "@/core/haptics/haptics";
-import {
-  getDayMinutes,
-  getLatestQuizScore,
-  getPlanProgress,
-  getProgressTotals,
-  getReminder,
-  getStreak,
-  getUpNext,
-  getWeeklyCompletionCounts,
-  useAppSelector,
-  useToday,
-} from "@/core/store";
+import { useToday } from "@/core/store";
 import { addDays } from "@/utils/dates/addDays";
-import { getWeekTitle } from "../logic/week";
+import { getWeekStartSunday, getWeekTitle } from "../logic/week";
 
-/**
- * Progress's view model: the week shown (this one, or one before), its days
- * and title, the streak and totals, the latest Quick Check score, and what's
- * up next — with its time, how far through its plan is, and the reminder.
- */
+/** Progress view model backed by /v1/me/progress. */
 export function useProgressWeek() {
   const router = useRouter();
   const today = useToday();
-  // Which week is shown: 0 is this one, -1 the one before, and so on.
   const [weekOffset, setWeekOffset] = useState(0);
-  const week = useAppSelector((state) =>
-    getWeeklyCompletionCounts(state, addDays(today, weekOffset * 7)),
-  );
-  const streak = useAppSelector((state) => getStreak(state, today));
-  const totals = useAppSelector(getProgressTotals);
-  const quizScore = useAppSelector(getLatestQuizScore);
-  const next = useAppSelector((state) => getUpNext(state, today));
-  const nextDetail = useAppSelector((state) =>
-    next
-      ? {
-          minutes: getDayMinutes(state, next.day.id),
-          percent: getPlanProgress(state, next.plan.id)?.completionPercentage ?? 0,
-        }
-      : null,
-  );
-  const reminder = useAppSelector((state) => getReminder(state, "dailyStudy"));
+  const weekStart = addDays(getWeekStartSunday(today), weekOffset * 7);
+  const progressQuery = useProgressQuery(weekStart);
+  const remindersQuery = useRemindersQuery();
+  const progress = progressQuery.data;
+  const week = progress?.week ?? Array.from({ length: 7 }, (_, index) => ({
+    date: addDays(weekStart, index),
+    completedDayCount: 0,
+  }));
+  const reminder = remindersQuery.data?.reminders.find((item) => item.kind === "dailyStudy") ?? null;
+  const upNext = progress?.upNext ?? null;
 
   return {
-    today,
+    today: progress?.today ?? today,
     week,
-    title: getWeekTitle(week.at(0)?.date ?? today, week.at(-1)?.date ?? today),
+    title: getWeekTitle(week[0]?.date ?? weekStart, week.at(-1)?.date ?? addDays(weekStart, 6)),
     weekOffset,
     previousWeek: () => {
       selectionFeedback();
@@ -58,13 +37,22 @@ export function useProgressWeek() {
       selectionFeedback();
       setWeekOffset((offset) => offset + 1);
     },
-    streak,
-    totals,
-    quizScore,
-    upNext: next && nextDetail ? { ...next, ...nextDetail } : null,
+    streak: progress?.streak ?? { current: 0, longest: 0 },
+    totals: progress?.totals ?? { completedDayCount: 0, completedPlanCount: 0 },
+    quizScore: progress?.latestQuickCheck ?? null,
+    upNext: upNext
+      ? {
+          plan: upNext.plan,
+          day: upNext.day,
+          date: upNext.date,
+          minutes: upNext.day.estimatedMinutes,
+          percent: upNext.plan.progress.percentage,
+        }
+      : null,
     reminder,
+    loading: progressQuery.isPending,
     openUpNext: () => {
-      if (next) router.push(planOverviewHref(next.plan.id));
+      if (upNext) router.push(planOverviewHref(upNext.plan.id));
     },
   };
 }

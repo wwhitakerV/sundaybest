@@ -29,6 +29,10 @@ import {
   reminderKindSchema,
   resolveSermonRequestSchema,
   resolveSermonResponseSchema,
+  searchSermonsQuerySchema,
+  searchSermonsResponseSchema,
+  progressResponseSchema,
+  isoDateSchema,
   retryPlanGenerationResponseSchema,
   sessionCredentialsSchema,
   startPlanResponseSchema,
@@ -59,6 +63,7 @@ import {
 import { createGenerationService } from "../services/generation-service.js";
 import { requireIdempotencyKey, runIdempotent } from "../services/idempotency.js";
 import { createPlanService } from "../services/plan-service.js";
+import { createProgressService } from "../services/progress-service.js";
 import { createQuizService } from "../services/quiz-service.js";
 import { createSermonService } from "../services/sermon-service.js";
 import { createSettingsService } from "../services/settings-service.js";
@@ -80,6 +85,7 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
   const sermonService = createSermonService(db, context.env);
   const generationService = createGenerationService(db);
   const planService = createPlanService(db);
+  const progressService = createProgressService(db);
   const studyService = createStudyService(db, context.bible);
   const quizService = createQuizService(db);
 
@@ -111,9 +117,18 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
       publicKeyPem: installation.publicKeyPem,
       previousSignCount: installation.signCount,
     });
-    await advanceCounter(context, installation.id, installation.signCount, verified.signCount, readTimezone(request));
+    await advanceCounter(
+      context,
+      installation.id,
+      installation.signCount,
+      verified.signCount,
+      readTimezone(request),
+    );
     return sessionCredentialsSchema.parse(
-      await context.sessions.issueForInstallation({ userId: installation.userId, installationId: installation.id }),
+      await context.sessions.issueForInstallation({
+        userId: installation.userId,
+        installationId: installation.id,
+      }),
     );
   });
 
@@ -127,18 +142,27 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
       publicKeyPem: installation.publicKeyPem,
       previousSignCount: installation.signCount,
     });
-    await advanceCounter(context, installation.id, installation.signCount, verified.signCount, readTimezone(request));
-    return sessionCredentialsSchema.parse(await context.sessions.rotate({ keyId: body.keyId, refreshToken: body.refreshToken }));
+    await advanceCounter(
+      context,
+      installation.id,
+      installation.signCount,
+      verified.signCount,
+      readTimezone(request),
+    );
+    return sessionCredentialsSchema.parse(
+      await context.sessions.rotate({ keyId: body.keyId, refreshToken: body.refreshToken }),
+    );
   });
 
   if (context.env.NODE_ENV !== "production" && context.env.DEV_SESSION_ENABLED) {
     app.post("/v1/dev/session", async (request) => {
       const body = parseWithSchema(devSessionSchema, request.body ?? {});
-      if (body.timezone && !isValidTimeZone(body.timezone)) throw new AppError("VALIDATION_FAILED", "Invalid timezone");
+      if (body.timezone && !isValidTimeZone(body.timezone))
+        throw new AppError("VALIDATION_FAILED", "Invalid timezone");
       return sessionCredentialsSchema.parse(
         await context.sessions.createDevelopmentInstall({
-          installationId: body.installationId,
-          timezone: body.timezone,
+          ...(body.installationId !== undefined ? { installationId: body.installationId } : {}),
+          ...(body.timezone !== undefined ? { timezone: body.timezone } : {}),
         }),
       );
     });
@@ -166,8 +190,16 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
 
   app.post("/v1/me/onboarding/complete", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    return idempotent(request, context, auth.userId, "POST /v1/me/onboarding/complete", {}, async () =>
-      completeOnboardingResponseSchema.parse({ user: await userService.completeOnboarding(auth.userId) }),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      "POST /v1/me/onboarding/complete",
+      {},
+      async () =>
+        completeOnboardingResponseSchema.parse({
+          user: await userService.completeOnboarding(auth.userId),
+        }),
     );
   });
 
@@ -190,29 +222,51 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
 
   app.get("/v1/me/settings", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    return getSettingsResponseSchema.parse({ settings: await settingsService.getSettings(auth.userId) });
+    return getSettingsResponseSchema.parse({
+      settings: await settingsService.getSettings(auth.userId),
+    });
   });
 
   app.patch("/v1/me/settings", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const body = parseWithSchema(updateSettingsRequestSchema, request.body);
     return idempotent(request, context, auth.userId, "PATCH /v1/me/settings", body, async () =>
-      getSettingsResponseSchema.parse({ settings: await settingsService.updateSettings(auth.userId, body) }),
+      getSettingsResponseSchema.parse({
+        settings: await settingsService.updateSettings(auth.userId, body),
+      }),
     );
   });
 
   app.get("/v1/me/reminders", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    return getRemindersResponseSchema.parse({ reminders: await settingsService.listReminders(auth.userId) });
+    return getRemindersResponseSchema.parse({
+      reminders: await settingsService.listReminders(auth.userId),
+    });
   });
 
   app.put("/v1/me/reminders/:kind", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const kind = parseWithSchema(z.object({ kind: reminderKindSchema }), request.params).kind;
     const body = parseWithSchema(updateReminderRequestSchema, request.body);
-    return idempotent(request, context, auth.userId, `PUT /v1/me/reminders/${kind}`, body, async () =>
-      updateReminderResponseSchema.parse({ reminder: await settingsService.updateReminder(auth.userId, kind, body) }),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `PUT /v1/me/reminders/${kind}`,
+      body,
+      async () =>
+        updateReminderResponseSchema.parse({
+          reminder: await settingsService.updateReminder(auth.userId, kind, body),
+        }),
     );
+  });
+
+  app.get("/v1/sermons/search", async (request) => {
+    await requireAuth(request, db, context.jwt);
+    const query = parseWithSchema(searchSermonsQuerySchema, request.query);
+    return searchSermonsResponseSchema.parse({
+      sermons: await sermonService.search(query.q, query.limit),
+    });
   });
 
   app.post("/v1/sermons/resolve", async (request) => {
@@ -223,15 +277,30 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     );
   });
 
+  app.get("/v1/me/progress", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const query = parseWithSchema(
+      z.object({ weekStart: isoDateSchema.optional() }).strict(),
+      request.query ?? {},
+    );
+    return progressResponseSchema.parse(
+      await progressService.get(auth.userId, auth.timezone, query.weekStart),
+    );
+  });
+
   app.get("/v1/plans", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
-    return listPlansResponseSchema.parse({ plans: await planService.list(auth.userId) });
+    return listPlansResponseSchema.parse({
+      plans: await planService.list(auth.userId, auth.timezone),
+    });
   });
 
   app.get("/v1/plans/:planId", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { planId } = parseWithSchema(planParamSchema, request.params);
-    return getPlanResponseSchema.parse({ plan: await planService.getDetail(auth.userId, planId) });
+    return getPlanResponseSchema.parse({
+      plan: await planService.getDetail(auth.userId, planId, auth.timezone),
+    });
   });
 
   app.post("/v1/plans", async (request) => {
@@ -254,41 +323,73 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
   app.post("/v1/plans/:planId/start", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { planId } = parseWithSchema(planParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/plans/${planId}/start`, {}, async () =>
-      startPlanResponseSchema.parse({ plan: await planService.start(auth.userId, planId, auth.timezone) }),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/plans/${planId}/start`,
+      {},
+      async () =>
+        startPlanResponseSchema.parse({
+          plan: await planService.start(auth.userId, planId, auth.timezone),
+        }),
     );
   });
 
   app.post("/v1/plans/:planId/archive", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { planId } = parseWithSchema(planParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/plans/${planId}/archive`, {}, async () =>
-      archivePlanResponseSchema.parse({ plan: await planService.archive(auth.userId, planId) }),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/plans/${planId}/archive`,
+      {},
+      async () =>
+        archivePlanResponseSchema.parse({
+          plan: await planService.archive(auth.userId, planId, auth.timezone),
+        }),
     );
   });
 
   app.put("/v1/plans/:planId/saved", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { planId } = parseWithSchema(planParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `PUT /v1/plans/${planId}/saved`, {}, async () => {
-      await planService.save(auth.userId, planId);
-      return savePlanResponseSchema.parse({ saved: true });
-    });
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `PUT /v1/plans/${planId}/saved`,
+      {},
+      async () => {
+        await planService.save(auth.userId, planId);
+        return savePlanResponseSchema.parse({ saved: true });
+      },
+    );
   });
 
   app.delete("/v1/plans/:planId/saved", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { planId } = parseWithSchema(planParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `DELETE /v1/plans/${planId}/saved`, {}, async () => {
-      await planService.unsave(auth.userId, planId);
-      return removeSavedPlanResponseSchema.parse({ saved: false });
-    });
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `DELETE /v1/plans/${planId}/saved`,
+      {},
+      async () => {
+        await planService.unsave(auth.userId, planId);
+        return removeSavedPlanResponseSchema.parse({ saved: false });
+      },
+    );
   });
 
   app.get("/v1/plan-generations/:generationId", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { generationId } = parseWithSchema(generationParamSchema, request.params);
-    return getPlanGenerationResponseSchema.parse({ generation: await generationService.get(auth.userId, generationId) });
+    return getPlanGenerationResponseSchema.parse({
+      generation: await generationService.get(auth.userId, generationId),
+    });
   });
 
   app.post("/v1/plan-generations/:generationId/retry", async (request) => {
@@ -303,44 +404,86 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
         context.env.NODE_ENV !== "production" && context.env.DEV_SESSION_ENABLED,
     });
     const { generationId } = parseWithSchema(generationParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/plan-generations/${generationId}/retry`, {}, async () =>
-      retryPlanGenerationResponseSchema.parse({ generation: await generationService.retry(auth.userId, generationId) }),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/plan-generations/${generationId}/retry`,
+      {},
+      async () =>
+        retryPlanGenerationResponseSchema.parse({
+          generation: await generationService.retry(auth.userId, generationId),
+        }),
     );
   });
 
   app.get("/v1/plans/:planId/days/:dayNumber", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { planId, dayNumber } = parseWithSchema(dayParamSchema, request.params);
-    return getStudyDayResponseSchema.parse({ day: await studyService.getDay(auth.userId, planId, dayNumber, auth.timezone) });
+    return getStudyDayResponseSchema.parse({
+      day: await studyService.getDay(auth.userId, planId, dayNumber, auth.timezone),
+    });
   });
 
   app.put("/v1/plans/:planId/days/:dayNumber/steps/:step", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const params = parseWithSchema(dayStepParamSchema, request.params);
     const body = parseWithSchema(completeStudyStepRequestSchema, request.body);
-    if (body.step !== params.step) throw new AppError("VALIDATION_FAILED", "Step in path and body must match");
-    return idempotent(request, context, auth.userId, `PUT /v1/plans/${params.planId}/days/${params.dayNumber}/steps/${params.step}`, body, async () =>
-      completeStudyStepResponseSchema.parse(
-        await studyService.completeStep(auth.userId, params.planId, params.dayNumber, params.step, auth.timezone),
-      ),
+    if (body.step !== params.step)
+      throw new AppError("VALIDATION_FAILED", "Step in path and body must match");
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `PUT /v1/plans/${params.planId}/days/${params.dayNumber}/steps/${params.step}`,
+      body,
+      async () =>
+        completeStudyStepResponseSchema.parse(
+          await studyService.completeStep(
+            auth.userId,
+            params.planId,
+            params.dayNumber,
+            params.step,
+            auth.timezone,
+          ),
+        ),
     );
   });
 
   app.post("/v1/plans/:planId/days/:dayNumber/complete", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const params = parseWithSchema(dayParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/plans/${params.planId}/days/${params.dayNumber}/complete`, {}, async () =>
-      completeStudyDayResponseSchema.parse(
-        await studyService.completeDay(auth.userId, params.planId, params.dayNumber, auth.timezone),
-      ),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/plans/${params.planId}/days/${params.dayNumber}/complete`,
+      {},
+      async () =>
+        completeStudyDayResponseSchema.parse(
+          await studyService.completeDay(
+            auth.userId,
+            params.planId,
+            params.dayNumber,
+            auth.timezone,
+          ),
+        ),
     );
   });
 
   app.post("/v1/quizzes/:quizId/attempts", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { quizId } = parseWithSchema(quizParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/quizzes/${quizId}/attempts`, {}, async () =>
-      startQuizAttemptResponseSchema.parse(await quizService.startAttempt(auth.userId, quizId, auth.timezone)),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/quizzes/${quizId}/attempts`,
+      {},
+      async () =>
+        startQuizAttemptResponseSchema.parse(
+          await quizService.startAttempt(auth.userId, quizId, auth.timezone),
+        ),
     );
   });
 
@@ -354,16 +497,32 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     const auth = await requireAuth(request, db, context.jwt);
     const { attemptId } = parseWithSchema(attemptParamSchema, request.params);
     const body = parseWithSchema(submitQuizAnswerRequestSchema, request.body);
-    return idempotent(request, context, auth.userId, `POST /v1/quiz-attempts/${attemptId}/answers`, body, async () =>
-      submitQuizAnswerResponseSchema.parse(await quizService.submitAnswer(auth.userId, attemptId, body)),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/quiz-attempts/${attemptId}/answers`,
+      body,
+      async () =>
+        submitQuizAnswerResponseSchema.parse(
+          await quizService.submitAnswer(auth.userId, attemptId, body),
+        ),
     );
   });
 
   app.post("/v1/quiz-attempts/:attemptId/complete", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { attemptId } = parseWithSchema(attemptParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/quiz-attempts/${attemptId}/complete`, {}, async () =>
-      completeQuizAttemptResponseSchema.parse(await quizService.completeAttempt(auth.userId, attemptId)),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/quiz-attempts/${attemptId}/complete`,
+      {},
+      async () =>
+        completeQuizAttemptResponseSchema.parse(
+          await quizService.completeAttempt(auth.userId, attemptId),
+        ),
     );
   });
 }
@@ -399,7 +558,9 @@ async function requireInstallationByKey(context: AppContext, keyId: string) {
   const rows = await context.database.db
     .select()
     .from(deviceInstallations)
-    .where(and(eq(deviceInstallations.attestationKeyId, keyId), isNull(deviceInstallations.revokedAt)))
+    .where(
+      and(eq(deviceInstallations.attestationKeyId, keyId), isNull(deviceInstallations.revokedAt)),
+    )
     .limit(1);
   if (!rows[0]) throw new AppError("KEY_UNKNOWN", "Unknown App Attest key");
   return rows[0];

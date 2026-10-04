@@ -6,6 +6,7 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { BookOpen } from "lucide-react-native";
 
 import { NotFoundScreen } from "@/ui/organisms/NotFoundScreen";
+import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { useTabBarAccessory } from "@/ui/organisms/tab-bar/tab-bar-accessory";
@@ -91,6 +92,8 @@ export function PlanOverviewScreen() {
     },
     handedOff && view.continueLabel !== null,
   );
+
+  if (!view.found && view.loading) return <LoadingScreen />;
 
   if (!view.found) {
     return (

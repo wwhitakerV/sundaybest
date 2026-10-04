@@ -31,3 +31,11 @@ export function addCalendarDays(isoDate: string, days: number): string {
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
+
+
+export function startOfWeekSunday(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  if (!year || !month || !day) throw new AppError("VALIDATION_FAILED", "Invalid ISO date");
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return addCalendarDays(isoDate, -date.getUTCDay());
+}

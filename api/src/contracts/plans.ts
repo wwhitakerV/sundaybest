@@ -10,6 +10,16 @@ import {
 import { sermonSummarySchema } from "./sermons.js";
 
 export const planStatusSchema = z.enum(["ready", "active", "completed", "archived"]);
+export const planDayStatusSchema = z.enum(["locked", "available", "inProgress", "completed"]);
+export const quickCheckStatusSchema = z.enum(["notStarted", "inProgress", "completed"]);
+
+export const quickCheckStandingSchema = z.object({
+  id: apiIdSchema,
+  status: quickCheckStatusSchema,
+  questionCount: z.number().int().nonnegative(),
+  answeredCount: z.number().int().nonnegative(),
+  correctCount: z.number().int().nonnegative(),
+});
 
 export const planProgressSchema = z.object({
   completedDays: z.number().int().nonnegative(),
@@ -17,16 +27,28 @@ export const planProgressSchema = z.object({
   percentage: z.number().int().min(0).max(100),
 });
 
+export const planCurrentDaySchema = z.object({
+  id: apiIdSchema,
+  dayNumber: z.number().int().min(1).max(7),
+  title: z.string().min(1).max(300),
+  estimatedMinutes: z.number().int().positive(),
+  scheduledOn: isoDateSchema.nullable(),
+  status: planDayStatusSchema,
+  quickCheck: quickCheckStandingSchema.nullable(),
+});
+
 export const planSummarySchema = z.object({
   id: apiIdSchema,
   title: z.string().min(1).max(300),
   status: planStatusSchema,
   lengthDays: planLengthSchema,
+  estimatedMinutes: z.number().int().positive(),
   quickCheckEnabled: z.boolean(),
   isSample: z.boolean(),
   saved: z.boolean(),
   sermon: sermonSummarySchema,
   progress: planProgressSchema,
+  currentDay: planCurrentDaySchema.nullable(),
   startDate: isoDateSchema.nullable(),
   startedAt: isoDateTimeSchema.nullable(),
   completedAt: isoDateTimeSchema.nullable(),
@@ -69,6 +91,7 @@ export const prayerContentSchema = z.object({
 });
 
 export const planDayProgressSchema = z.object({
+  status: planDayStatusSchema,
   completedSteps: completedStudyStepsSchema,
   scheduledOn: isoDateSchema.nullable(),
   startedAt: isoDateTimeSchema.nullable(),
@@ -78,11 +101,13 @@ export const planDayProgressSchema = z.object({
 export const planDaySummarySchema = z.object({
   id: apiIdSchema,
   dayNumber: z.number().int().min(1).max(7),
+  estimatedMinutes: z.number().int().positive(),
   reading: dayReadingSchema,
   scriptureReference: scriptureReferenceSchema,
   reflectionPrompts: z.array(reflectionPromptSchema),
   prayer: prayerContentSchema,
   quickCheckId: apiIdSchema.nullable(),
+  quickCheck: quickCheckStandingSchema.nullable(),
   progress: planDayProgressSchema,
 });
 
@@ -113,4 +138,6 @@ export const removeSavedPlanResponseSchema = z.object({ saved: z.literal(false) 
 
 export type ApiPlanSummary = z.infer<typeof planSummarySchema>;
 export type ApiPlanDetail = z.infer<typeof planDetailSchema>;
+export type ApiPlanDaySummary = z.infer<typeof planDaySummarySchema>;
+export type ApiQuickCheckStanding = z.infer<typeof quickCheckStandingSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;

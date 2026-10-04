@@ -4,6 +4,9 @@ export const apiQueryKeys = {
   settings: ["api", "settings"] as const,
   reminders: ["api", "reminders"] as const,
   plans: ["api", "plans"] as const,
+  progressRoot: ["api", "progress"] as const,
+  progress: (weekStart: string) => ["api", "progress", weekStart] as const,
+  sermonSearch: (query: string) => ["api", "sermons", "search", query] as const,
   plan: (planId: string) => ["api", "plans", planId] as const,
   generation: (generationId: string) => ["api", "plan-generations", generationId] as const,
   studyDay: (planId: string, dayNumber: number) =>

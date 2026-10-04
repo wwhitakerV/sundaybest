@@ -20,6 +20,8 @@ import {
   removeSavedPlanResponseSchema,
   resolveSermonRequestSchema,
   resolveSermonResponseSchema,
+  searchSermonsResponseSchema,
+  progressResponseSchema,
   retryPlanGenerationResponseSchema,
   savePlanResponseSchema,
   startPlanResponseSchema,
@@ -102,6 +104,11 @@ export function createSundayBestApi(client: ApiClient) {
     },
 
     sermons: {
+      search: (query: string, limit = 10) =>
+        client.request({
+          path: `/v1/sermons/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+          schema: searchSermonsResponseSchema,
+        }),
       resolve: (input: ResolveSermonRequest, idempotencyKey: string) =>
         client.request({
           path: "/v1/sermons/resolve",
@@ -110,6 +117,16 @@ export function createSundayBestApi(client: ApiClient) {
           schema: resolveSermonResponseSchema,
           idempotencyKey,
           idempotent: true,
+        }),
+    },
+
+    progress: {
+      get: (weekStart?: string) =>
+        client.request({
+          path: weekStart
+            ? `/v1/me/progress?weekStart=${encodeURIComponent(weekStart)}`
+            : "/v1/me/progress",
+          schema: progressResponseSchema,
         }),
     },
 

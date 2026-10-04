@@ -5,7 +5,7 @@ import { Card } from "@/ui/atoms/Card";
 import { ProgressDial } from "@/ui/atoms/ProgressDial";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { radius, space, useTheme } from "@/theme";
-import type { LibraryPlanLook } from "../logic/library";
+import type { ApiLibraryPlanLook } from "../logic/api-plan-wording";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
@@ -22,7 +22,7 @@ export type LibraryPlanCardProps = {
   /** Its sermon's church, under the title; left out when it isn't known. */
   church: string | null;
   thumbnailUrl: string | null;
-  look: LibraryPlanLook;
+  look: ApiLibraryPlanLook;
   /** How much of it is done, 0–100: the dial in its bottom row. */
   percent: number;
   /** Finished — its dial's flame turns red. */

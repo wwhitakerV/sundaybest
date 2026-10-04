@@ -5,83 +5,69 @@ import {
   describePlanHero,
   formatDay,
   planOverviewHref,
-  studyHref,
 } from "@/entities/plan";
 import { tapFeedback } from "@/core/haptics/haptics";
-import {
-  getActivePlan,
-  getCurrentPlanDay,
-  getDayMinutes,
-  getPlanProgress,
-  getSamplePlan,
-  getSermonForPlan,
-  getUserPlans,
-  useAppSelector,
-  useToday,
-} from "@/core/store";
+import { usePlansQuery } from "@/core/api/queries";
+import { useToday } from "@/core/store";
 import { formatDotDate } from "@/utils/dates/formatDotDate";
-import { describePlan } from "../logic/describe-plan";
+import {
+  getApiActivePlan,
+  getApiSamplePlan,
+  getApiUserPlans,
+} from "@/features/plans/logic/api-plan-collections";
+import { describeApiPlan } from "@/features/plans/logic/api-plan-wording";
 import { homePlanOverviewHref } from "../logic/routes";
 
-/**
- * Home's view model: today's date, the plan under way (its hero and its
- * collapsed bar) if there is one, whether the user has plans — or else the
- * sample to try — and where each thing on Home leads.
- */
+/** Home's server-backed plan view model. */
 export function useHomeView() {
   const router = useRouter();
   const today = useToday();
-  const plan = useAppSelector(getActivePlan);
-  const progress = useAppSelector((state) => (plan ? getPlanProgress(state, plan.id) : null));
-  const sermon = useAppSelector((state) => (plan ? getSermonForPlan(state, plan.id) : null));
-  const todayStudy = useAppSelector((state) => {
-    const day = plan ? getCurrentPlanDay(state, plan.id) : null;
-    return day ? { day, minutes: getDayMinutes(state, day.id) } : null;
-  });
-  const hasPlans = useAppSelector((state) => getUserPlans(state).length > 0);
-  const sample = useAppSelector(getSamplePlan);
-  const sampleDetail = useAppSelector((state) =>
-    sample ? describePlan(sample, getPlanProgress(state, sample.id)) : "",
-  );
+  const plansQuery = usePlansQuery();
+  const allPlans = plansQuery.data?.plans ?? [];
+  const plans = getApiUserPlans(allPlans);
+  const plan = getApiActivePlan(allPlans);
+  const sample = getApiSamplePlan(allPlans);
+  const currentDay = plan?.currentDay ?? null;
 
   const active =
-    plan && progress && todayStudy
+    plan && currentDay
       ? {
           planId: plan.id,
           hero: {
             title: plan.title,
-            church: sermon?.church ?? null,
-            thumbnailUrl: sermon?.thumbnailUrl ?? null,
-            colors: sermon?.thumbnailColors ?? [],
+            church: plan.sermon.church,
+            thumbnailUrl: plan.sermon.thumbnailUrl,
+            colors: plan.sermon.thumbnailColors,
             words: describePlanHero({
               status: "active",
-              currentDay: progress.currentDayNumber,
-              totalDays: progress.totalDays,
-              dayTitle: todayStudy.day.reading.title,
-              minutes: todayStudy.minutes,
+              currentDay: currentDay.dayNumber,
+              totalDays: plan.lengthDays,
+              dayTitle: currentDay.title,
+              minutes: currentDay.estimatedMinutes,
             }),
-            currentDay: progress.currentDayNumber,
-            totalDays: progress.totalDays,
-            completedDayCount: progress.completedDayCount,
+            currentDay: currentDay.dayNumber,
+            totalDays: plan.lengthDays,
+            completedDayCount: plan.progress.completedDays,
           },
           bar: {
             title: plan.title,
-            day: formatDay(progress.currentDayNumber),
-            thumbnailUrl: sermon?.thumbnailUrl ?? null,
-            colors: sermon?.thumbnailColors ?? [],
+            day: formatDay(currentDay.dayNumber),
+            thumbnailUrl: plan.sermon.thumbnailUrl,
+            colors: plan.sermon.thumbnailColors,
           },
           href: homePlanOverviewHref(plan.id),
-          currentDay: progress.currentDayNumber,
+          currentDay: currentDay.dayNumber,
         }
       : null;
 
   return {
     date: formatDotDate(today),
     active,
-    hasPlans,
-    sample: sample ? { id: sample.id, title: sample.title, detail: sampleDetail } : null,
-    /** The artwork that flies into the bar — there whenever a plan's under way. */
-    flight: plan ? { thumbnailUrl: sermon?.thumbnailUrl ?? null } : null,
+    plans,
+    hasPlans: plans.length > 0,
+    sample: sample ? { id: sample.id, title: sample.title, detail: describeApiPlan(sample) } : null,
+    flight: plan ? { thumbnailUrl: plan.sermon.thumbnailUrl } : null,
+    loading: plansQuery.isPending,
     openPlan: (planId: string) => router.push(planOverviewHref(planId)),
     openSample: () => {
       if (sample) router.push(planOverviewHref(sample.id));
@@ -90,10 +76,13 @@ export function useHomeView() {
       tapFeedback();
       router.push(NEW_PLAN_HREF);
     },
+    // Daily Study becomes server-backed in the next slice. Until then, Continue
+    // enters the real plan detail rather than sending a server UUID into the
+    // still-legacy Study store.
     continueToday: () => {
       if (!active) return;
       tapFeedback();
-      router.push(studyHref(active.planId, active.currentDay));
+      router.push(planOverviewHref(active.planId));
     },
   };
 }

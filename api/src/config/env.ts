@@ -39,6 +39,8 @@ const envSchema = z
     BIBLE_PROVIDER_TOKEN: optionalString,
 
     YOUTUBE_OEMBED_BASE_URL: z.url().default("https://www.youtube.com/oembed"),
+    YOUTUBE_SEARCH_BASE_URL: z.url().default("https://www.googleapis.com/youtube/v3/search"),
+    YOUTUBE_API_KEY: optionalString,
     WORKER_POLL_MS: z.coerce.number().int().min(250).max(60_000).default(1000),
     WORKER_LOCK_SECONDS: z.coerce.number().int().min(10).max(3600).default(120),
     WORKER_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).default(3),

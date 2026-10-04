@@ -106,6 +106,11 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
         prayer: { id: prayer.id, title: prayer.title, text: prayer.text },
         quickCheckId: quizRows[0]?.id ?? null,
         progress: {
+          status: access.progress.completedAt
+            ? "completed"
+            : access.progress.startedAt || stepRows.length > 0
+              ? "inProgress"
+              : "available",
           completedSteps: sortSteps(stepRows.map((row) => row.step)),
           scheduledOn: access.progress.scheduledOn,
           startedAt: access.progress.startedAt?.toISOString() ?? null,

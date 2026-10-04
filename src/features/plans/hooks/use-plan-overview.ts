@@ -1,98 +1,108 @@
+import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import {
   describePlanHero,
   getHeroPalette,
   parsePlanParams,
-  quickCheckHref,
-  studyHref,
 } from "@/entities/plan";
+import { usePlanQuery, useStartPlanMutation } from "@/core/api/queries";
 import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
-import {
-  getCurrentPlanDay,
-  getDayMinutes,
-  getPlanById,
-  getPlanDays,
-  getPlanProgress,
-  getSermonForPlan,
-  useAppSelector,
-  useToday,
-} from "@/core/store";
+import { useToday } from "@/core/store";
 import { useTheme } from "@/theme";
-import { describeDayTile, isDayLockedForStudy, type DayStepKey } from "../logic/day-rail";
+import { describeDayTile, type DayStepKey } from "../logic/day-rail";
 import { usePlanMoreMenu } from "./use-plan-more-menu";
 import { useSelectedDay } from "./use-selected-day";
 
-/**
- * Plan Detail's view model, from its route and the store: the plan's hero,
- * its days as tiles, the day picked and what it holds, its More menu
- * (`usePlanMoreMenu`), and where each thing leads. `found: false` when the route doesn't name a plan that exists.
- * Everything's read on every render, so coming back shows what's changed.
- */
+/** Plan Detail backed by the real API plan/detail contract. */
 export function usePlanOverview() {
   const router = useRouter();
   const theme = useTheme();
   const planId = parsePlanParams(useLocalSearchParams())?.planId ?? "";
-  const plan = useAppSelector((state) => getPlanById(state, planId));
-  const sermon = useAppSelector((state) => getSermonForPlan(state, planId));
-  const progress = useAppSelector((state) => getPlanProgress(state, planId));
-  const currentDay = useAppSelector((state) => getCurrentPlanDay(state, planId));
-  const days = useAppSelector((state) =>
-    getPlanDays(state, planId).map((day) => ({ day, minutes: getDayMinutes(state, day.id) })),
-  );
-  const more = usePlanMoreMenu(planId);
+  const planQuery = usePlanQuery(planId);
+  const startMutation = useStartPlanMutation();
+  const plan = planQuery.data?.plan ?? null;
+  const more = usePlanMoreMenu(planId, plan?.saved ?? false);
   const today = useToday();
-  const dayRecords = days.map(({ day }) => day);
+  const days = plan?.days ?? [];
+  const currentDayNumber = plan?.progress.currentDayNumber ?? null;
   const { selectedNumber, pickDay, selected } = useSelectedDay({
     days,
-    currentDayNumber: currentDay?.dayNumber ?? null,
+    currentDayNumber,
     quickCheckEnabled: plan?.quickCheckEnabled ?? false,
     today,
   });
 
-  const currentMinutes = days.find(({ day }) => day.id === currentDay?.id)?.minutes ?? 0;
+  const currentDay = plan?.currentDay ?? null;
   const words =
-    plan && progress && currentDay
+    plan && currentDay
       ? describePlanHero({
           status: plan.status,
           currentDay: currentDay.dayNumber,
-          totalDays: progress.totalDays,
-          dayTitle: currentDay.reading.title,
-          minutes: currentMinutes,
+          totalDays: plan.lengthDays,
+          dayTitle: currentDay.title,
+          minutes: currentDay.estimatedMinutes,
         })
-      : null;
-  const openDay = (dayNumber: number) => router.push(studyHref(planId, dayNumber));
+      : plan?.status === "completed" && plan.days.at(-1)
+        ? describePlanHero({
+            status: "completed",
+            currentDay: plan.lengthDays,
+            totalDays: plan.lengthDays,
+            dayTitle: plan.days.at(-1)?.reading.title ?? plan.title,
+            minutes: plan.days.at(-1)?.estimatedMinutes ?? 1,
+          })
+        : null;
+
   const openCurrentDay = () => {
-    if (!currentDay) return;
+    if (!plan) return;
     tapFeedback();
-    openDay(currentDay.dayNumber);
+    if (plan.status === "ready") {
+      startMutation.mutate(plan.id);
+      return;
+    }
+    explainStudyBoundary();
   };
+
   const goBack = () => router.back();
 
-  if (!plan || !progress) {
-    return { found: false, continueLabel: null, openCurrentDay, goBack } as const;
+  if (!plan) {
+    return {
+      found: false,
+      loading: planQuery.isPending,
+      continueLabel: null,
+      openCurrentDay,
+      goBack,
+    } as const;
   }
-  const colors = sermon?.thumbnailColors ?? [];
+
+  const colors = plan.sermon.thumbnailColors;
 
   return {
     found: true,
+    loading: false,
     planId,
-    totalDays: progress.totalDays,
+    totalDays: plan.lengthDays,
     hero: words && {
       title: plan.title,
-      church: sermon?.church ?? null,
-      thumbnailUrl: sermon?.thumbnailUrl ?? null,
+      church: plan.sermon.church,
+      thumbnailUrl: plan.sermon.thumbnailUrl,
       colors,
       words,
-      totalDays: progress.totalDays,
-      completedDayCount: progress.completedDayCount,
+      totalDays: plan.lengthDays,
+      completedDayCount: plan.progress.completedDays,
     },
     continueLabel: words?.action ?? null,
     light: getHeroPalette(colors, theme.colors.featureBackdrop).light,
-    tiles: days.map(({ day }) =>
-      describeDayTile(day, currentDay?.dayNumber ?? null, {
-        locked: isDayLockedForStudy(day, dayRecords, today),
-      }),
+    tiles: days.map((day) =>
+      describeDayTile(
+        {
+          dayNumber: day.dayNumber,
+          status: day.progress.status,
+          scheduledOn: day.progress.scheduledOn,
+        },
+        currentDayNumber,
+        { locked: day.progress.status === "locked" },
+      ),
     ),
     selectedNumber,
     selected,
@@ -102,11 +112,14 @@ export function usePlanOverview() {
     },
     openCurrentDay,
     more,
-    openStep: (key: DayStepKey) => {
-      if (!selected) return;
-      if (key === "quickCheck") router.push(quickCheckHref(planId, selected.day.dayNumber));
-      else openDay(selected.day.dayNumber);
-    },
+    openStep: (_key: DayStepKey) => explainStudyBoundary(),
     goBack,
   } as const;
+}
+
+function explainStudyBoundary() {
+  Alert.alert(
+    "Daily Study is next",
+    "This plan is live on the API. The Daily Study flow is the next data slice being moved off the legacy mock store.",
+  );
 }
