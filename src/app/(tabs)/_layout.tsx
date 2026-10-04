@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Flame, House, LibraryBig, UserRound } from "lucide-react-native";
+import { Flame, House, LibraryBig, Settings2 } from "lucide-react-native";
 
 import { TabIcon } from "@/ui/organisms/tab-bar/TabIcon";
 import { TabBarAccessoryProvider } from "@/ui/organisms/tab-bar/tab-bar-accessory";
@@ -46,7 +46,7 @@ export default function TabsLayout() {
           options={{
             title: "Settings",
             tabBarButtonTestID: "tab-settings",
-            tabBarIcon: ({ color, size }) => <TabIcon icon={UserRound} color={color} size={size} />,
+            tabBarIcon: ({ color, size }) => <TabIcon icon={Settings2} color={color} size={size} />,
           }}
         />
         {/* Hidden for now (MVP): its routes stay, it just has no tab. */}
