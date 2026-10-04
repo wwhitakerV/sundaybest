@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { searchSermons, type SermonSearchResult } from "../data/search-sermons";
 import {
+  haveSameSermonSearchResults,
   normalizeSermonSearchQuery,
   SERMON_SEARCH_DEBOUNCE_MS,
   SERMON_SEARCH_MIN_CHARACTERS,
@@ -16,8 +17,9 @@ type SermonSearchState = {
 
 /**
  * Owns search timing only: debounce while typing, immediate submit from the
- * keyboard, duplicate suppression, and stale-response protection. The search
- * source itself stays in data/search-sermons so Supadata can replace it later.
+ * keyboard, duplicate suppression, stale-response protection, and preserving
+ * visible results while the next query resolves. The search source itself
+ * stays in data/search-sermons so Supadata can replace it later.
  */
 export function useSermonSearch(query: string, enabled: boolean) {
   const [search, setSearch] = useState<SermonSearchState>({ results: [], status: "idle" });
@@ -42,14 +44,21 @@ export function useSermonSearch(query: string, enabled: boolean) {
 
     if (key === inFlightKeyRef.current) return;
     if (key === completedKeyRef.current) {
-      setSearch({ results: completedResultsRef.current, status: "ready" });
+      setSearch((current) => ({
+        results: haveSameSermonSearchResults(current.results, completedResultsRef.current)
+          ? current.results
+          : completedResultsRef.current,
+        status: "ready",
+      }));
       return;
     }
 
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     inFlightKeyRef.current = key;
-    setSearch({ results: [], status: "searching" });
+
+    // Keep the current rows mounted while the new query runs in the background.
+    setSearch((current) => ({ ...current, status: "searching" }));
 
     try {
       const results = await searchSermons(normalized);
@@ -58,12 +67,16 @@ export function useSermonSearch(query: string, enabled: boolean) {
       inFlightKeyRef.current = null;
       completedKeyRef.current = key;
       completedResultsRef.current = results;
-      setSearch({ results, status: "ready" });
+      setSearch((current) => ({
+        results: haveSameSermonSearchResults(current.results, results) ? current.results : results,
+        status: "ready",
+      }));
     } catch {
       if (requestId !== requestIdRef.current) return;
 
       inFlightKeyRef.current = null;
-      setSearch({ results: [], status: "error" });
+      // Preserve any already-visible rows if a background refresh fails.
+      setSearch((current) => ({ ...current, status: "error" }));
     }
   }, []);
 
@@ -92,11 +105,17 @@ export function useSermonSearch(query: string, enabled: boolean) {
     }
 
     if (key === completedKeyRef.current) {
-      setSearch({ results: completedResultsRef.current, status: "ready" });
+      setSearch((current) => ({
+        results: haveSameSermonSearchResults(current.results, completedResultsRef.current)
+          ? current.results
+          : completedResultsRef.current,
+        status: "ready",
+      }));
       return;
     }
 
-    setSearch({ results: [], status: "waiting" });
+    // Debounce the next request without blanking the results already on screen.
+    setSearch((current) => ({ ...current, status: "waiting" }));
     timeoutRef.current = setTimeout(() => {
       timeoutRef.current = null;
       void runSearch(normalized);

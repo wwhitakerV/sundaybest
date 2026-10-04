@@ -2,7 +2,15 @@ import { useTheme, type Theme } from "@/theme";
 import { ThemedText, type TypographyProps } from "./ThemedText";
 
 export type SFProTitleVariant =
-  "screen" | "headline" | "headlineRegular" | "section" | "card" | "step" | "nav" | "preview";
+  | "screen"
+  | "headline"
+  | "headlineRegular"
+  | "section"
+  | "card"
+  | "smallCardTitle"
+  | "step"
+  | "nav"
+  | "preview";
 
 export type SFProTitleProps = TypographyProps & { variant?: SFProTitleVariant };
 
@@ -18,6 +26,8 @@ function typeFor(typography: Theme["typography"], variant: SFProTitleVariant) {
       return typography.sectionTitle;
     case "card":
       return typography.cardTitle;
+    case "smallCardTitle":
+      return typography.smallCardTitle;
     case "step":
       return typography.stepTitle;
     case "nav":

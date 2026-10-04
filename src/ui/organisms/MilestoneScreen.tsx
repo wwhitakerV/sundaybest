@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { space } from "@/theme";
 import { HERO_RING } from "@/ui/atoms/hero-ring";
 import { DisplayTitle } from "@/ui/typography/DisplayTitle";
 import { SFProBody } from "@/ui/typography/SFProBody";
-import { PAGE_INSET, PAGE_TOP, Screen } from "./Screen";
+import { PAGE_INSET, PAGE_TOP } from "./Screen";
+import { ScrollScreen } from "./ScrollScreen";
+import { ScreenFooter } from "./ScreenFooter";
 
 /**
  * The one layout every milestone page shares, set by Day Complete: where the
@@ -26,8 +28,7 @@ export const MILESTONE_LAYOUT = {
   contentGap: space[16],
   /** Under the content, so it scrolls clear of the footer. */
   contentFoot: space[24],
-  /** Between the footer's buttons, and above them. */
-  footerGap: space[12],
+  /** Above the footer's buttons (`ScreenFooter` sets the rest). */
   footerTop: space[16],
 } as const;
 
@@ -65,46 +66,49 @@ export function MilestoneScreen({
   footer,
 }: MilestoneScreenProps) {
   return (
-    <Screen testID={testID} padded>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        <View testID={`${testID}-body`} style={styles.body}>
-          <View testID={`${testID}-heading`} style={styles.heading}>
-            <View testID={`${testID}-mark`} style={styles.mark}>
-              {mark}
-            </View>
-            <View testID={`${testID}-titles`} style={styles.titles}>
-              <DisplayTitle accessibilityRole="header" style={styles.centred}>
-                {title}
-              </DisplayTitle>
-              {subtitle ? (
-                <SFProBody tone="textMuted" style={styles.centred}>
-                  {subtitle}
-                </SFProBody>
-              ) : null}
-            </View>
-            {badge}
+    <ScrollScreen
+      testID={testID}
+      contentStyle={styles.scroll}
+      footer={
+        footer ? (
+          <ScreenFooter testID={`${testID}-footer`} style={styles.footer}>
+            {footer}
+          </ScreenFooter>
+        ) : undefined
+      }
+      overlay={
+        // Last, so it's drawn — and touched — over the page; floated, so it never moves the mark.
+        header ? (
+          <View testID={`${testID}-header`} style={styles.header}>
+            {header}
           </View>
-          {children ? (
-            <View testID={`${testID}-content`} style={styles.content}>
-              {children}
-            </View>
-          ) : null}
+        ) : undefined
+      }
+    >
+      <View testID={`${testID}-body`} style={styles.body}>
+        <View testID={`${testID}-heading`} style={styles.heading}>
+          <View testID={`${testID}-mark`} style={styles.mark}>
+            {mark}
+          </View>
+          <View testID={`${testID}-titles`} style={styles.titles}>
+            <DisplayTitle accessibilityRole="header" style={styles.centred}>
+              {title}
+            </DisplayTitle>
+            {subtitle ? (
+              <SFProBody tone="textMuted" style={styles.centred}>
+                {subtitle}
+              </SFProBody>
+            ) : null}
+          </View>
+          {badge}
         </View>
-      </ScrollView>
-
-      {footer ? (
-        <View testID={`${testID}-footer`} style={styles.footer}>
-          {footer}
-        </View>
-      ) : null}
-
-      {/* Last, so it's drawn — and touched — over the page. */}
-      {header ? (
-        <View testID={`${testID}-header`} style={styles.header}>
-          {header}
-        </View>
-      ) : null}
-    </Screen>
+        {children ? (
+          <View testID={`${testID}-content`} style={styles.content}>
+            {children}
+          </View>
+        ) : null}
+      </View>
+    </ScrollScreen>
   );
 }
 
@@ -124,6 +128,6 @@ const styles = StyleSheet.create({
   titles: { alignItems: "center", gap: layout.subtitleGap },
   centred: { textAlign: "center" },
   content: { marginTop: layout.contentTop, gap: layout.contentGap },
-  footer: { gap: layout.footerGap, paddingTop: layout.footerTop },
+  footer: { paddingTop: layout.footerTop },
   header: { position: "absolute", top: PAGE_TOP, left: PAGE_INSET, right: PAGE_INSET },
 });

@@ -15,7 +15,13 @@ export type SermonSearchResultsProps = {
   testID: string;
 };
 
-/** Nothing until there's a query; then guidance, request state, an empty result, or the matching sermons. */
+/**
+ * Nothing until there's a query; then guidance, request state,
+ * an empty result, or the matching sermons.
+ *
+ * Existing results remain mounted while a new search is waiting/searching
+ * so matching sermons do not disappear and re-render between queries.
+ */
 export function SermonSearchResults({
   query,
   results,
@@ -26,7 +32,6 @@ export function SermonSearchResults({
 }: SermonSearchResultsProps) {
   const trimmed = query.trim();
 
-  // The page's own line above the field already says what to search by.
   if (trimmed.length === 0) return null;
 
   if (trimmed.length < SERMON_SEARCH_MIN_CHARACTERS) {
@@ -37,9 +42,33 @@ export function SermonSearchResults({
     );
   }
 
-  // During the 400ms debounce (and while a request is active), never show a
-  // false "No sermons found" state from an older or not-yet-run query.
-  if (status === "waiting" || status === "searching") return null;
+  /**
+   * Keep the previous results visible while the next debounced search
+   * is waiting or actively fetching.
+   */
+  if (results.length > 0) {
+    return (
+      <View testID={testID} accessibilityRole="radiogroup" style={styles.results}>
+        {results.map((result) => (
+          <SermonSearchResult
+            key={result.id}
+            testID={`${testID}-${result.id}`}
+            result={result}
+            selected={selectedId === result.id}
+            onPress={() => onSelect(result)}
+          />
+        ))}
+      </View>
+    );
+  }
+
+  /**
+   * No previous results exist yet, so remain visually quiet while
+   * waiting for the debounce or active request to finish.
+   */
+  if (status === "waiting" || status === "searching") {
+    return null;
+  }
 
   if (status === "error") {
     return (
@@ -50,7 +79,7 @@ export function SermonSearchResults({
     );
   }
 
-  if (status === "ready" && results.length === 0) {
+  if (status === "ready") {
     return (
       <View testID={`${testID}-empty`} style={styles.empty}>
         <SFProBody variant="listItem">No sermons found</SFProBody>
@@ -59,23 +88,21 @@ export function SermonSearchResults({
     );
   }
 
-  return (
-    <View testID={testID} accessibilityRole="radiogroup" style={styles.results}>
-      {results.map((result) => (
-        <SermonSearchResult
-          key={result.id}
-          testID={`${testID}-${result.id}`}
-          result={result}
-          selected={selectedId === result.id}
-          onPress={() => onSelect(result)}
-        />
-      ))}
-    </View>
-  );
+  return null;
 }
 
 const styles = StyleSheet.create({
-  message: { marginTop: space[4], marginLeft: space[6] },
-  empty: { gap: space[4], paddingTop: space[8], paddingHorizontal: space[6] },
-  results: { marginTop: space[4], gap: space[10] },
+  message: {
+    marginTop: space[4],
+    marginLeft: space[6],
+  },
+  empty: {
+    gap: space[4],
+    paddingTop: space[8],
+    paddingHorizontal: space[6],
+  },
+  results: {
+    marginTop: space[4],
+    gap: space[10],
+  },
 });

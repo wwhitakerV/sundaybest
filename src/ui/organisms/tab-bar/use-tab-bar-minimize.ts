@@ -1,11 +1,25 @@
 import { useEffect } from "react";
-import { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  type WithSpringConfig,
+} from "react-native-reanimated";
 
 import { bounceWithin } from "@/utils/motion/bounceWithin";
 import { clampUnit } from "@/utils/motion/clampUnit";
 
 /** Lightly under-damped: the button beside the gathered tabs bounces sideways into place. */
 const BUTTON_SPRING = { damping: 12, stiffness: 170, mass: 0.9 };
+
+/**
+ * The button's spring: the bounce coming in. Leaving, it stops dead at
+ * hidden — left to bounce, it would swing past hidden and back, flashing the
+ * button into view again as it went.
+ */
+export function buttonSpring(shown: boolean): WithSpringConfig {
+  return shown ? BUTTON_SPRING : { ...BUTTON_SPRING, overshootClamping: true };
+}
 /**
  * The same stiffness, a little under critical damping (2√(stiffness × mass)
  * ≈ 24.7): it overshoots its end by about 5% — which `bounceWithin` turns
@@ -36,7 +50,7 @@ export function useTabBarMinimize(
     capsule.set(withSpring(minimized ? 1 : 0, CAPSULE_SPRING));
   }, [minimized, capsule]);
   useEffect(() => {
-    button.set(withSpring(buttonShown ? 1 : 0, BUTTON_SPRING));
+    button.set(withSpring(buttonShown ? 1 : 0, buttonSpring(buttonShown)));
   }, [buttonShown, button]);
 
   const capsuleStyle = useAnimatedStyle(() =>

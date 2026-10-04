@@ -1,5 +1,5 @@
 import { Text } from "react-native";
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
@@ -18,6 +18,7 @@ import {
 } from "@/core/store";
 import { getScoreHeadline } from "@/features/plans/logic/quick-check";
 import { QuickCheckScreen } from "@/features/plans/screens/QuickCheckScreen";
+import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -192,6 +193,14 @@ describe("QuickCheckScreen", () => {
       for (const letter of ["a", "b", "c", "d"]) {
         expect(screen.getByTestId(`quick-check-choice-${letter}`)).toBeVisible();
       }
+    });
+
+    it("pins its action in the shared footer", () => {
+      renderQuickCheck(TEMPTATION, 1, STARTED);
+
+      const footer = screen.getByTestId("quick-check-footer");
+      expect(within(footer).getByTestId("quick-check-check-button")).toBeVisible();
+      expect(footer).toHaveStyle({ paddingBottom: FOOTER_BOTTOM });
     });
 
     it("won't check an answer until one is picked", () => {

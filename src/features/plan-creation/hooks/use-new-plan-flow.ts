@@ -16,6 +16,7 @@ import {
 } from "../logic/new-plan-flow";
 import { preparingHref } from "../logic/routes";
 import { checkSermonLink } from "../logic/sermon-link";
+import { getLinkFeedback } from "../logic/link-feedback";
 import { useSermonSearch } from "./use-sermon-search";
 
 /**
@@ -110,6 +111,7 @@ export function useNewPlanFlow() {
     shownChecked,
     noCaptions,
     canContinue,
+    linkFeedback: getLinkFeedback(state),
     searchResults: search.results,
     searchStatus: search.status,
     submitSearch: search.submit,

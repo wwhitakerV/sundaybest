@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react-native";
 import { StyleSheet } from "react-native";
 import { Svg } from "react-native-svg";
 import { render, screen, fireEvent, within } from "@tests/helpers/render";
@@ -5,8 +6,16 @@ import * as Clipboard from "expo-clipboard";
 import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import {
+  errorFeedback,
+  selectionFeedback,
+  successFeedback,
+  tapFeedback,
+} from "@/core/haptics/haptics";
 import { FIELD_ICON_CENTRE } from "@/features/plan-creation/components/field-geometry";
 import { lightTheme } from "@/theme/tokens";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
 import { NewPlanScreen } from "@/features/plan-creation/screens/NewPlanScreen";
 
 jest.mock("expo-router", () => ({
@@ -14,6 +23,14 @@ jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
   useNavigation: jest.fn(),
   useIsFocused: () => true,
+}));
+
+jest.mock("@/core/haptics/haptics", () => ({
+  tapFeedback: jest.fn(),
+  selectionFeedback: jest.fn(),
+  successFeedback: jest.fn(),
+  warningFeedback: jest.fn(),
+  errorFeedback: jest.fn(),
 }));
 
 jest.mock("expo-clipboard", () => ({ getStringAsync: jest.fn() }));
@@ -38,6 +55,20 @@ async function goToLinkPreview(link = LINK) {
 }
 
 describe("NewPlanScreen", () => {
+  it("scrolls the full width, so the day picker's outline is never cut off at the ends", () => {
+    render(<NewPlanScreen />);
+
+    const scroll = screen.getByTestId("new-plan-screen-scroll");
+    // The page around it: the screen's own frame, inset only top and bottom.
+    const page = screen.getByTestId("new-plan-screen").children[0];
+    expect(typeof page === "object" && StyleSheet.flatten(page.props.style)).not.toMatchObject({
+      paddingHorizontal: PAGE_INSET,
+    });
+    expect(StyleSheet.flatten(scroll.props.contentContainerStyle as object)).toMatchObject({
+      paddingHorizontal: PAGE_INSET,
+    });
+  });
+
   it("is addressable as new-plan-screen", () => {
     render(<NewPlanScreen />);
 
@@ -68,14 +99,129 @@ describe("NewPlanScreen", () => {
     expect(screen.getByTestId("paste-sermon-continue-button")).toBeEnabled();
   });
 
-  it("says so when the link isn't a link, and stays put", () => {
+  describe("a link that isn't a link", () => {
+    function pressContinueOnBadLink() {
+      render(<NewPlanScreen />);
+      fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), "last sunday");
+      fireEvent.press(screen.getByTestId("paste-sermon-continue-button"));
+    }
+
+    it("says so in a panel at the foot, and stays put", () => {
+      pressContinueOnBadLink();
+
+      const panel = screen.getByTestId("new-plan-link-feedback");
+      expect(within(panel).getByText("That link won't work")).toBeVisible();
+      expect(
+        within(panel).getByText("That doesn't look like a link. Try copying it again."),
+      ).toBeVisible();
+      expect(screen.getByTestId("paste-sermon-body")).toBeVisible();
+    });
+
+    it("draws the panel in the incorrect colours", () => {
+      pressContinueOnBadLink();
+
+      expect(screen.getByTestId("new-plan-link-feedback")).toHaveStyle({
+        backgroundColor: lightTheme.colors.incorrectSurface,
+      });
+    });
+
+    it("moves Continue into the panel", () => {
+      pressContinueOnBadLink();
+
+      const panel = screen.getByTestId("new-plan-link-feedback");
+      expect(within(panel).getByTestId("paste-sermon-continue-button")).toBeVisible();
+    });
+
+    it("no longer shows the small error under the field", () => {
+      pressContinueOnBadLink();
+
+      expect(screen.queryByTestId("paste-sermon-link-input-error")).toBeNull();
+    });
+
+    it("keeps the field's edge red while the error stands", () => {
+      pressContinueOnBadLink();
+
+      expect(screen.getByTestId("paste-sermon-link-input-field")).toHaveStyle({
+        borderColor: lightTheme.colors.accent,
+      });
+    });
+
+    it("draws the field's edge as a divider when there is no error", () => {
+      render(<NewPlanScreen />);
+
+      expect(screen.getByTestId("paste-sermon-link-input-field")).toHaveStyle({
+        borderColor: lightTheme.colors.divider,
+      });
+    });
+
+    it("removes the panel when the link is changed, leaving Continue", () => {
+      pressContinueOnBadLink();
+
+      fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), "last sunday!");
+
+      expect(screen.queryByTestId("new-plan-link-feedback")).toBeNull();
+      expect(screen.getByTestId("paste-sermon-continue-button")).toBeVisible();
+    });
+  });
+
+  describe("a link that works", () => {
+    function typeValidLink() {
+      render(<NewPlanScreen />);
+      fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), LINK);
+    }
+
+    it("says so in a green panel before Continue is pressed", () => {
+      typeValidLink();
+
+      const panel = screen.getByTestId("new-plan-link-feedback");
+      expect(panel).toHaveStyle({ backgroundColor: lightTheme.colors.correctSurface });
+      expect(within(panel).getByText("Nice find!")).toBeVisible();
+      expect(
+        within(panel).getByText("Let's turn this sermon into your daily study."),
+      ).toBeVisible();
+    });
+
+    it("moves Continue into the panel", () => {
+      typeValidLink();
+
+      const panel = screen.getByTestId("new-plan-link-feedback");
+      expect(within(panel).getByTestId("paste-sermon-continue-button")).toBeVisible();
+    });
+
+    it("shows the panel without a haptic", () => {
+      typeValidLink();
+
+      expect(successFeedback).not.toHaveBeenCalled();
+      expect(tapFeedback).not.toHaveBeenCalled();
+      expect(selectionFeedback).not.toHaveBeenCalled();
+      expect(errorFeedback).not.toHaveBeenCalled();
+    });
+
+    it("still moves on to the preview when Continue is pressed in the panel", async () => {
+      typeValidLink();
+
+      fireEvent.press(screen.getByTestId("paste-sermon-continue-button"));
+
+      expect(await screen.findByTestId("link-preview-sermon")).toBeVisible();
+    });
+  });
+
+  it("shows no panel for a link that isn't valid yet, before Continue", () => {
     render(<NewPlanScreen />);
 
     fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), "last sunday");
-    fireEvent.press(screen.getByTestId("paste-sermon-continue-button"));
 
-    expect(screen.getByTestId("paste-sermon-link-input-error")).toBeVisible();
-    expect(screen.getByTestId("paste-sermon-body")).toBeVisible();
+    expect(screen.queryByTestId("new-plan-link-feedback")).toBeNull();
+    const footer = screen.getByTestId("new-plan-footer");
+    expect(within(footer).getByTestId("paste-sermon-continue-button")).toBeVisible();
+  });
+
+  it("pins Continue in the shared footer when there is no error", () => {
+    render(<NewPlanScreen />);
+
+    const footer = screen.getByTestId("new-plan-footer");
+    expect(within(footer).getByTestId("paste-sermon-continue-button")).toBeVisible();
+    expect(footer).toHaveStyle({ paddingBottom: FOOTER_BOTTOM });
   });
 
   it("dismisses the whole modal when Close is pressed", () => {
@@ -128,6 +274,19 @@ describe("NewPlanScreen", () => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.any()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
       params: { planId: expect.any(String) },
     });
+  });
+
+  it("puts sparkles on Create my plan, and nothing on Continue", async () => {
+    render(<NewPlanScreen />);
+    expect(
+      within(screen.getByTestId("paste-sermon-continue-button")).UNSAFE_queryByType(Sparkles),
+    ).toBeNull();
+
+    await goToLinkPreview();
+
+    expect(
+      within(screen.getByTestId("link-preview-create-plan-button")).UNSAFE_getByType(Sparkles),
+    ).toBeTruthy();
   });
 
   it("shows the search guidance exactly once in search mode", () => {

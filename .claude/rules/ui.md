@@ -44,6 +44,15 @@ paths:
 - Handles the empty, loading, and error states, or takes them as props. A screen
   with only a happy path is unfinished.
 
+## Scrolling pages
+
+A page that scrolls between a pinned header and footer composes `ScrollScreen`
+(`src/ui/organisms`), or `ListScreen` for a long list: the scroll view runs the full width, so nothing that
+springs, glows or casts a shadow near its sides is clipped, and the page inset
+sits inside it and on the header and footer. Never pad a scroll view in from
+the screen's sides (`<Screen padded>` around a `ScrollView`). Its pinned
+buttons go in `ScreenFooter`; a verdict in their place is `FeedbackPanel`.
+
 ## Milestone pages
 
 A page that marks a moment between steps — a day done, a plan ready, complete

@@ -1,6 +1,7 @@
-import { FlatList, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
-import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
+import { ListScreen } from "@/ui/organisms/ListScreen";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { FilterPills } from "@/ui/molecules/FilterPills";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { space } from "@/theme";
@@ -21,41 +22,41 @@ export function PlansScreen() {
   const { filter, setFilter, filters, cards, empty, openPlan, actionFor } = usePlansLibrary();
 
   return (
-    <Screen testID="plans-screen" padded>
-      <TitleHeader title="Plans" />
-
-      <FilterPills
-        testID="plans-filter-pills"
-        options={filters}
-        selected={filter}
-        onSelect={setFilter}
-        bleed={PAGE_INSET}
-      />
-
-      <FlatList
-        data={cards}
-        keyExtractor={({ plan }) => plan.id}
-        contentContainerStyle={[styles.list, { gap: space[16] }]}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<PlansEmpty testID="plans-empty" {...empty} />}
-        renderItem={({ item }) => (
-          <LibraryPlanCard
-            testID={`plans-item-${item.plan.id}`}
-            thumbnailTestID={`plans-thumbnail-${item.plan.id}`}
-            progressTestID={`plans-progress-${item.plan.id}`}
-            actionTestID={`plans-action-${item.plan.id}`}
-            title={item.plan.title}
-            church={item.church}
-            thumbnailUrl={item.thumbnailUrl}
-            look={item.look}
-            percent={item.percent}
-            done={item.done}
-            onPress={() => openPlan(item.plan.id)}
-            {...actionFor(item)}
+    <ListScreen
+      testID="plans-screen"
+      header={
+        <>
+          <TitleHeader title="Plans" />
+          <FilterPills
+            testID="plans-filter-pills"
+            options={filters}
+            selected={filter}
+            onSelect={setFilter}
+            bleed={PAGE_INSET}
           />
-        )}
-      />
-    </Screen>
+        </>
+      }
+      data={cards}
+      keyExtractor={({ plan }) => plan.id}
+      contentStyle={styles.list}
+      empty={<PlansEmpty testID="plans-empty" {...empty} />}
+      renderItem={({ item }) => (
+        <LibraryPlanCard
+          testID={`plans-item-${item.plan.id}`}
+          thumbnailTestID={`plans-thumbnail-${item.plan.id}`}
+          progressTestID={`plans-progress-${item.plan.id}`}
+          actionTestID={`plans-action-${item.plan.id}`}
+          title={item.plan.title}
+          church={item.church}
+          thumbnailUrl={item.thumbnailUrl}
+          look={item.look}
+          percent={item.percent}
+          done={item.done}
+          onPress={() => openPlan(item.plan.id)}
+          {...actionFor(item)}
+        />
+      )}
+    />
   );
 }
 
@@ -63,5 +64,5 @@ export function PlansScreen() {
 const LIST_FOOT = 140;
 
 const styles = StyleSheet.create({
-  list: { paddingBottom: LIST_FOOT },
+  list: { gap: space[16], paddingBottom: LIST_FOOT },
 });

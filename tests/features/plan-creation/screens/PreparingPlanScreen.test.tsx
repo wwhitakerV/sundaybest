@@ -1,9 +1,10 @@
-import { act, render, screen, fireEvent } from "@tests/helpers/render";
+import { act, render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { BUILD_STAGE_MS, PlanBuilder } from "@/core/plan-builder";
-import { AppStoreProvider, INITIAL_STATE } from "@/core/store";
+import { AppStoreProvider, INITIAL_STATE, appReducer } from "@/core/store";
+import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
 import { PreparingPlanScreen } from "@/features/plan-creation/screens/PreparingPlanScreen";
 import {
   BUILDING_PLAN_ID,
@@ -96,6 +97,30 @@ describe("PreparingPlanScreen", () => {
     expect(mockReplace).toHaveBeenCalledWith({
       pathname: "/(plan-creation)/ready",
       params: { planId: PLAN_ID },
+    });
+  });
+
+  describe("when the build fails", () => {
+    function renderFailed() {
+      const failed = appReducer(withPlanBeingBuilt(INITIAL_STATE), {
+        type: "generation/fail",
+        error: { code: "network", message: "It failed." },
+        at: "2026-09-23T12:06:00.000Z",
+      });
+      return render(
+        <AppStoreProvider initialState={failed}>
+          <PreparingPlanScreen />
+        </AppStoreProvider>,
+      );
+    }
+
+    it("pins Try again and Close in the shared footer", () => {
+      renderFailed();
+
+      const footer = screen.getByTestId("preparing-plan-footer");
+      expect(within(footer).getByTestId("preparing-plan-retry-button")).toBeVisible();
+      expect(within(footer).getByTestId("preparing-plan-close-button")).toBeVisible();
+      expect(footer).toHaveStyle({ paddingBottom: FOOTER_BOTTOM });
     });
   });
 

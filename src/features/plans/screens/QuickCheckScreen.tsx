@@ -1,9 +1,9 @@
-import { ScrollView, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 import { ListChecks, X } from "lucide-react-native";
 
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
-import { Screen } from "@/ui/organisms/Screen";
+import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
+import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
 import { Button } from "@/ui/atoms/Button";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { IconRing } from "@/ui/atoms/IconRing";
@@ -93,45 +93,41 @@ export function QuickCheckScreen() {
   const shownAnswer = shown && view.answers.find((answer) => answer.questionId === shown.id);
 
   return (
-    <Screen testID="quick-check-screen" padded>
-      <QuickCheckHeader
-        testID="quick-check"
-        total={questions.length}
-        progress={{ counter: currentIndex + 1, index: currentIndex }}
-        onClose={view.close}
-      />
-
-      <Animated.View style={[styles.body, bodyStyle]}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {shown && (
-            <QuickCheckQuestion
-              question={shown}
-              selectedChoiceId={
-                shown.id === attempt?.currentQuestionId ? (attempt.selectedChoiceId ?? null) : null
-              }
-              answeredChoiceId={shownAnswer?.choiceId ?? null}
-              onPick={view.pick}
-            />
-          )}
-        </ScrollView>
-      </Animated.View>
-
-      {current && currentResult !== "unanswered" ? (
-        <QuickCheckFeedback
-          result={currentResult}
-          question={current}
-          action={action}
-          onAction={() => view.act(action)}
+    <ScrollScreen
+      testID="quick-check-screen"
+      header={
+        <QuickCheckHeader
+          testID="quick-check"
+          total={questions.length}
+          progress={{ counter: currentIndex + 1, index: currentIndex }}
+          onClose={view.close}
         />
-      ) : (
-        actionButton
-      )}
-    </Screen>
+      }
+      footer={
+        current && currentResult !== "unanswered" ? (
+          <QuickCheckFeedback
+            result={currentResult}
+            question={current}
+            action={action}
+            onAction={() => view.act(action)}
+          />
+        ) : (
+          <ScreenFooter testID="quick-check-footer">{actionButton}</ScreenFooter>
+        )
+      }
+    >
+      <Animated.View style={bodyStyle}>
+        {shown && (
+          <QuickCheckQuestion
+            question={shown}
+            selectedChoiceId={
+              shown.id === attempt?.currentQuestionId ? (attempt.selectedChoiceId ?? null) : null
+            }
+            answeredChoiceId={shownAnswer?.choiceId ?? null}
+            onPick={view.pick}
+          />
+        )}
+      </Animated.View>
+    </ScrollScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  // Fills the space between header and action, so the button stays anchored
-  // at the bottom whatever the page's height.
-  body: { flex: 1 },
-});

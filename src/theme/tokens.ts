@@ -643,6 +643,7 @@ const typography = {
   headlineRegular: { fontSize: 24, fontWeight: "400" },
   /** A title on a large card (the Plans library's): bold, set close for up to three lines. */
   cardTitle: { fontSize: 20, fontWeight: "700", lineHeight: 25 },
+  smallCardTitle: { fontSize: 18, fontWeight: "600", lineHeight: 22 },
   /** The number on a small tile (Plan Detail's days): large enough to read at a glance. */
   tileNumber: { fontSize: 22, fontWeight: "600" },
   /** A study step's name on its row (Plan Detail's day): clear, and firm enough to tap. */

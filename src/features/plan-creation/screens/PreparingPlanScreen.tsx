@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { NotFoundScreen } from "@/ui/organisms/NotFoundScreen";
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { Screen } from "@/ui/organisms/Screen";
+import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
 import { Button } from "@/ui/atoms/Button";
 import { ProgressRing } from "@/ui/atoms/ProgressRing";
 import { usePreparingPlan } from "../hooks/use-preparing-plan";
@@ -45,7 +46,7 @@ export function PreparingPlanScreen() {
             {failure.message} Nothing&apos;s lost — try again, or come back later.
           </SFProBody>
         </View>
-        <View style={styles.actions}>
+        <ScreenFooter testID="preparing-plan-footer">
           <Button testID="preparing-plan-retry-button" label="Try again" onPress={retry} />
           <Button
             testID="preparing-plan-close-button"
@@ -53,7 +54,7 @@ export function PreparingPlanScreen() {
             variant="secondary"
             onPress={close}
           />
-        </View>
+        </ScreenFooter>
       </Screen>
     );
   }
@@ -100,5 +101,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: space[24],
   },
-  actions: { gap: space[12], paddingBottom: space[8] },
 });

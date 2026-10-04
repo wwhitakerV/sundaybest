@@ -1,9 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Link2, Search, type LucideIcon } from "lucide-react-native";
+import { Pressable, StyleSheet } from "react-native";
+import { Link2, Search, Sparkles, type LucideIcon } from "lucide-react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 
-import { Screen } from "@/ui/organisms/Screen";
+import { FeedbackPanel } from "@/ui/organisms/FeedbackPanel";
+import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
+import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
 import { Button } from "@/ui/atoms/Button";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { CaptionsSheet } from "../components/CaptionsSheet";
@@ -38,120 +40,135 @@ export function NewPlanScreen() {
   const current = NEW_PLAN_STEPS.at(flow.stepIndex) ?? NEW_PLAN_STEPS[0];
   const body = NEW_PLAN_STEPS.at(renderedStep) ?? NEW_PLAN_STEPS[0];
   const searching = state.inputMode === "search";
+  const action = (
+    <Button
+      testID={current.actionTestID}
+      label={current.actionLabel}
+      // A little magic on the step that makes the plan.
+      {...(current.key === "link-preview" && { icon: Sparkles })}
+      disabled={!flow.canContinue}
+      onPress={flow.next}
+    />
+  );
 
   return (
-    <Screen testID="new-plan-screen" padded>
-      <PlanCreationHeader
-        testID={current.key}
-        leading={current.leading}
-        step={current.counter}
-        onPress={flow.leading}
-      />
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View testID={`${body.key}-body`} style={[styles.body, bodyStyle]}>
-          {renderedStep === 0 ? (
-            searching ? (
-              <>
-                <SFProTitle>Find a sermon</SFProTitle>
-                <SFProBody tone="textMuted">
-                  Search by pastor, church, topic, or sermon title.
-                </SFProBody>
-                <SermonSearchField
-                  testID="search-sermons-input"
-                  value={state.searchQuery}
-                  onChangeText={flow.changeSearchQuery}
-                  onSubmit={flow.submitSearch}
-                  onClear={flow.clearSearch}
-                />
-                <InputModeAction
-                  testID="new-plan-paste-instead"
-                  icon={Link2}
-                  label="Paste a sermon link instead"
-                  onPress={flow.showPaste}
-                  color={theme.colors.textInactive}
-                  strokeWidth={theme.icon.strokeWidth}
-                />
-                <SermonSearchResults
-                  testID="sermon-search-results"
-                  query={state.searchQuery}
-                  results={flow.searchResults}
-                  status={flow.searchStatus}
-                  selectedId={state.searchSelection?.id ?? null}
-                  onSelect={flow.selectSearchResult}
-                />
-              </>
-            ) : (
-              <>
-                <SFProTitle>Paste a sermon link</SFProTitle>
-                <SFProBody tone="textMuted">Any public sermon video with captions works.</SFProBody>
-                <SermonLinkField
-                  testID="paste-sermon-link-input"
-                  value={state.link}
-                  onChangeText={flow.changeLink}
-                  onPaste={() => void flow.paste()}
-                  error={state.step === "paste" ? state.linkError : null}
-                />
-                <InputModeAction
-                  testID="new-plan-search-instead"
-                  icon={Search}
-                  label="Search for a sermon instead"
-                  onPress={flow.showSearch}
-                  color={theme.colors.textInactive}
-                  strokeWidth={theme.icon.strokeWidth}
-                />
-                <HowToCopyCard />
-              </>
-            )
-          ) : (
-            shownChecked && (
-              <>
-                <SermonPreview
-                  testID="link-preview-sermon"
-                  link={shortenLink(shownChecked.url)}
-                  title={shownChecked.sermon.title}
-                  church={shownChecked.sermon.church}
-                  thumbnailUrl={shownChecked.sermon.thumbnailUrl}
-                  duration={formatDuration(shownChecked.sermon.durationSeconds)}
-                />
-                <DayCountPicker
-                  testID="link-preview-days"
-                  value={state.days}
-                  onChange={flow.pickDays}
-                />
-                <QuickCheckToggle
-                  testID="link-preview-quick-check-toggle"
-                  value={state.quickCheck}
-                  onChange={flow.setQuickCheck}
-                />
-              </>
-            )
-          )}
-        </Animated.View>
-      </ScrollView>
-
-      <View style={styles.action}>
-        <Button
-          testID={current.actionTestID}
-          label={current.actionLabel}
-          disabled={!flow.canContinue}
-          onPress={flow.next}
+    <ScrollScreen
+      testID="new-plan-screen"
+      header={
+        <PlanCreationHeader
+          testID={current.key}
+          leading={current.leading}
+          step={current.counter}
+          onPress={flow.leading}
         />
-      </View>
-
-      {/* Only once Preparing has handed back — never over it. */}
-      <CaptionsSheet
-        testID="captions-sheet"
-        visible={flow.noCaptions && focused}
-        onTryAnotherLink={flow.tryAnotherLink}
-        onRemindLater={flow.remindLater}
-      />
-    </Screen>
+      }
+      footer={
+        // The link's verdict at the foot, as a quiz answer's is: why it won't work, or a cheer.
+        flow.linkFeedback ? (
+          <FeedbackPanel
+            testID="new-plan-link-feedback"
+            tone={flow.linkFeedback.tone}
+            title={flow.linkFeedback.title}
+            detail={flow.linkFeedback.detail}
+          >
+            {action}
+          </FeedbackPanel>
+        ) : (
+          <ScreenFooter testID="new-plan-footer">{action}</ScreenFooter>
+        )
+      }
+      overlay={
+        // Only once Preparing has handed back — never over it.
+        <CaptionsSheet
+          testID="captions-sheet"
+          visible={flow.noCaptions && focused}
+          onTryAnotherLink={flow.tryAnotherLink}
+          onRemindLater={flow.remindLater}
+        />
+      }
+      contentStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <Animated.View testID={`${body.key}-body`} style={[styles.body, bodyStyle]}>
+        {renderedStep === 0 ? (
+          searching ? (
+            <>
+              <SFProTitle>Find a sermon</SFProTitle>
+              <SFProBody tone="textMuted">
+                Search by pastor, church, topic, or sermon title.
+              </SFProBody>
+              <SermonSearchField
+                testID="search-sermons-input"
+                value={state.searchQuery}
+                onChangeText={flow.changeSearchQuery}
+                onSubmit={flow.submitSearch}
+                onClear={flow.clearSearch}
+              />
+              <InputModeAction
+                testID="new-plan-paste-instead"
+                icon={Link2}
+                label="Paste a sermon link instead"
+                onPress={flow.showPaste}
+                color={theme.colors.textInactive}
+                strokeWidth={theme.icon.strokeWidth}
+              />
+              <SermonSearchResults
+                testID="sermon-search-results"
+                query={state.searchQuery}
+                results={flow.searchResults}
+                status={flow.searchStatus}
+                selectedId={state.searchSelection?.id ?? null}
+                onSelect={flow.selectSearchResult}
+              />
+            </>
+          ) : (
+            <>
+              <SFProTitle>Paste a sermon link</SFProTitle>
+              <SFProBody tone="textMuted">Any public sermon video with captions works.</SFProBody>
+              <SermonLinkField
+                testID="paste-sermon-link-input"
+                value={state.link}
+                onChangeText={flow.changeLink}
+                onPaste={() => void flow.paste()}
+                invalid={flow.linkFeedback?.tone === "incorrect"}
+              />
+              <InputModeAction
+                testID="new-plan-search-instead"
+                icon={Search}
+                label="Search for a sermon instead"
+                onPress={flow.showSearch}
+                color={theme.colors.textInactive}
+                strokeWidth={theme.icon.strokeWidth}
+              />
+              <HowToCopyCard />
+            </>
+          )
+        ) : (
+          shownChecked && (
+            <>
+              <SermonPreview
+                testID="link-preview-sermon"
+                link={shortenLink(shownChecked.url)}
+                title={shownChecked.sermon.title}
+                church={shownChecked.sermon.church}
+                thumbnailUrl={shownChecked.sermon.thumbnailUrl}
+                duration={formatDuration(shownChecked.sermon.durationSeconds)}
+              />
+              <DayCountPicker
+                testID="link-preview-days"
+                value={state.days}
+                onChange={flow.pickDays}
+              />
+              <QuickCheckToggle
+                testID="link-preview-quick-check-toggle"
+                value={state.quickCheck}
+                onChange={flow.setQuickCheck}
+              />
+            </>
+          )
+        )}
+      </Animated.View>
+    </ScrollScreen>
   );
 }
 
@@ -193,7 +210,6 @@ function InputModeAction({
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1 },
   content: { paddingBottom: space[16] },
   body: { gap: space[16] },
   modeAction: {
@@ -208,5 +224,4 @@ const styles = StyleSheet.create({
     // Room under it, before what the step shows next.
     marginBottom: space[16],
   },
-  action: { paddingBottom: space[8] },
 });

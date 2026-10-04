@@ -7,6 +7,7 @@ import {
   type MilestoneScreenProps,
 } from "@/ui/organisms/MilestoneScreen";
 import { PAGE_INSET, PAGE_TOP } from "@/ui/organisms/Screen";
+import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
 
 function renderMilestone(props: Partial<MilestoneScreenProps> = {}) {
   return render(
@@ -116,5 +117,15 @@ describe("MilestoneScreen", () => {
 
     expect(screen.getByTestId("a-milestone-footer")).toBeVisible();
     expect(screen.getByTestId("a-button")).toBeVisible();
+  });
+
+  it("sets its footer where every pinned footer sits, 12pt between buttons", () => {
+    renderMilestone({ footer: <View testID="a-button" /> });
+
+    expect(screen.getByTestId("a-milestone-footer")).toHaveStyle({
+      paddingBottom: FOOTER_BOTTOM,
+      paddingTop: 16,
+      gap: 12,
+    });
   });
 });

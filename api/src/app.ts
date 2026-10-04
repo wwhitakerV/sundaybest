@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 
 import type { AppContext } from "./app-context.js";
+import { registerApiDocs } from "./docs/openapi.js";
 import { AppError, isAppError } from "./http/errors.js";
 import { registerV1Routes } from "./routes/v1.js";
 
@@ -28,6 +29,10 @@ export async function buildApp(context: AppContext): Promise<FastifyInstance> {
     requestTimeout: 30_000,
   });
 
+  if (context.env.NODE_ENV !== "production") {
+    await registerApiDocs(app);
+  }
+
   app.get("/health/live", async () => ({ status: "ok" as const }));
   app.get("/health/ready", async (_request, reply) => {
     try {
@@ -51,7 +56,9 @@ export async function buildApp(context: AppContext): Promise<FastifyInstance> {
     if (isAppError(error)) {
       appError = error;
     } else if (error instanceof ZodError) {
-      appError = new AppError("VALIDATION_FAILED", "Request or response failed validation", { cause: error });
+      appError = new AppError("VALIDATION_FAILED", "Request or response failed validation", {
+        cause: error,
+      });
     } else {
       appError = new AppError("INTERNAL", "Internal server error", { cause: error });
     }

@@ -32,8 +32,8 @@ export function SermonSearchResult({ result, selected, onPress, testID }: Sermon
         styles.row,
         {
           backgroundColor: pressed ? theme.colors.segmentBackground : theme.colors.surface,
-          borderColor: selected ? theme.colors.text : theme.colors.divider,
-          borderWidth: selected ? 2 : 1,
+          borderColor: selected ? theme.colors.text : "transparent",
+          borderWidth: 2,
         },
       ]}
     >
@@ -43,7 +43,7 @@ export function SermonSearchResult({ result, selected, onPress, testID }: Sermon
         style={styles.thumbnail}
       />
       <View style={styles.copy}>
-        <SFProTitle variant="card" numberOfLines={2}>
+        <SFProTitle variant="smallCardTitle" numberOfLines={2}>
           {sermon.title}
         </SFProTitle>
         {sermon.church && (
@@ -52,13 +52,6 @@ export function SermonSearchResult({ result, selected, onPress, testID }: Sermon
           </SFProBody>
         )}
       </View>
-      {selected && (
-        <View
-          pointerEvents="none"
-          testID={`${testID}-outline`}
-          style={[styles.selectedOutline, { borderColor: theme.colors.text }]}
-        />
-      )}
     </Pressable>
   );
 }
@@ -76,5 +69,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   thumbnail: { width: 116, borderRadius: radius[14] },
-  copy: { flex: 1, gap: space[4], paddingRight: space[4] },
+  copy: {
+    flex: 1,
+    gap: space[4],
+    paddingRight: space[4],
+    paddingTop: space[6],
+    alignSelf: "flex-start",
+  },
 });

@@ -15,3 +15,12 @@ export function normalizeSermonSearchQuery(query: string): string {
 export function sermonSearchQueryKey(query: string): string {
   return normalizeSermonSearchQuery(query).toLocaleLowerCase();
 }
+
+/** Preserve the current result collection when a new search returns the same rows in the same order. */
+export function haveSameSermonSearchResults(
+  current: readonly { id: string }[],
+  next: readonly { id: string }[],
+): boolean {
+  if (current.length !== next.length) return false;
+  return current.every((result, index) => result.id === next[index]?.id);
+}

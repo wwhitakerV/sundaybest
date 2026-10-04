@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ScrollView, StatusBar, StyleSheet } from "react-native";
+import { StatusBar, StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 
-import { Screen } from "@/ui/organisms/Screen";
+import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { TextSizeScope } from "@/ui/typography/TextSizeScope";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { ReadingSheet } from "../components/ReadingSheet";
@@ -53,50 +53,52 @@ export function StudyScreen() {
     <>
       {/* The page, on its paper. The sheet stays in the app's own colours. */}
       <ThemeScope theme={paper}>
-        <Screen testID="study-screen" padded style={styles.clearBottomNav}>
-          <StudyHeader
-            testID="study"
-            day={view.dayNumber}
-            totalDays={view.totalDays}
-            step={view.position.step}
-            pages={view.pages}
-            page={view.position.page}
-            onClose={view.close}
-            onTextSize={() => setReadingOpen(true)}
-          />
-
-          <Animated.View style={[styles.body, bodyStyle]}>
-            {/* A day's reading runs longer than the screen; the keyboard lifts the answer boxes. */}
-            <ScrollView
-              contentContainerStyle={styles.bodyContent}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              automaticallyAdjustKeyboardInsets
-            >
-              {/* The reading's own size; the header and nav stay as they are. */}
-              <TextSizeScope offset={reading.textOffset}>
-                <StudyDriftProvider revealKey={renderedPage} still={reduceMotion}>
-                  <StudyStepBody
-                    stepKey={bodyStep.key}
-                    page={rendered.page}
-                    content={view.content}
-                    answerFor={view.answerFor}
-                    onAnswerChange={view.changeAnswer}
-                    followStyle={followStyle}
-                  />
-                </StudyDriftProvider>
-              </TextSizeScope>
-            </ScrollView>
+        {/* A day's reading runs longer than the screen; the keyboard lifts the answer boxes. */}
+        <ScrollScreen
+          testID="study-screen"
+          style={styles.clearBottomNav}
+          header={
+            <StudyHeader
+              testID="study"
+              day={view.dayNumber}
+              totalDays={view.totalDays}
+              step={view.position.step}
+              pages={view.pages}
+              page={view.position.page}
+              onClose={view.close}
+              onTextSize={() => setReadingOpen(true)}
+            />
+          }
+          overlay={
+            // Floats over the foot of the page, clear of the reading (`clearBottomNav`).
+            <StudyNav
+              testID="study-nav"
+              step={view.position.step}
+              {...(view.isLastPage && { finishLabel: "Finish" })}
+              onPrevious={view.previous}
+              onNext={view.next}
+            />
+          }
+          contentStyle={styles.bodyContent}
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
+        >
+          <Animated.View style={bodyStyle}>
+            {/* The reading's own size; the header and nav stay as they are. */}
+            <TextSizeScope offset={reading.textOffset}>
+              <StudyDriftProvider revealKey={renderedPage} still={reduceMotion}>
+                <StudyStepBody
+                  stepKey={bodyStep.key}
+                  page={rendered.page}
+                  content={view.content}
+                  answerFor={view.answerFor}
+                  onAnswerChange={view.changeAnswer}
+                  followStyle={followStyle}
+                />
+              </StudyDriftProvider>
+            </TextSizeScope>
           </Animated.View>
-
-          <StudyNav
-            testID="study-nav"
-            step={view.position.step}
-            {...(view.isLastPage && { finishLabel: "Finish" })}
-            onPrevious={view.previous}
-            onNext={view.next}
-          />
-        </Screen>
+        </ScrollScreen>
       </ThemeScope>
       <ReadingSheet
         visible={readingOpen}
@@ -114,6 +116,5 @@ export function StudyScreen() {
 
 const styles = StyleSheet.create({
   clearBottomNav: { paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
-  body: { flex: 1 },
   bodyContent: { paddingBottom: space[24] },
 });
