@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Env } from "../config/env.js";
+import { normalizeTranscript } from "../generation/transcript.js";
 import { AppError } from "../http/errors.js";
 import { postJson } from "./http.js";
 import { supadataTranscript } from "./supadata.js";
@@ -47,7 +48,7 @@ export function createTranscriptProvider(env: Env): TranscriptProvider {
             "Transcript provider response failed validation",
           );
         }
-        return parsed.data;
+        return { ...parsed.data, segments: normalizeTranscript(parsed.data.segments) };
       },
     };
   }
@@ -87,7 +88,7 @@ export function createTranscriptProvider(env: Env): TranscriptProvider {
       return {
         language: transcript.lang,
         kind: "captions",
-        segments,
+        segments: normalizeTranscript(segments),
       };
     },
   };

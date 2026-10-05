@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { LogController, type FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 
 import type { AppContext } from "./app-context.js";
@@ -9,10 +9,10 @@ import { registerRateLimit } from "./http/rate-limit.js";
 
 export async function buildApp(context: AppContext): Promise<FastifyInstance> {
   const app = Fastify({
-    trustProxy: context.env.TRUST_PROXY_HOPS === 0 ? false : context.env.TRUST_PROXY_HOPS,
-    disableRequestLogging: true,
+    trustProxy: context.env.TRUST_PROXY_HOPS === 0 ? false : (_address, hop) => hop < context.env.TRUST_PROXY_HOPS,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: {
-      level: context.env.NODE_ENV === "development" ? "debug" : "info",
+      level: context.env.NODE_ENV === "test" ? "silent" : context.env.NODE_ENV === "development" ? "debug" : "info",
       redact: {
         paths: [
           "req.headers.authorization",

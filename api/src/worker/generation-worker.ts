@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 import type postgres from "postgres";
 
 import type { Env } from "../config/env.js";
@@ -20,6 +20,8 @@ import {
 import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
 import type { GeneratedPlan, PlanGenerationProvider } from "../providers/plan-generation-provider.js";
+import { formatTranscript, normalizeTranscript } from "../generation/transcript.js";
+import { validateGeneratedContent } from "../generation/validation.js";
 import type { TranscriptProvider } from "../providers/transcript-provider.js";
 
 interface ClaimedJob {
@@ -83,7 +85,8 @@ export function createGenerationWorker(input: {
             eq(generationJobs.status, "running"),
             eq(generationJobs.lockedBy, workerId),
           ),
-        );
+        )
+        .catch(() => undefined);
     }, heartbeatMs);
     heartbeat.unref();
 
@@ -105,7 +108,7 @@ export function createGenerationWorker(input: {
         await input.db
           .update(generationJobs)
           .set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: new Date() })
-          .where(eq(generationJobs.id, job.id));
+          .where(and(eq(generationJobs.id, job.id), eq(generationJobs.lockedBy, workerId)));
         return;
       }
 
@@ -126,6 +129,13 @@ export function createGenerationWorker(input: {
           church: context.sermon.churchOrChannel,
         });
         await input.db.transaction(async (tx) => {
+          // Concurrent plans for one sermon must reuse one complete transcript,
+          // rather than interleaving segments from separate provider responses.
+          await tx.select({ id: sermonSources.id }).from(sermonSources)
+            .where(eq(sermonSources.id, context.sermon.id)).for("update");
+          const existing = await tx.select({ id: sermonTranscriptSegments.id }).from(sermonTranscriptSegments)
+            .where(eq(sermonTranscriptSegments.sermonId, context.sermon.id)).limit(1);
+          if (existing.length > 0) return;
           for (const [index, segment] of transcript.segments.entries()) {
             await tx.insert(sermonTranscriptSegments).values({
               sermonId: context.sermon.id,
@@ -152,30 +162,30 @@ export function createGenerationWorker(input: {
       }
 
       await setGenerationStatus(input.db, context.generation.id, "findingScripture");
-      const transcriptText = transcriptRows.map((segment) => segment.text).join("\n");
+      const transcriptSegments = normalizeTranscript(transcriptRows);
+      const transcriptText = formatTranscript(transcriptSegments);
       await setGenerationStatus(input.db, context.generation.id, "writingDays");
-      const generated = await input.generator.generate({
+      const generationInput = {
         sermon: {
           externalId: context.sermon.externalId,
           canonicalUrl: context.sermon.canonicalUrl,
           title: context.sermon.title,
           church: context.sermon.churchOrChannel,
+          durationSeconds: context.sermon.durationSeconds,
         },
         transcript: transcriptText,
+        transcriptSegments,
         lengthDays: context.generation.requestedLength,
         quickCheckEnabled: context.generation.quickCheckEnabled,
-      });
-      await validateGeneratedContent(generated, transcriptText, input.bible);
+      };
+      const generated = await input.generator.generate(generationInput);
+      await validateGeneratedContent(generated, generationInput, input.bible);
       if (context.generation.quickCheckEnabled) {
         await setGenerationStatus(input.db, context.generation.id, "buildingQuiz");
       }
-      await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, generated);
-      await input.db
-        .update(generationJobs)
-        .set({ status: "completed", lockedAt: null, lockedBy: null, updatedAt: new Date(), lastError: null })
-        .where(eq(generationJobs.id, job.id));
+      await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, generated, job.id, workerId);
     } catch (cause) {
-      await handleFailure(input.db, job, input.env, cause);
+      await handleFailure(input.db, job, input.env, cause, workerId);
     } finally {
       clearInterval(heartbeat);
     }
@@ -206,12 +216,16 @@ async function setGenerationStatus(
   await db
     .update(planGenerations)
     .set({ status, updatedAt: new Date(), ...(extra.startedAt ? { startedAt: extra.startedAt } : {}) })
-    .where(eq(planGenerations.id, generationId));
+    .where(and(eq(planGenerations.id, generationId), ne(planGenerations.status, "completed")));
 }
 
-async function persistGeneratedPlan(db: Database, planId: string, generationId: string, generated: GeneratedPlan): Promise<void> {
+async function persistGeneratedPlan(db: Database, planId: string, generationId: string, generated: GeneratedPlan, jobId: string, workerId: string): Promise<void> {
   const now = new Date();
   await db.transaction(async (tx) => {
+    const [claim] = await tx.select().from(generationJobs).where(eq(generationJobs.id, jobId)).for("update");
+    if (!claim || claim.status !== "running" || claim.lockedBy !== workerId) {
+      throw new AppError("INTERNAL", "Generation worker no longer owns this job");
+    }
     await tx.delete(planDays).where(eq(planDays.planId, planId));
 
     for (const day of generated.days) {
@@ -314,78 +328,30 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
         updatedAt: now,
       })
       .where(eq(planGenerations.id, generationId));
+    await tx.update(generationJobs).set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: now })
+      .where(eq(generationJobs.id, jobId));
   });
 }
 
-async function validateGeneratedContent(
-  generated: GeneratedPlan,
-  transcriptText: string,
-  bible: BibleProvider,
-): Promise<void> {
-  const transcript = normalizeSourceText(transcriptText);
-  const references = new Set<string>();
-
-  for (const day of generated.days) {
-    if (day.sermonQuote && !transcript.includes(normalizeSourceText(day.sermonQuote))) {
-      throw new AppError("INTERNAL", `Generated sermon quote for day ${day.dayNumber} is not present in the transcript`);
-    }
-    references.add(day.scripture.reference);
-  }
-
-  // Validate every generated reference against the configured Bible source
-  // before the content graph is published. KJV is used as the validation
-  // translation so plan content remains translation-neutral.
-  for (const reference of references) {
-    await bible.getPassage({ reference, translation: "KJV" });
-  }
-}
-
-function normalizeSourceText(value: string): string {
-  return value
-    .normalize("NFKC")
-    .toLowerCase()
-    .replace(/[“”„‟]/g, '"')
-    .replace(/[‘’‚‛]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unknown): Promise<void> {
+async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unknown, workerId: string): Promise<void> {
   const message = cause instanceof Error ? cause.message.slice(0, 1000) : "Unknown generation failure";
   const shouldRetry = job.attempts < env.WORKER_MAX_ATTEMPTS;
-  if (shouldRetry) {
-    const delaySeconds = Math.min(60, 5 * 2 ** Math.max(0, job.attempts - 1));
-    await db
-      .update(generationJobs)
-      .set({
-        status: "queued",
-        availableAt: new Date(Date.now() + delaySeconds * 1000),
-        lockedAt: null,
-        lockedBy: null,
-        lastError: message,
-        updatedAt: new Date(),
-      })
-      .where(eq(generationJobs.id, job.id));
-    return;
-  }
-
-  const publicFailure = toPublicGenerationFailure(cause);
-  const now = new Date();
   await db.transaction(async (tx) => {
-    await tx
-      .update(generationJobs)
-      .set({ status: "failed", lockedAt: null, lockedBy: null, lastError: message, updatedAt: now })
+    const [claim] = await tx.select().from(generationJobs).where(eq(generationJobs.id, job.id)).for("update");
+    // A recovered job belongs to its new worker; an old worker cannot requeue it.
+    if (!claim || claim.status !== "running" || claim.lockedBy !== workerId) return;
+    if (shouldRetry) {
+      const delaySeconds = Math.min(60, 5 * 2 ** Math.max(0, job.attempts - 1));
+      await tx.update(generationJobs).set({ status: "queued", availableAt: new Date(Date.now() + delaySeconds * 1000),
+        lockedAt: null, lockedBy: null, lastError: message, updatedAt: new Date() }).where(eq(generationJobs.id, job.id));
+      return;
+    }
+    const failure = toPublicGenerationFailure(cause);
+    const now = new Date();
+    await tx.update(generationJobs).set({ status: "failed", lockedAt: null, lockedBy: null, lastError: message, updatedAt: now })
       .where(eq(generationJobs.id, job.id));
-    await tx
-      .update(planGenerations)
-      .set({
-        status: "failed",
-        errorCode: publicFailure.code,
-        errorMessage: publicFailure.message,
-        finishedAt: now,
-        updatedAt: now,
-      })
-      .where(eq(planGenerations.id, job.generationId));
+    await tx.update(planGenerations).set({ status: "failed", errorCode: failure.code, errorMessage: failure.message, finishedAt: now, updatedAt: now })
+      .where(and(eq(planGenerations.id, job.generationId), ne(planGenerations.status, "completed")));
   });
 }
 

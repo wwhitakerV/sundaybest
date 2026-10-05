@@ -11,7 +11,7 @@ const bibleGatewayResponseSchema = z.object({
   provider: z.string().min(1).max(100),
   providerVersion: z.string().max(100).nullable().optional(),
   cacheAllowed: z.boolean(),
-  verses: z.array(z.object({ number: z.number().int().positive(), text: z.string().min(1) })).min(1),
+  verses: z.array(z.object({ number: z.number().int().positive(), text: z.string().trim().min(1) })).min(1),
 });
 
 export type BiblePassage = z.infer<typeof bibleGatewayResponseSchema>;
@@ -56,7 +56,11 @@ export function createBibleProvider(env: Env): BibleProvider {
       if (normalizeReference(parsed.data.reference) !== normalizeReference(input.reference)) {
         throw new AppError("INTERNAL", "Bible provider returned a different Scripture reference");
       }
-      return parsed.data;
+      const numbers = parsed.data.verses.map((verse) => verse.number);
+      if (new Set(numbers).size !== numbers.length || numbers.some((number, index) => index > 0 && number !== numbers[index - 1]! + 1)) {
+        throw new AppError("INTERNAL", "Bible provider returned duplicate or unordered verses");
+      }
+      return { ...parsed.data, verses: parsed.data.verses.map((verse) => ({ ...verse, text: verse.text.trim() })) };
     },
   };
 }

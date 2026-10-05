@@ -104,43 +104,46 @@ export function createGenerationService(db: Database) {
       }
 
       const now = new Date();
-      const [updated] = await db
-        .update(planGenerations)
-        .set({
-          status: "preparing",
-          attemptCount: generation.attemptCount + 1,
-          errorCode: null,
-          errorMessage: null,
-          startedAt: null,
-          finishedAt: null,
-          updatedAt: now,
-        })
-        .where(eq(planGenerations.id, generation.id))
-        .returning();
-
-      await db
-        .insert(generationJobs)
-        .values({
-          generationId: generation.id,
-          status: "queued",
-          attempts: 0,
-          availableAt: now,
-        })
-        .onConflictDoUpdate({
-          target: generationJobs.generationId,
-          set: {
+      return db.transaction(async (tx) => {
+        const [updated] = await tx
+          .update(planGenerations)
+          .set({
+            status: "preparing",
+            attemptCount: generation.attemptCount + 1,
+            errorCode: null,
+            errorMessage: null,
+            startedAt: null,
+            finishedAt: null,
+            updatedAt: now,
+          })
+          .where(and(eq(planGenerations.id, generation.id), eq(planGenerations.status, "failed")))
+          .returning();
+  
+        if (!updated) throw new AppError("CONFLICT", "Generation was already retried");
+  
+        await tx
+          .insert(generationJobs)
+          .values({
+            generationId: generation.id,
             status: "queued",
             attempts: 0,
             availableAt: now,
-            lockedAt: null,
-            lockedBy: null,
-            lastError: null,
-            updatedAt: now,
-          },
-        });
-
-      if (!updated) throw new AppError("INTERNAL");
-      return toGeneration(updated, row.planTitle);
+          })
+          .onConflictDoUpdate({
+            target: generationJobs.generationId,
+            set: {
+              status: "queued",
+              attempts: 0,
+              availableAt: now,
+              lockedAt: null,
+              lockedBy: null,
+              lastError: null,
+              updatedAt: now,
+            },
+          });
+  
+        return toGeneration(updated, row.planTitle);
+      });
     },
   };
 }

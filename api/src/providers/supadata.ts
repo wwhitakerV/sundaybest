@@ -137,6 +137,7 @@ export async function supadataTranscript(env: Env, urlValue: string): Promise<Su
   url.searchParams.set("url", urlValue);
   url.searchParams.set("lang", "en");
   url.searchParams.set("mode", "auto");
+  url.searchParams.set("text", "false");
 
   const raw = await getJson(env, url, 45_000, "TRANSCRIPT_UNAVAILABLE");
   const immediate = transcriptSchema.safeParse(raw);

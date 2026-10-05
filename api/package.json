@@ -14,11 +14,12 @@
     "start": "node --enable-source-maps dist/server.js",
     "start:worker": "node --enable-source-maps dist/worker.js",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "node --import tsx --test tests/*.test.ts",
     "db:push": "drizzle-kit push",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
-    "validate": "npm run typecheck && npm test && npm run build"
+    "validate": "npm run typecheck && npm test && npm run build",
+    "smoke:plan": "node --import tsx scripts/smoke-plan.ts"
   },
   "dependencies": {
     "dotenv": "17.4.2",
@@ -26,10 +27,12 @@
     "fastify": "5.12.5",
     "jose": "6.2.12",
     "node-app-attest": "1.0.1",
+    "openai": "7.28.0",
     "postgres": "3.4.9",
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@types/node": "^24.10.0",
     "drizzle-kit": "0.31.10",
     "tsx": "^4.20.6",
