@@ -7,6 +7,12 @@ import {
   usePlansQuery,
   useUserSettingsQuery,
 } from "@/core/api/queries";
+import {
+  getMeResponseSchema,
+  getSettingsResponseSchema,
+  listPlansResponseSchema,
+} from "@/core/api/contracts";
+import { offlineCacheKeys, persistServerCache } from "@/core/api/offline-cache";
 
 /**
  * Keeps the native splash over React until the first destination is genuinely
@@ -30,6 +36,32 @@ export function LaunchSplashCoordinator({ children }: { children: ReactNode }) {
   const homeMounted = pathname === "/home" || pathname === "/(tabs)/home";
   const destinationReady = !onboarded || homeMounted;
   const ready = serverBootstrapDone && destinationReady;
+
+  useEffect(() => {
+    if (!me.data) return;
+    void persistServerCache({
+      cacheKey: offlineCacheKeys.me,
+      resourceType: "me",
+      schema: getMeResponseSchema,
+      value: me.data,
+    });
+    if (settings.data) {
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.settings,
+        resourceType: "settings",
+        schema: getSettingsResponseSchema,
+        value: settings.data,
+      });
+    }
+    if (plans.data) {
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.plans,
+        resourceType: "plans",
+        schema: listPlansResponseSchema,
+        value: plans.data,
+      });
+    }
+  }, [me.data, plans.data, settings.data]);
 
   useEffect(() => {
     if (!ready || hidden.current) return;

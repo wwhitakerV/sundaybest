@@ -40,7 +40,7 @@ Expo Go cannot mint App Attest credentials for the SundayBest bundle. With `NODE
 
 ## Mobile integration
 
-The API paths and response shapes match `src/core/api/contracts/*` and `src/core/api/sundaybest-api.ts` in the repo root. User identity, onboarding, settings, reminders, Home plan data, Plans, Plan Detail, and Progress are now API-backed through TanStack Query. Daily Study and Quick Check content/progress remain on the legacy local path until the next migration slice, so real server plan IDs are deliberately not sent into that store.
+The API paths and response shapes match `src/core/api/contracts/*` and `src/core/api/sundaybest-api.ts` in the repo root. User identity, settings, plans, progress, Daily Study, Quick Check, sermon discovery, and generation are API-backed through TanStack Query. Phase 5 adds an explicit SQLite/SQLCipher resource cache plus an ordered idempotent mutation outbox for offline study progress; private reflection answers remain device-only and never enter the outbox.
 
 The API uses `X-Client-Timezone` (IANA timezone, e.g. `America/New_York`) to enforce daily plan pacing. The mobile transport sends this automatically. For a physical iPhone in Expo Go, point `EXPO_PUBLIC_API_URL` at the Mac's reachable Bonjour/LAN host (for example `http://Walters-MacBook-Pro.local:4100`).
 
@@ -52,14 +52,20 @@ The server verifies attestation objects, stores the attested public key, verifie
 
 ## External content providers
 
-The backend intentionally does **not** invent a transcript, copyrighted Bible translation, or AI-generated study content in production. These adapters are explicit configuration boundaries:
+YouTube discovery, metadata, and transcripts are routed through Supadata. Set this only on the API/worker process:
 
-- `TRANSCRIPT_PROVIDER_URL`
+- `SUPADATA_API_KEY` — required for live YouTube search/resolve/transcripts
+- `SUPADATA_BASE_URL` — defaults to `https://api.supadata.ai/v1`
+
+The worker uses Supadata's universal `/transcript` endpoint in `auto` mode and handles both immediate transcript responses and asynchronous transcript jobs. Transcript segments are persisted once per sermon, so regenerating or sharing the same sermon does not spend another transcript request unless the local transcript is absent. Search uses `/youtube/search`; single-video metadata uses `/metadata`.
+
+The remaining explicit provider boundaries are:
+
 - `PLAN_GENERATION_PROVIDER_URL`
 - `BIBLE_PROVIDER_URL`
-- `SUPADATA_API_KEY` — optional during local development; enables live YouTube results for `GET /v1/sermons/search` in addition to the local sermon catalog
+- `TRANSCRIPT_PROVIDER_URL` — optional override if a deployment intentionally uses a custom transcript gateway instead of Supadata
 
-Each can point at your chosen provider or at a tiny internal gateway. The provider contracts live in `src/providers/` and are Zod-validated before data is persisted. Development has a deterministic plan generator only for exercising the job pipeline; it is blocked in production.
+All provider responses are validated before persistence. Development still has a deterministic plan generator only for exercising the job pipeline; it is blocked in production.
 
 ## Data rules enforced server-side
 

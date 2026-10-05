@@ -1,13 +1,6 @@
-import { z } from "zod";
-
 import type { Env } from "../config/env.js";
 import { AppError } from "../http/errors.js";
-
-const oEmbedSchema = z.object({
-  title: z.string().min(1),
-  author_name: z.string().min(1).optional(),
-  thumbnail_url: z.url().optional(),
-});
+import { supadataMetadata } from "./supadata.js";
 
 export interface ResolvedYouTubeSermon {
   externalId: string;
@@ -15,6 +8,8 @@ export interface ResolvedYouTubeSermon {
   title: string;
   church: string | null;
   thumbnailUrl: string | null;
+  durationSeconds: number | null;
+  publishedOn: string | null;
 }
 
 export function parseYouTubeVideoId(rawUrl: string): string | null {
@@ -34,33 +29,45 @@ export function parseYouTubeVideoId(rawUrl: string): string | null {
   return null;
 }
 
-export async function resolveYouTubeSermon(rawUrl: string, env: Env): Promise<ResolvedYouTubeSermon> {
+export async function resolveYouTubeSermon(
+  rawUrl: string,
+  env: Env,
+): Promise<ResolvedYouTubeSermon> {
   const externalId = parseYouTubeVideoId(rawUrl);
-  if (!externalId) throw new AppError("SERMON_UNSUPPORTED", "SundayBest currently supports YouTube sermon URLs only");
-  const canonicalUrl = `https://www.youtube.com/watch?v=${externalId}`;
-  const endpoint = new URL(env.YOUTUBE_OEMBED_BASE_URL);
-  endpoint.searchParams.set("url", canonicalUrl);
-  endpoint.searchParams.set("format", "json");
-
-  let response: Response;
-  try {
-    response = await fetch(endpoint, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(10_000) });
-  } catch (cause) {
-    throw new AppError("SERMON_UNAVAILABLE", "Could not reach YouTube metadata", { cause });
+  if (!externalId) {
+    throw new AppError(
+      "SERMON_UNSUPPORTED",
+      "SundayBest currently supports YouTube sermon URLs only",
+    );
   }
-  if (!response.ok) throw new AppError("SERMON_UNAVAILABLE", "YouTube video is unavailable");
-  const parsed = oEmbedSchema.safeParse(await response.json());
-  if (!parsed.success) throw new AppError("SERMON_UNAVAILABLE", "YouTube metadata response was invalid");
+
+  const canonicalUrl = `https://www.youtube.com/watch?v=${externalId}`;
+  const metadata = await supadataMetadata(env, canonicalUrl);
+  if (metadata.id !== externalId) {
+    throw new AppError("SERMON_UNAVAILABLE", "Supadata returned metadata for a different video");
+  }
+  if (!metadata.title) {
+    throw new AppError("SERMON_UNAVAILABLE", "This YouTube video does not have a usable title");
+  }
+
   return {
     externalId,
     canonicalUrl,
-    title: parsed.data.title,
-    church: parsed.data.author_name ?? null,
-    thumbnailUrl: parsed.data.thumbnail_url ?? null,
+    title: metadata.title,
+    church: metadata.author.displayName ?? metadata.author.username ?? null,
+    thumbnailUrl: metadata.media.type === "video" ? metadata.media.thumbnailUrl ?? null : null,
+    durationSeconds: metadata.media.type === "video" ? metadata.media.duration ?? null : null,
+    publishedOn: normalizeDate(metadata.createdAt),
   };
 }
 
 function cleanId(value: string | null | undefined): string | null {
   if (!value || !/^[A-Za-z0-9_-]{6,32}$/.test(value)) return null;
   return value;
+}
+
+function normalizeDate(value: string | undefined): string | null {
+  if (!value) return null;
+  const match = /^\d{4}-\d{2}-\d{2}/.exec(value);
+  return match?.[0] ?? null;
 }

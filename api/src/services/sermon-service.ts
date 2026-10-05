@@ -14,13 +14,12 @@ export function createSermonService(db: Database, env: Env) {
     church: string | null;
     thumbnailUrl: string | null;
     publishedOn?: string | null;
+    durationSeconds?: number | null;
   }) {
     const existing = await db
       .select()
       .from(sermonSources)
-      .where(
-        and(eq(sermonSources.platform, "youtube"), eq(sermonSources.externalId, input.externalId)),
-      )
+      .where(and(eq(sermonSources.platform, "youtube"), eq(sermonSources.externalId, input.externalId)))
       .limit(1);
     const now = new Date();
     let row = existing[0];
@@ -33,6 +32,7 @@ export function createSermonService(db: Database, env: Env) {
           churchOrChannel: input.church,
           thumbnailUrl: input.thumbnailUrl,
           ...(input.publishedOn !== undefined ? { publishedOn: input.publishedOn } : {}),
+          ...(input.durationSeconds !== undefined ? { durationSeconds: input.durationSeconds } : {}),
           metadataFetchedAt: now,
           updatedAt: now,
         })
@@ -49,6 +49,7 @@ export function createSermonService(db: Database, env: Env) {
           churchOrChannel: input.church,
           thumbnailUrl: input.thumbnailUrl,
           ...(input.publishedOn !== undefined ? { publishedOn: input.publishedOn } : {}),
+          ...(input.durationSeconds !== undefined ? { durationSeconds: input.durationSeconds } : {}),
           metadataFetchedAt: now,
         })
         .returning();

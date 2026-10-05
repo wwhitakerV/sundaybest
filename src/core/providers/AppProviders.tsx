@@ -9,6 +9,8 @@ import { PlanBuilder } from "@/core/plan-builder";
 import { AppStoreProvider } from "@/core/store";
 import { LaunchSplashCoordinator } from "./LaunchSplashCoordinator";
 import { LegacyPreferencesBridge } from "./LegacyPreferencesBridge";
+import { OfflineCacheHydrator } from "./OfflineCacheHydrator";
+import { OfflineSyncProvider } from "./OfflineSyncProvider";
 import { ServerPreferences } from "./ServerPreferences";
 
 // Side-effect import. `env.ts` validates and freezes the environment at module
@@ -37,15 +39,19 @@ export function AppProviders({ children, fallback = null }: AppProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ApiProvider>
-        <ServerPreferences>
-          <AppStoreProvider>
-            <LegacyPreferencesBridge />
-            <PlanBuilder />
-            <LaunchSplashCoordinator>{children}</LaunchSplashCoordinator>
-          </AppStoreProvider>
-        </ServerPreferences>
-      </ApiProvider>
+      <OfflineCacheHydrator>
+        <ApiProvider>
+          <OfflineSyncProvider>
+            <ServerPreferences>
+              <AppStoreProvider>
+                <LegacyPreferencesBridge />
+                <PlanBuilder />
+                <LaunchSplashCoordinator>{children}</LaunchSplashCoordinator>
+              </AppStoreProvider>
+            </ServerPreferences>
+          </OfflineSyncProvider>
+        </ApiProvider>
+      </OfflineCacheHydrator>
     </QueryClientProvider>
   );
 }

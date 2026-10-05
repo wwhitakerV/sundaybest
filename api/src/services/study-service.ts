@@ -52,11 +52,13 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
         .where(and(eq(scriptureTexts.referenceId, scripture.id), eq(scriptureTexts.translation, translation)))
         .limit(1);
       let verses: Array<{ number: number; text: string }>;
+      let scriptureCacheAllowed = textRows[0] !== undefined;
       if (textRows[0]) {
         verses = textRows[0].verses;
       } else {
         const passage = await bibleProvider.getPassage({ reference: scripture.canonicalReference, translation });
         verses = passage.verses;
+        scriptureCacheAllowed = passage.cacheAllowed;
         if (passage.cacheAllowed) {
           await db
             .insert(scriptureTexts)
@@ -101,6 +103,7 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
           verseEnd: scripture.verseEnd,
           translation,
           verses,
+          cacheAllowed: scriptureCacheAllowed,
         },
         reflectionPrompts: promptRows.map((prompt) => ({ id: prompt.id, order: prompt.position, question: prompt.question })),
         prayer: { id: prayer.id, title: prayer.title, text: prayer.text },

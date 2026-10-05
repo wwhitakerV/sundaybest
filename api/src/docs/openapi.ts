@@ -647,7 +647,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           operationId: "searchSermons",
           summary: "Search sermon videos",
           description:
-            "Searches the SundayBest sermon catalog and, when YOUTUBE_API_KEY is configured, YouTube as well.",
+            "Searches the SundayBest sermon catalog and, when SUPADATA_API_KEY is configured, YouTube through Supadata.",
           security: auth,
           parameters: [
             {

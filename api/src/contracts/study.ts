@@ -23,6 +23,8 @@ export const scriptureVerseSchema = z.object({
 export const translatedScriptureSchema = scriptureReferenceSchema.extend({
   translation: bibleTranslationSchema,
   verses: z.array(scriptureVerseSchema).min(1),
+  /** Whether the licensed provider permits durable on-device caching. */
+  cacheAllowed: z.boolean(),
 });
 
 export const studyDaySchema = z.object({

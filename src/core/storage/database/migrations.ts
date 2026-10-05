@@ -110,6 +110,51 @@ export const MIGRATIONS: readonly Migration[] = [
       );
     },
   },
+  {
+    version: 3,
+    name: "scope-offline-server-state-to-user",
+    async up(db) {
+      // v1 created these tables before the real sync layer shipped. Rebuild
+      // them with an explicit user scope so a future account switch on the
+      // same device can never surface another user's cached server data or
+      // replay another user's queued mutations. No production release wrote
+      // these tables before this migration, so old rows are intentionally
+      // discarded rather than assigned an unverifiable owner.
+      await db.execute("DROP TABLE IF EXISTS api_resource_cache");
+      await db.execute(`
+        CREATE TABLE api_resource_cache (
+          scope_id TEXT NOT NULL,
+          cache_key TEXT NOT NULL,
+          resource_type TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          server_updated_at TEXT,
+          cached_at TEXT NOT NULL,
+          PRIMARY KEY (scope_id, cache_key)
+        )
+      `);
+      await db.execute(
+        "CREATE INDEX api_resource_cache_scope_type_idx ON api_resource_cache(scope_id, resource_type)",
+      );
+
+      await db.execute("DROP TABLE IF EXISTS mutation_outbox");
+      await db.execute(`
+        CREATE TABLE mutation_outbox (
+          id TEXT PRIMARY KEY NOT NULL,
+          scope_id TEXT NOT NULL,
+          kind TEXT NOT NULL,
+          entity_key TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          idempotency_key TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL,
+          attempt_count INTEGER NOT NULL DEFAULT 0,
+          last_error_code TEXT
+        )
+      `);
+      await db.execute(
+        "CREATE INDEX mutation_outbox_scope_created_idx ON mutation_outbox(scope_id, created_at)",
+      );
+    },
+  },
 ];
 
 export class MigrationError extends Error {

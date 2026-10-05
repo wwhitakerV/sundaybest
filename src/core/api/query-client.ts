@@ -6,11 +6,12 @@ import { ApiError } from "./api-error";
  * TanStack Query, configured for a security posture rather than for
  * convenience.
  *
- * **Nothing is persisted.** No persister is installed and no persistence
- * package is a dependency, so cached query data lives in memory and dies with
- * the process. `query-client.test.ts` asserts that no persistence package is
- * installed, which means adding one later breaks a test — persistence of API
- * responses to disk is a decision that needs an ADR, not a convenient default.
+ * TanStack Query remains the in-memory source of server state while the app is
+ * running. Phase 5 adds an explicit, schema-validated SQLite resource cache
+ * underneath selected query functions for offline reads; there is still no
+ * generic TanStack cache persister. That separation keeps private/local data
+ * and server data ownership explicit instead of serialising the entire query
+ * cache indiscriminately.
  */
 
 /** One retry, matching the API client's own policy. */

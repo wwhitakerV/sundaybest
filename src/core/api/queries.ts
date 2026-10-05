@@ -15,9 +15,28 @@ import type {
   UpdateReminderRequest,
   UpdateSettingsRequest,
 } from "./contracts";
+import {
+  getMeResponseSchema,
+  getSettingsResponseSchema,
+  getRemindersResponseSchema,
+  listPlansResponseSchema,
+  getPlanResponseSchema,
+  getStudyDayResponseSchema,
+  getQuizAttemptResponseSchema,
+  progressResponseSchema,
+} from "./contracts";
 import { createIdempotencyKey } from "./idempotency";
 import { apiQueryKeys } from "./query-keys";
 import { useSundayBestApi } from "./ApiProvider";
+import {
+  cachedCurrentUserQuery,
+  cachedServerQuery,
+  isOfflineTransportFailure,
+  offlineCacheKeys,
+  persistServerCache,
+} from "./offline-cache";
+import { enqueueMutation } from "@/core/storage/mutation-outbox";
+import { removeCachedResource } from "@/core/storage/api-resource-cache";
 
 type MeEnvelope = { user: ApiUser };
 type SettingsEnvelope = { settings: ApiUserSettings };
@@ -28,24 +47,55 @@ type StudyDayEnvelope = { day: ApiStudyDay };
 
 export function useCurrentUserQuery() {
   const api = useSundayBestApi();
-  return useQuery({ queryKey: apiQueryKeys.me, queryFn: () => api.user.getMe() });
+  return useQuery({
+    queryKey: apiQueryKeys.me,
+    queryFn: () =>
+      cachedCurrentUserQuery({
+        schema: getMeResponseSchema,
+        fetcher: () => api.user.getMe(),
+      }),
+  });
 }
 
 export function useUserSettingsQuery() {
   const api = useSundayBestApi();
-  return useQuery({ queryKey: apiQueryKeys.settings, queryFn: () => api.settings.get() });
+  return useQuery({
+    queryKey: apiQueryKeys.settings,
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.settings,
+        resourceType: "settings",
+        schema: getSettingsResponseSchema,
+        fetcher: () => api.settings.get(),
+      }),
+  });
 }
 
 export function useRemindersQuery() {
   const api = useSundayBestApi();
-  return useQuery({ queryKey: apiQueryKeys.reminders, queryFn: () => api.reminders.list() });
+  return useQuery({
+    queryKey: apiQueryKeys.reminders,
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.reminders,
+        resourceType: "reminders",
+        schema: getRemindersResponseSchema,
+        fetcher: () => api.reminders.list(),
+      }),
+  });
 }
 
 export function usePlansQuery(enabled = true) {
   const api = useSundayBestApi();
   return useQuery({
     queryKey: apiQueryKeys.plans,
-    queryFn: () => api.plans.list(),
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.plans,
+        resourceType: "plans",
+        schema: listPlansResponseSchema,
+        fetcher: () => api.plans.list(),
+      }),
     enabled,
   });
 }
@@ -54,7 +104,14 @@ export function usePlanQuery(planId: string) {
   const api = useSundayBestApi();
   return useQuery({
     queryKey: apiQueryKeys.plan(planId),
-    queryFn: () => api.plans.get(planId),
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.plan(planId),
+        resourceType: "plan",
+        schema: getPlanResponseSchema,
+        fetcher: () => api.plans.get(planId),
+        serverUpdatedAt: (value) => value.plan.updatedAt,
+      }),
     enabled: planId.length > 0,
   });
 }
@@ -63,7 +120,14 @@ export function useStudyDayQuery(planId: string, dayNumber: number) {
   const api = useSundayBestApi();
   return useQuery({
     queryKey: apiQueryKeys.studyDay(planId, dayNumber),
-    queryFn: () => api.study.getDay(planId, dayNumber),
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.studyDay(planId, dayNumber),
+        resourceType: "studyDay",
+        schema: getStudyDayResponseSchema,
+        fetcher: () => api.study.getDay(planId, dayNumber),
+        cacheable: (value) => value.day.scripture.cacheAllowed,
+      }),
     enabled: planId.length > 0 && dayNumber > 0,
   });
 }
@@ -72,7 +136,13 @@ export function useQuizSessionQuery(quizId: string, enabled = true) {
   const api = useSundayBestApi();
   return useQuery({
     queryKey: apiQueryKeys.quizSession(quizId),
-    queryFn: () => api.quizzes.getCurrentAttempt(quizId),
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.quizSession(quizId),
+        resourceType: "quizSession",
+        schema: getQuizAttemptResponseSchema,
+        fetcher: () => api.quizzes.getCurrentAttempt(quizId),
+      }),
     enabled: enabled && quizId.length > 0,
     retry: false,
   });
@@ -82,7 +152,13 @@ export function useProgressQuery(weekStart: string, enabled = true) {
   const api = useSundayBestApi();
   return useQuery({
     queryKey: apiQueryKeys.progress(weekStart),
-    queryFn: () => api.progress.get(weekStart),
+    queryFn: () =>
+      cachedServerQuery({
+        cacheKey: offlineCacheKeys.progress(weekStart),
+        resourceType: "progress",
+        schema: progressResponseSchema,
+        fetcher: () => api.progress.get(weekStart),
+      }),
     enabled,
   });
 }
@@ -163,7 +239,15 @@ export function useCompleteOnboardingMutation() {
 
   return useMutation({
     mutationFn: () => api.user.completeOnboarding(createIdempotencyKey("user:onboarding")),
-    onSuccess: (data) => queryClient.setQueryData<MeEnvelope>(apiQueryKeys.me, data),
+    onSuccess: (data) => {
+      queryClient.setQueryData<MeEnvelope>(apiQueryKeys.me, data);
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.me,
+        resourceType: "me",
+        schema: getMeResponseSchema,
+        value: data,
+      });
+    },
   });
 }
 
@@ -172,8 +256,29 @@ export function useUpdateSettingsMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: UpdateSettingsRequest) =>
-      api.settings.update(input, createIdempotencyKey("settings:update")),
+    mutationFn: async (input: UpdateSettingsRequest) => {
+      const idempotencyKey = createIdempotencyKey("settings:update");
+      try {
+        return await api.settings.update(input, idempotencyKey);
+      } catch (cause) {
+        if (!isOfflineTransportFailure(cause)) throw cause;
+        const current = queryClient.getQueryData<SettingsEnvelope>(apiQueryKeys.settings);
+        if (!current) throw cause;
+        await enqueueMutation({
+          kind: "settings.update",
+          entityKey: "settings",
+          payload: { input },
+          idempotencyKey,
+        });
+        return {
+          settings: {
+            ...current.settings,
+            ...input,
+            updatedAt: new Date().toISOString(),
+          },
+        };
+      }
+    },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: apiQueryKeys.settings });
       const previous = queryClient.getQueryData<SettingsEnvelope>(apiQueryKeys.settings);
@@ -189,7 +294,15 @@ export function useUpdateSettingsMutation() {
         queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, context.previous);
       }
     },
-    onSuccess: (data) => queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, data),
+    onSuccess: (data) => {
+      queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, data);
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.settings,
+        resourceType: "settings",
+        schema: getSettingsResponseSchema,
+        value: data,
+      });
+    },
   });
 }
 
@@ -198,8 +311,31 @@ export function useUpdateReminderMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ kind, input }: { kind: ReminderKind; input: UpdateReminderRequest }) =>
-      api.reminders.update(kind, input, createIdempotencyKey(`reminder:${kind}`)),
+    mutationFn: async ({ kind, input }: { kind: ReminderKind; input: UpdateReminderRequest }) => {
+      const idempotencyKey = createIdempotencyKey(`reminder:${kind}`);
+      try {
+        return await api.reminders.update(kind, input, idempotencyKey);
+      } catch (cause) {
+        if (!isOfflineTransportFailure(cause)) throw cause;
+        const current = queryClient
+          .getQueryData<RemindersEnvelope>(apiQueryKeys.reminders)
+          ?.reminders.find((item) => item.kind === kind);
+        if (!current) throw cause;
+        await enqueueMutation({
+          kind: "reminder.update",
+          entityKey: kind,
+          payload: { kind, input },
+          idempotencyKey,
+        });
+        return {
+          reminder: {
+            ...current,
+            ...input,
+            updatedAt: new Date().toISOString(),
+          },
+        };
+      }
+    },
     onMutate: async ({ kind, input }) => {
       await queryClient.cancelQueries({ queryKey: apiQueryKeys.reminders });
       const previous = queryClient.getQueryData<RemindersEnvelope>(apiQueryKeys.reminders);
@@ -227,6 +363,12 @@ export function useUpdateReminderMutation() {
             : [...current.reminders, reminder],
         };
       });
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.reminders,
+        resourceType: "reminders",
+        schema: getRemindersResponseSchema,
+        value: queryClient.getQueryData<RemindersEnvelope>(apiQueryKeys.reminders),
+      });
     },
   });
 }
@@ -245,6 +387,14 @@ export function useStartPlanMutation() {
           ? { plans: current.plans.map((item) => (item.id === plan.id ? plan : item)) }
           : current,
       );
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.plan(plan.id),
+        resourceType: "plan",
+        schema: getPlanResponseSchema,
+        value: { plan },
+        serverUpdatedAt: plan.updatedAt,
+      });
+      void persistPlansCache(queryClient);
       void queryClient.invalidateQueries({ queryKey: apiQueryKeys.progressRoot });
     },
   });
@@ -255,14 +405,42 @@ export function useArchivePlanMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (planId: string) =>
-      api.plans.archive(planId, createIdempotencyKey(`plan:${planId}:archive`)),
+    mutationFn: async (planId: string) => {
+      const idempotencyKey = createIdempotencyKey(`plan:${planId}:archive`);
+      try {
+        return await api.plans.archive(planId, idempotencyKey);
+      } catch (cause) {
+        if (!isOfflineTransportFailure(cause)) throw cause;
+        const current = queryClient
+          .getQueryData<PlansEnvelope>(apiQueryKeys.plans)
+          ?.plans.find((item) => item.id === planId);
+        if (!current) throw cause;
+        await enqueueMutation({
+          kind: "plan.archive",
+          entityKey: planId,
+          payload: { planId },
+          idempotencyKey,
+        });
+        const now = new Date().toISOString();
+        return { plan: { ...current, status: "archived" as const, archivedAt: now, updatedAt: now } };
+      }
+    },
     onSuccess: ({ plan }) => {
       queryClient.setQueryData<PlansEnvelope>(apiQueryKeys.plans, (current) =>
         current
           ? { plans: current.plans.map((item) => (item.id === plan.id ? plan : item)) }
           : current,
       );
+      queryClient.setQueryData<PlanEnvelope>(apiQueryKeys.plan(plan.id), (current) =>
+        current ? { plan: { ...current.plan, ...plan, days: current.plan.days } } : current,
+      );
+      void persistPlansCache(queryClient);
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.plan(plan.id),
+        resourceType: "plan",
+        schema: getPlanResponseSchema,
+        value: queryClient.getQueryData<PlanEnvelope>(apiQueryKeys.plan(plan.id)),
+      });
       void queryClient.invalidateQueries({ queryKey: apiQueryKeys.plan(plan.id) });
       void queryClient.invalidateQueries({ queryKey: apiQueryKeys.progressRoot });
     },
@@ -274,10 +452,25 @@ export function useSetPlanSavedMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ planId, saved }: { planId: string; saved: boolean }) =>
-      saved
-        ? api.plans.save(planId, createIdempotencyKey(`plan:${planId}:save`))
-        : api.plans.removeSaved(planId, createIdempotencyKey(`plan:${planId}:unsave`)),
+    mutationFn: async ({ planId, saved }: { planId: string; saved: boolean }) => {
+      const idempotencyKey = createIdempotencyKey(
+        `plan:${planId}:${saved ? "save" : "unsave"}`,
+      );
+      try {
+        return saved
+          ? await api.plans.save(planId, idempotencyKey)
+          : await api.plans.removeSaved(planId, idempotencyKey);
+      } catch (cause) {
+        if (!isOfflineTransportFailure(cause)) throw cause;
+        await enqueueMutation({
+          kind: "plan.setSaved",
+          entityKey: planId,
+          payload: { planId, saved },
+          idempotencyKey,
+        });
+        return { saved };
+      }
+    },
     onMutate: async ({ planId, saved }) => {
       await Promise.all([
         queryClient.cancelQueries({ queryKey: apiQueryKeys.plans }),
@@ -300,6 +493,9 @@ export function useSetPlanSavedMutation() {
       if (context.previousPlans) queryClient.setQueryData(apiQueryKeys.plans, context.previousPlans);
       if (context.previousPlan) queryClient.setQueryData(apiQueryKeys.plan(context.planId), context.previousPlan);
     },
+    onSuccess: () => {
+      void persistPlansCache(queryClient);
+    },
   });
 }
 
@@ -309,13 +505,30 @@ export function useCompleteStudyStepMutation(planId: string, dayNumber: number) 
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (step: "read" | "scripture" | "reflect" | "pray") =>
-      api.study.completeStep(
-        planId,
-        dayNumber,
-        step,
-        createIdempotencyKey(`study:${planId}:${dayNumber}:${step}`),
-      ),
+    mutationFn: async (step: "read" | "scripture" | "reflect" | "pray") => {
+      const idempotencyKey = createIdempotencyKey(`study:${planId}:${dayNumber}:${step}`);
+      try {
+        return await api.study.completeStep(planId, dayNumber, step, idempotencyKey);
+      } catch (cause) {
+        if (!isOfflineTransportFailure(cause)) throw cause;
+        await enqueueMutation({
+          kind: "study.completeStep",
+          entityKey: `${planId}:${dayNumber}`,
+          payload: { planId, dayNumber, step },
+          idempotencyKey,
+        });
+        const current = queryClient.getQueryData<StudyDayEnvelope>(
+          apiQueryKeys.studyDay(planId, dayNumber),
+        );
+        const completed = new Set(current?.day.progress.completedSteps ?? []);
+        completed.add(step);
+        const order = ["read", "scripture", "reflect", "pray"] as const;
+        return {
+          completedSteps: order.filter((candidate) => completed.has(candidate)),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+    },
     onSuccess: (data) => {
       queryClient.setQueryData<StudyDayEnvelope>(
         apiQueryKeys.studyDay(planId, dayNumber),
@@ -356,6 +569,7 @@ export function useCompleteStudyStepMutation(planId: string, dayNumber: number) 
           },
         };
       });
+      void persistStudyCaches(queryClient, planId, dayNumber);
       void invalidateStudySurfaces(queryClient, planId);
     },
   });
@@ -366,12 +580,32 @@ export function useCompleteStudyDayMutation(planId: string, dayNumber: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () =>
-      api.study.completeDay(
-        planId,
-        dayNumber,
-        createIdempotencyKey(`study:${planId}:${dayNumber}:complete`),
-      ),
+    mutationFn: async () => {
+      const idempotencyKey = createIdempotencyKey(`study:${planId}:${dayNumber}:complete`);
+      try {
+        return await api.study.completeDay(planId, dayNumber, idempotencyKey);
+      } catch (cause) {
+        if (!isOfflineTransportFailure(cause)) throw cause;
+        await enqueueMutation({
+          kind: "study.completeDay",
+          entityKey: `${planId}:${dayNumber}`,
+          payload: { planId, dayNumber },
+          idempotencyKey,
+        });
+        const plan = queryClient.getQueryData<PlanEnvelope>(apiQueryKeys.plan(planId))?.plan;
+        const now = new Date().toISOString();
+        const completedBefore = plan?.progress.completedDays ?? 0;
+        const alreadyComplete = plan?.days.some(
+          (day) => day.dayNumber === dayNumber && day.progress.status === "completed",
+        ) ?? false;
+        const completedAfter = completedBefore + (alreadyComplete ? 0 : 1);
+        return {
+          completedAt: now,
+          planCompletedAt:
+            plan && completedAfter >= plan.lengthDays ? now : null,
+        };
+      }
+    },
     onSuccess: (data) => {
       queryClient.setQueryData<StudyDayEnvelope>(
         apiQueryKeys.studyDay(planId, dayNumber),
@@ -452,6 +686,8 @@ export function useCompleteStudyDayMutation(planId: string, dayNumber: number) {
             : current,
         );
       }
+      void persistStudyCaches(queryClient, planId, dayNumber);
+      void persistPlansCache(queryClient);
       void invalidateStudySurfaces(queryClient, planId);
     },
   });
@@ -469,6 +705,12 @@ export function useStartQuizAttemptMutation(quizId: string) {
       ),
     onSuccess: (data) => {
       queryClient.setQueryData<ApiQuizSession>(apiQueryKeys.quizSession(quizId), data);
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.quizSession(quizId),
+        resourceType: "quizSession",
+        schema: getQuizAttemptResponseSchema,
+        value: data,
+      });
       void queryClient.invalidateQueries({ queryKey: apiQueryKeys.planRoot });
     },
   });
@@ -492,6 +734,12 @@ export function useSubmitQuizAnswerMutation(quizId: string, attemptId: string) {
           (candidate) => candidate.questionId !== answer.questionId,
         );
         return { ...current, answers: [...withoutPrevious, answer] };
+      });
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.quizSession(quizId),
+        resourceType: "quizSession",
+        schema: getQuizAttemptResponseSchema,
+        value: queryClient.getQueryData<ApiQuizSession>(apiQueryKeys.quizSession(quizId)),
       });
       void queryClient.invalidateQueries({ queryKey: apiQueryKeys.planRoot });
     },
@@ -555,6 +803,19 @@ export function useCompleteQuizAttemptMutation(quizId: string, attemptId: string
           : current,
       );
 
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.quizSession(quizId),
+        resourceType: "quizSession",
+        schema: getQuizAttemptResponseSchema,
+        value: queryClient.getQueryData<ApiQuizSession>(apiQueryKeys.quizSession(quizId)),
+      });
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.plan(planId),
+        resourceType: "plan",
+        schema: getPlanResponseSchema,
+        value: queryClient.getQueryData<PlanEnvelope>(apiQueryKeys.plan(planId)),
+      });
+      void persistPlansCache(queryClient);
       void invalidateStudySurfaces(queryClient, planId);
     },
   });
@@ -577,4 +838,42 @@ async function invalidateStudySurfaces(
     work.push(queryClient.invalidateQueries({ queryKey: apiQueryKeys.plan(planId) }));
   }
   await Promise.all(work);
+}
+
+async function persistPlansCache(queryClient: QueryClient): Promise<void> {
+  await persistServerCache({
+    cacheKey: offlineCacheKeys.plans,
+    resourceType: "plans",
+    schema: listPlansResponseSchema,
+    value: queryClient.getQueryData<PlansEnvelope>(apiQueryKeys.plans),
+  });
+}
+
+async function persistStudyCaches(
+  queryClient: QueryClient,
+  planId: string,
+  dayNumber: number,
+): Promise<void> {
+  const study = queryClient.getQueryData<StudyDayEnvelope>(
+    apiQueryKeys.studyDay(planId, dayNumber),
+  );
+  const studyPersistence = study?.day.scripture.cacheAllowed
+    ? persistServerCache({
+        cacheKey: offlineCacheKeys.studyDay(planId, dayNumber),
+        resourceType: "studyDay",
+        schema: getStudyDayResponseSchema,
+        value: study,
+      })
+    : removeCachedResource(offlineCacheKeys.studyDay(planId, dayNumber));
+
+  await Promise.all([
+    studyPersistence,
+    persistServerCache({
+      cacheKey: offlineCacheKeys.plan(planId),
+      resourceType: "plan",
+      schema: getPlanResponseSchema,
+      value: queryClient.getQueryData<PlanEnvelope>(apiQueryKeys.plan(planId)),
+    }),
+    persistPlansCache(queryClient),
+  ]);
 }

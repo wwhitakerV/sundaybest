@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const booleanFromString = z.enum(["true", "false"]).transform((value) => value === "true");
+const booleanFromString = z
+  .enum(["true", "false"])
+  .transform((value) => value === "true");
 
 const optionalUrl = z.preprocess(
   (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
@@ -29,6 +31,11 @@ const envSchema = z
     APP_ATTEST_ALLOW_DEVELOPMENT: booleanFromString.default(false),
     DEV_SESSION_ENABLED: booleanFromString.default(false),
 
+    SUPADATA_API_KEY: optionalString,
+    SUPADATA_BASE_URL: z.url().default("https://api.supadata.ai/v1"),
+    SUPADATA_TRANSCRIPT_POLL_MS: z.coerce.number().int().min(500).max(10_000).default(1500),
+    SUPADATA_TRANSCRIPT_POLL_TIMEOUT_MS: z.coerce.number().int().min(10_000).max(600_000).default(180_000),
+
     TRANSCRIPT_PROVIDER_URL: optionalUrl,
     TRANSCRIPT_PROVIDER_TOKEN: optionalString,
     PLAN_GENERATION_PROVIDER_URL: optionalUrl,
@@ -36,9 +43,6 @@ const envSchema = z
     BIBLE_PROVIDER_URL: optionalUrl,
     BIBLE_PROVIDER_TOKEN: optionalString,
 
-    YOUTUBE_OEMBED_BASE_URL: z.url().default("https://www.youtube.com/oembed"),
-    YOUTUBE_SEARCH_BASE_URL: z.url().default("https://www.googleapis.com/youtube/v3/search"),
-    SUPADATA_API_KEY: optionalString,
     WORKER_POLL_MS: z.coerce.number().int().min(250).max(60_000).default(1000),
     WORKER_LOCK_SECONDS: z.coerce.number().int().min(10).max(3600).default(120),
     WORKER_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(20).default(3),
@@ -58,26 +62,18 @@ const envSchema = z
         message: "Development App Attest certificates must not be accepted in production",
       });
     }
-    if (value.NODE_ENV === "production" && !value.TRANSCRIPT_PROVIDER_URL) {
+    if (value.NODE_ENV === "production" && !value.SUPADATA_API_KEY) {
       ctx.addIssue({
         code: "custom",
-        path: ["TRANSCRIPT_PROVIDER_URL"],
-        message: "Required in production",
+        path: ["SUPADATA_API_KEY"],
+        message: "Required in production for YouTube search, metadata, and transcript ingestion",
       });
     }
     if (value.NODE_ENV === "production" && !value.PLAN_GENERATION_PROVIDER_URL) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["PLAN_GENERATION_PROVIDER_URL"],
-        message: "Required in production",
-      });
+      ctx.addIssue({ code: "custom", path: ["PLAN_GENERATION_PROVIDER_URL"], message: "Required in production" });
     }
     if (value.NODE_ENV === "production" && !value.BIBLE_PROVIDER_URL) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["BIBLE_PROVIDER_URL"],
-        message: "Required in production",
-      });
+      ctx.addIssue({ code: "custom", path: ["BIBLE_PROVIDER_URL"], message: "Required in production" });
     }
   });
 
@@ -86,9 +82,7 @@ export type Env = z.infer<typeof envSchema>;
 export function parseEnv(input: NodeJS.ProcessEnv): Env {
   const parsed = envSchema.safeParse(input);
   if (!parsed.success) {
-    const detail = parsed.error.issues
-      .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
-      .join("; ");
+    const detail = parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ");
     throw new Error(`Invalid API environment: ${detail}`);
   }
   return parsed.data;
