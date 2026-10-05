@@ -1,53 +1,86 @@
+import { Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { LocalTime } from "@/types/domain";
-import { parsePlanParams, studyHref, HOME_HREF } from "@/entities/plan";
+import { studyHref, HOME_HREF } from "@/entities/plan";
 import { useModalSession } from "@/hooks/use-modal-session";
-import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
-import { requestNotificationPermission } from "@/core/notifications/request-notification-permission";
 import {
-  getPlanById,
-  getReminder,
-  getSamplePlan,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
+  usePlanQuery,
+  useRemindersQuery,
+  useStartPlanMutation,
+  useUpdateReminderMutation,
+} from "@/core/api/queries";
+import { requestNotificationPermission } from "@/core/notifications/request-notification-permission";
+import { syncLocalReminder } from "@/core/notifications/local-reminders";
+import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 
-/**
- * Plan Ready's view model: the plan just built (none when opened bare), the
- * daily reminder, and the ways on. Start begins the plan, asks to send
- * reminders, and opens its first day — the sample's, without a plan of its
- * own — replacing the New Plan modal with the study session rather than
- * stacking one on the other.
- */
+/** Plan Ready backed by the generated server plan and synced reminder settings. */
 export function usePlanReady() {
   const router = useRouter();
   const session = useModalSession();
-  const planId = parsePlanParams(useLocalSearchParams())?.planId ?? null;
-  const plan = useAppSelector((state) => (planId ? getPlanById(state, planId) : null));
-  const sample = useAppSelector(getSamplePlan);
-  const reminder = useAppSelector((state) => getReminder(state, "dailyStudy"));
-  const { startPlan, turnOnReminderAt } = useStoreActions();
+  const params = useLocalSearchParams<{ planId?: string | string[] }>();
+  const planId = firstParam(params.planId);
+
+  const planQuery = usePlanQuery(planId);
+  const remindersQuery = useRemindersQuery();
+  const startPlan = useStartPlanMutation();
+  const updateReminder = useUpdateReminderMutation();
+
+  const plan = planQuery.data?.plan ?? null;
+  const reminder =
+    remindersQuery.data?.reminders.find((item) => item.kind === "dailyStudy") ?? null;
+
+  async function selectTime(time: LocalTime) {
+    if (!reminder || updateReminder.isPending) return;
+    if (!reminder.enabled || reminder.time !== time) selectionFeedback();
+
+    try {
+      const { reminder: updated } = await updateReminder.mutateAsync({
+        kind: "dailyStudy",
+        input: {
+          enabled: true,
+          time,
+          days: reminder.days,
+        },
+      });
+      await syncLocalReminder(updated);
+    } catch {
+      Alert.alert("Couldn’t update reminder", "Try again in a moment.");
+    }
+  }
+
+  async function start() {
+    if (!plan || startPlan.isPending) return;
+    tapFeedback();
+
+    try {
+      const started = await startPlan.mutateAsync(plan.id);
+
+      const currentReminder =
+        remindersQuery.data?.reminders.find((item) => item.kind === "dailyStudy") ?? null;
+      if (currentReminder?.enabled) {
+        const granted = await requestNotificationPermission();
+        if (granted) await syncLocalReminder(currentReminder);
+      }
+
+      router.replace(studyHref(started.plan.id, 1));
+    } catch {
+      Alert.alert("Couldn’t start your plan", "Try again in a moment.");
+    }
+  }
 
   return {
     plan,
     reminder,
-    selectTime: (time: LocalTime) => {
-      if (!reminder) return;
-      if (!reminder.enabled || reminder.time !== time) selectionFeedback();
-      turnOnReminderAt(reminder.id, time);
-    },
-    start: async () => {
-      // Without a plan of its own (opened bare), it starts the sample.
-      const started = plan ?? sample;
-      if (!started) return;
-      tapFeedback();
-      if (plan) startPlan(plan.id);
-      await requestNotificationPermission();
-      // Replace, not push: the new-plan modal hands off to the study session
-      // modal rather than stacking one modal on top of the other.
-      router.replace(studyHref(started.id, 1));
-    },
+    loading: planQuery.isPending || remindersQuery.isPending,
+    busy: startPlan.isPending || updateReminder.isPending,
+    selectTime,
+    start,
     notNow: () => session.exitTo(HOME_HREF),
   };
+}
+
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
 }

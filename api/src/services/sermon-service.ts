@@ -18,7 +18,9 @@ export function createSermonService(db: Database, env: Env) {
     const existing = await db
       .select()
       .from(sermonSources)
-      .where(and(eq(sermonSources.platform, "youtube"), eq(sermonSources.externalId, input.externalId)))
+      .where(
+        and(eq(sermonSources.platform, "youtube"), eq(sermonSources.externalId, input.externalId)),
+      )
       .limit(1);
     const now = new Date();
     let row = existing[0];
@@ -72,7 +74,7 @@ export function createSermonService(db: Database, env: Env) {
 
       const byExternalId = new Map(catalogRows.map((row) => [row.externalId, row]));
 
-      if (byExternalId.size < limit && env.YOUTUBE_API_KEY) {
+      if (byExternalId.size < limit && env.SUPADATA_API_KEY) {
         const remote = await searchYouTubeVideos(query, limit, env);
         for (const result of remote) {
           if (byExternalId.size >= limit) break;

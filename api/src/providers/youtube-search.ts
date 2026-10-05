@@ -37,14 +37,14 @@ export async function searchYouTubeVideos(
   limit: number,
   env: Env,
 ): Promise<YouTubeSearchResult[]> {
-  if (!env.YOUTUBE_API_KEY) return [];
+  if (!env.SUPADATA_API_KEY) return [];
 
   const endpoint = new URL(env.YOUTUBE_SEARCH_BASE_URL);
   endpoint.searchParams.set("part", "snippet");
   endpoint.searchParams.set("type", "video");
   endpoint.searchParams.set("maxResults", String(limit));
   endpoint.searchParams.set("q", query);
-  endpoint.searchParams.set("key", env.YOUTUBE_API_KEY);
+  endpoint.searchParams.set("key", env.SUPADATA_API_KEY);
   endpoint.searchParams.set("safeSearch", "moderate");
 
   let response: Response;

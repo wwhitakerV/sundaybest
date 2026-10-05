@@ -21,7 +21,7 @@ import { SFProTitle } from "@/ui/typography/SFProTitle";
  * with Try again. The build and where it hands on: `usePreparingPlan`.
  */
 export function PreparingPlanScreen() {
-  const { found, plan, status, failure, retry, close } = usePreparingPlan();
+  const { found, plan, status, failure, retry, retrying, close } = usePreparingPlan();
 
   if (!found) {
     return (
@@ -47,7 +47,12 @@ export function PreparingPlanScreen() {
           </SFProBody>
         </View>
         <ScreenFooter testID="preparing-plan-footer">
-          <Button testID="preparing-plan-retry-button" label="Try again" onPress={retry} />
+          <Button
+            testID="preparing-plan-retry-button"
+            label="Try again"
+            loading={retrying}
+            onPress={retry}
+          />
           <Button
             testID="preparing-plan-close-button"
             label="Close"

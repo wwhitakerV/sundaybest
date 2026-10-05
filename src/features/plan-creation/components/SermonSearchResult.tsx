@@ -39,7 +39,9 @@ export function SermonSearchResult({ result, selected, onPress, testID }: Sermon
     >
       <VideoThumbnail
         uri={sermon.thumbnailUrl}
-        duration={formatDuration(sermon.durationSeconds)}
+        {...(sermon.durationSeconds !== null
+          ? { duration: formatDuration(sermon.durationSeconds) }
+          : {})}
         style={styles.thumbnail}
       />
       <View style={styles.copy}>

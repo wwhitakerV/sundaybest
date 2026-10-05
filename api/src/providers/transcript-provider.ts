@@ -34,7 +34,7 @@ export function createTranscriptProvider(env: Env): TranscriptProvider {
     return {
       async fetch() {
         throw new AppError(
-          "TRANSCRIPT_UNAVAILABLE",
+          "INTERNAL",
           "No transcript provider is configured. Set TRANSCRIPT_PROVIDER_URL before real plan generation.",
         );
       },

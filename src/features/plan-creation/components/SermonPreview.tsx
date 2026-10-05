@@ -14,7 +14,7 @@ export type SermonPreviewProps = {
   church: string | null;
   thumbnailUrl: string | null;
   /** Shown on the thumbnail, `m:ss`. */
-  duration: string;
+  duration?: string;
   testID: string;
 };
 
@@ -42,7 +42,11 @@ export function SermonPreview({
       </Card>
 
       <Card style={styles.card}>
-        <VideoThumbnail uri={thumbnailUrl} duration={duration} style={styles.thumbnail} />
+        <VideoThumbnail
+          uri={thumbnailUrl}
+          {...(duration !== undefined ? { duration } : {})}
+          style={styles.thumbnail}
+        />
         <View style={styles.text}>
           <SFProTitle variant="preview">{title}</SFProTitle>
           {church && <SFProBody tone="textMuted">{church}</SFProBody>}

@@ -1,11 +1,11 @@
-import type { SermonPreview } from "@/core/plan-builder";
+import type { SermonPreview } from "../data/search-sermons";
 import type { PlanLength } from "@/types/domain";
 
 /** The two ways a sermon can enter the first step. */
 export type SermonInputMode = "paste" | "search";
 
 /** The link checked on the first step, and the sermon it points to. */
-export type CheckedLink = { url: string; sermon: SermonPreview };
+export type CheckedLink = { sermonId: string; url: string; sermon: SermonPreview };
 
 /** A search row is only a selection until Continue explicitly commits it. */
 export type SearchSelection = { id: string; checked: CheckedLink };
@@ -18,6 +18,7 @@ type Shared = {
   days: PlanLength;
   quickCheck: boolean;
   planId: string | null;
+  generationId: string | null;
 };
 
 /**
@@ -39,7 +40,7 @@ export type NewPlanEvent =
   | { type: "back" }
   | { type: "daysPicked"; days: PlanLength }
   | { type: "quickCheckSet"; quickCheck: boolean }
-  | { type: "planCreated"; planId: string }
+  | { type: "planCreated"; planId: string; generationId: string }
   | { type: "anotherLink" };
 
 /** A fresh start: paste mode, an empty link/search, and the user's plan defaults. */
@@ -55,13 +56,14 @@ export function initialNewPlanState(defaults: {
     searchSelection: null,
     linkError: null,
     planId: null,
+    generationId: null,
     ...defaults,
   };
 }
 
 /** New Plan's legal moves. Anything not possible from where it is changes nothing. */
 export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPlanState {
-  const { link, inputMode, searchQuery, searchSelection, days, quickCheck, planId } = state;
+  const { link, inputMode, searchQuery, searchSelection, days, quickCheck, planId, generationId } = state;
 
   switch (event.type) {
     case "inputModeChanged":
@@ -96,6 +98,7 @@ export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPla
             days,
             quickCheck,
             planId,
+            generationId,
           }
         : state;
     case "back":
@@ -110,6 +113,7 @@ export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPla
             days,
             quickCheck,
             planId,
+            generationId,
           }
         : state;
     case "daysPicked":
@@ -117,7 +121,9 @@ export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPla
     case "quickCheckSet":
       return state.step === "preview" ? { ...state, quickCheck: event.quickCheck } : state;
     case "planCreated":
-      return state.step === "preview" ? { ...state, planId: event.planId } : state;
+      return state.step === "preview"
+        ? { ...state, planId: event.planId, generationId: event.generationId }
+        : state;
     case "anotherLink":
       return {
         step: "paste",
@@ -127,6 +133,7 @@ export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPla
         searchSelection: null,
         linkError: null,
         planId: null,
+        generationId: null,
         days,
         quickCheck,
       };

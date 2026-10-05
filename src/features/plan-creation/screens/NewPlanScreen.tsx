@@ -47,7 +47,8 @@ export function NewPlanScreen() {
       // A little magic on the step that makes the plan.
       {...(current.key === "link-preview" && { icon: Sparkles })}
       disabled={!flow.canContinue}
-      onPress={flow.next}
+      loading={flow.busy}
+      onPress={() => void flow.next()}
     />
   );
 
@@ -152,7 +153,9 @@ export function NewPlanScreen() {
                 title={shownChecked.sermon.title}
                 church={shownChecked.sermon.church}
                 thumbnailUrl={shownChecked.sermon.thumbnailUrl}
-                duration={formatDuration(shownChecked.sermon.durationSeconds)}
+                {...(shownChecked.sermon.durationSeconds !== null
+                  ? { duration: formatDuration(shownChecked.sermon.durationSeconds) }
+                  : {})}
               />
               <DayCountPicker
                 testID="link-preview-days"

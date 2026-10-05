@@ -1,11 +1,22 @@
+import { Alert } from "react-native";
 import { useReducer, useState } from "react";
 import { useRouter } from "expo-router";
 
 import type { PlanLength } from "@/types/domain";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
-import { errorFeedback, selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
-import { getPlanGeneration, getUserSettings, useAppSelector, useStoreActions } from "@/core/store";
+import {
+  useCreatePlanMutation,
+  usePlanGenerationQuery,
+  useResolveSermonMutation,
+  useUserSettingsQuery,
+} from "@/core/api/queries";
+import { isApiError } from "@/core/api/api-error";
+import {
+  errorFeedback,
+  selectionFeedback,
+  tapFeedback,
+} from "@/core/haptics/haptics";
 import { lookUpSermon } from "../data/look-up-sermon";
 import type { SermonSearchResult } from "../data/search-sermons";
 import {
@@ -20,21 +31,32 @@ import { getLinkFeedback } from "../logic/link-feedback";
 import { useSermonSearch } from "./use-sermon-search";
 
 /**
- * New Plan's view model: where the flow is (`newPlanReducer`), and the
- * user's intents. Paste and search stay separate on step one, then Continue
- * explicitly commits either source into the same preview/build path.
+ * New Plan backed by the real SundayBest API: live sermon search/resolve,
+ * then one server-side generation job. The screen's two-step interaction stays
+ * unchanged; only the source of truth has moved off the mock store.
  */
 export function useNewPlanFlow() {
   const router = useRouter();
   const session = useModalSession();
-  const settings = useAppSelector(getUserSettings);
-  const generation = useAppSelector(getPlanGeneration);
-  const { createAndBuildPlan, archivePlan } = useStoreActions();
+  const settingsQuery = useUserSettingsQuery();
+  const resolveSermon = useResolveSermonMutation();
+  const createPlan = useCreatePlanMutation();
+
+  const defaults = settingsQuery.data?.settings;
   const [state, dispatch] = useReducer(
     newPlanReducer,
-    { days: settings.defaultPlanLength, quickCheck: settings.quickCheckByDefault },
+    {
+      days: defaults?.defaultPlanLength ?? 5,
+      quickCheck: defaults?.quickCheckByDefault ?? true,
+    },
     initialNewPlanState,
   );
+
+  const generationQuery = usePlanGenerationQuery(
+    state.generationId ?? "",
+    state.generationId !== null,
+  );
+
   const search = useSermonSearch(
     state.searchQuery,
     state.step === "paste" && state.inputMode === "search",
@@ -42,33 +64,51 @@ export function useNewPlanFlow() {
 
   // The preview stays drawn while it fades out after Back; a fresh start clears it.
   const [shownChecked, setShownChecked] = useState<CheckedLink | null>(null);
-  if (state.step === "preview" && state.checked !== shownChecked) setShownChecked(state.checked);
+  if (state.step === "preview" && state.checked !== shownChecked) {
+    setShownChecked(state.checked);
+  }
 
   const stepIndex = getNewPlanStepIndex(state);
+  const busy = resolveSermon.isPending || createPlan.isPending;
   const canContinue =
-    state.step === "preview" ||
-    (state.inputMode === "search" ? state.searchSelection !== null : state.link.trim() !== "");
+    !busy &&
+    (state.step === "preview" ||
+      (state.inputMode === "search"
+        ? state.searchSelection !== null
+        : state.link.trim() !== ""));
+
   const noCaptions =
-    state.planId !== null &&
-    generation?.planId === state.planId &&
-    generation.status === "failed" &&
-    generation.error?.code === "noCaptions";
+    generationQuery.data?.generation.status === "failed" &&
+    generationQuery.data.generation.error?.code === "noCaptions";
 
   function changeLink(link: string) {
     dispatch({ type: "linkChanged", link });
   }
 
-  function next() {
+  async function next() {
+    if (busy) return;
+
     if (state.step === "preview") {
       tapFeedback();
-      const planId = createAndBuildPlan({
-        sourceUrl: state.checked.url,
-        title: state.checked.sermon.title,
-        lengthDays: state.days,
-        quickCheckEnabled: state.quickCheck,
-      });
-      dispatch({ type: "planCreated", planId });
-      router.push(preparingHref(planId));
+      try {
+        const created = await createPlan.mutateAsync({
+          sermonId: state.checked.sermonId,
+          lengthDays: state.days,
+          quickCheckEnabled: state.quickCheck,
+        });
+        dispatch({
+          type: "planCreated",
+          planId: created.planId,
+          generationId: created.generationId,
+        });
+        router.push(preparingHref(created.planId, created.generationId));
+      } catch {
+        errorFeedback();
+        Alert.alert(
+          "Couldn’t create your plan",
+          "Check your connection and try again.",
+        );
+      }
       return;
     }
 
@@ -87,10 +127,20 @@ export function useNewPlanFlow() {
     }
 
     tapFeedback();
-    dispatch({
-      type: "linkAccepted",
-      checked: { url: result.url, sermon: lookUpSermon(result.url) },
-    });
+    try {
+      const { sermon } = await resolveSermon.mutateAsync({ url: result.url });
+      dispatch({
+        type: "linkAccepted",
+        checked: {
+          sermonId: sermon.id,
+          url: sermon.canonicalUrl,
+          sermon: lookUpSermon(sermon),
+        },
+      });
+    } catch (cause) {
+      errorFeedback();
+      dispatch({ type: "linkRejected", message: resolveErrorMessage(cause) });
+    }
   }
 
   function selectSearchResult(result: SermonSearchResult) {
@@ -100,7 +150,11 @@ export function useNewPlanFlow() {
       type: "searchResultSelected",
       selection: {
         id: result.id,
-        checked: { url: result.url, sermon: result.sermon },
+        checked: {
+          sermonId: result.id,
+          url: result.url,
+          sermon: result.sermon,
+        },
       },
     });
   }
@@ -111,6 +165,7 @@ export function useNewPlanFlow() {
     shownChecked,
     noCaptions,
     canContinue,
+    busy,
     linkFeedback: getLinkFeedback(state),
     searchResults: search.results,
     searchStatus: search.status,
@@ -127,7 +182,6 @@ export function useNewPlanFlow() {
       if (copied) changeLink(copied);
     },
     leading: () => {
-      // Close on the first step; Back on the preview.
       if (state.step === "paste") session.exit();
       else dispatch({ type: "back" });
     },
@@ -140,12 +194,27 @@ export function useNewPlanFlow() {
       if (state.step === "preview" && quickCheck !== state.quickCheck) selectionFeedback();
       dispatch({ type: "quickCheckSet", quickCheck });
     },
-    /** Back to an empty link, putting away the plan that couldn't be built. */
     tryAnotherLink: () => {
-      if (state.planId) archivePlan(state.planId);
       setShownChecked(null);
       dispatch({ type: "anotherLink" });
     },
     remindLater: () => session.exit(),
   };
+}
+
+function resolveErrorMessage(cause: unknown): string {
+  if (!isApiError(cause)) {
+    return "We couldn’t check that video. Try again in a moment.";
+  }
+
+  switch (cause.code) {
+    case "SERMON_UNSUPPORTED":
+      return "For now, paste a YouTube sermon link.";
+    case "SERMON_UNAVAILABLE":
+      return "We couldn’t open that video. Make sure it’s public and try again.";
+    default:
+      return cause.kind === "network" || cause.kind === "timeout"
+        ? "We couldn’t reach the sermon right now. Check your connection and try again."
+        : "We couldn’t check that video. Try again in a moment.";
+  }
 }

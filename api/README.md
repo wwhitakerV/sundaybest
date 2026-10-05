@@ -57,7 +57,7 @@ The backend intentionally does **not** invent a transcript, copyrighted Bible tr
 - `TRANSCRIPT_PROVIDER_URL`
 - `PLAN_GENERATION_PROVIDER_URL`
 - `BIBLE_PROVIDER_URL`
-- `YOUTUBE_API_KEY` — optional during local development; enables live YouTube results for `GET /v1/sermons/search` in addition to the local sermon catalog
+- `SUPADATA_API_KEY` — optional during local development; enables live YouTube results for `GET /v1/sermons/search` in addition to the local sermon catalog
 
 Each can point at your chosen provider or at a tiny internal gateway. The provider contracts live in `src/providers/` and are Zod-validated before data is persisted. Development has a deterministic plan generator only for exercising the job pipeline; it is blocked in production.
 

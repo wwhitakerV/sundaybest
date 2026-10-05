@@ -1,67 +1,113 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 
-import { parsePlanParams } from "@/entities/plan";
-import { useModalSession } from "@/hooks/use-modal-session";
-import { errorFeedback, successFeedback, tapFeedback } from "@/core/haptics/haptics";
+import { isApiError } from "@/core/api/api-error";
 import {
-  getPlanById,
-  getPlanGeneration,
-  isGeneratingPlan,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
+  usePlanGenerationQuery,
+  useRetryPlanGenerationMutation,
+} from "@/core/api/queries";
+import { apiQueryKeys } from "@/core/api/query-keys";
+import { useModalSession } from "@/hooks/use-modal-session";
+import {
+  errorFeedback,
+  successFeedback,
+  tapFeedback,
+} from "@/core/haptics/haptics";
 import { planReadyHref } from "../logic/routes";
 
-/**
- * Preparing's view model: how the route's plan's build is going. A draft
- * whose build hasn't started — another plan was being built when it was made
- * — starts as soon as the builder is free. Once it's built it hands on to
- * Plan Ready; if the video has no captions it hands back to New Plan, which
- * says so. Any other failure is the screen's to show, with Try again.
- */
+/** Preparing is now a live view of the server-side generation job. */
 export function usePreparingPlan() {
   const router = useRouter();
   const session = useModalSession();
-  const planId = parsePlanParams(useLocalSearchParams())?.planId ?? "";
-  const plan = useAppSelector((state) => getPlanById(state, planId));
-  const busy = useAppSelector(isGeneratingPlan);
-  const storeGeneration = useAppSelector(getPlanGeneration);
-  const generation = storeGeneration?.planId === planId ? storeGeneration : null;
-  const { startPlanGeneration, retryPlanGeneration } = useStoreActions();
+  const queryClient = useQueryClient();
+  const params = useLocalSearchParams<{
+    planId?: string | string[];
+    generationId?: string | string[];
+  }>();
 
-  const status = generation?.status ?? "idle";
-  const failure = status === "failed" ? (generation?.error ?? null) : null;
-  const noCaptions = failure?.code === "noCaptions";
+  const planId = firstParam(params.planId);
+  const generationId = firstParam(params.generationId);
+  const generationQuery = usePlanGenerationQuery(generationId);
+  const retryGeneration = useRetryPlanGenerationMutation(generationId);
+  const handledSettlement = useRef<string | null>(null);
+
+  const generation = generationQuery.data?.generation ?? null;
+  const status = generation?.status ?? "preparing";
+  const noCaptions =
+    generation?.status === "failed" &&
+    generation.error?.code === "noCaptions";
 
   useEffect(() => {
-    if (plan?.status === "draft" && !generation && !busy) startPlanGeneration(plan.id);
-  }, [plan, generation, busy, startPlanGeneration]);
+    if (!generation) return;
 
-  // Where the build lands — felt as well as seen: a success as it hands on to
-  // Plan Ready; an error when it couldn't be built, whether shown here or (no
-  // captions) back on New Plan.
-  useEffect(() => {
-    if (status === "completed") {
+    const settlementKey = `${generation.id}:${generation.attempt}:${generation.status}`;
+    if (handledSettlement.current === settlementKey) return;
+
+    if (generation.status === "completed") {
+      handledSettlement.current = settlementKey;
       successFeedback();
+      void Promise.all([
+        queryClient.invalidateQueries({ queryKey: apiQueryKeys.plans }),
+        queryClient.invalidateQueries({ queryKey: apiQueryKeys.plan(planId) }),
+      ]);
       router.replace(planReadyHref(planId));
-    } else if (status === "failed") {
+      return;
+    }
+
+    if (generation.status === "failed") {
+      handledSettlement.current = settlementKey;
       errorFeedback();
       if (noCaptions) router.back();
     }
-  }, [status, noCaptions, planId, router]);
+  }, [generation, noCaptions, planId, queryClient, router]);
+
+  const routeValid = planId.length > 0 && generationId.length > 0;
+  const missing =
+    generationQuery.isError &&
+    isApiError(generationQuery.error) &&
+    generationQuery.error.code === "NOT_FOUND";
+
+  const generationFailure =
+    generation?.status === "failed" && !noCaptions
+      ? generation.error
+      : null;
+
+  const requestFailure =
+    generationQuery.isError && !missing
+      ? {
+          code: "network" as const,
+          message: "We couldn’t check your plan right now.",
+        }
+      : null;
 
   return {
-    /** Whether the route names a plan that exists. */
-    found: plan !== null,
-    plan,
+    found: routeValid && !missing,
+    loading: generationQuery.isPending,
+    plan: generation
+      ? {
+          id: generation.planId,
+          title: generation.planTitle,
+          lengthDays: generation.requestedLength,
+          quickCheckEnabled: generation.quickCheckEnabled,
+        }
+      : null,
     status,
-    /** A failure the screen shows — not a missing-captions one, which New Plan shows. */
-    failure: noCaptions ? null : failure,
+    failure: generationFailure ?? requestFailure,
     retry: () => {
       tapFeedback();
-      retryPlanGeneration();
+      if (generation?.status === "failed") {
+        retryGeneration.mutate();
+      } else {
+        void generationQuery.refetch();
+      }
     },
+    retrying: retryGeneration.isPending || generationQuery.isFetching,
     close: session.exit,
-  };
+  } as const;
+}
+
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
 }

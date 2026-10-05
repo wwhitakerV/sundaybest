@@ -13,7 +13,7 @@ import { usePlanReady } from "../hooks/use-plan-ready";
  * now (it waits in Your plans). A milestone page (`MilestoneScreen`).
  */
 export function PlanReadyScreen() {
-  const { plan, reminder, selectTime, start, notNow } = usePlanReady();
+  const { plan, reminder, selectTime, start, notNow, loading, busy } = usePlanReady();
 
   return (
     <MilestoneScreen
@@ -26,12 +26,15 @@ export function PlanReadyScreen() {
           <Button
             testID="plan-ready-start-button"
             label="Start day 1"
+            disabled={!plan || loading}
+            loading={busy}
             onPress={() => void start()}
           />
           <Button
             testID="plan-ready-not-now-button"
             label="Not now"
             variant="secondary"
+            disabled={busy}
             onPress={notNow}
           />
         </>

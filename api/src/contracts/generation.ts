@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { apiIdSchema, isoDateTimeSchema } from "./common.js";
+import { apiIdSchema, isoDateTimeSchema, planLengthSchema } from "./common.js";
 
 export const planGenerationStatusSchema = z.enum([
   "validating",
@@ -29,6 +29,9 @@ export const planGenerationSchema = z.object({
   id: apiIdSchema,
   planId: apiIdSchema,
   sermonId: apiIdSchema.nullable(),
+  planTitle: z.string().min(1).max(300),
+  requestedLength: planLengthSchema,
+  quickCheckEnabled: z.boolean(),
   status: planGenerationStatusSchema,
   attempt: z.number().int().positive(),
   error: planGenerationErrorSchema.nullable(),

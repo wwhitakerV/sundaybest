@@ -1,9 +1,7 @@
-import { lookUpMockSermon, type SermonPreview } from "@/core/plan-builder";
+import type { ApiSermonSummary } from "@/core/api/contracts";
+import { toSermonPreview, type SermonPreview } from "./search-sermons";
 
-/**
- * The sermon a link points to. Today it's the mock catalogue; a real lookup
- * replaces this one function, and nothing above it changes.
- */
-export function lookUpSermon(url: string): SermonPreview {
-  return lookUpMockSermon(url);
+/** Converts the API's canonical sermon resource into the preview New Plan renders. */
+export function lookUpSermon(sermon: ApiSermonSummary): SermonPreview {
+  return toSermonPreview(sermon);
 }

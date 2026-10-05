@@ -2,13 +2,16 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tansta
 
 import type {
   ApiPlanDetail,
+  ApiPlanGeneration,
   ApiPlanSummary,
   ApiQuizSession,
   ApiReminder,
   ApiStudyDay,
   ApiUser,
   ApiUserSettings,
+  CreatePlanRequest,
   ReminderKind,
+  ResolveSermonRequest,
   UpdateReminderRequest,
   UpdateSettingsRequest,
 } from "./contracts";
@@ -91,6 +94,66 @@ export function useSermonSearchQuery(query: string, enabled = true) {
     queryKey: apiQueryKeys.sermonSearch(normalized),
     queryFn: () => api.sermons.search(normalized),
     enabled: enabled && normalized.length >= 2,
+  });
+}
+
+
+export function usePlanGenerationQuery(generationId: string, enabled = true) {
+  const api = useSundayBestApi();
+  return useQuery({
+    queryKey: apiQueryKeys.generation(generationId),
+    queryFn: () => api.generations.get(generationId),
+    enabled: enabled && generationId.length > 0,
+    refetchInterval: (query) => {
+      const status = query.state.data?.generation.status;
+      return status === "completed" || status === "failed" ? false : 900;
+    },
+  });
+}
+
+export function useResolveSermonMutation() {
+  const api = useSundayBestApi();
+
+  return useMutation({
+    mutationFn: (input: ResolveSermonRequest) =>
+      api.sermons.resolve(input, createIdempotencyKey(`sermon:resolve:${input.url}`)),
+  });
+}
+
+export function useCreatePlanMutation() {
+  const api = useSundayBestApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreatePlanRequest) =>
+      api.plans.create(
+        input,
+        createIdempotencyKey(
+          `plan:create:${input.sermonId}:${input.lengthDays}:${input.quickCheckEnabled ? "quiz" : "no-quiz"}`,
+        ),
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: apiQueryKeys.plans });
+    },
+  });
+}
+
+export function useRetryPlanGenerationMutation(generationId: string) {
+  const api = useSundayBestApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () =>
+      api.generations.retry(
+        generationId,
+        createIdempotencyKey(`generation:${generationId}:retry`),
+      ),
+    onSuccess: (data) => {
+      queryClient.setQueryData<{ generation: ApiPlanGeneration }>(
+        apiQueryKeys.generation(generationId),
+        data,
+      );
+    },
   });
 }
 
