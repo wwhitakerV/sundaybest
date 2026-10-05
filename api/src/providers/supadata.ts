@@ -109,7 +109,9 @@ export async function supadataSearchVideos(
   const raw = await getJson(env, url, 15_000, "SERMON_UNAVAILABLE");
   const parsed = searchResponseSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new AppError("SERMON_UNAVAILABLE", "Supadata search response failed validation");
+    throw new AppError("INTERNAL", "Supadata search response failed validation", {
+      exposeMessage: false,
+    });
   }
   return parsed.data.results.filter((item): item is SupadataSearchVideo => item.type === "video");
 }
@@ -122,7 +124,9 @@ export async function supadataMetadata(env: Env, urlValue: string): Promise<Supa
   const raw = await getJson(env, url, 15_000, "SERMON_UNAVAILABLE");
   const parsed = metadataSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new AppError("SERMON_UNAVAILABLE", "Supadata metadata response failed validation");
+    throw new AppError("INTERNAL", "Supadata metadata response failed validation", {
+      exposeMessage: false,
+    });
   }
   return parsed.data;
 }
@@ -140,7 +144,9 @@ export async function supadataTranscript(env: Env, urlValue: string): Promise<Su
 
   const queued = jobIdSchema.safeParse(raw);
   if (!queued.success) {
-    throw new AppError("TRANSCRIPT_UNAVAILABLE", "Supadata transcript response failed validation");
+    throw new AppError("INTERNAL", "Supadata transcript response failed validation", {
+      exposeMessage: false,
+    });
   }
 
   const deadline = Date.now() + env.SUPADATA_TRANSCRIPT_POLL_TIMEOUT_MS;
@@ -150,13 +156,16 @@ export async function supadataTranscript(env: Env, urlValue: string): Promise<Su
     const statusRaw = await getJson(env, resultUrl, 20_000, "TRANSCRIPT_UNAVAILABLE");
     const status = transcriptJobSchema.safeParse(statusRaw);
     if (!status.success) {
-      throw new AppError("TRANSCRIPT_UNAVAILABLE", "Supadata transcript job response failed validation");
+      throw new AppError("INTERNAL", "Supadata transcript job response failed validation", {
+        exposeMessage: false,
+      });
     }
     if (status.data.status === "failed") {
-      throw new AppError(
-        "TRANSCRIPT_UNAVAILABLE",
-        status.data.error?.message ?? "Supadata could not produce a transcript",
-      );
+      const providerMessage =
+        status.data.error?.message ?? status.data.error?.details ?? "Transcript job failed";
+      throw new AppError("TRANSCRIPT_UNAVAILABLE", "No usable transcript is available for this sermon", {
+        cause: new Error(providerMessage),
+      });
     }
     if (status.data.status !== "completed") continue;
 
@@ -167,10 +176,14 @@ export async function supadataTranscript(env: Env, urlValue: string): Promise<Su
       availableLangs: status.data.availableLangs ?? [],
     });
     if (normalized.success) return normalized.data;
-    throw new AppError("TRANSCRIPT_UNAVAILABLE", "Supadata completed without a usable transcript");
+    throw new AppError("INTERNAL", "Supadata completed without a usable transcript", {
+      exposeMessage: false,
+    });
   }
 
-  throw new AppError("TRANSCRIPT_UNAVAILABLE", "Supadata transcript generation timed out");
+  throw new AppError("INTERNAL", "Supadata transcript generation timed out", {
+    exposeMessage: false,
+  });
 }
 
 async function getJson(
@@ -189,20 +202,40 @@ async function getJson(
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (cause) {
-    throw new AppError(failureCode, "Could not reach Supadata", { cause });
+    throw new AppError("INTERNAL", "Supadata request failed", {
+      cause,
+      exposeMessage: false,
+    });
   }
 
   if (!response.ok) {
-    let message = `Supadata returned HTTP ${response.status}`;
+    let providerMessage = `Supadata returned HTTP ${response.status}`;
     try {
       const parsed = supadataErrorSchema.safeParse(await response.json());
       if (parsed.success) {
-        message = parsed.data.message ?? parsed.data.details ?? message;
+        providerMessage = parsed.data.message ?? parsed.data.details ?? providerMessage;
       }
     } catch {
-      // The status still identifies a provider failure.
+      // The status still identifies the provider failure internally.
     }
-    throw new AppError(failureCode, message);
+
+    // Authentication, throttling and provider outages are operational failures,
+    // not a statement about the user's sermon. Keep provider details server-side
+    // and let the API's INTERNAL mapping remain retryable.
+    if (response.status === 401 || response.status === 403 || response.status === 429 || response.status >= 500) {
+      throw new AppError("INTERNAL", `Supadata request failed with HTTP ${response.status}`, {
+        cause: new Error(providerMessage),
+        exposeMessage: false,
+      });
+    }
+
+    throw new AppError(
+      failureCode,
+      failureCode === "TRANSCRIPT_UNAVAILABLE"
+        ? "No usable transcript is available for this sermon"
+        : "This sermon is unavailable right now",
+      { cause: new Error(providerMessage) },
+    );
   }
 
   try {

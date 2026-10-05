@@ -25,6 +25,10 @@ export interface Env {
   readonly attestationEnabled: boolean;
   /** `undefined` when no DSN is configured, which disables crash reporting. */
   readonly sentryDsn: string | undefined;
+  /** Required in preview/production for freeRASP iOS configuration. */
+  readonly appTeamId: string | undefined;
+  /** Required in preview/production; receives freeRASP threat reports. */
+  readonly securityWatcherEmail: string | undefined;
   /**
    * Always `true`. Present as a field so a reader of the parsed config can see
    * that the choice was made, rather than having to know it happens in a Babel
@@ -50,6 +54,8 @@ const EXPECTATIONS = new Map<string, string>([
   ],
   ["EXPO_PUBLIC_ATTESTATION_ENABLED", 'must be a boolean string, e.g. "true" or "false"'],
   ["EXPO_PUBLIC_SENTRY_DSN", "must be a URL when set; leave it empty to disable crash reporting"],
+  ["EXPO_PUBLIC_APP_TEAM_ID", "must be the 10-character Apple Developer Team ID outside development"],
+  ["EXPO_PUBLIC_SECURITY_WATCHER_EMAIL", "must be a valid email address outside development"],
   [
     "EXPO_PUBLIC_USE_RN_FETCH",
     'must be exactly "1" — TLS pinning does not cover Expo\'s own fetch',
@@ -98,6 +104,8 @@ const envSchema = z
     // An empty string is how a .env file expresses "unset", so it is accepted
     // and normalised to undefined below.
     EXPO_PUBLIC_SENTRY_DSN: z.union([z.url(), z.literal("")]).optional(),
+    EXPO_PUBLIC_APP_TEAM_ID: z.union([z.string().regex(/^[A-Z0-9]{10}$/), z.literal("")]).optional(),
+    EXPO_PUBLIC_SECURITY_WATCHER_EMAIL: z.union([z.email(), z.literal("")]).optional(),
 
     // Required, and only ever "1". Expo SDK 57 swaps `globalThis.fetch` for
     // `expo/fetch` unless this is set (see expo/src/winter/runtime.native.ts),
@@ -112,13 +120,38 @@ const envSchema = z
     // Plaintext http is a local-development convenience only. Allowing it in a
     // preview or production build would put every request on the wire in clear.
     if (raw.EXPO_PUBLIC_APP_VARIANT === "development") return;
-    if (HTTPS_URL.test(raw.EXPO_PUBLIC_API_URL)) return;
 
-    ctx.addIssue({
-      code: "custom",
-      path: ["EXPO_PUBLIC_API_URL"],
-      message: "https required outside development",
-    });
+    if (!HTTPS_URL.test(raw.EXPO_PUBLIC_API_URL)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EXPO_PUBLIC_API_URL"],
+        message: "https required outside development",
+      });
+    }
+
+    if (!raw.EXPO_PUBLIC_ATTESTATION_ENABLED) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EXPO_PUBLIC_ATTESTATION_ENABLED"],
+        message: "attestation must be enabled outside development",
+      });
+    }
+
+    if (!raw.EXPO_PUBLIC_APP_TEAM_ID) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EXPO_PUBLIC_APP_TEAM_ID"],
+        message: "Apple Developer Team ID required outside development",
+      });
+    }
+
+    if (!raw.EXPO_PUBLIC_SECURITY_WATCHER_EMAIL) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["EXPO_PUBLIC_SECURITY_WATCHER_EMAIL"],
+        message: "security watcher email required outside development",
+      });
+    }
   });
 
 /**
@@ -140,12 +173,19 @@ export function parseEnv(raw: Readonly<Record<string, string | undefined>>): Env
   }
 
   const dsn = result.data.EXPO_PUBLIC_SENTRY_DSN;
+  const appTeamId = result.data.EXPO_PUBLIC_APP_TEAM_ID;
+  const securityWatcherEmail = result.data.EXPO_PUBLIC_SECURITY_WATCHER_EMAIL;
 
   return Object.freeze({
     variant: result.data.EXPO_PUBLIC_APP_VARIANT,
     apiUrl: result.data.EXPO_PUBLIC_API_URL,
     attestationEnabled: result.data.EXPO_PUBLIC_ATTESTATION_ENABLED,
     sentryDsn: dsn === undefined || dsn === "" ? undefined : dsn,
+    appTeamId: appTeamId === undefined || appTeamId === "" ? undefined : appTeamId,
+    securityWatcherEmail:
+      securityWatcherEmail === undefined || securityWatcherEmail === ""
+        ? undefined
+        : securityWatcherEmail,
     useRnFetch: true,
   });
 }

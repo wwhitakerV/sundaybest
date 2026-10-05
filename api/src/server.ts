@@ -30,16 +30,34 @@ async function shutdown(signal: string): Promise<void> {
   await database.close();
 }
 
+function requestShutdown(signal: "SIGINT" | "SIGTERM"): void {
+  const forceExit = setTimeout(() => {
+    app.log.error({ signal }, "graceful shutdown timed out");
+    process.exit(1);
+  }, 15_000);
+  forceExit.unref();
+
+  void shutdown(signal).then(
+    () => {
+      clearTimeout(forceExit);
+      process.exit(0);
+    },
+    (error: unknown) => {
+      clearTimeout(forceExit);
+      app.log.error({ err: error, signal }, "graceful shutdown failed");
+      process.exit(1);
+    },
+  );
+}
+
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
-  process.once(signal, () => {
-    void shutdown(signal).finally(() => process.exit(0));
-  });
+  process.once(signal, () => requestShutdown(signal));
 }
 
 try {
   await app.listen({ host: env.HOST, port: env.PORT });
 } catch (error) {
-  app.log.error(error);
-  await database.close();
+  app.log.error({ err: error }, "server failed to start");
+  await database.close().catch(() => undefined);
   process.exitCode = 1;
 }

@@ -37,18 +37,11 @@ System Haptics switch turns them off. Where each is used is in
 
 ## `plan-builder/`
 
-A frontend stand-in for the real plan builder. `PlanBuilder` (mounted once in
-`AppProviders`, under the store) watches the store's `generation`: while a
-build is running it waits `BUILD_STAGE_MS`, then moves it on through the
-store's actions — the next stage, a failure, or, at the end, the finished
-plan's records (`buildMockPlanContent`: days, Scripture, readings,
-reflections, prayers, and a Quick Check per day when enabled). It runs
-app-wide, so a build carries on when the user leaves Preparing.
-
-Deterministic, never random: `lookUpMockSermon` always finds the same sermon
-for a link, and `MOCK_TEST_LINKS` always behave the same way — `noCaptions`
-fails while listening to the message, `buildFails` fails every attempt, and
-`failsOnce` fails the first attempt and builds on retry.
+Legacy deterministic fixtures from the pre-API plan-generation prototype. They
+are no longer mounted in `AppProviders`; production plan creation is exclusively
+the server-side generation flow in `core/api` + the API worker. Keep these files
+only while older store-level tests still import them, then delete the directory
+with those tests in one cleanup change.
 
 ## `store/`
 

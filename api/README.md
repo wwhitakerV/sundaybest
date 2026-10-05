@@ -50,6 +50,13 @@ Set `APP_ATTEST_TEAM_ID` and `APP_ATTEST_BUNDLE_ID` to the values registered wit
 
 The server verifies attestation objects, stores the attested public key, verifies assertions, and enforces the monotonically increasing App Attest counter. One-time challenges are hashed in PostgreSQL and consumed exactly once. High-value mutations (account deletion plus plan generation/retry) bind the assertion to the HTTP method, path, and canonical request body, so a valid assertion cannot be reused for a different request.
 
+
+## Production environment gates
+
+`NODE_ENV=production` fails startup when development App Attest certificates or development sessions are enabled, when Supadata / plan-generation / Bible providers are missing, or when any configured external provider uses plaintext HTTP. Keep all provider credentials server-side; none belong in the Expo `EXPO_PUBLIC_*` namespace.
+
+The server trusts no forwarded proxy hops by default (`TRUST_PROXY_HOPS=0`). Set the exact hop count only when deployment topology requires it.
+
 ## External content providers
 
 YouTube discovery, metadata, and transcripts are routed through Supadata. Set this only on the API/worker process:
@@ -141,9 +148,22 @@ Response:
 
 If `cacheAllowed` is false the server returns the passage without persisting copyrighted text.
 
-## Production edge controls
+## Production traffic controls
 
-The app server owns authentication and domain authorization. Put production traffic behind your normal TLS/reverse-proxy/WAF layer and rate-limit abuse-prone public or costly routes there, especially `/v1/attest/challenge`, `/v1/sermons/resolve`, and generation endpoints. Product-specific per-user generation quotas are intentionally not hard-coded because pricing/entitlement rules have not been defined yet.
+The app server owns authentication and domain authorization. Production should still sit behind a TLS reverse proxy/WAF, but the API now also has a bounded in-process fixed-window limiter as a backstop if the edge rule is bypassed or misconfigured.
+
+Configure the proxy boundary precisely with `TRUST_PROXY_HOPS` (`0` means Fastify is directly reachable). Do not set a larger number than the real proxy chain: `request.ip` is the rate-limit key, and trusting extra forwarded hops lets a client spoof it.
+
+The default one-minute buckets are:
+
+- general API traffic: `RATE_LIMIT_DEFAULT_MAX=240`
+- session/App Attest bootstrap: `RATE_LIMIT_AUTH_MAX=30`
+- sermon search/resolve: `RATE_LIMIT_SEARCH_MAX=60`
+- plan generation/retry: `RATE_LIMIT_GENERATION_MAX=12`
+
+`RATE_LIMIT_WINDOW_MS` changes the shared window. These limits are per API process, not a replacement for a distributed edge/WAF limit. Product-specific per-user generation quotas are intentionally not hard-coded because pricing/entitlement rules have not been defined yet.
+
+Automatic Fastify request logging is disabled. Completion logs use the matched route template (for example `/v1/sermons/search`) rather than the raw URL, so sermon search text in query strings is not written to logs. `/v1/*` responses also send `Cache-Control: no-store`.
 
 ## Health
 

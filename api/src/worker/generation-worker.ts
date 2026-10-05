@@ -369,7 +369,7 @@ async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unk
     return;
   }
 
-  const errorCode = cause instanceof AppError && cause.code === "TRANSCRIPT_UNAVAILABLE" ? "noCaptions" : "unknown";
+  const publicFailure = toPublicGenerationFailure(cause);
   const now = new Date();
   await db.transaction(async (tx) => {
     await tx
@@ -378,9 +378,47 @@ async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unk
       .where(eq(generationJobs.id, job.id));
     await tx
       .update(planGenerations)
-      .set({ status: "failed", errorCode, errorMessage: message, finishedAt: now, updatedAt: now })
+      .set({
+        status: "failed",
+        errorCode: publicFailure.code,
+        errorMessage: publicFailure.message,
+        finishedAt: now,
+        updatedAt: now,
+      })
       .where(eq(planGenerations.id, job.generationId));
   });
+}
+
+function toPublicGenerationFailure(cause: unknown): {
+  code: "invalidLink" | "unsupportedSource" | "videoUnavailable" | "noCaptions" | "network" | "unknown";
+  message: string;
+} {
+  if (cause instanceof AppError) {
+    switch (cause.code) {
+      case "TRANSCRIPT_UNAVAILABLE":
+        return {
+          code: "noCaptions",
+          message: "We couldn’t find usable captions for this sermon.",
+        };
+      case "SERMON_UNSUPPORTED":
+        return {
+          code: "unsupportedSource",
+          message: "This sermon source isn’t supported yet.",
+        };
+      case "SERMON_UNAVAILABLE":
+        return {
+          code: "videoUnavailable",
+          message: "This sermon isn’t available right now.",
+        };
+      default:
+        break;
+    }
+  }
+
+  return {
+    code: "unknown",
+    message: "We couldn’t build this plan right now. Please try again.",
+  };
 }
 
 function sleep(ms: number, signal: AbortSignal): Promise<void> {

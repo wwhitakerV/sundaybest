@@ -5,11 +5,12 @@ import type { AppContext } from "./app-context.js";
 import { registerApiDocs } from "./docs/openapi.js";
 import { AppError, isAppError } from "./http/errors.js";
 import { registerV1Routes } from "./routes/v1.js";
+import { registerRateLimit } from "./http/rate-limit.js";
 
 export async function buildApp(context: AppContext): Promise<FastifyInstance> {
   const app = Fastify({
-    trustProxy: true,
-    disableRequestLogging: false,
+    trustProxy: context.env.TRUST_PROXY_HOPS === 0 ? false : context.env.TRUST_PROXY_HOPS,
+    disableRequestLogging: true,
     logger: {
       level: context.env.NODE_ENV === "development" ? "debug" : "info",
       redact: {
@@ -32,6 +33,30 @@ export async function buildApp(context: AppContext): Promise<FastifyInstance> {
   if (context.env.NODE_ENV !== "production") {
     await registerApiDocs(app);
   }
+
+  registerRateLimit(app, context.env);
+
+  // Never log raw URLs here: sermon search terms live in the query string.
+  // Route templates preserve operational value without recording user text.
+  app.addHook("onResponse", async (request, reply) => {
+    request.log.info(
+      {
+        method: request.method,
+        route: request.routeOptions.url,
+        statusCode: reply.statusCode,
+        responseTimeMs: Math.round(reply.elapsedTime),
+      },
+      "request completed",
+    );
+  });
+
+  app.addHook("onSend", async (request, reply, payload) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+    if (request.url.startsWith("/v1/")) {
+      reply.header("Cache-Control", "no-store");
+    }
+    return payload;
+  });
 
   app.get("/health/live", async () => ({ status: "ok" as const }));
   app.get("/health/ready", async (_request, reply) => {

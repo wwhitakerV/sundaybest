@@ -4,7 +4,7 @@
  * `expo-modules-core` declares `NodeJS.ProcessEnv` with an `[key: string]: any`
  * index signature, so without this every `process.env.X` read is an implicit
  * `any` — it typechecks whatever you do with it, and the type-aware lint rules
- * flag the assignment instead. Declaring the four variables narrows them to
+ * flag the assignment instead. Declaring the variables narrows them to
  * `string | undefined`, which is what they actually are: a variable absent from
  * the build is absent at runtime.
  *
@@ -26,6 +26,10 @@ declare global {
       EXPO_PUBLIC_ATTESTATION_ENABLED?: string;
       /** Optional Sentry DSN. Absent or empty disables crash reporting. */
       EXPO_PUBLIC_SENTRY_DSN?: string;
+      /** Apple Developer Team ID. Required in preview/production. */
+      EXPO_PUBLIC_APP_TEAM_ID?: string;
+      /** Threat-report destination for freeRASP. Required in preview/production. */
+      EXPO_PUBLIC_SECURITY_WATCHER_EMAIL?: string;
       /**
        * Always `"1"`. Read by Expo's own runtime, not by app code: it keeps
        * `globalThis.fetch` as React Native's implementation instead of

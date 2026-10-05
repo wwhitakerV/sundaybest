@@ -19,6 +19,13 @@ const envSchema = z
     HOST: z.string().default("0.0.0.0"),
     PORT: z.coerce.number().int().min(1).max(65535).default(4100),
     DATABASE_URL: z.string().min(1),
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
+
+    RATE_LIMIT_WINDOW_MS: z.coerce.number().int().min(1_000).max(3_600_000).default(60_000),
+    RATE_LIMIT_DEFAULT_MAX: z.coerce.number().int().min(1).max(100_000).default(240),
+    RATE_LIMIT_AUTH_MAX: z.coerce.number().int().min(1).max(10_000).default(30),
+    RATE_LIMIT_SEARCH_MAX: z.coerce.number().int().min(1).max(10_000).default(60),
+    RATE_LIMIT_GENERATION_MAX: z.coerce.number().int().min(1).max(10_000).default(12),
 
     JWT_SECRET: z.string().min(32),
     JWT_ISSUER: z.string().min(1).default("sundaybest-api"),
@@ -74,6 +81,24 @@ const envSchema = z
     }
     if (value.NODE_ENV === "production" && !value.BIBLE_PROVIDER_URL) {
       ctx.addIssue({ code: "custom", path: ["BIBLE_PROVIDER_URL"], message: "Required in production" });
+    }
+    if (value.NODE_ENV === "production") {
+      const secureUrls = [
+        ["SUPADATA_BASE_URL", value.SUPADATA_BASE_URL],
+        ["TRANSCRIPT_PROVIDER_URL", value.TRANSCRIPT_PROVIDER_URL],
+        ["PLAN_GENERATION_PROVIDER_URL", value.PLAN_GENERATION_PROVIDER_URL],
+        ["BIBLE_PROVIDER_URL", value.BIBLE_PROVIDER_URL],
+      ] as const;
+
+      for (const [field, url] of secureUrls) {
+        if (url && !url.startsWith("https://")) {
+          ctx.addIssue({
+            code: "custom",
+            path: [field],
+            message: "HTTPS is required in production",
+          });
+        }
+      }
     }
   });
 

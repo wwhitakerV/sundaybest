@@ -112,16 +112,25 @@ export function toPinningOptions(config: PinConfig = PIN_CONFIG): PinningOptions
  */
 export async function initializePinning(
   variant: PinnedVariant,
+  apiUrl: string,
   config: PinConfig = PIN_CONFIG,
 ): Promise<boolean> {
   assertPinsUsable(variant, config);
 
   if (variant === "development") return false;
 
-  // Expo Go has no native module. In a release build this being false means the
-  // build is broken, which `assertPinsUsable` cannot detect — hence the manual
-  // bad-certificate test on the checklist.
-  if (!isSslPinningAvailable()) return false;
+  const apiHost = new URL(apiUrl).hostname;
+  if (!Object.prototype.hasOwnProperty.call(config, apiHost)) {
+    throw new PinningError(
+      `The configured API host (${apiHost}) has no TLS pin entry. Refusing to start an unpinned ${variant} build.`,
+    );
+  }
+
+  // Expo Go has no native module. Preview/production must never silently run
+  // without the control the build claims to have.
+  if (!isSslPinningAvailable()) {
+    throw new PinningError(`TLS pinning is unavailable in this ${variant} build.`);
+  }
 
   await initializeSslPinning(toPinningOptions(config));
 

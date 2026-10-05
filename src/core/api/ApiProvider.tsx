@@ -1,11 +1,17 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import Constants from "expo-constants";
 import { isRunningInExpoGo } from "expo";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { env } from "../config/env";
 import { flags } from "../config/flags";
+import { logger } from "../monitoring/logger";
 import { createAppAttestation } from "../security/attestation/app-attest";
 import type { AppAttestDevice, Attestation } from "../security/attestation/attestation";
-import { createIntegrityState } from "../security/integrity/policy";
+import {
+  shouldMonitorIntegrity,
+  useIntegrityMonitor,
+} from "../security/integrity/freerasp-integrity";
+import { createIntegrityState, type IntegrityState } from "../security/integrity/policy";
 import { createExpoSecureStorage } from "../security/secure-storage/expo-secure-storage";
 import { createDevelopmentSessionManager } from "../security/session/development-session";
 import { createSessionManager, type SessionManager } from "../security/session/session";
@@ -19,6 +25,7 @@ export type SundayBestApi = ReturnType<typeof createSundayBestApi>;
 export type ApiRuntime = {
   api: SundayBestApi;
   session: SessionManager;
+  integrity: IntegrityState;
   baseUrl: string;
   authMode: "development" | "attested";
 };
@@ -27,12 +34,25 @@ const ApiRuntimeContext = createContext<ApiRuntime | null>(null);
 
 export function ApiProvider({ children }: { children: ReactNode }) {
   const runtime = useMemo(createRuntime, []);
-  return <ApiRuntimeContext.Provider value={runtime}>{children}</ApiRuntimeContext.Provider>;
+
+  return (
+    <ApiRuntimeContext.Provider value={runtime}>
+      {shouldMonitorIntegrity(env.variant) && !isRunningInExpoGo() ? (
+        <IntegrityMonitor runtime={runtime}>{children}</IntegrityMonitor>
+      ) : (
+        children
+      )}
+    </ApiRuntimeContext.Provider>
+  );
 }
 
 export function useApiRuntime(): ApiRuntime {
   const runtime = useContext(ApiRuntimeContext);
-  if (!runtime) throw new Error("useApiRuntime must be used inside ApiProvider");
+
+  if (!runtime) {
+    throw new Error("useApiRuntime must be used inside ApiProvider");
+  }
+
   return runtime;
 }
 
@@ -46,6 +66,7 @@ function createRuntime(): ApiRuntime {
   const secureStorage = createExpoSecureStorage();
   const bootstrapApi = createBootstrapApi({ baseUrl });
   const integrity = createIntegrityState();
+
   const devAuth = development && (isRunningInExpoGo() || !flags.isEnabled("attestation"));
 
   const attestation: Attestation = devAuth
@@ -58,8 +79,15 @@ function createRuntime(): ApiRuntime {
       });
 
   const session = devAuth
-    ? createDevelopmentSessionManager({ api: bootstrapApi, secureStorage })
-    : createSessionManager({ api: bootstrapApi, attestation, secureStorage });
+    ? createDevelopmentSessionManager({
+        api: bootstrapApi,
+        secureStorage,
+      })
+    : createSessionManager({
+        api: bootstrapApi,
+        attestation,
+        secureStorage,
+      });
 
   const client = createApiClient({
     baseUrl,
@@ -72,37 +100,102 @@ function createRuntime(): ApiRuntime {
   return {
     api: createSundayBestApi(client),
     session,
+    integrity,
     baseUrl,
     authMode: devAuth ? "development" : "attested",
   };
 }
 
+function IntegrityMonitor({ runtime, children }: { runtime: ApiRuntime; children: ReactNode }) {
+  const config = getIntegrityConfig();
+
+  useIntegrityMonitor({
+    variant: env.variant,
+    bundleId: config.bundleId,
+    appTeamId: config.appTeamId,
+    watcherMail: config.watcherMail,
+    integrity: runtime.integrity,
+
+    onSessionCompromised: () => {
+      void runtime.session.clear();
+    },
+
+    onSignal: (signal, response) => {
+      // Signal names only. Never attach device identifiers or SDK payloads.
+      logger.warn("device integrity signal", {
+        signal,
+        response,
+      });
+    },
+  });
+
+  return children;
+}
+
+function getIntegrityConfig(): {
+  bundleId: string;
+  appTeamId: string;
+  watcherMail: string;
+} {
+  const bundleId = Constants.expoConfig?.ios?.bundleIdentifier;
+
+  if (!bundleId) {
+    throw new Error("Missing iOS bundle identifier for runtime integrity monitoring");
+  }
+
+  if (!env.appTeamId) {
+    throw new Error("Missing Apple Team ID for runtime integrity monitoring");
+  }
+
+  if (!env.securityWatcherEmail) {
+    throw new Error("Missing security watcher email for runtime integrity monitoring");
+  }
+
+  return {
+    bundleId,
+    appTeamId: env.appTeamId,
+    watcherMail: env.securityWatcherEmail,
+  };
+}
+
 const disabledAttestation: Attestation = {
   async attest() {
-    return { status: "disabled" };
+    return {
+      status: "disabled",
+    };
   },
+
   async createAssertion() {
-    return { status: "disabled" };
+    return {
+      status: "disabled",
+    };
   },
+
   async reset() {
     return Promise.resolve();
   },
 };
 
+declare const require: (path: string) => {
+  expoAppAttestDevice: AppAttestDevice;
+};
 
-declare const require: (path: string) => { expoAppAttestDevice: AppAttestDevice };
-
-/** Do not load @expo/app-integrity at all while running inside Expo Go. */
+/**
+ * Do not load @expo/app-integrity at all while running inside Expo Go.
+ */
 const lazyExpoAppAttestDevice: AppAttestDevice = {
   support() {
     return loadRealDevice().support();
   },
+
   generateKey() {
     return loadRealDevice().generateKey();
   },
+
   attestKey(keyId, challenge) {
     return loadRealDevice().attestKey(keyId, challenge);
   },
+
   createAssertion(keyId, challenge) {
     return loadRealDevice().createAssertion(keyId, challenge);
   },
