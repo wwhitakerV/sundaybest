@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 
+import { usePrefetch } from "@/core/api/prefetch";
 import { useProgressQuery, useRemindersQuery } from "@/core/api/queries";
 import { studyHref } from "@/entities/plan";
 import { selectionFeedback } from "@/core/haptics/haptics";
@@ -17,12 +18,22 @@ export function useProgressWeek() {
   const progressQuery = useProgressQuery(weekStart);
   const remindersQuery = useRemindersQuery();
   const progress = progressQuery.data;
-  const week = progress?.week ?? Array.from({ length: 7 }, (_, index) => ({
-    date: addDays(weekStart, index),
-    completedDayCount: 0,
-  }));
-  const reminder = remindersQuery.data?.reminders.find((item) => item.kind === "dailyStudy") ?? null;
+  const week =
+    progress?.week ??
+    Array.from({ length: 7 }, (_, index) => ({
+      date: addDays(weekStart, index),
+      completedDayCount: 0,
+    }));
+  const reminder =
+    remindersQuery.data?.reminders.find((item) => item.kind === "dailyStudy") ?? null;
   const upNext = progress?.upNext ?? null;
+  // Up next opens already loaded.
+  const prefetch = usePrefetch();
+  const nextPlanId = upNext?.plan.id ?? null;
+  const nextDay = upNext?.day.dayNumber ?? null;
+  useEffect(() => {
+    if (nextPlanId && nextDay !== null) prefetch.studyDay(nextPlanId, nextDay);
+  }, [nextPlanId, nextDay, prefetch]);
 
   return {
     today: progress?.today ?? today,

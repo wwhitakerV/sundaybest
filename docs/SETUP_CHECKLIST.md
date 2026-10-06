@@ -315,8 +315,13 @@ shipping, not because they recur.
       `icon-development.png`, and `icon-preview.png` are generated
       block-letter placeholders (`npm run icons`). Real artwork is needed
       before any TestFlight or App Store submission, with no alpha channel.
-      Splash artwork is still unset — `app.config.ts` configures only a
-      background colour.
+      The splash is set: the wordmark on white (`assets/splash-wordmark.png`,
+      `scripts/render-splash-wordmark.swift`); it needs a new native build.
+- [ ] **Measure speed on a real iPhone, release build.** Time a cold launch to
+      Home (new and returning reader), opening a plan, opening a study day,
+      and a Quick Check; note the API requests each screen makes. Record the
+      numbers in `docs/PROJECT.md` so later changes can be compared against
+      them, and fix anything that waits on the network before moving.
 - [ ] **Run `scripts/setup-branch-protection.sh`.** Needs the `gh` CLI
       installed and authenticated (`gh auth login`) as an account with admin
       on the repo. Sets, on `main`: pull requests required, 1 approval

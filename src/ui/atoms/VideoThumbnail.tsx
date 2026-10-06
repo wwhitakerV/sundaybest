@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { Image } from "expo-image";
 import { Play } from "lucide-react-native";
 
 import { radius, space, useTheme } from "@/theme";
@@ -24,11 +25,15 @@ export function VideoThumbnail({ uri, duration, testID, style }: VideoThumbnailP
     >
       <Play size={32} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
       {uri && (
+        // expo-image: decoded off the main thread and kept in memory and on
+        // disk, so a thumbnail seen once — or warmed by `prefetchImages` —
+        // draws at once everywhere it appears, with no fade to wait through.
         <Image
           source={{ uri }}
           style={StyleSheet.absoluteFill}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={uri}
         />
       )}
       {duration && (

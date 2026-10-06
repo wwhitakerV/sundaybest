@@ -24,6 +24,12 @@ const SECURE_STORAGE_SCHEMAS = {
   /** Stable Expo Go development-install id. Not used by preview/production auth. */
   "development.installationId": z.string().uuid(),
 
+  /**
+   * The user whose server data the offline cache holds (`api-resource-cache`).
+   * Set from every successful /me; offline reads are scoped to it.
+   */
+  "offline.currentUserId": z.string().uuid(),
+
   /** Session refresh token. Rotated on every use. */
   "session.refreshToken": z.string().min(1).max(4096),
 } as const;

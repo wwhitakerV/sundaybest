@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
 
 import { space, useTheme } from "@/theme";
 import sermonThumbnail from "../../../../../assets/images/welcome/sermon-thumbnail.png";
@@ -23,12 +24,7 @@ export function SermonCard() {
           fills it. Sizing the Image itself lets its file's own pixel size leak
           into layout and leave it short of the card's edge. */}
       <View style={styles.thumbnail}>
-        <Image
-          source={sermonThumbnail}
-          style={styles.fill}
-          resizeMode="cover"
-          accessibilityIgnoresInvertColors
-        />
+        <Image source={sermonThumbnail} style={styles.fill} contentFit="cover" />
       </View>
       <View style={styles.text}>
         <SFProBody variant="listItem" numberOfLines={1}>

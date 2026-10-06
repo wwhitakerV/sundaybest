@@ -11,22 +11,26 @@ export type NotFoundScreenProps = {
   title: string;
   /** Why, kindly, and what to do. */
   message: string;
-  /** The way out: "Back to Plans". */
+  /** The main action: the way out ("Back to Plans"), or "Try again" when there's also a way out. */
   actionLabel: string;
   onAction: () => void;
+  /** A second way out beside a retry ("Close"), so trying again is never the only choice. */
+  secondary?: { label: string; onPress: () => void };
   testID: string;
 };
 
 /**
- * What a screen shows when what it's for isn't there — a plan or day that
- * doesn't exist, or a link that doesn't make sense — instead of nothing: what
- * happened, and one way out.
+ * What a screen shows when what it's for isn't there, or couldn't be reached
+ * — instead of nothing: what happened, and a way out. A screen that can be
+ * retried offers the retry and a way out together, so the reader is never
+ * held on it.
  */
 export function NotFoundScreen({
   title,
   message,
   actionLabel,
   onAction,
+  secondary,
   testID,
 }: NotFoundScreenProps) {
   return (
@@ -39,12 +43,22 @@ export function NotFoundScreen({
           {message}
         </SFProBody>
       </View>
-      <Button
-        testID={`${testID}-action`}
-        label={actionLabel}
-        variant="secondary"
-        onPress={onAction}
-      />
+      <View style={styles.actions}>
+        <Button
+          testID={`${testID}-action`}
+          label={actionLabel}
+          variant={secondary ? "primary" : "secondary"}
+          onPress={onAction}
+        />
+        {secondary && (
+          <Button
+            testID={`${testID}-secondary`}
+            label={secondary.label}
+            variant="secondary"
+            onPress={secondary.onPress}
+          />
+        )}
+      </View>
     </Screen>
   );
 }
@@ -52,4 +66,5 @@ export function NotFoundScreen({
 const styles = StyleSheet.create({
   centre: { flex: 1, justifyContent: "center", gap: space[12] },
   centred: { textAlign: "center" },
+  actions: { gap: space[8] },
 });

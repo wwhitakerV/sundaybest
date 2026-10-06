@@ -26,6 +26,7 @@ import {
 } from "./contracts";
 import { createIdempotencyKey } from "./idempotency";
 import { apiMutationKeys, apiQueryKeys, isStudyDayQueryKey } from "./query-keys";
+import { planQueryOptions, studyDayQueryOptions } from "./query-options";
 import { useSundayBestApi } from "./ApiProvider";
 import {
   cachedCurrentUserQuery,
@@ -101,32 +102,13 @@ export function usePlansQuery(enabled = true) {
 
 export function usePlanQuery(planId: string) {
   const api = useSundayBestApi();
-  return useQuery({
-    queryKey: apiQueryKeys.plan(planId),
-    queryFn: () =>
-      cachedServerQuery({
-        cacheKey: offlineCacheKeys.plan(planId),
-        resourceType: "plan",
-        schema: getPlanResponseSchema,
-        fetcher: () => api.plans.get(planId),
-        serverUpdatedAt: (value) => value.plan.updatedAt,
-      }),
-    enabled: planId.length > 0,
-  });
+  return useQuery({ ...planQueryOptions(api, planId), enabled: planId.length > 0 });
 }
 
 export function useStudyDayQuery(planId: string, dayNumber: number) {
   const api = useSundayBestApi();
   return useQuery({
-    queryKey: apiQueryKeys.studyDay(planId, dayNumber),
-    queryFn: () =>
-      cachedServerQuery({
-        cacheKey: offlineCacheKeys.studyDay(planId, dayNumber),
-        resourceType: "studyDay",
-        schema: getStudyDayResponseSchema,
-        fetcher: () => api.study.getDay(planId, dayNumber),
-        cacheable: (value) => value.day.scripture.cacheAllowed,
-      }),
+    ...studyDayQueryOptions(api, planId, dayNumber),
     enabled: planId.length > 0 && dayNumber > 0,
   });
 }

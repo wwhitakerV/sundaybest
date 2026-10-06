@@ -1,9 +1,10 @@
 import { z, type ZodType } from "zod";
 
 import { createExpoSecureStorage } from "@/core/security/secure-storage/expo-secure-storage";
+import type { SecureStorageKey } from "@/core/security/secure-storage/keys";
 import { getAppDatabase } from "./database/app-database";
 
-const CURRENT_SCOPE_KEY = "offline.currentUserId";
+const CURRENT_SCOPE_KEY = "offline.currentUserId" satisfies SecureStorageKey;
 
 const cacheRowSchema = z.object({
   payload_json: z.string(),
@@ -107,10 +108,10 @@ export async function removeCachedResource(cacheKey: string): Promise<void> {
   const scopeId = await getOfflineUserScope();
   if (!scopeId) return;
   const db = await getAppDatabase();
-  await db.execute(
-    "DELETE FROM api_resource_cache WHERE scope_id = ? AND cache_key = ?",
-    [scopeId, cacheKey],
-  );
+  await db.execute("DELETE FROM api_resource_cache WHERE scope_id = ? AND cache_key = ?", [
+    scopeId,
+    cacheKey,
+  ]);
 }
 
 export async function clearCachedServerStateForCurrentUser(): Promise<void> {

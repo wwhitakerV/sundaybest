@@ -39,11 +39,7 @@ export function PlanCompleteScreen() {
 
   if (!view.found) {
     return (
-      <StudyNotFound
-        testID="plan-complete-not-found"
-        error={Boolean(view.error)}
-        onRetry={view.retry}
-      />
+      <StudyNotFound testID="plan-complete-not-found" error={view.error} onRetry={view.retry} />
     );
   }
 

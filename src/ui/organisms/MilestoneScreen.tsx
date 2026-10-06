@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { space } from "@/theme";
 import { HERO_RING } from "@/ui/atoms/hero-ring";
@@ -7,7 +8,6 @@ import { DisplayTitle } from "@/ui/typography/DisplayTitle";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { PAGE_INSET, PAGE_TOP } from "./Screen";
 import { ScrollScreen } from "./ScrollScreen";
-import { ScreenFooter } from "./ScreenFooter";
 
 /**
  * The one layout every milestone page shares, set by Day Complete: where the
@@ -28,8 +28,6 @@ export const MILESTONE_LAYOUT = {
   contentGap: space[16],
   /** Under the content, so it scrolls clear of the footer. */
   contentFoot: space[24],
-  /** Above the footer's buttons (`ScreenFooter` sets the rest). */
-  footerTop: space[16],
 } as const;
 
 export type MilestoneScreenProps = {
@@ -45,7 +43,7 @@ export type MilestoneScreenProps = {
   badge?: ReactNode;
   /** What the page holds: cards, rows, a picker. */
   children?: ReactNode;
-  /** The way on, pinned at the foot: its buttons. */
+  /** The way on, in the dock at the foot: its one button. */
   footer?: ReactNode;
 };
 
@@ -65,21 +63,17 @@ export function MilestoneScreen({
   children,
   footer,
 }: MilestoneScreenProps) {
+  const insetTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
+
   return (
     <ScrollScreen
       testID={testID}
       contentStyle={styles.scroll}
-      footer={
-        footer ? (
-          <ScreenFooter testID={`${testID}-footer`} style={styles.footer}>
-            {footer}
-          </ScreenFooter>
-        ) : undefined
-      }
+      {...(footer !== undefined && { footer })}
       overlay={
         // Last, so it's drawn — and touched — over the page; floated, so it never moves the mark.
         header ? (
-          <View testID={`${testID}-header`} style={styles.header}>
+          <View testID={`${testID}-header`} style={[styles.header, { top: insetTop + PAGE_TOP }]}>
             {header}
           </View>
         ) : undefined
@@ -128,6 +122,5 @@ const styles = StyleSheet.create({
   titles: { alignItems: "center", gap: layout.subtitleGap },
   centred: { textAlign: "center" },
   content: { marginTop: layout.contentTop, gap: layout.contentGap },
-  footer: { paddingTop: layout.footerTop },
-  header: { position: "absolute", top: PAGE_TOP, left: PAGE_INSET, right: PAGE_INSET },
+  header: { position: "absolute", left: PAGE_INSET, right: PAGE_INSET },
 });

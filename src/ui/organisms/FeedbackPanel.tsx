@@ -7,8 +7,8 @@ import { radius, space, useTheme } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
 import { toneColor } from "@/ui/typography/tone";
+import { FLOATING_NAV_BAR, getFloatingNavBarBottom } from "./floatingNavBar";
 import { PAGE_INSET } from "./Screen";
-import { FOOTER_BOTTOM } from "./ScreenFooter";
 
 export type FeedbackPanelProps = {
   testID: string;
@@ -22,15 +22,16 @@ export type FeedbackPanelProps = {
 };
 
 /**
- * A verdict at the foot of a padded screen, in its colour: an icon and a
- * title, why, and the way on. It runs to the screen's edges, past the page
- * inset, with rounded top corners, and on under the home indicator — in place
- * of the screen's own action. A quiz answer checked, a link that won't work.
+ * A verdict at the foot of a page, in its colour: an icon and a title, why,
+ * and the way on. `ScrollFrame` pins it to the screen's bottom in the dock's
+ * place; it runs just past the screen's edges with rounded top corners, its
+ * words at the page inset and its button exactly where the dock's sits. A
+ * quiz answer checked, a link that won't work.
  */
 export function FeedbackPanel({ testID, tone, title, detail, children }: FeedbackPanelProps) {
   const theme = useTheme();
-  // The screen keeps clear of the home indicator; the panel's colour runs on under it.
-  const bottomInset = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
+  // Its button where the dock's pill sits; its colour runs on under the home indicator.
+  const capsuleBottom = getFloatingNavBarBottom(useContext(SafeAreaInsetsContext)?.bottom ?? 0);
   const right = tone === "correct";
   const Icon = right ? CircleCheck : CircleX;
 
@@ -39,26 +40,29 @@ export function FeedbackPanel({ testID, tone, title, detail, children }: Feedbac
       testID={testID}
       style={[
         styles.panel,
-        // Its button lands where a `ScreenFooter`'s would, so it never moves.
-        { marginBottom: -(bottomInset + EDGE), paddingBottom: bottomInset + EDGE + FOOTER_BOTTOM },
+        { paddingBottom: capsuleBottom + EDGE },
         {
           backgroundColor: right ? theme.colors.correctSurface : theme.colors.incorrectSurface,
           borderColor: right ? theme.colors.correctBorder : theme.colors.incorrectBorder,
         },
       ]}
     >
-      <View style={styles.verdict}>
-        <Icon
-          size={22}
-          color={toneColor(theme.colors, tone)}
-          strokeWidth={theme.icon.strokeWidth}
-        />
-        <SFProTitle variant="headline" tone={tone}>
-          {title}
-        </SFProTitle>
+      <View testID={`${testID}-words`} style={styles.words}>
+        <View style={styles.verdict}>
+          <Icon
+            size={22}
+            color={toneColor(theme.colors, tone)}
+            strokeWidth={theme.icon.strokeWidth}
+          />
+          <SFProTitle variant="headline" tone={tone}>
+            {title}
+          </SFProTitle>
+        </View>
+        {detail ? <SFProBody tone={tone}>{detail}</SFProBody> : null}
       </View>
-      {detail ? <SFProBody tone={tone}>{detail}</SFProBody> : null}
-      {children}
+      <View testID={`${testID}-action`} style={styles.action}>
+        {children}
+      </View>
     </View>
   );
 }
@@ -72,13 +76,17 @@ const EDGE = 1;
 
 const styles = StyleSheet.create({
   panel: {
-    marginHorizontal: -(PAGE_INSET + EDGE),
-    paddingHorizontal: PAGE_INSET + EDGE,
+    marginHorizontal: -EDGE,
+    marginBottom: -EDGE,
+    paddingHorizontal: FLOATING_NAV_BAR.sideMargin + EDGE,
     paddingTop: space[24],
     gap: space[16],
     borderWidth: EDGE,
     borderTopLeftRadius: radius[36],
     borderTopRightRadius: radius[36],
   },
+  // The words keep the page inset; only the button comes out to the dock's.
+  words: { paddingHorizontal: PAGE_INSET - FLOATING_NAV_BAR.sideMargin, gap: space[16] },
   verdict: { flexDirection: "row", alignItems: "center", gap: space[10] },
+  action: { height: FLOATING_NAV_BAR.capsuleHeight, justifyContent: "center" },
 });

@@ -3,12 +3,8 @@ import { StyleSheet, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { space } from "@/theme";
-import { BottomFade } from "./atoms/BottomFade";
-import {
-  FLOATING_NAV_BAR,
-  getFloatingNavBarBottom,
-  getFloatingNavBarTintHeight,
-} from "./organisms/floatingNavBar";
+import { DockTint } from "./organisms/DockTint";
+import { FLOATING_NAV_BAR, getFloatingNavBarBottom } from "./organisms/floatingNavBar";
 
 const { capsuleHeight, sideMargin } = FLOATING_NAV_BAR;
 
@@ -29,7 +25,6 @@ export type FloatingBarProps = {
 export function FloatingBar({ children, testID }: FloatingBarProps) {
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   const capsuleBottom = getFloatingNavBarBottom(insetBottom);
-  const tintHeight = getFloatingNavBarTintHeight(capsuleBottom);
 
   return (
     <View
@@ -37,12 +32,7 @@ export function FloatingBar({ children, testID }: FloatingBarProps) {
       pointerEvents="box-none"
       style={[styles.bar, { bottom: capsuleBottom - insetBottom }]}
     >
-      <View
-        pointerEvents="none"
-        style={[styles.tint, { bottom: -capsuleBottom, height: tintHeight }]}
-      >
-        <BottomFade testID={`${testID}-tint`} height={tintHeight} solidHeight={capsuleBottom} />
-      </View>
+      <DockTint testID={`${testID}-tint`} capsuleBottom={capsuleBottom} />
       <View testID={`${testID}-row`} style={[styles.row, { gap: space[8] }]}>
         {children}
       </View>
@@ -52,6 +42,5 @@ export function FloatingBar({ children, testID }: FloatingBarProps) {
 
 const styles = StyleSheet.create({
   bar: { position: "absolute", left: sideMargin, right: sideMargin },
-  tint: { position: "absolute", left: -sideMargin, right: -sideMargin },
   row: { height: capsuleHeight, flexDirection: "row", alignItems: "center" },
 });

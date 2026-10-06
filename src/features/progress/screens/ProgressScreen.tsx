@@ -2,7 +2,7 @@ import { StyleSheet, View } from "react-native";
 
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
-import { ContentPending } from "@/ui/molecules/ContentPending";
+import { ProgressSkeleton } from "../components/ProgressSkeleton";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { StatCard } from "@/ui/molecules/StatCard";
@@ -56,7 +56,7 @@ export function ProgressScreen() {
       contentStyle={styles.content}
     >
       {loading ? (
-        <ContentPending testID="progress-content-pending" />
+        <ProgressSkeleton testID="progress-content-pending" />
       ) : (
         <>
           <WeekNavigator

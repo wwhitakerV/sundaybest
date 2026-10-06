@@ -4,7 +4,7 @@ import { render, screen } from "@tests/helpers/render";
 import { lightTheme } from "@/theme/tokens";
 import { FeedbackPanel } from "@/ui/organisms/FeedbackPanel";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
-import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
+import { FLOATING_NAV_BAR, getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 import { Text } from "react-native";
 
 /** An iPhone's home indicator. */
@@ -68,21 +68,37 @@ describe("FeedbackPanel", () => {
     });
   });
 
-  it("fills down to the screen's bottom edge, under the home indicator", () => {
+  it("fills down to the screen's bottom edge, its button where the dock's pill sits", () => {
     renderPanel();
 
     expect(screen.getByTestId("panel")).toHaveStyle({
-      marginBottom: -(BOTTOM_INSET + EDGE),
-      paddingBottom: BOTTOM_INSET + EDGE + FOOTER_BOTTOM,
+      marginBottom: -EDGE,
+      paddingBottom: getFloatingNavBarBottom(BOTTOM_INSET) + EDGE,
     });
   });
 
-  it("reaches just past both sides of the screen", () => {
+  it("holds its button in a row as tall as the dock's", () => {
+    renderPanel({}, <Text>Way on</Text>);
+
+    expect(screen.getByTestId("panel-action")).toHaveStyle({
+      height: FLOATING_NAV_BAR.capsuleHeight,
+    });
+  });
+
+  it("reaches just past both sides of the screen, its button as far in as the dock's", () => {
     renderPanel();
 
     expect(screen.getByTestId("panel")).toHaveStyle({
-      marginHorizontal: -(PAGE_INSET + EDGE),
-      paddingHorizontal: PAGE_INSET + EDGE,
+      marginHorizontal: -EDGE,
+      paddingHorizontal: FLOATING_NAV_BAR.sideMargin + EDGE,
+    });
+  });
+
+  it("keeps its words at the page inset", () => {
+    renderPanel();
+
+    expect(screen.getByTestId("panel-words")).toHaveStyle({
+      paddingHorizontal: PAGE_INSET - FLOATING_NAV_BAR.sideMargin,
     });
   });
 

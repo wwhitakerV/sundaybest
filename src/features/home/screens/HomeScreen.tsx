@@ -4,9 +4,9 @@ import Animated from "react-native-reanimated";
 
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
-import { ContentPending } from "@/ui/molecules/ContentPending";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { ActivePlanBar } from "../components/ActivePlanBar";
+import { HomeSkeleton } from "../components/HomeSkeleton";
 import { ActivePlanHero } from "../components/ActivePlanHero";
 import { ArtworkFlight } from "../components/ArtworkFlight";
 import { useHomeView } from "../hooks/use-home-view";
@@ -84,7 +84,7 @@ export function HomeScreen() {
           showsVerticalScrollIndicator={false}
         >
           {view.loading ? (
-            <ContentPending testID="home-content-pending" />
+            <HomeSkeleton testID="home-content-pending" />
           ) : (
             <>
               {view.active ? (

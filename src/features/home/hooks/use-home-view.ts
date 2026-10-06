@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useRouter } from "expo-router";
 
 import {
@@ -18,6 +19,8 @@ import {
 } from "@/features/plans/logic/api-plan-collections";
 import { describeApiPlan } from "@/features/plans/logic/api-plan-wording";
 import { homePlanOverviewHref } from "../logic/routes";
+import { usePrefetch } from "@/core/api/prefetch";
+import { prefetchImages } from "@/core/images/prefetch-images";
 
 /** Home's server-backed plan view model. */
 export function useHomeView() {
@@ -29,6 +32,22 @@ export function useHomeView() {
   const plan = getApiActivePlan(allPlans);
   const sample = getApiSamplePlan(allPlans);
   const currentDay = plan?.currentDay ?? null;
+  const prefetch = usePrefetch();
+  const activeId = plan?.id ?? null;
+  const openDay = currentDay && currentDay.status !== "locked" ? currentDay.dayNumber : null;
+
+  // Every plan's artwork on Home is drawn the moment it's shown.
+  const artwork = allPlans.map((candidate) => candidate.sermon.thumbnailUrl).join("\n");
+  useEffect(() => {
+    prefetchImages(artwork.split("\n"));
+  }, [artwork]);
+
+  // Home's two ways on — the plan, and today's study — arrive already loaded.
+  useEffect(() => {
+    if (!activeId) return;
+    prefetch.plan(activeId);
+    if (openDay !== null) prefetch.studyDay(activeId, openDay);
+  }, [activeId, openDay, prefetch]);
 
   const active =
     plan && currentDay
@@ -82,7 +101,10 @@ export function useHomeView() {
     continueToday: () => {
       if (!active) return;
       tapFeedback();
-      router.push(studyHref(active.planId, active.currentDay));
+      // A day not open yet is shown, locked, on the plan instead.
+      router.push(
+        currentDay?.status === "locked" ? active.href : studyHref(active.planId, active.currentDay),
+      );
     },
   };
 }

@@ -43,8 +43,9 @@ export function GenerationBar({
   const fill = ready ? theme.colors.success : theme.colors.controlPrimary;
   const ink = ready ? theme.colors.onSuccess : theme.colors.onControlPrimary;
   const line = ready ? theme.colors.onSuccessFaint : theme.colors.onControlPrimaryFaint;
-  // A button stands out against the bar: light on a dark bar, dark on a light one.
-  const buttonTone = ready || theme.name === "dark" ? "dark" : "light";
+  // A button stands out against the bar: white on the dark bar and on the
+  // green one, dark only where the primary control is itself light.
+  const buttonTone = !ready && theme.name === "dark" ? "dark" : "light";
 
   return (
     <View testID={testID} style={[styles.pill, { backgroundColor: fill }]}>

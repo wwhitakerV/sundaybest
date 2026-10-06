@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
-import { render, screen } from "@tests/helpers/render";
+import { fireEvent, render, screen } from "@tests/helpers/render";
 
 import { SFProBody } from "@/ui/typography/SFProBody";
+import { EDGE_FADE } from "@/ui/organisms/frame-edges";
 import { ListScreen } from "@/ui/organisms/ListScreen";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 
@@ -39,8 +40,7 @@ describe("ListScreen", () => {
   it("runs the list the screen's full width, with the page inset on its content", () => {
     renderList();
 
-    const page = screen.getByTestId("a-list-page").children[0];
-    expect(typeof page === "object" && StyleSheet.flatten(page.props.style)).not.toMatchObject({
+    expect(screen.getByTestId("a-list-page-list")).not.toHaveStyle({
       paddingHorizontal: PAGE_INSET,
     });
     expect(
@@ -52,5 +52,24 @@ describe("ListScreen", () => {
     renderList();
 
     expect(screen.getByTestId("a-list-page-header")).toHaveStyle({ paddingHorizontal: PAGE_INSET });
+  });
+
+  it("starts its first item clear of the floating header and its fade", () => {
+    renderList();
+    fireEvent(screen.getByTestId("a-list-page-header"), "layout", {
+      nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 100 } },
+    });
+
+    expect(screen.getByTestId("a-list-page-list-top-clearance")).toHaveStyle({
+      height: 100 + EDGE_FADE,
+    });
+  });
+
+  it("ends its last item clear of the bottom edge's fade", () => {
+    renderList();
+
+    expect(screen.getByTestId("a-list-page-list-bottom-clearance")).toHaveStyle({
+      height: EDGE_FADE,
+    });
   });
 });

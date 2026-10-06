@@ -4,7 +4,6 @@ import Animated from "react-native-reanimated";
 
 import { FeedbackPanel } from "@/ui/organisms/FeedbackPanel";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
-import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
 import { Button } from "@/ui/atoms/Button";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { useNewPlanFlow } from "../hooks/use-new-plan-flow";
@@ -60,9 +59,10 @@ export function NewPlanScreen() {
           onPress={flow.leading}
         />
       }
-      footer={
-        // The link's verdict at the foot, as a quiz answer's is: why it won't work, or a cheer.
-        flow.linkFeedback ? (
+      footer={action}
+      // The link's verdict in the dock's place, as a quiz answer's is: why it won't work, or a cheer.
+      {...(flow.linkFeedback && {
+        feedback: (
           <FeedbackPanel
             testID="new-plan-link-feedback"
             tone={flow.linkFeedback.tone}
@@ -71,10 +71,8 @@ export function NewPlanScreen() {
           >
             {action}
           </FeedbackPanel>
-        ) : (
-          <ScreenFooter testID="new-plan-footer">{action}</ScreenFooter>
-        )
-      }
+        ),
+      })}
       contentStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >

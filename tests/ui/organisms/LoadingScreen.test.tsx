@@ -9,16 +9,17 @@ describe("LoadingScreen", () => {
     expect(screen.getByTestId("loading-screen")).toBeVisible();
   });
 
-  it("renders the masthead wordmark", () => {
+  it("renders the splash wordmark, named for VoiceOver", () => {
     render(<LoadingScreen />);
 
-    expect(screen.getByText("SUNDAYBEST")).toBeVisible();
+    expect(screen.getByLabelText("SundayBest")).toBeVisible();
   });
 
-  it("renders the spinner", () => {
+  it("never shows a spinner", () => {
     render(<LoadingScreen />);
 
-    expect(screen.getByTestId("loading-spinner")).toBeVisible();
+    expect(screen.queryByTestId("loading-spinner")).toBeNull();
+    expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
   it("applies the themed background colour", () => {

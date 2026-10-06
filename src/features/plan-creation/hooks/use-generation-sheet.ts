@@ -24,6 +24,8 @@ export function useGenerationSheet() {
   return {
     view: bar.view,
     steps,
+    /** The step under way, while building. */
+    step: steps.find((candidate) => candidate.state === "active")?.label ?? null,
     close: () => router.back(),
     open: thenClose(bar.open),
     retry: thenClose(bar.retry),

@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 import { ListScreen } from "@/ui/organisms/ListScreen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
-import { ContentPending } from "@/ui/molecules/ContentPending";
+import { PlansSkeleton } from "../components/PlansSkeleton";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { FilterPills } from "@/ui/molecules/FilterPills";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
@@ -28,6 +28,7 @@ export function PlansScreen() {
   return (
     <ListScreen
       testID="plans-screen"
+      headerFade="gradual"
       header={
         <>
           <TitleHeader title="Plans" />
@@ -46,7 +47,7 @@ export function PlansScreen() {
       contentStyle={styles.list}
       empty={
         loading ? (
-          <ContentPending testID="plans-content-pending" />
+          <PlansSkeleton testID="plans-content-pending" />
         ) : (
           <PlansEmpty testID="plans-empty" {...empty} />
         )

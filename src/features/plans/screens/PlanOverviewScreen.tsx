@@ -77,6 +77,7 @@ export function PlanOverviewScreen() {
         testID="plan-overview-load-error"
         title="Couldn't load this plan"
         onRetry={view.retry}
+        leave={{ label: "Back to Plans", onPress: view.goBack }}
       />
     );
   }

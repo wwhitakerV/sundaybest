@@ -33,11 +33,7 @@ export function DayCompleteScreen() {
 
   if (!view.found) {
     return (
-      <StudyNotFound
-        testID="day-complete-not-found"
-        error={Boolean(view.error)}
-        onRetry={view.retry}
-      />
+      <StudyNotFound testID="day-complete-not-found" error={view.error} onRetry={view.retry} />
     );
   }
 

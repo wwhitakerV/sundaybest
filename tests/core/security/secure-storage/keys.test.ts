@@ -9,8 +9,19 @@ describe("the key registry", () => {
     expect([...SECURE_STORAGE_KEYS].sort()).toEqual([
       "attestation.keyId",
       "database.key",
+      "development.installationId",
+      "offline.currentUserId",
       "session.refreshToken",
     ]);
+  });
+
+  // The offline cache's owner: without it, saving /me's user threw after every
+  // successful lookup and launch failed (or fell back to Welcome).
+  it("keeps the offline cache's user id, and only as a uuid", () => {
+    const schema = schemaFor("offline.currentUserId");
+
+    expect(schema.safeParse("4bca81ef-a008-49d6-a0c4-d83974fb0241").success).toBe(true);
+    expect(schema.safeParse("not-a-user").success).toBe(false);
   });
 
   it("has a schema for every declared key", () => {

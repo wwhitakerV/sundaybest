@@ -18,7 +18,7 @@ import {
 } from "@/core/store";
 import { getScoreHeadline } from "@/features/plans/logic/quick-check";
 import { QuickCheckScreen } from "@/features/plans/screens/QuickCheckScreen";
-import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
+import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -195,12 +195,12 @@ describe("QuickCheckScreen", () => {
       }
     });
 
-    it("pins its action in the shared footer", () => {
+    it("puts its action in the dock, where the tab bar's pill sits", () => {
       renderQuickCheck(TEMPTATION, 1, STARTED);
 
-      const footer = screen.getByTestId("quick-check-footer");
-      expect(within(footer).getByTestId("quick-check-check-button")).toBeVisible();
-      expect(footer).toHaveStyle({ paddingBottom: FOOTER_BOTTOM });
+      const dock = screen.getByTestId("quick-check-screen-dock");
+      expect(within(dock).getByTestId("quick-check-check-button")).toBeVisible();
+      expect(dock).toHaveStyle({ bottom: getFloatingNavBarBottom(0) });
     });
 
     it("won't check an answer until one is picked", () => {

@@ -1,25 +1,21 @@
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
-import { space } from "@/theme";
+import { space, useTheme } from "@/theme";
 import { Button } from "@/ui/atoms/Button";
 import { NotFoundScreen } from "@/ui/organisms/NotFoundScreen";
-import { SheetLayout } from "@/ui/SheetLayout";
-import { SFProBody } from "@/ui/typography/SFProBody";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { BuildSteps } from "../components/BuildSteps";
+import { GenerationSheetHeader } from "../components/GenerationSheetHeader";
 import { useGenerationSheet } from "../hooks/use-generation-sheet";
 
-const TITLES = {
-  building: "Generating your plan",
-  ready: "Your plan is ready",
-  failed: "Couldn’t build your plan",
-} as const;
-
 /**
- * The plan being built, in a half sheet over wherever the reader is: how far
- * along it is, step by step, spinning on the step under way. Ready, it opens
- * the plan; failed, it says why and offers what can be done.
+ * The plan being built, in a half sheet over wherever the reader is: a black
+ * head with how far along it is, then its steps, spinning on the step under
+ * way. Ready, it opens the plan; failed, it offers what can be done — and a
+ * way out, always.
  */
 export function GenerationSheetScreen() {
+  const theme = useTheme();
   const sheet = useGenerationSheet();
   const { view } = sheet;
 
@@ -36,19 +32,20 @@ export function GenerationSheetScreen() {
   }
 
   return (
-    <SheetLayout testID="generation-sheet" title={TITLES[view.kind]}>
+    <ScrollView
+      testID="generation-sheet"
+      style={{ backgroundColor: theme.colors.background }}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <GenerationSheetHeader
+        testID="generation-sheet-header"
+        view={view}
+        step={sheet.step}
+        onClose={sheet.close}
+      />
       <View style={styles.body}>
-        {view.kind === "building" && (
-          <SFProBody
-            variant="detail"
-            tone="textMuted"
-          >{`${view.percent}% · This keeps going while you browse.`}</SFProBody>
-        )}
-        {view.kind === "failed" ? (
-          <SFProBody tone="textMuted">{view.reason}</SFProBody>
-        ) : (
-          <BuildSteps testID="generation-steps" steps={sheet.steps} />
-        )}
+        {view.kind !== "failed" && <BuildSteps testID="generation-steps" steps={sheet.steps} />}
         <View style={styles.actions}>
           {view.kind === "ready" && (
             <Button testID="generation-sheet-open" label="Open plan" onPress={sheet.open} />
@@ -74,11 +71,12 @@ export function GenerationSheetScreen() {
           )}
         </View>
       </View>
-    </SheetLayout>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { gap: space[24], paddingTop: space[8] },
+  content: { paddingBottom: space[40] },
+  body: { gap: space[24], paddingTop: space[24], paddingHorizontal: PAGE_INSET },
   actions: { gap: space[8] },
 });

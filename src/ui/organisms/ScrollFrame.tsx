@@ -1,62 +1,187 @@
-import type { ReactNode } from "react";
-import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { space } from "@/theme";
-import { PAGE_INSET, Screen } from "./Screen";
+import { space, useTheme } from "@/theme";
+import { BottomFade } from "@/ui/atoms/BottomFade";
+import { TopFade } from "@/ui/atoms/TopFade";
+import { FloatingDock } from "./FloatingDock";
+import {
+  GRADUAL_FADE,
+  GRADUAL_RAMP,
+  getFrameEdges,
+  type FrameFoot,
+  type HeaderFade,
+} from "./frame-edges";
+import { PAGE_INSET, PAGE_TOP } from "./Screen";
 
 export type ScrollFrameProps = {
   testID: string;
-  /** Pinned above the scroll: a step header, a title and its filters. */
+  /** Floated over the top of the scroll: a step header, a title and its filters. */
   header?: ReactNode;
-  /** The full-width scroller, its content inset by `SCROLL_INSET`. */
+  /**
+   * How the header meets what scrolls under it: `"edge"`, a short fade just
+   * below it; `"gradual"`, a thicker eased fade inside its own block, ending at
+   * its bottom edge (Plans' filters, Study's steps).
+   */
+  headerFade?: HeaderFade;
+  /** The full-height, full-width scroller, its content inset by `SCROLL_INSET`. */
   children: ReactNode;
-  /** Pinned at the foot: a `ScreenFooter`, or a `FeedbackPanel` in its place. */
+  /** The page's way on, in the dock where the tab bar's pill sits: one `Button`, or a bar's pill. */
   footer?: ReactNode;
-  /** Over everything, drawn last: a sheet, a floating nav, a floating close. */
+  /** A verdict (`FeedbackPanel`) shown in the dock's place, pinned to the screen's bottom. */
+  feedback?: ReactNode;
+  /** Over everything, drawn last: a sheet, a floating close. */
   overlay?: ReactNode;
-  /** The frame's own extras (room kept clear for a floating nav). */
-  style?: StyleProp<ViewStyle>;
 };
 
 /** The page inset, on a scroller's content: `ScrollScreen` and `ListScreen` set it. */
 export const SCROLL_INSET = { paddingHorizontal: PAGE_INSET } as const;
 
+/** Between a header's parts: a title and its filters. */
+const HEADER_GAP = space[12];
+
+const FrameClearanceContext = createContext({ top: 0, bottom: 0 });
+
 /**
- * The frame `ScrollScreen` and `ListScreen` share: a screen inset only top
- * and bottom, so its scroller runs the full width, with the page inset on
- * the header and the footer — lining up with the scroller's content.
+ * How far in from the screen's top and bottom a frame's scroller starts and
+ * ends its content, so it rests clear of the header, the dock, and their
+ * fades. `ScrollScreen` and `ListScreen` add it.
+ */
+export function useFrameClearance(): { top: number; bottom: number } {
+  return useContext(FrameClearanceContext);
+}
+
+/**
+ * The frame every scrolling page shares (`ScrollScreen`, `ListScreen`,
+ * `MilestoneScreen`). Its scroller runs the phone's full height and width;
+ * the header floats over its top and the way on floats in the dock over its
+ * foot — the tab bar's own container — each on the page's colour, fading
+ * into the page. So what scrolls dissolves under both ends instead of
+ * stopping at a line, and every page's top and foot look the same.
  */
 export function ScrollFrame({
   testID,
   header,
+  headerFade = "edge",
   children,
   footer,
+  feedback,
   overlay,
-  style,
 }: ScrollFrameProps) {
+  const theme = useTheme();
+  const insets = useContext(SafeAreaInsetsContext);
+  const insetTop = insets?.top ?? 0;
+  const [headerRef, headerHeight, setHeaderHeight] = useHeaderHeight();
+  const [panelHeight, setPanelHeight] = useState(0);
+
+  const foot: FrameFoot = feedback
+    ? { kind: "panel", height: panelHeight }
+    : footer
+      ? { kind: "dock" }
+      : { kind: "none" };
+  const edges = getFrameEdges({
+    insetTop,
+    insetBottom: insets?.bottom ?? 0,
+    headerHeight: header ? headerHeight : 0,
+    headerFade,
+    foot,
+  });
+
   return (
-    <Screen testID={testID} padded="vertical" {...(style && { style })}>
+    <View testID={testID} style={[styles.root, { backgroundColor: theme.colors.background }]}>
+      <FrameClearanceContext.Provider
+        value={{ top: edges.top.clearance, bottom: edges.bottom.clearance }}
+      >
+        {children}
+      </FrameClearanceContext.Provider>
+
+      <TopFade
+        testID={`${testID}-top-fade`}
+        height={edges.top.height}
+        solidHeight={edges.top.solid}
+        {...(headerFade === "gradual" && { ramp: GRADUAL_RAMP })}
+      />
       {header ? (
-        <View testID={`${testID}-header`} style={styles.header}>
+        <View
+          ref={headerRef}
+          testID={`${testID}-header`}
+          onLayout={(event: LayoutChangeEvent) => setHeaderHeight(event.nativeEvent.layout.height)}
+          style={[
+            styles.header,
+            { paddingTop: insetTop + PAGE_TOP },
+            headerFade === "gradual" && styles.gradualRoom,
+          ]}
+        >
           {header}
         </View>
       ) : null}
 
-      {children}
-
-      {footer ? (
-        // A `FeedbackPanel` here reaches past this inset to the screen's edges.
-        <View testID={`${testID}-foot`} style={SCROLL_INSET}>
-          {footer}
+      {foot.kind === "dock" ? null : (
+        <View pointerEvents="none" style={[styles.bottomEdge, { height: edges.bottom.height }]}>
+          <BottomFade
+            testID={`${testID}-bottom-fade`}
+            height={edges.bottom.height}
+            solidHeight={edges.bottom.solid}
+          />
         </View>
+      )}
+      {feedback ? (
+        <View
+          testID={`${testID}-panel`}
+          onLayout={(event: LayoutChangeEvent) => setPanelHeight(event.nativeEvent.layout.height)}
+          style={styles.panel}
+        >
+          {feedback}
+        </View>
+      ) : footer ? (
+        <FloatingDock testID={`${testID}-dock`}>{footer}</FloatingDock>
       ) : null}
 
       {overlay}
-    </Screen>
+    </View>
   );
 }
 
+/**
+ * The floating header's measured height. `onLayout` is the usual way, but it
+ * hasn't always arrived for a header inside a full-screen modal (Study), which
+ * left the page's content under the header with no fade; so the header is
+ * also measured directly once it's drawn. Either one landing is enough.
+ */
+function useHeaderHeight() {
+  const ref = useRef<View>(null);
+  const [value, setValue] = useState(0);
+  const set = (height: number) => setValue((current) => (current === height ? current : height));
+
+  useLayoutEffect(() => {
+    ref.current?.measure((_x, _y, _width, height) => {
+      if (height > 0) set(height);
+    });
+  });
+
+  return [ref, value, set] as const;
+}
+
 const styles = StyleSheet.create({
-  // Its parts as far apart as the screen's sections.
-  header: { ...SCROLL_INSET, gap: space[16] },
+  root: { flex: 1 },
+  // A gradual fade's ramp is the foot of the header's own block.
+  gradualRoom: { paddingBottom: GRADUAL_FADE },
+  header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: PAGE_INSET,
+    gap: HEADER_GAP,
+  },
+  bottomEdge: { position: "absolute", left: 0, right: 0, bottom: 0 },
+  panel: { position: "absolute", left: 0, right: 0, bottom: 0 },
 });

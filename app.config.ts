@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import expoImagePlugin from "expo-image/plugin";
 import expoRouterPlugin from "expo-router/plugin";
 import fontPlugin from "expo-font/plugin";
 import secureStorePlugin from "expo-secure-store/plugin";
@@ -286,8 +287,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
     plugins: [
       expoRouterPlugin(),
+      // The launch screen: the SUNDAYBEST wordmark on white, and nothing else.
+      // The image is the masthead face (Bodoni Moda Medium) in the brand black,
+      // rendered by scripts/render-splash-wordmark.swift; a native
+      // change, so it ships with a new build, not an OTA update.
       splashScreenPlugin({
         backgroundColor: "#FFFFFF",
+        image: "./assets/splash-wordmark.png",
+        imageWidth: 180,
+        resizeMode: "contain",
       }),
 
       // SQLCipher is a native build flag, so the encrypted database needs a real
@@ -334,6 +342,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           ],
         },
       }),
+
+      // expo-image: decoded, memory-and-disk-cached images for every artwork
+      // and thumbnail (ADR 0024). A native module, so it ships with a build.
+      expoImagePlugin(),
     ],
 
     experiments: {

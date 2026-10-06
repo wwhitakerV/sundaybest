@@ -5,10 +5,9 @@ import { X } from "lucide-react-native";
 
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
-import { ContentPending } from "@/ui/molecules/ContentPending";
+import { StudySkeleton } from "../components/StudySkeleton";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { TextSizeScope } from "@/ui/typography/TextSizeScope";
-import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { ReadingSheet } from "../components/ReadingSheet";
 import { StudyHeader } from "../components/StudyHeader";
 import { StudyNotFound } from "../components/StudyNotFound";
@@ -57,15 +56,13 @@ export function StudyScreen() {
         }
         contentStyle={styles.loadingContent}
       >
-        <ContentPending testID="study-content-pending" compact />
+        <StudySkeleton testID="study-content-pending" />
       </ScrollScreen>
     );
   }
 
   if (!view.found) {
-    return (
-      <StudyNotFound testID="study-not-found" error={Boolean(view.error)} onRetry={view.retry} />
-    );
+    return <StudyNotFound testID="study-not-found" error={view.error} onRetry={view.retry} />;
   }
 
   const rendered = fromPageIndex(renderedPage, view.pages);
@@ -80,7 +77,7 @@ export function StudyScreen() {
       <ThemeScope theme={paper}>
         <ScrollScreen
           testID="study-screen"
-          style={styles.clearBottomNav}
+          headerFade="gradual"
           header={
             <StudyHeader
               testID="study"
@@ -93,7 +90,7 @@ export function StudyScreen() {
               onTextSize={() => setReadingOpen(true)}
             />
           }
-          overlay={
+          footer={
             <StudyNav
               testID="study-nav"
               step={view.position.step}
@@ -141,10 +138,6 @@ export function StudyScreen() {
 }
 
 const styles = StyleSheet.create({
-  clearBottomNav: {
-    paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
-  },
-
   bodyContent: {
     paddingBottom: space[24],
   },

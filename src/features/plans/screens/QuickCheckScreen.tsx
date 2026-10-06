@@ -4,8 +4,7 @@ import { ListChecks, X } from "lucide-react-native";
 
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
-import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
-import { ContentPending } from "@/ui/molecules/ContentPending";
+import { QuickCheckSkeleton } from "../components/QuickCheckSkeleton";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { Button } from "@/ui/atoms/Button";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
@@ -51,19 +50,13 @@ export function QuickCheckScreen() {
         }
         contentStyle={styles.loadingContent}
       >
-        <ContentPending testID="quick-check-content-pending" compact />
+        <QuickCheckSkeleton testID="quick-check-content-pending" />
       </ScrollScreen>
     );
   }
 
   if (!view.found) {
-    return (
-      <StudyNotFound
-        testID="quick-check-not-found"
-        error={Boolean(view.error)}
-        onRetry={view.retry}
-      />
-    );
+    return <StudyNotFound testID="quick-check-not-found" error={view.error} onRetry={view.retry} />;
   }
 
   const { questions, status, currentIndex, current, currentResult, action, score } = view;
@@ -135,19 +128,19 @@ export function QuickCheckScreen() {
           onClose={view.close}
         />
       }
-      footer={
-        current && currentResult !== "unanswered" ? (
-          <QuickCheckFeedback
-            result={currentResult}
-            question={current}
-            action={action}
-            busy={view.busy}
-            onAction={() => void view.act(action)}
-          />
-        ) : (
-          <ScreenFooter testID="quick-check-footer">{actionButton}</ScreenFooter>
-        )
-      }
+      footer={actionButton}
+      {...(current &&
+        currentResult !== "unanswered" && {
+          feedback: (
+            <QuickCheckFeedback
+              result={currentResult}
+              question={current}
+              action={action}
+              busy={view.busy}
+              onAction={() => void view.act(action)}
+            />
+          ),
+        })}
     >
       <Animated.View style={bodyStyle}>
         {shown && (

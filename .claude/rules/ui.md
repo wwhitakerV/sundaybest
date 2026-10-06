@@ -46,17 +46,59 @@ paths:
 
 ## Scrolling pages
 
-A page that scrolls between a pinned header and footer composes `ScrollScreen`
-(`src/ui/organisms`), or `ListScreen` for a long list: the scroll view runs the full width, so nothing that
-springs, glows or casts a shadow near its sides is clipped, and the page inset
-sits inside it and on the header and footer. Never pad a scroll view in from
-the screen's sides (`<Screen padded>` around a `ScrollView`). Its pinned
-buttons go in `ScreenFooter`; a verdict in their place is `FeedbackPanel`.
+Every page that scrolls composes `ScrollScreen` (`src/ui/organisms`), `ListScreen`
+for a long list, or `MilestoneScreen` — all three are `ScrollFrame`, and nothing
+else draws a page's top or foot. The scroller runs the phone's full height and
+width; the page inset sits on its content and on the header, never around the
+scroller (`<Screen padded>` around a `ScrollView` is wrong).
+
+- **The top** is the `header` slot: it floats over the scroll on a `TopFade` —
+  solid behind the status bar and the header, fading out 16pt below it — so what
+  scrolls up dissolves under it. With no header the status bar still gets it.
+  A header with controls that sit low in it (Plans' filters, Study's steps)
+  takes `headerFade="gradual"`: a thicker, eased fade inside the header's own
+  block, ending exactly at its bottom edge.
+- **The foot** is the dock (`FloatingDock`): the tab bar's own container — same
+  place, height, side margins, and tint (`DockTint`, solid below the pill, fading
+  16pt above it). Pass `footer` one `Button`, or a bar's pill (Study's pager);
+  a verdict goes in `feedback` (`FeedbackPanel`) and takes the dock's place.
+- Content rests clear of both (`useFrameClearance`, from `getFrameEdges`); never
+  hand-tune room for a header, footer, or fade, and never hand-roll a fade.
+- Home and Plan Overview draw their own heroes and are the only exceptions.
+
+## Loading, errors, footers, and images
+
+These hold on every screen; a screen that breaks one is unfinished.
+
+- **No spinners after launch, and no full-screen loaders.** Launch is the
+  native splash, then `LoadingScreen` — the same wordmark on white — and
+  nothing else. Content on its way is a skeleton in its own shape (`Skeleton`
+  with `Bone`s and `SkeletonLines`; `ContentPending` only where nothing has a
+  shape yet), breathing gently, still under Reduce Motion. The one `Spinner`
+  marks a step under way in a list of steps (the generation sheet). A button
+  never spins: while its action runs it keeps its words and ignores a second
+  press, and where it can it doesn't wait at all (Create plan closes New Plan
+  at once).
+- **Never a dead end.** Every error offers a way out — Close, Back to plan,
+  Back to Plans. Retry is offered only when trying again can help (the server
+  couldn't be reached), and always beside a way out (`NotFoundScreen`'s
+  `secondary`, `ScreenLoadError`'s `leave`). An answer from the server — a day
+  not open yet, a plan that isn't there — is said plainly, never retried.
+  Don't navigate into what's known to be locked: show it where it is.
+- **Both ends fade, the same way everywhere.** See Scrolling pages: the
+  header over a `TopFade`, the way on in the dock on the tab bar's tint. A
+  custom floating bar uses `FloatingBar` or `DockTint`, never its own fade.
+- **Navigation never waits on the network.** Warm what the reader is about to
+  open (`usePrefetch` in `@/core/api/prefetch`): a plan from its list, a day
+  from its plan.
+- **Images go through `expo-image`** (`VideoThumbnail` for artwork), cached in
+  memory and on disk; artwork about to be seen is warmed with `prefetchImages`
+  (`@/core/images`).
 
 ## Milestone pages
 
-A page that marks a moment between steps — a day done, a plan ready, complete
-or preparing, a Quick Check to start or its score — composes `MilestoneScreen`
+A page that marks a moment between steps — a day done, a plan complete, a
+Quick Check to start or its score — composes `MilestoneScreen`
 (`src/ui/organisms`). It owns every position and gap (Day Complete set them:
 the mark 96pt below the safe area, then 20 / 8 / 20 / 32 / 16); a page passes
 its mark, title, subtitle, badge, content, and footer, never spacing. A header

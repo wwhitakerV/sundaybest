@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { ApiPlanDetail } from "@/core/api/contracts";
@@ -19,6 +20,7 @@ import { STUDY_STEPS } from "../logic/study-steps";
 import { usePlanMoreMenu } from "./use-plan-more-menu";
 import { useSelectedDay } from "./use-selected-day";
 import { useClearReadyBuild } from "./use-clear-ready-build";
+import { usePrefetch } from "@/core/api/prefetch";
 
 /** Plan Detail backed by the real API plan/detail contract. */
 export function usePlanOverview() {
@@ -41,6 +43,15 @@ export function usePlanOverview() {
   });
 
   const currentDay = plan?.currentDay ?? null;
+  // Continue opens already loaded: today's study is fetched while the plan's read.
+  const prefetch = usePrefetch();
+  const openDay =
+    currentDay && currentDay.status !== "locked" && plan?.status === "active"
+      ? currentDay.dayNumber
+      : null;
+  useEffect(() => {
+    if (planId && openDay !== null) prefetch.studyDay(planId, openDay);
+  }, [planId, openDay, prefetch]);
   const words =
     plan && currentDay
       ? describePlanHero({
@@ -62,6 +73,14 @@ export function usePlanOverview() {
 
   const openCurrentDay = () => {
     if (!plan || startMutation.isPending) return;
+    // A day not open yet is shown, locked, where it sits — never opened into
+    // a screen that can only say so.
+    const lockedDay = currentLockedDay(plan);
+    if (lockedDay !== null) {
+      if (lockedDay !== selectedNumber) selectionFeedback();
+      pickDay(lockedDay);
+      return;
+    }
     tapFeedback();
     if (plan.status === "ready") {
       startMutation.mutate(plan.id, {
@@ -155,6 +174,12 @@ export function usePlanOverview() {
     },
     goBack,
   } as const;
+}
+
+/** The day Continue would open, when it isn't open yet; otherwise null. */
+function currentLockedDay(plan: ApiPlanDetail): number | null {
+  const day = plan.days.find((candidate) => candidate.dayNumber === plan.progress.currentDayNumber);
+  return day?.progress.status === "locked" && plan.status !== "ready" ? day.dayNumber : null;
 }
 
 function openCurrentStudy(router: ReturnType<typeof useRouter>, plan: ApiPlanDetail): void {

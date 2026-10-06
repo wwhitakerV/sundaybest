@@ -16,7 +16,7 @@ import {
 import { FIELD_ICON_CENTRE } from "@/features/plan-creation/components/field-geometry";
 import { lightTheme } from "@/theme/tokens";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
-import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
+import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 import { NewPlanScreen } from "@/features/plan-creation/screens/NewPlanScreen";
 import { API_URL, aGeneration, aSermon } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
@@ -71,11 +71,11 @@ describe("NewPlanScreen", () => {
     render(<NewPlanScreen />);
 
     const scroll = screen.getByTestId("new-plan-screen-scroll");
-    // The page around it: the screen's own frame, inset only top and bottom.
-    const page = screen.getByTestId("new-plan-screen").children[0];
-    expect(typeof page === "object" && StyleSheet.flatten(page.props.style)).not.toMatchObject({
+    // Nothing around it pads it in from the screen's sides.
+    expect(screen.getByTestId("new-plan-screen")).not.toHaveStyle({
       paddingHorizontal: PAGE_INSET,
     });
+    expect(scroll).not.toHaveStyle({ paddingHorizontal: PAGE_INSET });
     expect(StyleSheet.flatten(scroll.props.contentContainerStyle as object)).toMatchObject({
       paddingHorizontal: PAGE_INSET,
     });
@@ -224,16 +224,16 @@ describe("NewPlanScreen", () => {
     fireEvent.changeText(screen.getByTestId("paste-sermon-link-input"), "last sunday");
 
     expect(screen.queryByTestId("new-plan-link-feedback")).toBeNull();
-    const footer = screen.getByTestId("new-plan-footer");
-    expect(within(footer).getByTestId("paste-sermon-continue-button")).toBeVisible();
+    const dock = screen.getByTestId("new-plan-screen-dock");
+    expect(within(dock).getByTestId("paste-sermon-continue-button")).toBeVisible();
   });
 
-  it("pins Continue in the shared footer when there is no error", () => {
+  it("puts Continue in the dock, where the tab bar's pill sits, when there is no error", () => {
     render(<NewPlanScreen />);
 
-    const footer = screen.getByTestId("new-plan-footer");
-    expect(within(footer).getByTestId("paste-sermon-continue-button")).toBeVisible();
-    expect(footer).toHaveStyle({ paddingBottom: FOOTER_BOTTOM });
+    const dock = screen.getByTestId("new-plan-screen-dock");
+    expect(within(dock).getByTestId("paste-sermon-continue-button")).toBeVisible();
+    expect(dock).toHaveStyle({ bottom: getFloatingNavBarBottom(0) });
   });
 
   it("dismisses the whole modal when Close is pressed", () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 
 import type { ApiPlanSummary } from "@/core/api/contracts";
@@ -14,6 +14,11 @@ import {
 } from "../logic/api-plan-collections";
 import { describeApiLibraryPlan } from "../logic/api-plan-wording";
 import { describeEmptyFilter, getPlanFilterOptions } from "../logic/plan-filters";
+import { usePrefetch } from "@/core/api/prefetch";
+import { prefetchImages } from "@/core/images/prefetch-images";
+
+/** How many plans, from the top, are loaded before they're tapped. */
+const PREFETCHED_PLANS = 6;
 
 type LibraryCard = {
   plan: ApiPlanSummary;
@@ -34,9 +39,25 @@ export function usePlansLibrary() {
   const cards: LibraryCard[] = filtered.map((plan) => ({
     plan,
     continueDay:
-      plan.status === "active" ? (plan.progress.currentDayNumber ?? plan.currentDay?.dayNumber ?? null) : null,
+      plan.status === "active"
+        ? (plan.progress.currentDayNumber ?? plan.currentDay?.dayNumber ?? null)
+        : null,
     startable: plan.status === "ready",
   }));
+
+  // The plans on screen open already loaded, their artwork already drawn.
+  const prefetch = usePrefetch();
+  const shownIds = cards
+    .slice(0, PREFETCHED_PLANS)
+    .map((card) => card.plan.id)
+    .join(",");
+  const artwork = filtered.map((plan) => plan.sermon.thumbnailUrl).join("\n");
+  useEffect(() => {
+    for (const planId of shownIds.split(",").filter(Boolean)) prefetch.plan(planId);
+  }, [shownIds, prefetch]);
+  useEffect(() => {
+    prefetchImages(artwork.split("\n"));
+  }, [artwork]);
 
   const displayCards = cards.map((card) => ({
     ...card,
@@ -58,9 +79,15 @@ export function usePlansLibrary() {
     router.push(planOverviewHref(planId));
   }
 
-  function continuePlan(planId: string, dayNumber: number) {
+  function continuePlan(plan: LibraryCard["plan"], dayNumber: number) {
     tapFeedback();
-    router.push(studyHref(planId, dayNumber));
+    // A day not open yet is shown, locked, on the plan — never opened into a
+    // screen that can only say so.
+    router.push(
+      plan.currentDay?.status === "locked"
+        ? planOverviewHref(plan.id)
+        : studyHref(plan.id, dayNumber),
+    );
   }
 
   function beginPlan(planId: string) {
@@ -91,7 +118,7 @@ export function usePlansLibrary() {
     actionFor: ({ plan, continueDay, startable }: LibraryCard): { action?: CardAction } => {
       if (continueDay !== null) {
         return {
-          action: { label: "Continue", onPress: () => continuePlan(plan.id, continueDay) },
+          action: { label: "Continue", onPress: () => continuePlan(plan, continueDay) },
         };
       }
       return startable ? { action: { label: "Start", onPress: () => beginPlan(plan.id) } } : {};

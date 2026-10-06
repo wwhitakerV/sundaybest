@@ -2,12 +2,13 @@ import type { ReactElement } from "react";
 import {
   FlatList,
   StyleSheet,
+  View,
   type ListRenderItem,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 
-import { SCROLL_INSET, ScrollFrame, type ScrollFrameProps } from "./ScrollFrame";
+import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
 
 export type ListScreenProps<Item> = Omit<ScrollFrameProps, "children"> & {
   data: readonly Item[];
@@ -34,17 +35,51 @@ export function ListScreen<Item>({
 }: ListScreenProps<Item>) {
   return (
     <ScrollFrame {...frame}>
-      <FlatList
+      <ClearedList
         testID={`${frame.testID}-list`}
-        style={styles.list}
         data={data}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        contentContainerStyle={[SCROLL_INSET, contentStyle]}
-        showsVerticalScrollIndicator={false}
-        {...(empty && { ListEmptyComponent: empty })}
+        {...(empty && { empty })}
+        {...(contentStyle && { contentStyle })}
       />
     </ScrollFrame>
+  );
+}
+
+/** The list itself, its items resting clear of the frame's header, dock, and fades. */
+function ClearedList<Item>({
+  testID,
+  data,
+  renderItem,
+  keyExtractor,
+  empty,
+  contentStyle,
+}: Pick<
+  ListScreenProps<Item>,
+  "data" | "renderItem" | "keyExtractor" | "empty" | "contentStyle"
+> & {
+  testID: string;
+}) {
+  const clearance = useFrameClearance();
+
+  return (
+    <FlatList
+      testID={testID}
+      style={styles.list}
+      data={data}
+      renderItem={renderItem}
+      keyExtractor={keyExtractor}
+      contentContainerStyle={[SCROLL_INSET, contentStyle]}
+      showsVerticalScrollIndicator={false}
+      {...(empty && { ListEmptyComponent: empty })}
+      ListHeaderComponent={
+        <View testID={`${testID}-top-clearance`} style={{ height: clearance.top }} />
+      }
+      ListFooterComponent={
+        <View testID={`${testID}-bottom-clearance`} style={{ height: clearance.bottom }} />
+      }
+    />
   );
 }
 

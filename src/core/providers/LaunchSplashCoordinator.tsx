@@ -1,12 +1,8 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
-import {
-  useCurrentUserQuery,
-  usePlansQuery,
-  useUserSettingsQuery,
-} from "@/core/api/queries";
+import { useCurrentUserQuery, usePlansQuery, useUserSettingsQuery } from "@/core/api/queries";
 import {
   getMeResponseSchema,
   getSettingsResponseSchema,
@@ -24,6 +20,14 @@ import { offlineCacheKeys, persistServerCache } from "@/core/api/offline-cache";
  * Home plan data is committed before the native splash fades away. Settings are
  * also awaited so global text scaling cannot visibly jump after the reveal.
  */
+/**
+ * The longest the splash waits on plans and settings. Who the reader is
+ * (`me`) is always waited for — it decides Welcome or Home, and lifting the
+ * splash before it is known only swaps one wordmark for another — but the
+ * rest moves on to its skeletons rather than holding for a whole timeout.
+ */
+const LAUNCH_HOLD_MAX_MS = 2500;
+
 export function LaunchSplashCoordinator({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const hidden = useRef(false);
@@ -35,7 +39,13 @@ export function LaunchSplashCoordinator({ children }: { children: ReactNode }) {
   const serverBootstrapDone = !me.isPending && !plans.isPending && !settings.isPending;
   const homeMounted = pathname === "/home" || pathname === "/(tabs)/home";
   const destinationReady = !onboarded || homeMounted;
-  const ready = serverBootstrapDone && destinationReady;
+  const [heldTooLong, setHeldTooLong] = useState(false);
+  const ready = !me.isPending && (serverBootstrapDone || heldTooLong) && destinationReady;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHeldTooLong(true), LAUNCH_HOLD_MAX_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!me.data) return;

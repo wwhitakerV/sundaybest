@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 
 import { controlHeight, radius, space, useTheme } from "@/theme";
@@ -15,7 +15,7 @@ export type ButtonProps = {
   onPress: () => void;
   variant?: ButtonVariant;
   disabled?: boolean;
-  /** Its action is under way: a spinner in place of its words, and no second press. */
+  /** Its action is under way: no second press. Its words stay — the app never shows a spinner in a button. */
   loading?: boolean;
   /** Forwarded to the outermost pressable so callers can find it in tests. */
   testID?: string;
@@ -64,21 +64,15 @@ export function Button({
         disabled && styles.disabled,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator {...(testID && { testID: `${testID}-spinner` })} color={ink} />
-      ) : (
-        <>
-          {Icon && (
-            <Icon
-              {...(testID && { testID: `${testID}-icon` })}
-              size={ICON_SIZE}
-              color={ink}
-              strokeWidth={theme.icon.strokeWidth}
-            />
-          )}
-          <SFProLabel tone={isPrimary ? "onControlPrimary" : "text"}>{label}</SFProLabel>
-        </>
+      {Icon && (
+        <Icon
+          {...(testID && { testID: `${testID}-icon` })}
+          size={ICON_SIZE}
+          color={ink}
+          strokeWidth={theme.icon.strokeWidth}
+        />
       )}
+      <SFProLabel tone={isPrimary ? "onControlPrimary" : "text"}>{label}</SFProLabel>
     </Pressable>
   );
 }

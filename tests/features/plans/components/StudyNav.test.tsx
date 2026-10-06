@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { tapFeedback } from "@/core/haptics/haptics";
 import { StudyNav } from "@/features/plans/components/StudyNav";
-import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
+import { FLOATING_NAV_BAR } from "@/ui/organisms/floatingNavBar";
 
 jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
 
@@ -19,17 +19,11 @@ describe("StudyNav", () => {
     expect(screen.getByTestId("study-nav")).toBeOnTheScreen();
   });
 
-  it("sits where every floating bar does — the tab bar's place", () => {
+  it("is the pill alone, as tall as the tab bar's, for the page's dock to place and tint", () => {
     render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
 
-    // Measured from the safe area's edge, where `Screen` ends its content (no inset here).
-    expect(screen.getByTestId("study-nav")).toHaveStyle({ bottom: getFloatingNavBarBottom(0) });
-  });
-
-  it("tints what scrolls under it", () => {
-    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
-
-    expect(screen.getByTestId("study-nav-tint")).toBeOnTheScreen();
+    expect(screen.getByTestId("study-nav")).toHaveStyle({ height: FLOATING_NAV_BAR.capsuleHeight });
+    expect(screen.queryByTestId("study-nav-tint")).toBeNull();
   });
 
   it("renders one dot per study step", () => {

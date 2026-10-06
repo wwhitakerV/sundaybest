@@ -1,29 +1,43 @@
 import { StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
 
-import { Screen } from "./Screen";
-import { Spinner } from "@/ui/atoms/Spinner";
-import { Wordmark } from "@/ui/typography/Wordmark";
+import splashWordmark from "../../../assets/splash-wordmark.png";
+import { useTheme } from "@/theme";
 
-const SPINNER_BOTTOM_OFFSET = 56;
+/** The native splash's wordmark width (`app.config.ts`), so the two are one picture. */
+const WORDMARK_WIDTH = 180;
+/** The wordmark image's own proportions (992 × 129). */
+const WORDMARK_ASPECT = 992 / 129;
 
 /**
- * Shown while the app's fonts are still loading (see `AppProviders`), in
- * place of a blank screen. The masthead falls back to the system font for
- * this brief render — the real masthead face (`src/theme/fonts.ts`) is
- * exactly what is not loaded yet.
+ * The launch screen, drawn by the app: the SUNDAYBEST wordmark on white,
+ * exactly where and as large as the native splash draws it, and nothing else
+ * — never a spinner. Shown while fonts load (`AppProviders`) and while the
+ * first route decides where a reader belongs, so lifting the native splash
+ * over it changes nothing on screen.
  */
 export function LoadingScreen() {
+  const theme = useTheme();
   return (
-    <Screen testID="loading-screen" style={styles.content}>
-      <Wordmark />
-      <View style={styles.spinner}>
-        <Spinner testID="loading-spinner" />
-      </View>
-    </Screen>
+    // Centred on the whole screen, not the safe area, exactly as the native
+    // splash centres it — so the hand-off never nudges the wordmark.
+    <View
+      testID="loading-screen"
+      style={[styles.centre, { backgroundColor: theme.colors.background }]}
+    >
+      <Image
+        testID="loading-wordmark"
+        source={splashWordmark}
+        style={styles.wordmark}
+        contentFit="contain"
+        transition={null}
+        accessibilityLabel="SundayBest"
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { alignItems: "center", justifyContent: "center" },
-  spinner: { position: "absolute", bottom: SPINNER_BOTTOM_OFFSET },
+  centre: { flex: 1, alignItems: "center", justifyContent: "center" },
+  wordmark: { width: WORDMARK_WIDTH, aspectRatio: WORDMARK_ASPECT },
 });

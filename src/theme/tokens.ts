@@ -153,6 +153,8 @@ type ColorTokens = {
   grabber: string;
   /** The unfilled track of a ring or a scale, and a ring not yet earned. */
   progressTrack: string;
+  /** A skeleton's blocks, standing in for content while it loads. */
+  skeleton: string;
   accent: string;
   /**
    * Text and icons set on `accent` — the step you're on, on Plan Detail's day.
@@ -306,6 +308,7 @@ const lightColors: ColorTokens = {
   containerBorder: palette.cardEdge,
   grabber: palette.grabber,
   progressTrack: palette.greyLight,
+  skeleton: palette.cardEdge,
   accent: palette.accent,
   onAccent: palette.white,
   sequenceLine: palette.greyLight,
@@ -388,6 +391,7 @@ const darkColors: ColorTokens = {
   containerBorder: palette.cardEdgeOnDark,
   grabber: palette.grabberOnDark,
   progressTrack: palette.ink600,
+  skeleton: palette.cardEdgeOnDark,
   accent: palette.accent,
   onAccent: palette.white,
   sequenceLine: palette.ink600,
@@ -525,6 +529,12 @@ export const motion = {
   sheet: { duration: 380, dampingRatio: 1, overshootClamping: true },
   /** How long anything takes to leave: a sheet sliding down, a menu fading. */
   exitMs: 200,
+  /**
+   * A skeleton's breath, Apple's way: each half of the pulse this long, from
+   * full to `skeletonDim` and back. Held still under Reduce Motion.
+   */
+  skeletonPulseMs: 900,
+  skeletonDim: 0.5,
 } as const;
 
 /** The heights controls repeat. */
