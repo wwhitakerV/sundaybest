@@ -14,7 +14,6 @@ import { BuildSteps } from "../components/BuildSteps";
 import { GenerationSheetHeader } from "../components/GenerationSheetHeader";
 import type { GenerationBarView } from "../logic/generation-bar";
 import { useGenerationSheet } from "../hooks/use-generation-sheet";
-import { GenerationPreviewButton } from "../dev/GenerationPreviewButton";
 
 /** A finished sheet's mark — its sparkle, or a failure's alert: large, the page's one mark. */
 const STATE_MARK = 64;
@@ -70,10 +69,6 @@ export function GenerationSheetScreen() {
             </View>
           </>
         )}
-        {/* DEVELOPMENT ONLY: steps through the states while the sheet is open. */}
-        <View style={styles.preview}>
-          <GenerationPreviewButton testID="generation-sheet-preview" />
-        </View>
       </ScrollView>
     </ThemeScope>
   );
@@ -168,7 +163,6 @@ const styles = StyleSheet.create({
   sheet: { flex: 1 },
   grabber: { paddingTop: FORM_SHEET_GRABBER_TOP },
   content: { flexGrow: 1, paddingBottom: space[40] },
-  preview: { marginTop: space[24] },
   body: { gap: space[24], paddingTop: space[8], paddingHorizontal: PAGE_INSET },
   state: {
     flexGrow: 1,

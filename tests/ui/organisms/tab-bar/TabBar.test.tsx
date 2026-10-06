@@ -376,14 +376,11 @@ describe("TabBar", () => {
     it("slides out from behind the tabs, not over them: drawn beneath the tabs' capsule", () => {
       renderWithBanner();
 
-      const bar = screen.getByTestId("tab-bar");
-      const drawOrder = bar.children.map((child) =>
-        typeof child === "string" ? null : (child.props as { testID?: string }).testID,
-      );
-      expect(drawOrder.indexOf("tab-bar-banner")).toBeGreaterThan(-1);
-      expect(drawOrder.indexOf("tab-bar-banner")).toBeLessThan(
-        drawOrder.indexOf("tab-bar-capsule"),
-      );
+      // Found in the order they're drawn.
+      const drawn = screen
+        .getAllByTestId(/^tab-bar-(banner|capsule)$/)
+        .map((element) => (element.props as { testID: string }).testID);
+      expect(drawn).toEqual(["tab-bar-banner", "tab-bar-capsule"]);
     });
 
     it("shrinks the floating button to the bar's height beside the open tabs", () => {
