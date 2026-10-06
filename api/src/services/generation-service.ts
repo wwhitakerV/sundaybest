@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, ne } from "drizzle-orm";
 
 import type { CreatePlanRequest } from "../contracts/plans.js";
 import type { Database } from "../db/client.js";
@@ -8,8 +8,12 @@ import {
   plans,
   sermonSources,
   userPlanEnrollments,
+  users,
 } from "../db/schema.js";
 import { AppError } from "../http/errors.js";
+
+/** The most builds the generation bar lists at once. */
+const CURRENT_LIMIT = 10;
 
 export function createGenerationService(db: Database) {
   async function getContext(userId: string, generationId: string) {
@@ -52,6 +56,26 @@ export function createGenerationService(db: Database) {
       if (!sermon[0]) throw new AppError("NOT_FOUND", "Sermon not found");
 
       return db.transaction(async (tx) => {
+        // One plan per sermon per reader: asking again opens the plan they
+        // have. One that failed to build does not count. Locking the reader
+        // serializes their creates, so two taps cannot both start one.
+        await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("update");
+        const [owned] = await tx
+          .select({ planId: planGenerations.planId, generationId: planGenerations.id })
+          .from(planGenerations)
+          .where(and(
+            eq(planGenerations.userId, userId),
+            eq(planGenerations.sermonId, input.sermonId),
+            ne(planGenerations.status, "failed"),
+          ))
+          .orderBy(desc(planGenerations.createdAt))
+          .limit(1);
+        if (owned) {
+          // Shown again in the app's generation bar, so asking again opens it.
+          await tx.update(planGenerations).set({ dismissedAt: null }).where(eq(planGenerations.id, owned.generationId));
+          return owned;
+        }
+
         const [plan] = await tx
           .insert(plans)
           .values({
@@ -95,6 +119,27 @@ export function createGenerationService(db: Database) {
       return toGeneration(row.generation, row.planTitle);
     },
 
+    /** The reader's builds not yet dismissed — building, ready, or failed — newest first. */
+    async listCurrent(userId: string) {
+      const rows = await db
+        .select({ generation: planGenerations, planTitle: plans.title })
+        .from(planGenerations)
+        .innerJoin(plans, eq(plans.id, planGenerations.planId))
+        .where(and(eq(planGenerations.userId, userId), isNull(planGenerations.dismissedAt)))
+        .orderBy(desc(planGenerations.createdAt))
+        .limit(CURRENT_LIMIT);
+      return rows.map((row) => toGeneration(row.generation, row.planTitle));
+    },
+
+    /** Takes a build out of the generation bar. It keeps building; dismissing twice is harmless. */
+    async dismiss(userId: string, generationId: string) {
+      const row = await getContext(userId, generationId);
+      if (row.generation.dismissedAt) return toGeneration(row.generation, row.planTitle);
+      const [updated] = await db.update(planGenerations).set({ dismissedAt: new Date() })
+        .where(eq(planGenerations.id, generationId)).returning();
+      return toGeneration(updated ?? row.generation, row.planTitle);
+    },
+
     async retry(userId: string, generationId: string) {
       const row = await getContext(userId, generationId);
       const generation = row.generation;
@@ -110,6 +155,8 @@ export function createGenerationService(db: Database) {
           .set({
             status: "preparing",
             attemptCount: generation.attemptCount + 1,
+            progress: 0,
+            dismissedAt: null,
             errorCode: null,
             errorMessage: null,
             startedAt: null,
@@ -160,6 +207,7 @@ export function toGeneration(
     requestedLength: asPlanLength(row.requestedLength),
     quickCheckEnabled: row.quickCheckEnabled,
     status: row.status,
+    progress: row.progress,
     attempt: row.attemptCount,
     error: row.errorCode
       ? {

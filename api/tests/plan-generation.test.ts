@@ -1,26 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import OpenAI from "openai";
-import { zodResponseFormat } from "openai/helpers/zod";
-import { createPlanGenerationProvider } from "../src/providers/plan-generation-provider.js";
-import { mapGenerationOutput } from "../src/generation/mapper.js";
-import { generationOutputSchema } from "../src/generation/output-schema.js";
+import { generateStagedPlan } from "../src/generation/pipeline.js";
+import { DAY_INSTRUCTIONS } from "../src/generation/prompts/day.js";
+import { OUTLINE_INSTRUCTIONS } from "../src/generation/prompts/outline.js";
+import { QUIZ_INSTRUCTIONS } from "../src/generation/prompts/quiz.js";
 import { canonicalizeScripture, referenceIsNamed } from "../src/generation/scripture.js";
-import { formatTranscript, normalizeTranscript } from "../src/generation/transcript.js";
+import { containsExcerpt, formatTranscript, normalizeTranscript } from "../src/generation/transcript.js";
 import { validateGeneratedContent, validatePlanStructure } from "../src/generation/validation.js";
-import { generationInput, generationOutput, metadata, sourceQuote, testEnv } from "./fixtures/generation.js";
+import { createBibleProvider } from "../src/providers/bible-provider.js";
+import { createPlanGenerationProvider } from "../src/providers/plan-generation-provider.js";
+import { fakeCaller, finishTheVerseQuestion, generationInput, quizOutput, testEnv } from "./fixtures/generation.js";
 
-for (const days of [1, 7]) for (const quickCheck of [false, true]) {
-  test(`maps ${days} days with Quick Check ${quickCheck ? 'on' : 'off'}`, () => {
-    const input = generationInput(days, quickCheck);
-    const plan = mapGenerationOutput(generationOutput(days, quickCheck), input, metadata);
-    validatePlanStructure(plan, input);
-    assert.equal(plan.title, "God’s love");
-    assert.equal(plan.days.length, days);
-    assert.equal(plan.days[0]!.quickCheck?.questions[0]?.choices[0]?.label ?? null, quickCheck ? "A" : null);
-    assert.equal('evidenceQuote' in plan.days[0]!.scripture, false);
-  });
-}
+const bible = createBibleProvider(testEnv());
+const plan = (days = 1, quickCheck = false, quiz?: () => unknown) =>
+  generateStagedPlan(generationInput(days, quickCheck), { call: fakeCaller(quiz ? { quiz } : {}).caller, bible });
 
 test("timestamp blocks preserve source offsets, sort captions, and never invent timing", () => {
   assert.equal(formatTranscript([{ startMs: 31000, endMs: 32000, text: "Two" }, { startMs: 1000, endMs: 2000, text: " One  " }]), "[00:00:01–00:00:02] One\n\n[00:00:31–00:00:32] Two");
@@ -29,105 +22,99 @@ test("timestamp blocks preserve source offsets, sort captions, and never invent 
   assert.throws(() => normalizeTranscript([{ startMs: 0, endMs: null, text: "  " }]));
 });
 
-test("Scripture evidence accepts numeric/spoken references and rejects invented citations", () => {
+test("Scripture references are recognised whether written as numbers or spoken", () => {
   const scripture = canonicalizeScripture({ book: "1 John", chapter: 3, verseStart: 16, verseEnd: 18, reference: "1 John 3:16-18" });
   assert.equal(referenceIsNamed("First John chapter three verses sixteen through eighteen", scripture), true);
   assert.equal(referenceIsNamed("1 John 3:16-18", scripture), true);
   assert.equal(referenceIsNamed("1 John chapter 3", scripture), true);
   assert.equal(referenceIsNamed("John 3:16-18", scripture), false);
-  const raw = generationOutput();
-  raw.days[0]!.scripture.evidenceQuote = "Invented John 3:16 quote";
-  assert.throws(() => mapGenerationOutput(raw, generationInput(), metadata), /evidence/);
-  raw.days[0]!.scripture.evidenceQuote = sourceQuote;
-  raw.days[0]!.scripture.reference = "Romans 3:16";
-  assert.throws(() => mapGenerationOutput(raw, generationInput(), metadata), /disagree/);
 });
 
-for (const [name, mutate] of [
-  ["wrong day count", (p: ReturnType<typeof mapGenerationOutput>) => { p.days.push({ ...p.days[0]!, dayNumber: 2 }); }],
-  ["blank reading", (p: ReturnType<typeof mapGenerationOutput>) => { p.days[0]!.readingParagraphs = [" "]; }],
-  ["invented sermon quote", (p: ReturnType<typeof mapGenerationOutput>) => { p.days[0]!.sermonQuote = "Invented words"; }],
-  ["out-of-range clip", (p: ReturnType<typeof mapGenerationOutput>) => { p.days[0]!.clipEndSeconds = 100; }],
-  ["incorrect clip location", (p: ReturnType<typeof mapGenerationOutput>) => { p.days[0]!.clipStartSeconds = 30; p.days[0]!.clipEndSeconds = 60; }],
-  ["disabled quiz returned", (p: ReturnType<typeof mapGenerationOutput>) => { p.days[0]!.quickCheck = mapGenerationOutput(generationOutput(1, true), generationInput(1, true), metadata).days[0]!.quickCheck; }],
-] as const) test(`rejects ${name}`, () => {
-  const input = generationInput();
-  const plan = mapGenerationOutput(generationOutput(), input, metadata);
-  mutate(plan);
-  assert.throws(() => validatePlanStructure(plan, input));
+test("excerpts match on their words, ignoring punctuation and case", () => {
+  const caption = "God loved the world and gave His Son. Reflect on that love";
+  assert.equal(containsExcerpt(caption, "god loved the world, and gave his son!"), true);
+  assert.equal(containsExcerpt(caption, "“gave His Son.” Reflect"), true);
+  assert.equal(containsExcerpt(caption, "loved the worlds"), false);
+  assert.equal(containsExcerpt(caption, "the world gave His Son"), false);
+  assert.equal(containsExcerpt(caption, " , "), false);
 });
 
-test("rejects duplicate choices, answer keys, missing required quizzes, and duplicate prompts", () => {
+type Plan = Awaited<ReturnType<typeof plan>>;
+for (const [name, days, quickCheck, mutate] of [
+  ["the wrong day count", 1, false, (p: Plan) => { p.days.push({ ...p.days[0]!, dayNumber: 2 }); }],
+  ["a blank reading", 1, false, (p: Plan) => { p.days[0]!.readingParagraphs = [" "]; }],
+  ["an invented sermon quote", 1, false, (p: Plan) => { p.days[0]!.sermonQuote = "Invented words"; }],
+  ["an out-of-range clip", 1, false, (p: Plan) => { p.days[0]!.clipEndSeconds = 100; }],
+  ["a clip without its quote", 1, false, (p: Plan) => { p.days[0]!.clipStartSeconds = 30; p.days[0]!.clipEndSeconds = 60; }],
+  ["overlapping passages", 2, false, (p: Plan) => { p.days[1]!.scripture = { ...p.days[1]!.scripture, verseStart: 16, verseEnd: 17, reference: "John 3:16-17" }; }],
+  ["a quiz when Quick Check is off", 1, false, (p: Plan) => { p.days[0]!.quickCheck = { title: "Quiz", questions: [] }; }],
+  ["a missing quiz when Quick Check is on", 1, true, (p: Plan) => { p.days[0]!.quickCheck = null; }],
+  ["fewer than seven questions", 1, true, (p: Plan) => { p.days[0]!.quickCheck!.questions.pop(); }],
+  ["three choices", 1, true, (p: Plan) => { p.days[0]!.quickCheck!.questions[0]!.choices.pop(); }],
+  ["repeated choices", 1, true, (p: Plan) => { p.days[0]!.quickCheck!.questions[0]!.choices[1]!.text = p.days[0]!.quickCheck!.questions[0]!.choices[0]!.text; }],
+  ["two correct answers", 1, true, (p: Plan) => { p.days[0]!.quickCheck!.questions[0]!.choices[1]!.correct = true; }],
+  ["a repeated prompt", 1, true, (p: Plan) => { p.days[0]!.quickCheck!.questions[1]!.prompt = p.days[0]!.quickCheck!.questions[0]!.prompt; }],
+] as const) test(`the final check rejects ${name}`, async () => {
+  const input = generationInput(days, quickCheck);
+  const generated = await plan(days, quickCheck);
+  mutate(generated);
+  assert.throws(() => validatePlanStructure(generated, input));
+});
+
+test("the final check rejects finish the verse without both translations or outside the day's passage", async () => {
   const input = generationInput(1, true);
-  const plan = mapGenerationOutput(generationOutput(1, true), input, metadata);
-  const q = plan.days[0]!.quickCheck!.questions[0]!;
-  q.choices[1]!.text = q.choices[0]!.text;
-  assert.throws(() => validatePlanStructure(plan, input), /distinct/);
-  q.choices[1]!.text = "Different"; q.choices[1]!.correct = true;
-  assert.throws(() => validatePlanStructure(plan, input));
-  plan.days[0]!.quickCheck = null;
-  assert.throws(() => validatePlanStructure(plan, input), /setting/);
-  const longer = mapGenerationOutput(generationOutput(7, true), generationInput(7, true), metadata);
-  longer.days[1]!.quickCheck!.questions[0]!.prompt = longer.days[0]!.quickCheck!.questions[0]!.prompt;
-  assert.throws(() => validatePlanStructure(longer, generationInput(7, true)), /Duplicate Quick Check/);
+  const withVerse = () => plan(1, true, () => ({ ...quizOutput(), questions: [...quizOutput().questions, finishTheVerseQuestion()] }));
+  const missing = await withVerse();
+  missing.days[0]!.quickCheck!.questions.at(-1)!.variants = null;
+  assert.throws(() => validatePlanStructure(missing, input), /both translations/);
+  const elsewhere = await withVerse();
+  elsewhere.days[0]!.quickCheck!.questions.at(-1)!.scriptureReference = "John 3:20";
+  assert.throws(() => validatePlanStructure(elsewhere, input), /day's passage/);
 });
 
-test("rejects fabricated question evidence and clips on untimed transcripts", () => {
-  const raw = generationOutput(1, true);
-  raw.days[0]!.quickCheck!.questions[0]!.evidenceQuote = "Invented evidence";
-  assert.throws(() => mapGenerationOutput(raw, generationInput(1, true), metadata), /evidence/);
-  const input = generationInput();
-  input.transcriptSegments = [{ startMs: 0, endMs: null, text: sourceQuote }];
-  assert.throws(() => validatePlanStructure(mapGenerationOutput(generationOutput(), input, metadata), input), /timing/);
-});
-
-test("Bible validation checks each unique passage once and rejects incomplete ranges", async () => {
+test("Bible validation checks each day's passage and rejects incomplete ranges", async () => {
   const input = generationInput(7);
-  const plan = mapGenerationOutput(generationOutput(7), input, metadata);
+  const generated = await plan(7);
   let calls = 0;
-  const bible = { async getPassage() { calls++; return { reference: "John 3:16", translation: "KJV" as const, provider: "test", cacheAllowed: false, verses: [{ number: 16, text: "Test verse text" }] }; } };
-  await validateGeneratedContent(plan, input, bible);
-  assert.equal(calls, 1);
-  await assert.rejects(() => validateGeneratedContent(plan, input, { async getPassage() { return { ...await bible.getPassage(), verses: [{ number: 17, text: "Wrong verse" }] }; } }), /complete requested/);
+  const counting = { bundledTranslations: ["KJV"] as const, servesLocally: () => true,
+    async getPassage({ reference }: { reference: string }) {
+      calls++;
+      return { reference, translation: "KJV" as const, provider: "test", cacheAllowed: false, verses: [{ number: Number(reference.split(":")[1]), text: "Test verse text" }] };
+    } };
+  await validateGeneratedContent(generated, input, counting);
+  assert.equal(calls, 7);
+  await assert.rejects(() => validateGeneratedContent(generated, input, { ...counting, async getPassage() { return { reference: "John 3:16", translation: "KJV" as const, provider: "test", cacheAllowed: false, verses: [{ number: 99, text: "Wrong verse" }] }; } }), /complete requested/);
 });
 
-test("OpenAI SDK sends strict JSON schema, server-only metadata, no storage, and maps real transport JSON", async () => {
-  const client = new OpenAI({ apiKey: "test-key", maxRetries: 0, fetch: async (_url, init) => {
-    const request = JSON.parse(String(init?.body));
-    assert.equal(request.store, false);
-    assert.equal(request.model, "gpt-5.6-luna");
-    assert.equal(request.response_format.json_schema.strict, true);
-    assert.equal(request.response_format.json_schema.schema.additionalProperties, false);
-    assert.equal('generator' in request.response_format.json_schema.schema.properties, false);
-    assert.match(request.messages[1].content, /00:00:30/);
-    return Response.json({ id: "test-completion", object: "chat.completion", created: 0, model: "test-snapshot", choices: [{ index: 0,
-      finish_reason: "stop", message: { role: "assistant", content: JSON.stringify(generationOutput()) } }] });
-  } });
-  const plan = await createPlanGenerationProvider(testEnv(), { client }).generate(generationInput());
-  assert.equal(plan.generator.model, "test-snapshot");
-  assert.equal(plan.generator.provider, "openai");
-  assert.equal(plan.generator.promptVersion, "sundaybest-plan-1");
-  assert.doesNotThrow(() => zodResponseFormat(generationOutputSchema, "test"));
+test("supporting Scripture without text in every bundled translation is left out", async () => {
+  const input = generationInput();
+  const generated = await plan();
+  const romans5 = { book: "Romans", chapter: 5, verseStart: 8, verseEnd: 8, reference: "Romans 5:8", connection: "God's love came first." };
+  generated.days[0]!.supportingScriptures = [romans5, { ...romans5, verseStart: 99, verseEnd: 99, reference: "Romans 5:99" }];
+  const verified = await validateGeneratedContent(generated, input, bible);
+  assert.deepEqual(verified.days[0]!.supportingScriptures.map((passage) => passage.reference), ["Romans 5:8"]);
 });
 
-for (const outcome of ["refusal", "length", "invalid", "rateLimit", "authFailure"] as const) {
-  test(`OpenAI ${outcome} never returns a publishable plan`, async () => {
-    const client = new OpenAI({ apiKey: "test-key", maxRetries: 0, fetch: async () => {
-      if (outcome === "rateLimit" || outcome === "authFailure") return Response.json({ error: { message: "SECRET user transcript data", type: "test", code: "test" } }, { status: outcome === "rateLimit" ? 429 : 401 });
-      return Response.json({ id: "test", object: "chat.completion", created: 0, model: "test", choices: [{ index: 0,
-        finish_reason: outcome === "length" ? "length" : "stop", message: { role: "assistant", refusal: outcome === "refusal" ? "Refused" : null,
-          content: outcome === "invalid" ? "{broken" : null } }] });
-    } });
-    await assert.rejects(() => createPlanGenerationProvider(testEnv(), { client }).generate(generationInput()), (error: unknown) => {
-      assert.ok(error instanceof Error); assert.doesNotMatch(error.message, /SECRET/); return true;
-    });
-  });
-}
+test("each step's prompt carries only the rules for that step", () => {
+  assert.match(OUTLINE_INSTRUCTIONS, /# ABOUT THIS PLAN/);
+  assert.match(OUTLINE_INSTRUCTIONS, /no two days may share or overlap verses/);
+  assert.doesNotMatch(OUTLINE_INSTRUCTIONS, /# READ SECTION|# QUIZZES/);
+  assert.match(DAY_INSTRUCTIONS, /# READ SECTION/);
+  assert.match(DAY_INSTRUCTIONS, /# SUPPORTING SCRIPTURE/);
+  assert.doesNotMatch(DAY_INSTRUCTIONS, /# QUIZZES|# ABOUT THIS PLAN/);
+  assert.match(QUIZ_INSTRUCTIONS, /# QUIZZES/);
+  assert.match(QUIZ_INSTRUCTIONS, /# FINISH THE VERSE/);
+  assert.doesNotMatch(QUIZ_INSTRUCTIONS, /# READ SECTION|# ABOUT THIS PLAN/);
+  for (const instructions of [OUTLINE_INSTRUCTIONS, DAY_INSTRUCTIONS, QUIZ_INSTRUCTIONS]) {
+    assert.doesNotMatch(instructions, /day-by-day/i);
+    assert.match(instructions, /# OUTPUT FIELDS/);
+  }
+});
 
 test("missing OpenAI key fails closed; fixture generation requires explicit non-production opt-in", async () => {
   await assert.rejects(() => createPlanGenerationProvider(testEnv({ OPENAI_API_KEY: "" })).generate(generationInput()), /OPENAI_API_KEY/);
   const fixture = await createPlanGenerationProvider(testEnv({ OPENAI_API_KEY: "", DEV_PLAN_GENERATION_ENABLED: "true" })).generate(generationInput());
   assert.equal(fixture.generator.provider, "development");
-  assert.throws(() => testEnv({ NODE_ENV: "production", SUPADATA_API_KEY: "test", BIBLE_PROVIDER_URL: "https://bible.example.test", DEV_PLAN_GENERATION_ENABLED: "true" }), /Development generation/);
-  assert.doesNotThrow(() => testEnv({ NODE_ENV: "production", SUPADATA_API_KEY: "test", BIBLE_PROVIDER_URL: "https://bible.example.test" }));
+  assert.throws(() => testEnv({ NODE_ENV: "production", SUPADATA_API_KEY: "test", DEV_PLAN_GENERATION_ENABLED: "true" }), /Development generation/);
+  assert.doesNotThrow(() => testEnv({ NODE_ENV: "production", SUPADATA_API_KEY: "test" }));
 });

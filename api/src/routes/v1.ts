@@ -18,6 +18,8 @@ import {
   createPlanResponseSchema,
   getMeResponseSchema,
   getPlanGenerationResponseSchema,
+  listCurrentPlanGenerationsResponseSchema,
+  dismissPlanGenerationResponseSchema,
   getPlanResponseSchema,
   getQuizAttemptResponseSchema,
   getRemindersResponseSchema,
@@ -66,6 +68,7 @@ import { createPlanService } from "../services/plan-service.js";
 import { createProgressService } from "../services/progress-service.js";
 import { createQuizService } from "../services/quiz-service.js";
 import { createSermonService } from "../services/sermon-service.js";
+import { availableTranslations } from "../providers/bible-provider.js";
 import { createSettingsService } from "../services/settings-service.js";
 import { createStudyService } from "../services/study-service.js";
 import { createUserService } from "../services/user-service.js";
@@ -81,7 +84,7 @@ const devSessionSchema = z
 export async function registerV1Routes(app: FastifyInstance, context: AppContext): Promise<void> {
   const { db } = context.database;
   const userService = createUserService(db);
-  const settingsService = createSettingsService(db);
+  const settingsService = createSettingsService(db, availableTranslations(context.env));
   const sermonService = createSermonService(db, context.env);
   const generationService = createGenerationService(db);
   const planService = createPlanService(db);
@@ -381,6 +384,21 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
         await planService.unsave(auth.userId, planId);
         return removeSavedPlanResponseSchema.parse({ saved: false });
       },
+    );
+  });
+
+  app.get("/v1/plan-generations/current", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    return listCurrentPlanGenerationsResponseSchema.parse({
+      generations: await generationService.listCurrent(auth.userId),
+    });
+  });
+
+  app.post("/v1/plan-generations/:generationId/dismiss", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const { generationId } = parseWithSchema(generationParamSchema, request.params);
+    return idempotent(request, context, auth.userId, `POST /v1/plan-generations/${generationId}/dismiss`, {}, async () =>
+      dismissPlanGenerationResponseSchema.parse({ generation: await generationService.dismiss(auth.userId, generationId) }),
     );
   });
 

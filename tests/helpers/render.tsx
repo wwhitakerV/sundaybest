@@ -1,5 +1,8 @@
 import {
   render as renderWithoutProviders,
+  renderHook as renderHookWithoutProviders,
+  type RenderHookOptions,
+  type RenderHookResult,
   type RenderOptions,
   type RenderResult,
 } from "@testing-library/react-native";
@@ -9,8 +12,15 @@ import type { ReactElement, ReactNode } from "react";
 import { AppProviders } from "@/core/providers/AppProviders";
 import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 
+/** Nothing cached on the device: a test states the server data it needs with MSW. */
+const NO_OFFLINE_CACHE = [] as const;
+
 function Providers({ children }: { children: ReactNode }) {
-  return <AppProviders fallback={<LoadingScreen />}>{children}</AppProviders>;
+  return (
+    <AppProviders fallback={<LoadingScreen />} offlineCache={NO_OFFLINE_CACHE}>
+      {children}
+    </AppProviders>
+  );
 }
 
 /**
@@ -22,6 +32,14 @@ function Providers({ children }: { children: ReactNode }) {
  */
 export function render(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">): RenderResult {
   return renderWithoutProviders(ui, { ...options, wrapper: Providers });
+}
+
+/** Renders a hook inside the same provider tree the app mounts, as `render` does a component. */
+export function renderHook<Result, Props>(
+  hook: (props: Props) => Result,
+  options?: Omit<RenderHookOptions<Props>, "wrapper">,
+): RenderHookResult<Result, Props> {
+  return renderHookWithoutProviders(hook, { ...options, wrapper: Providers });
 }
 
 /**

@@ -1,17 +1,10 @@
-import { planReadyHref, preparingHref } from "@/features/plan-creation/logic/routes";
+import { existsSync } from "node:fs";
+
+import { GENERATION_SHEET_HREF } from "@/features/plan-creation/logic/routes";
 
 describe("plan-creation routes", () => {
-  it("builds the Preparing route with the plan ID", () => {
-    expect(preparingHref("plan-a")).toEqual({
-      pathname: "/(plan-creation)/preparing",
-      params: { planId: "plan-a" },
-    });
-  });
-
-  it("builds the Plan Ready route with the plan ID", () => {
-    expect(planReadyHref("plan-a")).toEqual({
-      pathname: "/(plan-creation)/ready",
-      params: { planId: "plan-a" },
-    });
+  it("opens the generation sheet at a route the app has", () => {
+    expect(GENERATION_SHEET_HREF).toBe("/generation");
+    expect(existsSync("src/app/generation.tsx")).toBe(true);
   });
 });

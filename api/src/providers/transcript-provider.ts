@@ -59,6 +59,7 @@ export function createTranscriptProvider(env: Env): TranscriptProvider {
         throw new AppError(
           "INTERNAL",
           "No transcript provider is configured. Set SUPADATA_API_KEY.",
+          { permanent: true },
         );
       }
 

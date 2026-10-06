@@ -3,13 +3,10 @@ import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
-import { ArrowLeft, BookOpen } from "lucide-react-native";
+import { BookOpen } from "lucide-react-native";
 
-import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { NotFoundScreen } from "@/ui/organisms/NotFoundScreen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
-import { ContentPending } from "@/ui/molecules/ContentPending";
-import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { useTabBarAccessory } from "@/ui/organisms/tab-bar/tab-bar-accessory";
@@ -20,6 +17,7 @@ import { PlanHero } from "../components/PlanHero";
 import { PlanJourney } from "../components/PlanJourney";
 import { PlanMoreMenu } from "../components/PlanMoreMenu";
 import { PlanNav } from "../components/PlanNav";
+import { PlanOverviewPending } from "../components/PlanOverviewPending";
 import { PlanStatusBar } from "../components/PlanStatusBar";
 import { SelectedDay } from "../components/SelectedDay";
 import { usePlanHeroScroll } from "../hooks/use-plan-hero-scroll";
@@ -27,14 +25,6 @@ import { usePlanOverview } from "../hooks/use-plan-overview";
 import { getPlanArtworkFrame } from "../logic/plan-artwork";
 
 const NAV_GAP = space[8];
-
-const ABOUT_PLACEHOLDER = [
-  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-  "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-  "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.",
-  "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.",
-  "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.",
-] as const;
 
 const NAV_BUTTON = controlHeight.headerButton;
 const MENU_GAP = space[8];
@@ -78,35 +68,7 @@ export function PlanOverviewScreen() {
   );
 
   if (!view.found && view.loading) {
-    return (
-      <Screen testID="plan-overview-screen" edges={["left", "right"]}>
-        <View style={[styles.pendingNav, { top: navTop }]}>
-          <ScreenHeader
-            testID="plan-overview-loading-header"
-            title=""
-            left={
-              <HeaderIconButton
-                testID="plan-overview-back-button-loading"
-                icon={ArrowLeft}
-                accessibilityLabel="Back"
-                onPress={view.goBack}
-              />
-            }
-          />
-        </View>
-
-        <View
-          style={[
-            styles.pendingBody,
-            {
-              paddingTop: navTop + NAV_BUTTON + space[24],
-            },
-          ]}
-        >
-          <ContentPending testID="plan-overview-content-pending" compact />
-        </View>
-      </Screen>
-    );
+    return <PlanOverviewPending navTop={navTop} onBack={view.goBack} />;
   }
 
   if (!view.found && view.error) {
@@ -173,9 +135,11 @@ export function PlanOverviewScreen() {
             )}
           </View>
 
-          <View style={styles.about}>
-            <PlanAbout testID="plan-overview-about" paragraphs={ABOUT_PLACEHOLDER} />
-          </View>
+          {view.about && (
+            <View style={styles.about}>
+              <PlanAbout testID="plan-overview-about" {...view.about} />
+            </View>
+          )}
         </Animated.ScrollView>
       </FadeInView>
 
@@ -245,16 +209,5 @@ const styles = StyleSheet.create({
   about: {
     paddingHorizontal: PAGE_INSET,
     paddingTop: ABOUT_TOP,
-  },
-
-  pendingNav: {
-    position: "absolute",
-    left: PAGE_INSET,
-    right: PAGE_INSET,
-    zIndex: 1,
-  },
-
-  pendingBody: {
-    paddingHorizontal: PAGE_INSET,
   },
 });

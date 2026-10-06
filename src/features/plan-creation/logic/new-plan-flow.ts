@@ -17,8 +17,6 @@ type Shared = {
   searchSelection: SearchSelection | null;
   days: PlanLength;
   quickCheck: boolean;
-  planId: string | null;
-  generationId: string | null;
 };
 
 /**
@@ -39,9 +37,7 @@ export type NewPlanEvent =
   | { type: "linkAccepted"; checked: CheckedLink }
   | { type: "back" }
   | { type: "daysPicked"; days: PlanLength }
-  | { type: "quickCheckSet"; quickCheck: boolean }
-  | { type: "planCreated"; planId: string; generationId: string }
-  | { type: "anotherLink" };
+  | { type: "quickCheckSet"; quickCheck: boolean };
 
 /** A fresh start: paste mode, an empty link/search, and the user's plan defaults. */
 export function initialNewPlanState(defaults: {
@@ -55,15 +51,13 @@ export function initialNewPlanState(defaults: {
     searchQuery: "",
     searchSelection: null,
     linkError: null,
-    planId: null,
-    generationId: null,
     ...defaults,
   };
 }
 
 /** New Plan's legal moves. Anything not possible from where it is changes nothing. */
 export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPlanState {
-  const { link, inputMode, searchQuery, searchSelection, days, quickCheck, planId, generationId } = state;
+  const { link, inputMode, searchQuery, searchSelection, days, quickCheck } = state;
 
   switch (event.type) {
     case "inputModeChanged":
@@ -97,8 +91,6 @@ export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPla
             searchSelection,
             days,
             quickCheck,
-            planId,
-            generationId,
           }
         : state;
     case "back":
@@ -112,31 +104,12 @@ export function newPlanReducer(state: NewPlanState, event: NewPlanEvent): NewPla
             searchSelection,
             days,
             quickCheck,
-            planId,
-            generationId,
           }
         : state;
     case "daysPicked":
       return state.step === "preview" ? { ...state, days: event.days } : state;
     case "quickCheckSet":
       return state.step === "preview" ? { ...state, quickCheck: event.quickCheck } : state;
-    case "planCreated":
-      return state.step === "preview"
-        ? { ...state, planId: event.planId, generationId: event.generationId }
-        : state;
-    case "anotherLink":
-      return {
-        step: "paste",
-        link: "",
-        inputMode: "paste",
-        searchQuery: "",
-        searchSelection: null,
-        linkError: null,
-        planId: null,
-        generationId: null,
-        days,
-        quickCheck,
-      };
   }
 }
 

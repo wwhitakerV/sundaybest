@@ -17,6 +17,7 @@ import {
   sermonSources,
   userPlanEnrollments,
 } from "../db/schema.js";
+import { planAboutSchema } from "../contracts/plans.js";
 import { addCalendarDays, localDateInTimeZone } from "../domain/time.js";
 import { AppError } from "../http/errors.js";
 import { toSermon } from "./sermon-service.js";
@@ -256,7 +257,9 @@ export function createPlanService(db: Database) {
   async function getDetail(userId: string, planId: string, timezone: string) {
     const base = await getVisibleBase(userId, planId);
     const built = await buildPlan(userId, base, timezone);
-    return { ...built.summary, days: built.days };
+    // Stored JSON is untrusted on read; a malformed value hides the section rather than failing the plan.
+    const about = planAboutSchema.safeParse(base.plan.about);
+    return { ...built.summary, about: about.success ? about.data : null, days: built.days };
   }
 
   return {

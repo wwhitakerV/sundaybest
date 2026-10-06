@@ -31,13 +31,16 @@ export class AppError extends Error {
   readonly code: ApiErrorCode;
   readonly statusCode: number;
   readonly exposeMessage: boolean;
+  /** A failure that repeating the same work cannot fix, such as missing provider configuration. */
+  readonly permanent: boolean;
 
-  constructor(code: ApiErrorCode, message?: string, options?: { statusCode?: number; cause?: unknown; exposeMessage?: boolean }) {
+  constructor(code: ApiErrorCode, message?: string, options?: { statusCode?: number; cause?: unknown; exposeMessage?: boolean; permanent?: boolean }) {
     super(message ?? code, { cause: options?.cause });
     this.name = "AppError";
     this.code = code;
     this.statusCode = options?.statusCode ?? STATUS_BY_CODE[code];
     this.exposeMessage = options?.exposeMessage ?? this.statusCode < 500;
+    this.permanent = options?.permanent ?? false;
     Object.setPrototypeOf(this, AppError.prototype);
   }
 }

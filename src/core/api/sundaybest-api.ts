@@ -10,6 +10,8 @@ import {
   createPlanResponseSchema,
   getMeResponseSchema,
   getPlanGenerationResponseSchema,
+  listCurrentPlanGenerationsResponseSchema,
+  dismissPlanGenerationResponseSchema,
   getPlanResponseSchema,
   getQuizAttemptResponseSchema,
   getRemindersResponseSchema,
@@ -133,7 +135,10 @@ export function createSundayBestApi(client: ApiClient) {
     plans: {
       list: () => client.request({ path: "/v1/plans", schema: listPlansResponseSchema }),
       get: (planId: string) =>
-        client.request({ path: `/v1/plans/${encodeURIComponent(planId)}`, schema: getPlanResponseSchema }),
+        client.request({
+          path: `/v1/plans/${encodeURIComponent(planId)}`,
+          schema: getPlanResponseSchema,
+        }),
       create: (input: CreatePlanRequest, idempotencyKey: string) =>
         client.request({
           path: "/v1/plans",
@@ -178,6 +183,19 @@ export function createSundayBestApi(client: ApiClient) {
     },
 
     generations: {
+      current: () =>
+        client.request({
+          path: "/v1/plan-generations/current",
+          schema: listCurrentPlanGenerationsResponseSchema,
+        }),
+      dismiss: (generationId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/plan-generations/${encodeURIComponent(generationId)}/dismiss`,
+          method: "POST",
+          schema: dismissPlanGenerationResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
       get: (generationId: string) =>
         client.request({
           path: `/v1/plan-generations/${encodeURIComponent(generationId)}`,

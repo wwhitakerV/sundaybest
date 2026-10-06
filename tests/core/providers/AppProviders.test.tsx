@@ -12,6 +12,7 @@ jest.mock("expo-font", () => ({
 jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn().mockResolvedValue(true),
   hideAsync: jest.fn().mockResolvedValue(undefined),
+  setOptions: jest.fn(),
 }));
 
 const mockUseFonts = jest.mocked(useFonts);
@@ -26,7 +27,7 @@ describe("AppProviders", () => {
     mockUseFonts.mockReturnValue([true, null]);
 
     render(
-      <AppProviders fallback={fallback}>
+      <AppProviders fallback={fallback} offlineCache={[]}>
         <Text>ready</Text>
       </AppProviders>,
     );
@@ -47,18 +48,6 @@ describe("AppProviders", () => {
     expect(screen.getByText("loading")).toBeVisible();
   });
 
-  it("hides the splash screen once fonts have loaded", () => {
-    mockUseFonts.mockReturnValue([true, null]);
-
-    render(
-      <AppProviders fallback={fallback}>
-        <Text>ready</Text>
-      </AppProviders>,
-    );
-
-    expect(mockHideAsync).toHaveBeenCalledTimes(1);
-  });
-
   it("does not hide the splash screen while fonts are still loading", () => {
     mockUseFonts.mockReturnValue([false, null]);
 
@@ -72,20 +61,19 @@ describe("AppProviders", () => {
   });
 
   /**
-   * A font that fails to load must not hold the splash screen forever — the
-   * app renders anyway rather than trapping the user behind a permanent
-   * loading screen.
+   * A font that fails to load must not hold the app back — it renders anyway
+   * rather than trapping the user behind a permanent loading screen. (Hiding
+   * the splash is `LaunchSplashCoordinator`'s job, once launch data is in.)
    */
-  it("renders children and hides the splash screen even if a font failed to load", () => {
+  it("renders children even if a font failed to load", () => {
     mockUseFonts.mockReturnValue([false, new Error("font file missing")]);
 
     render(
-      <AppProviders fallback={fallback}>
+      <AppProviders fallback={fallback} offlineCache={[]}>
         <Text>ready</Text>
       </AppProviders>,
     );
 
     expect(screen.getByText("ready")).toBeVisible();
-    expect(mockHideAsync).toHaveBeenCalledTimes(1);
   });
 });

@@ -167,6 +167,18 @@ type ColorTokens = {
   controlPrimary: string;
   /** Text and icons sitting on `controlPrimary`. */
   onControlPrimary: string;
+  /** Secondary text on `controlPrimary` — a build's step under its title. */
+  onControlPrimaryMuted: string;
+  /** Lines and tracks on `controlPrimary` — the generation bar's divider and progress track. */
+  onControlPrimaryFaint: string;
+  /** Something finished and ready — the generation bar once a plan is built. The brand green. */
+  success: string;
+  /** Text and icons on `success`; the green is light, so its ink is dark. */
+  onSuccess: string;
+  /** Secondary text on `success` — the ready plan's title under "Your plan is ready". */
+  onSuccessMuted: string;
+  /** Lines on `success` — the generation bar's divider. */
+  onSuccessFaint: string;
   /** The active item in a selector or strip. */
   selected: string;
   /** Header/tab-bar icon colour, and the centered nav-title's active state. */
@@ -299,6 +311,12 @@ const lightColors: ColorTokens = {
   sequenceLine: palette.greyLight,
   controlPrimary: palette.black,
   onControlPrimary: palette.white,
+  onControlPrimaryMuted: palette.whiteMuted,
+  onControlPrimaryFaint: palette.whiteFaint,
+  success: palette.green,
+  onSuccess: palette.black,
+  onSuccessMuted: palette.blackMuted,
+  onSuccessFaint: palette.blackFaint,
   lightIcon: palette.lightIcon,
   selected: palette.green,
   chromeIcon: palette.ink,
@@ -375,6 +393,12 @@ const darkColors: ColorTokens = {
   sequenceLine: palette.ink600,
   controlPrimary: palette.white,
   onControlPrimary: palette.black,
+  onControlPrimaryMuted: palette.blackMuted,
+  onControlPrimaryFaint: palette.blackFaint,
+  success: palette.green,
+  onSuccess: palette.black,
+  onSuccessMuted: palette.blackMuted,
+  onSuccessFaint: palette.blackFaint,
   lightIcon: palette.lightIcon,
   selected: palette.green,
   chromeIcon: palette.white,

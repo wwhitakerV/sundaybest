@@ -9,12 +9,20 @@ import {
   quizChoices,
   quizQuestions,
   quizzes,
+  userSettings,
 } from "../db/schema.js";
+import { questionVariantsSchema } from "../generation/schema.js";
 import { AppError } from "../http/errors.js";
 import { requireStudyAccess } from "./study-access.js";
 
 export function createQuizService(db: Database) {
-  async function loadQuiz(quizId: string) {
+  /** The reader's translation; finish-the-verse falls back to the BSB wording for any other. */
+  async function translationOf(userId: string) {
+    const rows = await db.select({ translation: userSettings.bibleTranslation }).from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
+    return rows[0]?.translation ?? "BSB";
+  }
+
+  async function loadQuiz(quizId: string, translation: (typeof userSettings.$inferSelect)["bibleTranslation"]) {
     const quizRows = await db.select().from(quizzes).where(eq(quizzes.id, quizId)).limit(1);
     const quiz = quizRows[0];
     if (!quiz) throw new AppError("NOT_FOUND", "Quick Check not found");
@@ -30,13 +38,17 @@ export function createQuizService(db: Database) {
         .from(quizChoices)
         .where(eq(quizChoices.questionId, question.id))
         .orderBy(asc(quizChoices.position));
+      // Stored JSON is parsed, not trusted. Choices keep their ids and order in
+      // every translation, so the answer key is the same whichever is shown.
+      const variants = questionVariantsSchema.safeParse(question.variants);
+      const variant = variants.success && (translation === "BSB" || translation === "KJV") ? variants.data[translation] : null;
       publicQuestions.push({
         id: question.id,
         order: question.position,
         kind: question.kind,
         source: question.source,
-        prompt: question.prompt,
-        choices,
+        prompt: variant?.prompt ?? question.prompt,
+        choices: variant ? choices.map((choice, index) => ({ ...choice, text: variant.choices[index] ?? choice.text })) : choices,
         scriptureReference: question.scriptureReference,
       });
     }
@@ -153,7 +165,7 @@ export function createQuizService(db: Database) {
 
   async function toSession(attempt: typeof quizAttempts.$inferSelect) {
     const [quiz, publicAttempt, answers, score] = await Promise.all([
-      loadQuiz(attempt.quizId),
+      translationOf(attempt.userId).then((translation) => loadQuiz(attempt.quizId, translation)),
       toAttempt(attempt),
       answerFeedback(attempt.id),
       scoreForAttempt(attempt),

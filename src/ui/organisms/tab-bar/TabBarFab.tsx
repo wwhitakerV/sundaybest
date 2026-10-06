@@ -12,7 +12,7 @@ const FAB_STROKE_WIDTH = 2.5;
 export type TabBarFabProps = {
   label: string;
   onPress: () => void;
-  /** It shrinks to the capsule's height while a screen's button is raised (`useTabBarRaise`). */
+  /** It shrinks to the capsule's height while something's raised above the open tabs (`useTabBarRaise`). */
   style: StyleProp<AnimatedStyle<ViewStyle>>;
 };
 
@@ -21,7 +21,7 @@ export function TabBarFab({ label, onPress, style }: TabBarFabProps) {
   const theme = useTheme();
 
   return (
-    <Animated.View style={[styles.slot, style]}>
+    <Animated.View testID="tab-bar-fab-slot" style={[styles.slot, style]}>
       <Pressable
         testID="tab-bar-fab"
         accessibilityRole="button"

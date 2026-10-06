@@ -12,6 +12,20 @@ export function normalizeSourceText(value: string): string {
     .replace(/\s+/g, " ").trim();
 }
 
+/** Words only: lowercase, no punctuation. Captions are rarely punctuated as a model would quote them. */
+function matchText(value: string): string {
+  return normalizeSourceText(value).replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Whether `excerpt` appears in `text` word for word and in order, ignoring case
+ * and punctuation. Whole words only: "loved the world" does not match "worlds".
+ */
+export function containsExcerpt(text: string, excerpt: string): boolean {
+  const needle = matchText(excerpt);
+  return needle.length > 0 && ` ${matchText(text)} `.includes(` ${needle} `);
+}
+
 export function normalizeTranscript(segments: readonly TranscriptSegment[]): TranscriptSegment[] {
   if (segments.some((s) => !Number.isSafeInteger(s.startMs) || s.startMs < 0 ||
     (s.endMs !== null && (!Number.isSafeInteger(s.endMs) || s.endMs < s.startMs)))) {

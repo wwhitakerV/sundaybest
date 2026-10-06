@@ -5,6 +5,7 @@ import type { Env } from "../config/env.js";
 import type { Database } from "../db/client.js";
 import {
   generationJobs,
+  generationSteps,
   planDays,
   planGenerations,
   plans,
@@ -19,9 +20,15 @@ import {
 } from "../db/schema.js";
 import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
+import type { StageEvent } from "../generation/pipeline.js";
 import type { GeneratedPlan, PlanGenerationProvider } from "../providers/plan-generation-provider.js";
+import { NoScriptureError, findScriptureEvidence, teachesFromScripture } from "../generation/scripture-evidence.js";
 import { formatTranscript, normalizeTranscript } from "../generation/transcript.js";
 import { validateGeneratedContent } from "../generation/validation.js";
+import { newAttemptMetrics, recordAttempt, recordCall } from "./attempt-log.js";
+import { findReusablePlan } from "./reuse-plan.js";
+import { buildTracker } from "./build-tracker.js";
+import { generationCheckpoint } from "./step-checkpoint.js";
 import type { TranscriptProvider } from "../providers/transcript-provider.js";
 
 interface ClaimedJob {
@@ -89,6 +96,7 @@ export function createGenerationWorker(input: {
         .catch(() => undefined);
     }, heartbeatMs);
     heartbeat.unref();
+    const metrics = newAttemptMetrics();
 
     try {
       const generationRows = await input.db
@@ -112,9 +120,24 @@ export function createGenerationWorker(input: {
         return;
       }
 
-      await setGenerationStatus(input.db, context.generation.id, "processingSermon", {
-        startedAt: context.generation.startedAt ?? new Date(),
-      });
+      metrics.round = context.generation.attemptCount;
+      const tracker = buildTracker(input.db, { id: context.generation.id, lengthDays: context.generation.requestedLength,
+        quickCheckEnabled: context.generation.quickCheckEnabled });
+      await tracker.stage("processingSermon", { startedAt: context.generation.startedAt ?? new Date() });
+
+      // The same sermon and length already built by this prompt: copy it, with
+      // no transcript fetch and no model calls; drop its quizzes when Quick
+      // Check is off. Without the quizzes this plan needs, only they are written.
+      const quickCheck = context.generation.quickCheckEnabled;
+      const reusable = await findReusablePlan(input.db, { sermonId: context.plan.sermonId, planId: context.plan.id,
+        lengthDays: context.generation.requestedLength });
+      const hasQuizzes = reusable?.days.every((day) => day.quickCheck !== null) ?? false;
+      if (reusable && (!quickCheck || hasQuizzes)) {
+        const copy = quickCheck ? reusable : { ...reusable, days: reusable.days.map((day) => ({ ...day, quickCheck: null })) };
+        await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, copy, job.id, workerId);
+        await recordAttempt(input.db, job, metrics, null, "reused");
+        return;
+      }
 
       let transcriptRows = await input.db
         .select()
@@ -161,10 +184,14 @@ export function createGenerationWorker(input: {
           .orderBy(asc(sermonTranscriptSegments.sequence));
       }
 
-      await setGenerationStatus(input.db, context.generation.id, "findingScripture");
+      await tracker.stage("findingScripture");
       const transcriptSegments = normalizeTranscript(transcriptRows);
+      // SundayBest is for sermons that preach from the Bible: stop before any
+      // model call when the transcript barely names or reads Scripture.
+      if (!teachesFromScripture(findScriptureEvidence(transcriptSegments.map((segment) => segment.text).join(" ")))) {
+        throw new NoScriptureError();
+      }
       const transcriptText = formatTranscript(transcriptSegments);
-      await setGenerationStatus(input.db, context.generation.id, "writingDays");
       const generationInput = {
         sermon: {
           externalId: context.sermon.externalId,
@@ -178,13 +205,27 @@ export function createGenerationWorker(input: {
         lengthDays: context.generation.requestedLength,
         quickCheckEnabled: context.generation.quickCheckEnabled,
       };
-      const generated = await input.generator.generate(generationInput);
-      await validateGeneratedContent(generated, generationInput, input.bible);
-      if (context.generation.quickCheckEnabled) {
-        await setGenerationStatus(input.db, context.generation.id, "buildingQuiz");
+      const hooks = {
+        report: async (event: StageEvent) => {
+          void recordCall(input.db, job, metrics, event);
+          // The bar's status is a courtesy: failing to write it never fails the build.
+          await tracker.observe(event).catch(() => undefined);
+        },
+        checkpoint: generationCheckpoint(input.db, context.generation.id),
+      };
+      let generated: GeneratedPlan;
+      if (reusable && input.generator.addQuickChecks) {
+        tracker.daysAlreadyWritten();
+        await tracker.stage("buildingQuiz");
+        generated = await input.generator.addQuickChecks(generationInput, reusable, hooks);
+      } else {
+        generated = await input.generator.generate(generationInput, hooks);
       }
-      await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, generated, job.id, workerId);
+      const verified = await validateGeneratedContent(generated, generationInput, input.bible);
+      await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, verified, job.id, workerId);
+      await recordAttempt(input.db, job, metrics, null);
     } catch (cause) {
+      await recordAttempt(input.db, job, metrics, { cause });
       await handleFailure(input.db, job, input.env, cause, workerId);
     } finally {
       clearInterval(heartbeat);
@@ -205,18 +246,6 @@ export function createGenerationWorker(input: {
       }
     },
   };
-}
-
-async function setGenerationStatus(
-  db: Database,
-  generationId: string,
-  status: typeof planGenerations.$inferSelect.status,
-  extra: { startedAt?: Date } = {},
-): Promise<void> {
-  await db
-    .update(planGenerations)
-    .set({ status, updatedAt: new Date(), ...(extra.startedAt ? { startedAt: extra.startedAt } : {}) })
-    .where(and(eq(planGenerations.id, generationId), ne(planGenerations.status, "completed")));
 }
 
 async function persistGeneratedPlan(db: Database, planId: string, generationId: string, generated: GeneratedPlan, jobId: string, workerId: string): Promise<void> {
@@ -263,10 +292,12 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
           planId,
           dayNumber: day.dayNumber,
           readingTitle: day.readingTitle,
+          focus: day.focus,
           readingParagraphs: day.readingParagraphs,
           sermonQuote: day.sermonQuote,
           clipStartSeconds: day.clipStartSeconds,
           clipEndSeconds: day.clipEndSeconds,
+          supportingScriptures: day.supportingScriptures,
           scriptureReferenceId: scripture.id,
         })
         .returning();
@@ -294,6 +325,7 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
               prompt: question.prompt,
               scriptureReference: question.scriptureReference,
               explanation: question.explanation,
+              variants: question.variants,
             })
             .returning();
           if (!questionRow) throw new AppError("INTERNAL", "Could not persist Quick Check question");
@@ -312,12 +344,13 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
 
     await tx
       .update(plans)
-      .set({ title: generated.title, readyAt: now, updatedAt: now })
+      .set({ title: generated.title, about: generated.about, readyAt: now, updatedAt: now })
       .where(eq(plans.id, planId));
     await tx
       .update(planGenerations)
       .set({
         status: "completed",
+        progress: 100,
         generatorVersion: generated.generator.version,
         promptVersion: generated.generator.promptVersion,
         modelProvider: generated.generator.provider,
@@ -330,12 +363,14 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
       .where(eq(planGenerations.id, generationId));
     await tx.update(generationJobs).set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: now })
       .where(eq(generationJobs.id, jobId));
+    // The published plan holds its content now; its saved steps are no longer needed.
+    await tx.delete(generationSteps).where(eq(generationSteps.generationId, generationId));
   });
 }
 
 async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unknown, workerId: string): Promise<void> {
   const message = cause instanceof Error ? cause.message.slice(0, 1000) : "Unknown generation failure";
-  const shouldRetry = job.attempts < env.WORKER_MAX_ATTEMPTS;
+  const shouldRetry = job.attempts < env.WORKER_MAX_ATTEMPTS && isRetryableGenerationFailure(cause);
   await db.transaction(async (tx) => {
     const [claim] = await tx.select().from(generationJobs).where(eq(generationJobs.id, job.id)).for("update");
     // A recovered job belongs to its new worker; an old worker cannot requeue it.
@@ -355,10 +390,28 @@ async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unk
   });
 }
 
+const PERMANENT_FAILURE_CODES = new Set(["TRANSCRIPT_UNAVAILABLE", "SERMON_UNAVAILABLE", "SERMON_UNSUPPORTED"]);
+
+/**
+ * Automatic retries are for transient failures: provider outages, timeouts and
+ * model output that failed validation. Missing captions or configuration fail
+ * the same way every time, so they fail at once; the user can still retry.
+ */
+export function isRetryableGenerationFailure(cause: unknown): boolean {
+  if (!(cause instanceof AppError)) return true;
+  return !cause.permanent && !PERMANENT_FAILURE_CODES.has(cause.code);
+}
+
 function toPublicGenerationFailure(cause: unknown): {
   code: "invalidLink" | "unsupportedSource" | "videoUnavailable" | "noCaptions" | "network" | "unknown";
   message: string;
 } {
+  if (cause instanceof NoScriptureError) {
+    return {
+      code: "unsupportedSource",
+      message: "This video doesn’t teach from the Bible enough to build a study. SundayBest builds plans from sermons that preach from Scripture.",
+    };
+  }
   if (cause instanceof AppError) {
     switch (cause.code) {
       case "TRANSCRIPT_UNAVAILABLE":

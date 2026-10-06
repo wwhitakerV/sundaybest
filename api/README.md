@@ -53,7 +53,7 @@ The server verifies attestation objects, stores the attested public key, verifie
 
 ## Production environment gates
 
-`NODE_ENV=production` fails startup when development App Attest certificates or development sessions are enabled, when Supadata / plan-generation / Bible providers are missing, or when any configured external provider uses plaintext HTTP. Keep all provider credentials server-side; none belong in the Expo `EXPO_PUBLIC_*` namespace.
+`NODE_ENV=production` fails startup when development App Attest certificates or development sessions are enabled, when Supadata / plan-generation providers are missing, or when any configured external provider uses plaintext HTTP. Keep all provider credentials server-side; none belong in the Expo `EXPO_PUBLIC_*` namespace.
 
 The server trusts no forwarded proxy hops by default (`TRUST_PROXY_HOPS=0`). Set the exact hop count only when deployment topology requires it.
 
@@ -64,14 +64,14 @@ YouTube discovery, metadata, and transcripts are routed through Supadata. Set th
 - `SUPADATA_API_KEY` — required for live YouTube search/resolve/transcripts
 - `SUPADATA_BASE_URL` — defaults to `https://api.supadata.ai/v1`
 
-The worker uses Supadata's universal `/transcript` endpoint in `auto` mode and handles both immediate transcript responses and asynchronous transcript jobs. Transcript segments are persisted once per sermon, so regenerating or sharing the same sermon does not spend another transcript request unless the local transcript is absent. Search uses `/youtube/search`; single-video metadata uses `/metadata`.
+The worker uses Supadata's universal `/transcript` endpoint in `auto` mode and handles both immediate transcript responses and asynchronous transcript jobs. Transcript segments are persisted once per sermon, so regenerating or sharing the same sermon does not spend another transcript request unless the local transcript is absent. Search uses `/youtube/search`; single-video metadata uses `/metadata`. A pasted link to a sermon whose details were fetched in the last week is answered from the database without calling `/metadata`. A search term asked in the last day is answered from the videos Supadata returned the first time (`sermon_searches`: the term and video ids, never who searched; rows older than a day are deleted on the next search).
 
-OpenAI plan generation is now direct. Set `OPENAI_API_KEY` in the server/worker environment. `OPENAI_MODEL` defaults to the V0 model, `gpt-5.6-luna`; `OPENAI_TIMEOUT_MS` defaults to 180000 and `OPENAI_MAX_COMPLETION_TOKENS` to 24000. The SDK has no automatic retries; the existing job queue owns bounded retries.
+OpenAI plan generation is direct and staged: a plan call, then one call per day, then one quiz call per day, each verified before the next (see `docs/adr/0020-staged-plan-generation.md`). `npm run generation:attempts [generationId]` prints every call: its step, outcome, reason and tokens, including how many input tokens OpenAI billed at its cached rate. Before any model call, a transcript that barely names or reads Scripture fails the plan with `unsupportedSource` (see `docs/adr/0022-plans-need-scripture.md`). A request for the same sermon and length as a finished plan copies that plan instead of generating, dropping its quizzes or writing only the quizzes as Quick Check requires, and a reader asking again for a sermon they already have gets their existing plan (see `docs/adr/0021-reuse-generated-plans.md`). Accepted steps are kept in `generation_steps` until the plan is published, so a retry resumes where the last run stopped; bump `PROMPT_VERSION` in `src/generation/prompts/version.ts` whenever a prompt change should produce new plans. Set `OPENAI_API_KEY` in the server/worker environment. `OPENAI_MODEL` defaults to the V0 model, `gpt-5.6-luna`; `OPENAI_TIMEOUT_MS` defaults to 180000 and `OPENAI_MAX_COMPLETION_TOKENS` to 24000. The SDK has no automatic retries; the existing job queue owns bounded retries.
 
 The remaining optional/required provider boundaries are:
 
 - `PLAN_GENERATION_PROVIDER_URL` — optional explicit override for deployments using a generation gateway; leave blank for direct OpenAI
-- `BIBLE_PROVIDER_URL` — required for real Scripture validation and translated study text
+- `BIBLE_PROVIDER_URL` — optional licensed gateway for NIV, ESV and NLT; BSB and KJV are bundled (`data/bible/`, `src/bible/`) and need no provider
 - `TRANSCRIPT_PROVIDER_URL` — optional override if a deployment intentionally uses a custom transcript gateway instead of Supadata
 
 All provider responses are validated before persistence. Missing OpenAI configuration fails generation instead of silently creating fixture content. `DEV_PLAN_GENERATION_ENABLED=true` explicitly enables the deterministic fixture generator only outside production.
@@ -93,10 +93,13 @@ Read [PIPELINE_SETUP.md](PIPELINE_SETUP.md) for installation, live verification,
 - plan-creation request keys are also stored on generation rows so a process crash cannot create duplicate plans on retry
 - answer keys are never returned with unanswered quiz questions
 - generated sermon quotes must be found in the source transcript before publish
-- generated Scripture references need a named reference/chapter in the transcript and are verified through the Bible provider before publish
+- generated Scripture references need a named reference/chapter in the transcript and must have text in every bundled translation before publish
 - generated OpenAI Scripture citations and sermon-source quiz answers include exact source evidence that is checked and removed during mapping
 - quote clips require usable source timing and stay within the transcript/video bounds
 - day count, day order, Quick Check setting, one-correct-answer keys, distinct choices and non-repeated question/reflection prompts are checked before publication
+- each Quick Check has 7–10 questions with exactly four choices
+- About This Plan (overview, Scriptures referenced, key takeaways) is generated with the plan, stored on `plans.about`, and returned only on plan detail; every Scripture it lists must be named in the transcript, and each day's passage chapter is always listed
+- missing captions, unavailable sermons and missing provider configuration fail the generation at once instead of being retried automatically
 - generated quizzes use translation-neutral multiple choice; verse-completion generation is rejected until a translation-specific source is available
 
 ## Database changes
@@ -131,9 +134,11 @@ Request contains sermon metadata. Response:
 
 `POST PLAN_GENERATION_PROVIDER_URL`
 
-Receives sermon metadata, timestamp-aware transcript text, raw transcript segments, plan length, and whether Quick Check is enabled. It returns the generated content graph defined by `generatedPlanSchema` in `src/generation/schema.ts` (also re-exported from `src/providers/plan-generation-provider.ts`). A gateway must return real provider metadata and satisfy the same grounding and structural checks.
+Receives sermon metadata, timestamp-aware transcript text, raw transcript segments, plan length, and whether Quick Check is enabled. It returns the generated content graph, including `about`, defined by `generatedPlanSchema` in `src/generation/schema.ts` (also re-exported from `src/providers/plan-generation-provider.ts`). A gateway must return real provider metadata and satisfy the same grounding and structural checks.
 
 ### Bible gateway
+
+Used only for translations that are not bundled (NIV, ESV, NLT), and only once they are licensed. BSB and KJV are served from `data/bible/` in memory, with no network call or database row.
 
 `POST BIBLE_PROVIDER_URL`
 

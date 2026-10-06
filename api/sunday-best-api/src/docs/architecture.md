@@ -1,0 +1,48 @@
+# SundayBest backend architecture
+
+## Boundary
+
+The root Expo app is a client. `/api` is the authoritative server. The server owns users, settings, sermon metadata/transcripts, reusable plan content, enrollments, progress, quiz attempts, and generation state. Device-only reflection answers stay in the mobile SQLCipher database and never cross this API.
+
+## Identity
+
+A successful first App Attest verification creates one anonymous `users` row and one `device_installations` row. The device receives a short-lived access JWT and a rotating opaque refresh token. The access JWT contains the user ID and installation ID. Server routes derive ownership from that token.
+
+The schema leaves room for a future `user_identities` table for Sign in with Apple without changing existing user IDs.
+
+## Daily pacing
+
+A plan starts in the user's IANA timezone. Day 1 is scheduled for that local date, Day 2 for the following local date, and so on. On each authenticated request the mobile app sends `X-Client-Timezone`; the server derives the current local date from its own clock using that timezone. A day is studyable only when:
+
+1. its scheduled date has arrived; and
+2. all earlier days are complete.
+
+The server never trusts a client-supplied current date.
+
+## Content vs state
+
+`plans`, `plan_days`, Scripture references, prompts, prayers and quizzes are reusable content. `user_plan_enrollments`, day/step progress, saved plans and quiz attempts are user state. Starting a sample plan creates an enrollment; it never clones or mutates the shared content.
+
+## Generation
+
+Creating a plan commits a plan shell, generation row and queue job in one transaction, then returns immediately. The worker claims jobs with PostgreSQL row locking, resolves or reuses a transcript, calls the configured generation adapter, validates the complete generated graph, persists it transactionally, and marks the plan ready.
+
+No Redis dependency is required for MVP. The queue can be moved behind an interface later if volume demands it.
+
+## Scripture
+
+Plans store canonical Scripture references, not translation-specific text. Study-day reads use the user's current translation. The Bible provider response controls whether returned text may be cached. This keeps translation changes immediate and prevents the backend from silently persisting text a provider license forbids caching.
+
+## Idempotency
+
+Every state-changing application endpoint requires an `Idempotency-Key`. The server stores the user, method/path scope, request fingerprint and completed response. Reusing a key with different input returns `IDEMPOTENCY_CONFLICT`.
+
+Plan creation additionally stores the mutation request key on the generation row. If a process dies after the plan transaction commits but before the generic idempotency response is recorded, a retry resolves the already-created generation instead of creating another plan. Pending generic idempotency claims can be reclaimed after a short stale window; all state writes still have domain uniqueness constraints.
+
+## High-value request integrity
+
+App Attest bootstrap/refresh assertions sign their one-time challenge. Expensive/destructive application mutations additionally sign a canonical payload containing the challenge, HTTP method, request path, and request body. The server reconstructs the same payload before verifying the assertion and advances the App Attest counter with a compare-and-swap update.
+
+## Generation integrity
+
+Workers heartbeat their claimed queue row while they run. A stale claim can be recovered by another worker; if the content transaction already committed, the recovery path only finalizes the queue row and does not regenerate content. Before publish, direct sermon quotes must be present in the normalized transcript and every generated Scripture reference is checked through the configured Bible provider.

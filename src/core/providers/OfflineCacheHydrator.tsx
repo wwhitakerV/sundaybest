@@ -13,18 +13,33 @@ import {
   progressResponseSchema,
 } from "@/core/api/contracts";
 import { apiQueryKeys } from "@/core/api/query-keys";
-import { listCachedResources } from "@/core/storage/api-resource-cache";
+import { listCachedResources, type RawCachedResource } from "@/core/storage/api-resource-cache";
+
+export type OfflineCacheHydratorProps = {
+  children: ReactNode;
+  /**
+   * Resources already read from the device, hydrated before the first frame
+   * instead of read asynchronously — how tests mount the real provider tree
+   * synchronously. The app leaves it unset and reads the device cache.
+   */
+  preloaded?: readonly RawCachedResource[];
+};
 
 /**
  * Hydrates only explicitly cached, schema-validated server resources before the
  * application mounts. Cached values are marked stale so an online launch
  * refreshes them in the background without blocking first paint.
  */
-export function OfflineCacheHydrator({ children }: { children: ReactNode }) {
+export function OfflineCacheHydrator({ children, preloaded }: OfflineCacheHydratorProps) {
   const queryClient = useQueryClient();
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(() => {
+    if (!preloaded) return false;
+    for (const resource of preloaded) hydrate(queryClient, resource);
+    return true;
+  });
 
   useEffect(() => {
+    if (ready) return;
     let cancelled = false;
 
     void (async () => {
@@ -40,7 +55,7 @@ export function OfflineCacheHydrator({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [queryClient]);
+  }, [queryClient, ready]);
 
   return ready ? children : null;
 }

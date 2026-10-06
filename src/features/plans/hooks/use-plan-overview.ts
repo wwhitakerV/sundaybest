@@ -14,9 +14,11 @@ import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { useToday } from "@/core/store";
 import { useTheme } from "@/theme";
 import { describeDayTile, type DayStepKey } from "../logic/day-rail";
+import { describePlanAbout } from "../logic/plan-about";
 import { STUDY_STEPS } from "../logic/study-steps";
 import { usePlanMoreMenu } from "./use-plan-more-menu";
 import { useSelectedDay } from "./use-selected-day";
+import { useClearReadyBuild } from "./use-clear-ready-build";
 
 /** Plan Detail backed by the real API plan/detail contract. */
 export function usePlanOverview() {
@@ -24,6 +26,7 @@ export function usePlanOverview() {
   const theme = useTheme();
   const planId = parsePlanParams(useLocalSearchParams())?.planId ?? "";
   const planQuery = usePlanQuery(planId);
+  useClearReadyBuild(planId);
   const startMutation = useStartPlanMutation();
   const plan = planQuery.data?.plan ?? null;
   const more = usePlanMoreMenu(planId, plan?.saved ?? false);
@@ -104,6 +107,7 @@ export function usePlanOverview() {
       completedDayCount: plan.progress.completedDays,
     },
     continueLabel: words?.action ?? null,
+    about: describePlanAbout(plan.about),
     light: getHeroPalette(colors, theme.colors.featureBackdrop).light,
     tiles: days.map((day) =>
       describeDayTile(

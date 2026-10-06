@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { StyleSheet, type LayoutChangeEvent } from "react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
@@ -27,8 +27,9 @@ import {
   SIDE_MARGIN,
 } from "./tab-bar-geometry";
 import { useShownTabBarAccessory, type TabBarAccessory } from "./tab-bar-accessory";
+import { useShownTabBarBanner } from "./tab-bar-banner";
 import { useTabBarMinimize } from "./use-tab-bar-minimize";
-import { useTabBarRaise } from "./use-tab-bar-raise";
+import { useTabBarBannerReveal, useTabBarRaise } from "./use-tab-bar-raise";
 import { useTabBarReveal } from "./use-tab-bar-reveal";
 
 export type TabBarProps = BottomTabBarProps & {
@@ -66,6 +67,11 @@ export type TabBarProps = BottomTabBarProps & {
  * the button rises above them to the bar's full width and the FAB shrinks to
  * the capsule's height (`useTabBarRaise`) — until the screen asks afresh.
  *
+ * A banner can float above the tabs too (`useTabBarBanner`): it slides up
+ * into the raised place at the bar's full width, and the FAB shrinks beside
+ * the open tabs as it does for a raised button. A screen's raised button
+ * takes that place first; the banner steps aside until it lowers again.
+ *
  * `onPress` fires on every tab and FAB press, before navigation — this
  * component has no side-effect SDK access of its own (`ui` never imports
  * `core`), so haptic feedback is the caller's job.
@@ -94,7 +100,20 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
     rowWidth > 0 ? rowWidth - FAB_SIZE - GAP_TO_FAB : 0,
     CAPSULE_HEIGHT,
   );
-  const { slotStyle, fabStyle, tintStyle } = useTabBarRaise(raised, RAISE_GEOMETRY);
+  // A banner floats above the tabs unless a screen's button is raised there.
+  const banner = useShownTabBarBanner();
+  const bannerShown = banner !== null && banner !== undefined && !raised;
+  const [lastBanner, setLastBanner] = useState<ReactNode>(banner);
+  if (banner != null && banner !== lastBanner) setLastBanner(banner);
+  const bannerStyle = useTabBarBannerReveal(bannerShown, RAISE_LIFT);
+  const { slotStyle, fabStyle, tintStyle } = useTabBarRaise(
+    {
+      buttonRaised: raised,
+      fabShrunk: raised || (bannerShown && !minimized),
+      tintRaised: raised || bannerShown,
+    },
+    RAISE_GEOMETRY,
+  );
 
   const capsuleBottom = getFloatingNavBarBottom(insets.bottom);
   // Tall enough for the raised button; held down by the lift until it rises.
@@ -158,6 +177,16 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
         />
       </Animated.View>
 
+      {lastBanner != null && (
+        <Animated.View
+          testID="tab-bar-banner"
+          pointerEvents={bannerShown ? "box-none" : "none"}
+          style={[styles.banner, bannerStyle]}
+        >
+          {lastBanner}
+        </Animated.View>
+      )}
+
       {lastAccessory && (
         <Animated.View
           pointerEvents={accessory ? "auto" : "none"}
@@ -209,6 +238,14 @@ const styles = StyleSheet.create({
   // whole bar, padding and all, and sits low.
   accessorySlot: {
     position: "absolute",
+    height: CAPSULE_HEIGHT,
+  },
+  // The raised place, the bar's full width: where a raised button would be.
+  banner: {
+    position: "absolute",
+    top: RAISE_GEOMETRY.raised.top,
+    left: 0,
+    right: 0,
     height: CAPSULE_HEIGHT,
   },
 });

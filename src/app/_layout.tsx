@@ -49,10 +49,16 @@ export default function RootLayout() {
            */}
           <Stack.Screen name="study" options={{ presentation: "fullScreenModal" }} />
           {/*
-           * New Plan — its two steps, Preparing, and Ready — is the same kind of
-           * full-screen modal: it slides up over whatever opened it.
+           * New Plan — its two steps — is the same kind of full-screen modal:
+           * it slides up over whatever opened it, and closes the moment the
+           * plan is asked for.
            */}
           <Stack.Screen name="(plan-creation)" options={{ presentation: "fullScreenModal" }} />
+          {/*
+           * The plan being built, step by step: a native half-height sheet
+           * over wherever the reader is, opened from the generation bar.
+           */}
+          <Stack.Screen name="generation" options={HALF_SHEET_OPTIONS} />
           {/*
            * A theology exam attempt — the questions, its results, and
            * Understand why — is another full-screen modal with its own stack,

@@ -3,21 +3,14 @@ import { Alert } from "react-native";
 import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/queries";
 import type { BibleTranslation } from "@/types/domain";
 import { SFProBody } from "@/ui/typography/SFProBody";
-import { SettingsChoiceList, type SettingsChoice } from "../components/SettingsChoiceList";
+import { SettingsChoiceList } from "../components/SettingsChoiceList";
 import { SettingsSubpage } from "../components/SettingsSubpage";
-
-const TRANSLATIONS: readonly SettingsChoice<BibleTranslation>[] = [
-  { value: "NIV", label: "NIV", detail: "New International Version" },
-  { value: "ESV", label: "ESV", detail: "English Standard Version" },
-  { value: "KJV", label: "KJV", detail: "King James Version" },
-  { value: "NLT", label: "NLT", detail: "New Living Translation" },
-  { value: "BSB", label: "BSB", detail: "Berean Standard Bible" },
-];
+import { BIBLE_TRANSLATION_CHOICES, DEFAULT_BIBLE_TRANSLATION } from "../logic/bible-translations";
 
 export function BibleTranslationScreen() {
   const settingsQuery = useUserSettingsQuery();
   const update = useUpdateSettingsMutation();
-  const value = settingsQuery.data?.settings.bibleTranslation ?? "NIV";
+  const value = settingsQuery.data?.settings.bibleTranslation ?? DEFAULT_BIBLE_TRANSLATION;
 
   function select(next: BibleTranslation) {
     if (next === value || update.isPending) return;
@@ -38,7 +31,7 @@ export function BibleTranslationScreen() {
       </SFProBody>
       <SettingsChoiceList
         testID="bible-translation-options"
-        choices={TRANSLATIONS}
+        choices={BIBLE_TRANSLATION_CHOICES}
         value={value}
         onChange={select}
         disabled={settingsQuery.isPending}

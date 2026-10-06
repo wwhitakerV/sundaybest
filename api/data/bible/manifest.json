@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 1,
+  "books": [
+    {
+      "id": 1,
+      "name": "Genesis",
+      "displayName": "Genesis",
+      "aliases": [],
+      "chapterCount": 50
+    },
+    {
+      "id": 2,
+      "name": "Exodus",
+      "displayName": "Exodus",
+      "aliases": [],
+      "chapterCount": 40
+    },
+    {
+      "id": 3,
+      "name": "Leviticus",
+      "displayName": "Leviticus",
+      "aliases": [],
+      "chapterCount": 27
+    },
+    {
+      "id": 4,
+      "name": "Numbers",
+      "displayName": "Numbers",
+      "aliases": [],
+      "chapterCount": 36
+    },
+    {
+      "id": 5,
+      "name": "Deuteronomy",
+      "displayName": "Deuteronomy",
+      "aliases": [],
+      "chapterCount": 34
+    },
+    {
+      "id": 6,
+      "name": "Joshua",
+      "displayName": "Joshua",
+      "aliases": [],
+      "chapterCount": 24
+    },
+    {
+      "id": 7,
+      "name": "Judges",
+      "displayName": "Judges",
+      "aliases": [],
+      "chapterCount": 21
+    },
+    {
+      "id": 8,
+      "name": "Ruth",
+      "displayName": "Ruth",
+      "aliases": [],
+      "chapterCount": 4
+    },
+    {
+      "id": 9,
+      "name": "1 Samuel",
+      "displayName": "1 Samuel",
+      "aliases": [],
+      "chapterCount": 31
+    },
+    {
+      "id": 10,
+      "name": "2 Samuel",
+      "displayName": "2 Samuel",
+      "aliases": [],
+      "chapterCount": 24
+    },
+    {
+      "id": 11,
+      "name": "1 Kings",
+      "displayName": "1 Kings",
+      "aliases": [],
+      "chapterCount": 22
+    },
+    {
+      "id": 12,
+      "name": "2 Kings",
+      "displayName": "2 Kings",
+      "aliases": [],
+      "chapterCount": 25
+    },
+    {
+      "id": 13,
+      "name": "1 Chronicles",
+      "displayName": "1 Chronicles",
+      "aliases": [],
+      "chapterCount": 29
+    },
+    {
+      "id": 14,
+      "name": "2 Chronicles",
+      "displayName": "2 Chronicles",
+      "aliases": [],
+      "chapterCount": 36
+    },
+    {
+      "id": 15,
+      "name": "Ezra",
+      "displayName": "Ezra",
+      "aliases": [],
+      "chapterCount": 10
+    },
+    {
+      "id": 16,
+      "name": "Nehemiah",
+      "displayName": "Nehemiah",
+      "aliases": [],
+      "chapterCount": 13
+    },
+    {
+      "id": 17,
+      "name": "Esther",
+      "displayName": "Esther",
+      "aliases": [],
+      "chapterCount": 10
+    },
+    {
+      "id": 18,
+      "name": "Job",
+      "displayName": "Job",
+      "aliases": [],
+      "chapterCount": 42
+    },
+    {
+      "id": 19,
+      "name": "Psalms",
+      "displayName": "Psalm",
+      "aliases": [
+        "Psalm"
+      ],
+      "chapterCount": 150
+    },
+    {
+      "id": 20,
+      "name": "Proverbs",
+      "displayName": "Proverbs",
+      "aliases": [],
+      "chapterCount": 31
+    },
+    {
+      "id": 21,
+      "name": "Ecclesiastes",
+      "displayName": "Ecclesiastes",
+      "aliases": [],
+      "chapterCount": 12
+    },
+    {
+      "id": 22,
+      "name": "Song of Solomon",
+      "displayName": "Song of Solomon",
+      "aliases": [
+        "Song of Songs"
+      ],
+      "chapterCount": 8
+    },
+    {
+      "id": 23,
+      "name": "Isaiah",
+      "displayName": "Isaiah",
+      "aliases": [],
+      "chapterCount": 66
+    },
+    {
+      "id": 24,
+      "name": "Jeremiah",
+      "displayName": "Jeremiah",
+      "aliases": [],
+      "chapterCount": 52
+    },
+    {
+      "id": 25,
+      "name": "Lamentations",
+      "displayName": "Lamentations",
+      "aliases": [],
+      "chapterCount": 5
+    },
+    {
+      "id": 26,
+      "name": "Ezekiel",
+      "displayName": "Ezekiel",
+      "aliases": [],
+      "chapterCount": 48
+    },
+    {
+      "id": 27,
+      "name": "Daniel",
+      "displayName": "Daniel",
+      "aliases": [],
+      "chapterCount": 12
+    },
+    {
+      "id": 28,
+      "name": "Hosea",
+      "displayName": "Hosea",
+      "aliases": [],
+      "chapterCount": 14
+    },
+    {
+      "id": 29,
+      "name": "Joel",
+      "displayName": "Joel",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 30,
+      "name": "Amos",
+      "displayName": "Amos",
+      "aliases": [],
+      "chapterCount": 9
+    },
+    {
+      "id": 31,
+      "name": "Obadiah",
+      "displayName": "Obadiah",
+      "aliases": [],
+      "chapterCount": 1
+    },
+    {
+      "id": 32,
+      "name": "Jonah",
+      "displayName": "Jonah",
+      "aliases": [],
+      "chapterCount": 4
+    },
+    {
+      "id": 33,
+      "name": "Micah",
+      "displayName": "Micah",
+      "aliases": [],
+      "chapterCount": 7
+    },
+    {
+      "id": 34,
+      "name": "Nahum",
+      "displayName": "Nahum",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 35,
+      "name": "Habakkuk",
+      "displayName": "Habakkuk",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 36,
+      "name": "Zephaniah",
+      "displayName": "Zephaniah",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 37,
+      "name": "Haggai",
+      "displayName": "Haggai",
+      "aliases": [],
+      "chapterCount": 2
+    },
+    {
+      "id": 38,
+      "name": "Zechariah",
+      "displayName": "Zechariah",
+      "aliases": [],
+      "chapterCount": 14
+    },
+    {
+      "id": 39,
+      "name": "Malachi",
+      "displayName": "Malachi",
+      "aliases": [],
+      "chapterCount": 4
+    },
+    {
+      "id": 40,
+      "name": "Matthew",
+      "displayName": "Matthew",
+      "aliases": [],
+      "chapterCount": 28
+    },
+    {
+      "id": 41,
+      "name": "Mark",
+      "displayName": "Mark",
+      "aliases": [],
+      "chapterCount": 16
+    },
+    {
+      "id": 42,
+      "name": "Luke",
+      "displayName": "Luke",
+      "aliases": [],
+      "chapterCount": 24
+    },
+    {
+      "id": 43,
+      "name": "John",
+      "displayName": "John",
+      "aliases": [],
+      "chapterCount": 21
+    },
+    {
+      "id": 44,
+      "name": "Acts",
+      "displayName": "Acts",
+      "aliases": [],
+      "chapterCount": 28
+    },
+    {
+      "id": 45,
+      "name": "Romans",
+      "displayName": "Romans",
+      "aliases": [],
+      "chapterCount": 16
+    },
+    {
+      "id": 46,
+      "name": "1 Corinthians",
+      "displayName": "1 Corinthians",
+      "aliases": [],
+      "chapterCount": 16
+    },
+    {
+      "id": 47,
+      "name": "2 Corinthians",
+      "displayName": "2 Corinthians",
+      "aliases": [],
+      "chapterCount": 13
+    },
+    {
+      "id": 48,
+      "name": "Galatians",
+      "displayName": "Galatians",
+      "aliases": [],
+      "chapterCount": 6
+    },
+    {
+      "id": 49,
+      "name": "Ephesians",
+      "displayName": "Ephesians",
+      "aliases": [],
+      "chapterCount": 6
+    },
+    {
+      "id": 50,
+      "name": "Philippians",
+      "displayName": "Philippians",
+      "aliases": [],
+      "chapterCount": 4
+    },
+    {
+      "id": 51,
+      "name": "Colossians",
+      "displayName": "Colossians",
+      "aliases": [],
+      "chapterCount": 4
+    },
+    {
+      "id": 52,
+      "name": "1 Thessalonians",
+      "displayName": "1 Thessalonians",
+      "aliases": [],
+      "chapterCount": 5
+    },
+    {
+      "id": 53,
+      "name": "2 Thessalonians",
+      "displayName": "2 Thessalonians",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 54,
+      "name": "1 Timothy",
+      "displayName": "1 Timothy",
+      "aliases": [],
+      "chapterCount": 6
+    },
+    {
+      "id": 55,
+      "name": "2 Timothy",
+      "displayName": "2 Timothy",
+      "aliases": [],
+      "chapterCount": 4
+    },
+    {
+      "id": 56,
+      "name": "Titus",
+      "displayName": "Titus",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 57,
+      "name": "Philemon",
+      "displayName": "Philemon",
+      "aliases": [],
+      "chapterCount": 1
+    },
+    {
+      "id": 58,
+      "name": "Hebrews",
+      "displayName": "Hebrews",
+      "aliases": [],
+      "chapterCount": 13
+    },
+    {
+      "id": 59,
+      "name": "James",
+      "displayName": "James",
+      "aliases": [],
+      "chapterCount": 5
+    },
+    {
+      "id": 60,
+      "name": "1 Peter",
+      "displayName": "1 Peter",
+      "aliases": [],
+      "chapterCount": 5
+    },
+    {
+      "id": 61,
+      "name": "2 Peter",
+      "displayName": "2 Peter",
+      "aliases": [],
+      "chapterCount": 3
+    },
+    {
+      "id": 62,
+      "name": "1 John",
+      "displayName": "1 John",
+      "aliases": [],
+      "chapterCount": 5
+    },
+    {
+      "id": 63,
+      "name": "2 John",
+      "displayName": "2 John",
+      "aliases": [],
+      "chapterCount": 1
+    },
+    {
+      "id": 64,
+      "name": "3 John",
+      "displayName": "3 John",
+      "aliases": [],
+      "chapterCount": 1
+    },
+    {
+      "id": 65,
+      "name": "Jude",
+      "displayName": "Jude",
+      "aliases": [],
+      "chapterCount": 1
+    },
+    {
+      "id": 66,
+      "name": "Revelation",
+      "displayName": "Revelation",
+      "aliases": [],
+      "chapterCount": 22
+    }
+  ],
+  "translations": {
+    "KJV": {
+      "name": "King James Version",
+      "file": "kjv.json",
+      "contentSha256": "9022064524db3428d692710fc3e1cf514e22610def406ac533488ca6efeedad8",
+      "version": "9022064524db3428",
+      "bookCount": 66,
+      "chapterCount": 1189,
+      "verseEntryCount": 31102,
+      "nonemptyVerseCount": 31102,
+      "omittedVerses": []
+    },
+    "BSB": {
+      "name": "Berean Standard Bible",
+      "file": "bsb.json",
+      "contentSha256": "c51b64d15612ccac59c831bc4a78042ea91fe33d05dac98c46f373cd641f92f7",
+      "version": "c51b64d15612ccac",
+      "bookCount": 66,
+      "chapterCount": 1189,
+      "verseEntryCount": 31102,
+      "nonemptyVerseCount": 31086,
+      "omittedVerses": [
+        {
+          "bookId": 40,
+          "chapter": 17,
+          "verse": 21
+        },
+        {
+          "bookId": 40,
+          "chapter": 18,
+          "verse": 11
+        },
+        {
+          "bookId": 40,
+          "chapter": 23,
+          "verse": 14
+        },
+        {
+          "bookId": 41,
+          "chapter": 7,
+          "verse": 16
+        },
+        {
+          "bookId": 41,
+          "chapter": 9,
+          "verse": 44
+        },
+        {
+          "bookId": 41,
+          "chapter": 9,
+          "verse": 46
+        },
+        {
+          "bookId": 41,
+          "chapter": 11,
+          "verse": 26
+        },
+        {
+          "bookId": 41,
+          "chapter": 15,
+          "verse": 28
+        },
+        {
+          "bookId": 42,
+          "chapter": 17,
+          "verse": 36
+        },
+        {
+          "bookId": 42,
+          "chapter": 23,
+          "verse": 17
+        },
+        {
+          "bookId": 43,
+          "chapter": 5,
+          "verse": 4
+        },
+        {
+          "bookId": 44,
+          "chapter": 8,
+          "verse": 37
+        },
+        {
+          "bookId": 44,
+          "chapter": 15,
+          "verse": 34
+        },
+        {
+          "bookId": 44,
+          "chapter": 24,
+          "verse": 7
+        },
+        {
+          "bookId": 44,
+          "chapter": 28,
+          "verse": 29
+        },
+        {
+          "bookId": 45,
+          "chapter": 16,
+          "verse": 24
+        }
+      ]
+    }
+  },
+  "verseMappings": []
+}

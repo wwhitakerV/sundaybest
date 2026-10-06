@@ -10,7 +10,7 @@ import { useAppFonts } from "@/core/fonts/use-app-fonts";
 import { AppStoreProvider } from "@/core/store/AppStoreProvider";
 import { LaunchSplashCoordinator } from "./LaunchSplashCoordinator";
 import { LegacyPreferencesBridge } from "./LegacyPreferencesBridge";
-import { OfflineCacheHydrator } from "./OfflineCacheHydrator";
+import { OfflineCacheHydrator, type OfflineCacheHydratorProps } from "./OfflineCacheHydrator";
 import { OfflineSyncProvider } from "./OfflineSyncProvider";
 import { ServerPreferences } from "./ServerPreferences";
 
@@ -23,10 +23,12 @@ export type AppProvidersProps = {
   children: ReactNode;
   /** Hidden behind the native splash while fonts/security are loading. */
   fallback?: ReactNode;
+  /** The device cache, already read: tests pass one so the tree mounts on the first frame. */
+  offlineCache?: OfflineCacheHydratorProps["preloaded"];
 };
 
 /** Single place every app-wide provider gets mounted. */
-export function AppProviders({ children, fallback = null }: AppProvidersProps) {
+export function AppProviders({ children, fallback = null, offlineCache }: AppProvidersProps) {
   const queryClient = useMemo(() => createQueryClient(), []);
   const { loaded, error } = useAppFonts();
   const fontsReady = loaded || error !== null;
@@ -36,7 +38,7 @@ export function AppProviders({ children, fallback = null }: AppProvidersProps) {
   return (
     <NativeSecurityBootstrap fallback={fallback}>
       <QueryClientProvider client={queryClient}>
-        <OfflineCacheHydrator>
+        <OfflineCacheHydrator {...(offlineCache && { preloaded: offlineCache })}>
           <ApiProvider>
             <OfflineSyncProvider>
               <ServerPreferences>
@@ -54,9 +56,7 @@ export function AppProviders({ children, fallback = null }: AppProvidersProps) {
 }
 
 type SecurityState =
-  | { status: "checking" }
-  | { status: "ready" }
-  | { status: "failed"; error: Error };
+  { status: "checking" } | { status: "ready" } | { status: "failed"; error: Error };
 
 /**
  * Activates native transport security before any API provider is mounted.

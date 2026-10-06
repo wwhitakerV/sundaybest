@@ -1,4 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
+import { z } from "zod";
 
 import type { Database } from "../db/client.js";
 import {
@@ -13,6 +14,7 @@ import {
   userPlanEnrollments,
   userSettings,
 } from "../db/schema.js";
+import { generatedSupportingScriptureSchema } from "../generation/schema.js";
 import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
 import { sortSteps } from "./plan-service.js";
@@ -46,40 +48,8 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
       if (!scripture || !prayer || !settings) throw new AppError("INTERNAL", "Study content is incomplete");
 
       const translation = settings.bibleTranslation;
-      let textRows = await db
-        .select()
-        .from(scriptureTexts)
-        .where(and(eq(scriptureTexts.referenceId, scripture.id), eq(scriptureTexts.translation, translation)))
-        .limit(1);
-      let verses: Array<{ number: number; text: string }>;
-      let scriptureCacheAllowed = textRows[0] !== undefined;
-      if (textRows[0]) {
-        verses = textRows[0].verses;
-      } else {
-        const passage = await bibleProvider.getPassage({ reference: scripture.canonicalReference, translation });
-        verses = passage.verses;
-        scriptureCacheAllowed = passage.cacheAllowed;
-        if (passage.cacheAllowed) {
-          await db
-            .insert(scriptureTexts)
-            .values({
-              referenceId: scripture.id,
-              translation,
-              verses,
-              provider: passage.provider,
-              providerVersion: passage.providerVersion ?? null,
-            })
-            .onConflictDoUpdate({
-              target: [scriptureTexts.referenceId, scriptureTexts.translation],
-              set: { verses, provider: passage.provider, providerVersion: passage.providerVersion ?? null, fetchedAt: new Date() },
-            });
-          textRows = await db
-            .select()
-            .from(scriptureTexts)
-            .where(and(eq(scriptureTexts.referenceId, scripture.id), eq(scriptureTexts.translation, translation)))
-            .limit(1);
-        }
-      }
+      const { verses, cacheAllowed: scriptureCacheAllowed } = await loadScripture(db, bibleProvider, scripture, translation);
+      const supportingScriptures = await loadSupporting(bibleProvider, access.day.supportingScriptures, translation);
 
       return {
         id: access.day.id,
@@ -105,6 +75,7 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
           verses,
           cacheAllowed: scriptureCacheAllowed,
         },
+        supportingScriptures,
         reflectionPrompts: promptRows.map((prompt) => ({ id: prompt.id, order: prompt.position, question: prompt.question })),
         prayer: { id: prayer.id, title: prayer.title, text: prayer.text },
         quickCheckId: quizRows[0]?.id ?? null,
@@ -205,4 +176,62 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
       return { completedAt: now.toISOString(), planCompletedAt: planCompletedAt?.toISOString() ?? null };
     },
   };
+}
+
+/**
+ * Bundled public-domain text is served from memory. Gateway text is kept in
+ * `scripture_texts` only when its license allows caching.
+ */
+async function loadScripture(
+  db: Database,
+  bibleProvider: BibleProvider,
+  scripture: typeof scriptureReferences.$inferSelect,
+  translation: (typeof scriptureTexts.$inferSelect)["translation"],
+): Promise<{ verses: Array<{ number: number; text: string }>; cacheAllowed: boolean }> {
+  if (bibleProvider.servesLocally(translation)) {
+    const passage = await bibleProvider.getPassage({ reference: scripture.canonicalReference, translation });
+    return { verses: passage.verses, cacheAllowed: passage.cacheAllowed };
+  }
+  const [cached] = await db
+    .select()
+    .from(scriptureTexts)
+    .where(and(eq(scriptureTexts.referenceId, scripture.id), eq(scriptureTexts.translation, translation)))
+    .limit(1);
+  if (cached) return { verses: cached.verses, cacheAllowed: true };
+
+  const passage = await bibleProvider.getPassage({ reference: scripture.canonicalReference, translation });
+  if (passage.cacheAllowed) {
+    const provider = { provider: passage.provider, providerVersion: passage.providerVersion ?? null };
+    await db
+      .insert(scriptureTexts)
+      .values({ referenceId: scripture.id, translation, verses: passage.verses, ...provider })
+      .onConflictDoUpdate({
+        target: [scriptureTexts.referenceId, scriptureTexts.translation],
+        set: { verses: passage.verses, ...provider, fetchedAt: new Date() },
+      });
+  }
+  return { verses: passage.verses, cacheAllowed: passage.cacheAllowed };
+}
+
+/**
+ * Supporting Scripture in the reader's translation. Stored JSON is parsed, not
+ * trusted, and a passage that cannot be read is left out rather than failing
+ * the day.
+ */
+async function loadSupporting(
+  bibleProvider: BibleProvider,
+  stored: unknown,
+  translation: (typeof scriptureTexts.$inferSelect)["translation"],
+) {
+  const parsed = z.array(generatedSupportingScriptureSchema).safeParse(stored);
+  if (!parsed.success) return [];
+  const passages = await Promise.all(parsed.data.map(async ({ connection, ...passage }) => {
+    try {
+      const text = await bibleProvider.getPassage({ reference: passage.reference, translation });
+      return [{ ...passage, connection, translation, verses: text.verses }];
+    } catch {
+      return [];
+    }
+  }));
+  return passages.flat();
 }

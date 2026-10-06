@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tansta
 
 import type {
   ApiPlanDetail,
-  ApiPlanGeneration,
   ApiPlanSummary,
   ApiQuizSession,
   ApiReminder,
@@ -26,7 +25,7 @@ import {
   progressResponseSchema,
 } from "./contracts";
 import { createIdempotencyKey } from "./idempotency";
-import { apiQueryKeys } from "./query-keys";
+import { apiMutationKeys, apiQueryKeys, isStudyDayQueryKey } from "./query-keys";
 import { useSundayBestApi } from "./ApiProvider";
 import {
   cachedCurrentUserQuery,
@@ -173,20 +172,6 @@ export function useSermonSearchQuery(query: string, enabled = true) {
   });
 }
 
-
-export function usePlanGenerationQuery(generationId: string, enabled = true) {
-  const api = useSundayBestApi();
-  return useQuery({
-    queryKey: apiQueryKeys.generation(generationId),
-    queryFn: () => api.generations.get(generationId),
-    enabled: enabled && generationId.length > 0,
-    refetchInterval: (query) => {
-      const status = query.state.data?.generation.status;
-      return status === "completed" || status === "failed" ? false : 900;
-    },
-  });
-}
-
 export function useResolveSermonMutation() {
   const api = useSundayBestApi();
 
@@ -201,6 +186,8 @@ export function useCreatePlanMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // Watched by the generation bar, which shows the plan until the server has it.
+    mutationKey: apiMutationKeys.createPlan,
     mutationFn: (input: CreatePlanRequest) =>
       api.plans.create(
         input,
@@ -208,28 +195,13 @@ export function useCreatePlanMutation() {
           `plan:create:${input.sermonId}:${input.lengthDays}:${input.quickCheckEnabled ? "quiz" : "no-quiz"}`,
         ),
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: apiQueryKeys.plans });
-    },
-  });
-}
-
-export function useRetryPlanGenerationMutation(generationId: string) {
-  const api = useSundayBestApi();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () =>
-      api.generations.retry(
-        generationId,
-        createIdempotencyKey(`generation:${generationId}:retry`),
-      ),
-    onSuccess: (data) => {
-      queryClient.setQueryData<{ generation: ApiPlanGeneration }>(
-        apiQueryKeys.generation(generationId),
-        data,
-      );
-    },
+    // Settles only once the bar's list has the new build, so the bar goes
+    // straight from "asked for" to building, with nothing in between.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: apiQueryKeys.plans }),
+        queryClient.invalidateQueries({ queryKey: apiQueryKeys.currentGenerations }),
+      ]),
   });
 }
 
@@ -294,8 +266,14 @@ export function useUpdateSettingsMutation() {
         queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, context.previous);
       }
     },
-    onSuccess: (data) => {
+    onSuccess: (data, input) => {
       queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, data);
+      // A study day carries its Scripture in the reader's translation.
+      if (input.bibleTranslation) {
+        void queryClient.invalidateQueries({
+          predicate: (query) => isStudyDayQueryKey(query.queryKey),
+        });
+      }
       void persistServerCache({
         cacheKey: offlineCacheKeys.settings,
         resourceType: "settings",
@@ -422,7 +400,9 @@ export function useArchivePlanMutation() {
           idempotencyKey,
         });
         const now = new Date().toISOString();
-        return { plan: { ...current, status: "archived" as const, archivedAt: now, updatedAt: now } };
+        return {
+          plan: { ...current, status: "archived" as const, archivedAt: now, updatedAt: now },
+        };
       }
     },
     onSuccess: ({ plan }) => {
@@ -453,9 +433,7 @@ export function useSetPlanSavedMutation() {
 
   return useMutation({
     mutationFn: async ({ planId, saved }: { planId: string; saved: boolean }) => {
-      const idempotencyKey = createIdempotencyKey(
-        `plan:${planId}:${saved ? "save" : "unsave"}`,
-      );
+      const idempotencyKey = createIdempotencyKey(`plan:${planId}:${saved ? "save" : "unsave"}`);
       try {
         return saved
           ? await api.plans.save(planId, idempotencyKey)
@@ -490,15 +468,16 @@ export function useSetPlanSavedMutation() {
     },
     onError: (_error, _variables, context) => {
       if (!context) return;
-      if (context.previousPlans) queryClient.setQueryData(apiQueryKeys.plans, context.previousPlans);
-      if (context.previousPlan) queryClient.setQueryData(apiQueryKeys.plan(context.planId), context.previousPlan);
+      if (context.previousPlans)
+        queryClient.setQueryData(apiQueryKeys.plans, context.previousPlans);
+      if (context.previousPlan)
+        queryClient.setQueryData(apiQueryKeys.plan(context.planId), context.previousPlan);
     },
     onSuccess: () => {
       void persistPlansCache(queryClient);
     },
   });
 }
-
 
 export function useCompleteStudyStepMutation(planId: string, dayNumber: number) {
   const api = useSundayBestApi();
@@ -595,14 +574,14 @@ export function useCompleteStudyDayMutation(planId: string, dayNumber: number) {
         const plan = queryClient.getQueryData<PlanEnvelope>(apiQueryKeys.plan(planId))?.plan;
         const now = new Date().toISOString();
         const completedBefore = plan?.progress.completedDays ?? 0;
-        const alreadyComplete = plan?.days.some(
-          (day) => day.dayNumber === dayNumber && day.progress.status === "completed",
-        ) ?? false;
+        const alreadyComplete =
+          plan?.days.some(
+            (day) => day.dayNumber === dayNumber && day.progress.status === "completed",
+          ) ?? false;
         const completedAfter = completedBefore + (alreadyComplete ? 0 : 1);
         return {
           completedAt: now,
-          planCompletedAt:
-            plan && completedAfter >= plan.lengthDays ? now : null,
+          planCompletedAt: plan && completedAfter >= plan.lengthDays ? now : null,
         };
       }
     },
@@ -647,7 +626,8 @@ export function useCompleteStudyDayMutation(planId: string, dayNumber: number) {
             : day,
         );
         const nextDay = days.find((day) => day.progress.status !== "completed") ?? null;
-        const completedPlan = data.planCompletedAt !== null || completedDays === current.plan.lengthDays;
+        const completedPlan =
+          data.planCompletedAt !== null || completedDays === current.plan.lengthDays;
         const plan: ApiPlanDetail = {
           ...current.plan,
           status: completedPlan ? "completed" : current.plan.status,
@@ -699,10 +679,7 @@ export function useStartQuizAttemptMutation(quizId: string) {
 
   return useMutation({
     mutationFn: () =>
-      api.quizzes.startAttempt(
-        quizId,
-        createIdempotencyKey(`quiz:${quizId}:start`),
-      ),
+      api.quizzes.startAttempt(quizId, createIdempotencyKey(`quiz:${quizId}:start`)),
     onSuccess: (data) => {
       queryClient.setQueryData<ApiQuizSession>(apiQueryKeys.quizSession(quizId), data);
       void persistServerCache({
@@ -752,10 +729,7 @@ export function useCompleteQuizAttemptMutation(quizId: string, attemptId: string
 
   return useMutation({
     mutationFn: () =>
-      api.quizzes.completeAttempt(
-        attemptId,
-        createIdempotencyKey(`quiz:${attemptId}:complete`),
-      ),
+      api.quizzes.completeAttempt(attemptId, createIdempotencyKey(`quiz:${attemptId}:complete`)),
     onSuccess: ({ attempt, score }) => {
       queryClient.setQueryData<ApiQuizSession>(apiQueryKeys.quizSession(quizId), (current) =>
         current ? { ...current, attempt, score } : current,
@@ -826,10 +800,7 @@ function toPlanSummary(plan: ApiPlanDetail): ApiPlanSummary {
   return summary;
 }
 
-async function invalidateStudySurfaces(
-  queryClient: QueryClient,
-  planId?: string,
-): Promise<void> {
+async function invalidateStudySurfaces(queryClient: QueryClient, planId?: string): Promise<void> {
   const work = [
     queryClient.invalidateQueries({ queryKey: apiQueryKeys.plans }),
     queryClient.invalidateQueries({ queryKey: apiQueryKeys.progressRoot }),

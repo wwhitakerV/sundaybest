@@ -1,3 +1,4 @@
+import { aSermon } from "@tests/factories/api";
 import { lookUpSermon } from "@/features/plan-creation/data/look-up-sermon";
 import { getLinkFeedback } from "@/features/plan-creation/logic/link-feedback";
 import {
@@ -53,7 +54,10 @@ describe("getLinkFeedback", () => {
     const searching = newPlanReducer(start, { type: "inputModeChanged", inputMode: "search" });
     const state = newPlanReducer(searching, {
       type: "searchResultSelected",
-      selection: { id: "s1", checked: { url: VALID, sermon: lookUpSermon(VALID) } },
+      selection: {
+        id: "s1",
+        checked: { sermonId: aSermon().id, url: VALID, sermon: lookUpSermon(aSermon()) },
+      },
     });
 
     expect(getLinkFeedback(state)).toEqual({

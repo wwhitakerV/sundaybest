@@ -88,9 +88,6 @@ const envSchema = z
     if (value.NODE_ENV === "production" && value.DEV_PLAN_GENERATION_ENABLED) {
       ctx.addIssue({ code: "custom", path: ["DEV_PLAN_GENERATION_ENABLED"], message: "Development generation must be disabled in production" });
     }
-    if (value.NODE_ENV === "production" && !value.BIBLE_PROVIDER_URL) {
-      ctx.addIssue({ code: "custom", path: ["BIBLE_PROVIDER_URL"], message: "Required in production" });
-    }
     if (value.NODE_ENV === "production") {
       const secureUrls = [
         ["SUPADATA_BASE_URL", value.SUPADATA_BASE_URL],

@@ -60,6 +60,16 @@ afterAll(() => {
 // `expo-font` itself and asserts the not-loaded and error branches directly,
 // so this global default does not hide those paths — it only keeps every
 // *other* test's render path unblocked.
+// jest-expo's stand-in for expo-crypto's native module returns `undefined`
+// from `randomUUID`, so nothing that mints an id can work under test — the
+// development session's install id among them, and with it every API
+// request. Node's own generator is the honest equivalent; the rest of the
+// module is left as it is.
+jest.mock("expo-crypto", () => ({
+  ...jest.requireActual<object>("expo-crypto"),
+  randomUUID: () => jest.requireActual<{ randomUUID: () => string }>("node:crypto").randomUUID(),
+}));
+
 jest.mock("expo-font", () => ({
   useFonts: () => [true, null],
 }));
@@ -72,6 +82,7 @@ jest.mock("expo-font", () => ({
 jest.mock("expo-splash-screen", () => ({
   preventAutoHideAsync: jest.fn().mockResolvedValue(true),
   hideAsync: jest.fn().mockResolvedValue(undefined),
+  setOptions: jest.fn(),
 }));
 
 // React Native's `Vibration` module has no native side under Jest and throws

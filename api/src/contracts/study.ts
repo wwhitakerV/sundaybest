@@ -27,12 +27,22 @@ export const translatedScriptureSchema = scriptureReferenceSchema.extend({
   cacheAllowed: z.boolean(),
 });
 
+/**
+ * Scripture SundayBest chose to support the day's teaching ("Dive deeper"). The
+ * sermon did not cite it; `connection` says how it ties to the reading.
+ */
+export const supportingScriptureSchema = translatedScriptureSchema
+  .omit({ id: true, cacheAllowed: true })
+  .extend({ connection: z.string().min(1).max(600) });
+
 export const studyDaySchema = z.object({
   id: apiIdSchema,
   planId: apiIdSchema,
   dayNumber: z.number().int().min(1).max(7),
   reading: dayReadingSchema,
   scripture: translatedScriptureSchema,
+  // Defaulted so study days cached on a device before this field existed still parse.
+  supportingScriptures: z.array(supportingScriptureSchema).default([]),
   reflectionPrompts: z.array(reflectionPromptSchema),
   prayer: prayerContentSchema,
   quickCheckId: apiIdSchema.nullable(),
@@ -58,3 +68,4 @@ export const completeStudyDayResponseSchema = z.object({
 });
 
 export type ApiStudyDay = z.infer<typeof studyDaySchema>;
+export type ApiSupportingScripture = z.infer<typeof supportingScriptureSchema>;

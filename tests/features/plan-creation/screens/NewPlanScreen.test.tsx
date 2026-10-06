@@ -5,6 +5,7 @@ import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import * as Clipboard from "expo-clipboard";
 import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
+import { http, HttpResponse } from "msw";
 
 import {
   errorFeedback,
@@ -17,6 +18,8 @@ import { lightTheme } from "@/theme/tokens";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { FOOTER_BOTTOM } from "@/ui/organisms/ScreenFooter";
 import { NewPlanScreen } from "@/features/plan-creation/screens/NewPlanScreen";
+import { API_URL, aGeneration, aSermon } from "@tests/factories/api";
+import { server } from "@tests/mocks/server";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -37,9 +40,18 @@ jest.mock("expo-clipboard", () => ({ getStringAsync: jest.fn() }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitModal = jest.fn<void, []>();
-const LINK = "https://youtube.com/watch?v=Qm81xRz4";
+const LINK = aSermon().canonicalUrl;
 
 beforeEach(() => {
+  server.use(
+    http.post(`${API_URL}/v1/sermons/resolve`, () => HttpResponse.json({ sermon: aSermon() })),
+    http.post(`${API_URL}/v1/plans`, () =>
+      HttpResponse.json({ planId: aGeneration().planId, generationId: aGeneration().id }),
+    ),
+    http.get(`${API_URL}/v1/plan-generations/current`, () =>
+      HttpResponse.json({ generations: [] }),
+    ),
+  );
   jest.mocked(useNavigation).mockReturnValue({
     getParent: () => ({ goBack: mockExitModal }),
   });
@@ -238,8 +250,8 @@ describe("NewPlanScreen", () => {
     await goToLinkPreview();
 
     expect(screen.getByText("2 of 2")).toBeVisible();
-    expect(screen.getByText("Today I Choose to Be a Blessing")).toBeVisible();
-    expect(screen.getByText("…/watch?v=Qm81xRz4")).toBeVisible();
+    expect(screen.getByText(aSermon().title)).toBeVisible();
+    expect(screen.getByText("…/watch?v=vNoO3YQAPNM")).toBeVisible();
     expect(mockPush).not.toHaveBeenCalled();
   });
 
@@ -263,17 +275,14 @@ describe("NewPlanScreen", () => {
     expect(mockExitModal).not.toHaveBeenCalled();
   });
 
-  it("creates the plan and moves on to Preparing when Create my plan is pressed", async () => {
+  it("closes New Plan when Create my plan is pressed, leaving the build to the generation bar", async () => {
     render(<NewPlanScreen />);
     await goToLinkPreview();
 
     fireEvent.press(screen.getByTestId("link-preview-create-plan-button"));
 
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/(plan-creation)/preparing",
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.any()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-      params: { planId: expect.any(String) },
-    });
+    expect(mockExitModal).toHaveBeenCalledTimes(1);
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it("puts sparkles on Create my plan, and nothing on Continue", async () => {

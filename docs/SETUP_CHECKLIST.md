@@ -19,6 +19,15 @@ setup), **Security** (before real traffic or real threats matter),
       (free, can take up to ~5 business days), then enroll. Organization
       enrollment is required for a company-name App Store listing;
       individual enrollment does not need a D-U-N-S.
+- [ ] **Record where the bundled Bible files came from.** BSB and KJV ship in
+      `api/data/bible/` (see [ADR 0019](./adr/0019-bundled-public-domain-bible.md));
+      add the source of each export to `api/data/bible/README.md`.
+- [ ] **(Later) License NIV, ESV or NLT** before offering them. Each needs
+      written permission or a licensed provider, then `BIBLE_PROVIDER_URL` /
+      `BIBLE_PROVIDER_TOKEN` on the API and worker. API.Bible offers NIV for
+      non-commercial apps only; any paid tier would need a direct Biblica
+      license. Its terms cap cached text at 30 days and require usage
+      reporting (FUMS), which needs an ADR against the no-tracking rule.
 - [ ] **Enable 2FA on the Apple ID** used for App Store Connect and EAS
       credential automation.
 - [ ] **Enable 2FA on the Expo account** (`walt.whitakerv@gmail.com`).

@@ -15,6 +15,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const userStatusEnum = pgEnum("user_status", ["active", "deleted"]);
 export const themeEnum = pgEnum("theme_preference", ["system", "light", "dark"]);
@@ -119,7 +120,7 @@ export const userSettings = pgTable("user_settings", {
   userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
   theme: themeEnum("theme").notNull().default("system"),
   textSize: textSizeEnum("text_size").notNull().default("default"),
-  bibleTranslation: bibleTranslationEnum("bible_translation").notNull().default("NIV"),
+  bibleTranslation: bibleTranslationEnum("bible_translation").notNull().default("BSB"),
   defaultPlanLength: smallint("default_plan_length").notNull().default(6),
   quickCheckByDefault: boolean("quick_check_by_default").notNull().default(true),
   hapticsEnabled: boolean("haptics_enabled").notNull().default(true),
@@ -150,6 +151,14 @@ export const sermonSources = pgTable(
   },
   (t) => [uniqueIndex("sermon_sources_platform_external_uidx").on(t.platform, t.externalId)],
 );
+
+/** A recent Supadata search: the videos it returned for a term. Never who searched. */
+export const sermonSearches = pgTable("sermon_searches", {
+  /** The result limit and the normalized term, as `10:grace`. */
+  query: text("query").primaryKey(),
+  externalIds: jsonb("external_ids").$type<unknown>().notNull(),
+  searchedAt: timestamp("searched_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+});
 
 export const sermonTranscriptSegments = pgTable(
   "sermon_transcript_segments",
@@ -203,6 +212,8 @@ export const plans = pgTable(
     visibility: planVisibilityEnum("visibility").notNull().default("private"),
     lengthDays: smallint("length_days").notNull(),
     quickCheckEnabled: boolean("quick_check_enabled").notNull(),
+    /** About This Plan; null for plans generated before it existed. Parsed on read. */
+    about: jsonb("about").$type<unknown>(),
     contentVersion: integer("content_version").notNull().default(1),
     readyAt: timestamp("ready_at", { withTimezone: true, mode: "date" }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
@@ -240,6 +251,10 @@ export const planGenerations = pgTable(
     quickCheckEnabled: boolean("quick_check_enabled").notNull(),
     status: generationStatusEnum("status").notNull().default("preparing"),
     attemptCount: integer("attempt_count").notNull().default(1),
+    /** 0–100, for the app's progress bar; only ever moves forward within an attempt. */
+    progress: smallint("progress").notNull().default(0),
+    /** When the reader dismissed it from the app's generation bar; until then it is current. */
+    dismissedAt: timestamp("dismissed_at", { withTimezone: true, mode: "date" }),
     generatorVersion: text("generator_version"),
     promptVersion: text("prompt_version"),
     modelProvider: text("model_provider"),
@@ -255,7 +270,48 @@ export const planGenerations = pgTable(
     uniqueIndex("plan_generations_user_request_uidx").on(t.userId, t.requestKey),
     index("plan_generations_user_idx").on(t.userId),
     index("plan_generations_plan_idx").on(t.planId),
+    index("plan_generations_current_idx").on(t.userId, t.createdAt).where(sql`dismissed_at is null`),
+    index("plan_generations_reuse_idx").on(t.sermonId, t.requestedLength, t.quickCheckEnabled, t.promptVersion)
+      .where(sql`status = 'completed'`),
   ],
+);
+
+/** One row per generation attempt: why it failed and what the model used. Never content. */
+export const generationAttempts = pgTable(
+  "generation_attempts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    generationId: uuid("generation_id").notNull().references(() => planGenerations.id, { onDelete: "cascade" }),
+    /** "plan", "day 3", "quiz 3" for one model call; "total" for a whole attempt. */
+    stage: text("stage").notNull().default("total"),
+    round: integer("round").notNull(),
+    attempt: integer("attempt").notNull(),
+    outcome: text("outcome").notNull(),
+    error: text("error"),
+    model: text("model"),
+    finishReason: text("finish_reason"),
+    promptTokens: integer("prompt_tokens"),
+    /** Of `prompt_tokens`, how many were billed at the cached rate. */
+    cachedPromptTokens: integer("cached_prompt_tokens"),
+    completionTokens: integer("completion_tokens"),
+    reasoningTokens: integer("reasoning_tokens"),
+    durationMs: integer("duration_ms").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [index("generation_attempts_generation_idx").on(t.generationId)],
+);
+
+/** An accepted step's model output, kept until its plan is published so a re-run resumes. */
+export const generationSteps = pgTable(
+  "generation_steps",
+  {
+    generationId: uuid("generation_id").notNull().references(() => planGenerations.id, { onDelete: "cascade" }),
+    /** The step and what it was written from, as `day 3@<fingerprint>`. */
+    step: text("step").notNull(),
+    output: jsonb("output").$type<unknown>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.generationId, t.step] })],
 );
 
 export const generationJobs = pgTable(
@@ -285,10 +341,14 @@ export const planDays = pgTable(
     planId: uuid("plan_id").notNull().references(() => plans.id, { onDelete: "cascade" }),
     dayNumber: smallint("day_number").notNull(),
     readingTitle: text("reading_title").notNull(),
+    /** The day's thesis from the plan step; never shown. Null for days written before it was kept. */
+    focus: text("focus"),
     readingParagraphs: jsonb("reading_paragraphs").$type<string[]>().notNull(),
     sermonQuote: text("sermon_quote"),
     clipStartSeconds: integer("clip_start_seconds"),
     clipEndSeconds: integer("clip_end_seconds"),
+    /** SundayBest-chosen Scripture supporting the day ("Dive deeper"); parsed on read. */
+    supportingScriptures: jsonb("supporting_scriptures").$type<unknown>().notNull().default([]),
     scriptureReferenceId: uuid("scripture_reference_id").notNull().references(() => scriptureReferences.id),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
@@ -341,6 +401,8 @@ export const quizQuestions = pgTable(
     prompt: text("prompt").notNull(),
     scriptureReference: text("scripture_reference"),
     explanation: text("explanation"),
+    /** Finish the verse's wording per bundled translation; null for other questions. Parsed on read. */
+    variants: jsonb("variants").$type<unknown>(),
   },
   (t) => [uniqueIndex("quiz_questions_quiz_position_uidx").on(t.quizId, t.position)],
 );

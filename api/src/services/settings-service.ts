@@ -1,13 +1,14 @@
 import { and, eq, isNull } from "drizzle-orm";
 
-import type { ReminderKind, UpdateReminderRequest, UpdateSettingsRequest } from "../contracts/settings.js";
+import type { ApiUserSettings, ReminderKind, UpdateReminderRequest, UpdateSettingsRequest } from "../contracts/settings.js";
 import type { Database } from "../db/client.js";
 import { reminders, userSettings } from "../db/schema.js";
 import { AppError } from "../http/errors.js";
 
 const DEFAULT_DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
 
-export function createSettingsService(db: Database) {
+/** `availableTranslations` is what the configured Bible providers can serve. */
+export function createSettingsService(db: Database, availableTranslations: readonly ApiUserSettings["bibleTranslation"][]) {
   async function getSettings(userId: string) {
     let rows = await db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1);
     if (!rows[0]) {
@@ -21,6 +22,9 @@ export function createSettingsService(db: Database) {
   return {
     getSettings,
     async updateSettings(userId: string, input: UpdateSettingsRequest) {
+      if (input.bibleTranslation && !availableTranslations.includes(input.bibleTranslation)) {
+        throw new AppError("VALIDATION_FAILED", "That Bible translation isn't available");
+      }
       await getSettings(userId);
       const rows = await db
         .update(userSettings)

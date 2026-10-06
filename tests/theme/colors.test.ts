@@ -77,3 +77,27 @@ describe("motion", () => {
     expect(motion.exitMs).toBeLessThanOrEqual(250);
   });
 });
+
+function luminance(hex: Hex): number {
+  const [red, green, blue] = channels(hex).map((channel) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function contrast(a: Hex, b: Hex): number {
+  const [lighter, darker] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+describe("a filled bar's ink", () => {
+  it.each([
+    ["controlPrimary", "onControlPrimary"],
+    ["success", "onSuccess"],
+  ])("%s's ink reads against it in both themes", (fill, ink) => {
+    for (const theme of [light, dark]) {
+      expect(contrast(theme.get(fill) as Hex, theme.get(ink) as Hex)).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});

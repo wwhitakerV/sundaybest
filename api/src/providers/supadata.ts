@@ -252,7 +252,7 @@ function endpoint(env: Env, path: string): URL {
 
 function requireKey(env: Env): string {
   if (!env.SUPADATA_API_KEY) {
-    throw new AppError("INTERNAL", "SUPADATA_API_KEY is not configured");
+    throw new AppError("INTERNAL", "SUPADATA_API_KEY is not configured", { permanent: true });
   }
   return env.SUPADATA_API_KEY;
 }

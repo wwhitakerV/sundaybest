@@ -41,28 +41,80 @@ export interface ScriptureRange {
   reference: string;
 }
 
+/** A Scripture the sermon names: verse bounds are null when only the chapter is named. */
+export interface ScriptureCitation {
+  book: string;
+  chapter: number;
+  verseStart: number | null;
+  verseEnd: number | null;
+  reference: string;
+}
+
+/** Canonical form built from the numbers alone, ignoring the written reference. */
+export function canonicalizeScriptureFields(input: ScriptureRange): ScriptureRange {
+  const verses = `${input.verseStart}${input.verseEnd === input.verseStart ? "" : `-${input.verseEnd}`}`;
+  return canonicalizeScripture({ ...input, reference: `${input.book} ${input.chapter}:${verses}` });
+}
+
 export function canonicalizeScripture(input: ScriptureRange): ScriptureRange {
+  const canonical = canonicalizeCitation(input);
+  return { ...input, book: canonical.book, reference: canonical.reference };
+}
+
+export function canonicalizeCitation<T extends ScriptureCitation>(input: T): T {
   const book = aliases.get(normalizeSpokenReference(input.book));
   if (!book) throw new AppError("INTERNAL", "Generated Scripture uses an unknown book");
   const displayBook = book === "Psalms" ? "Psalm" : book;
-  const reference = `${displayBook} ${input.chapter}:${input.verseStart}${input.verseEnd === input.verseStart ? "" : `-${input.verseEnd}`}`;
+  const verses = input.verseStart === null ? "" : `:${input.verseStart}${input.verseEnd === input.verseStart ? "" : `-${input.verseEnd}`}`;
+  const reference = `${displayBook} ${input.chapter}${verses}`;
   // Fields and display reference must describe the same passage, not competing identities.
-  const supplied = normalizeSpokenReference(input.reference).replace(/^psalms\b/, "psalm")
-    .replace(/^song of songs\b/, "song of solomon").replace(/[–—]/g, "-").replace(/\s+/g, "");
-  if (supplied !== normalizeSourceText(reference).replace(/\s+/g, "")) {
+  if (!sameReference(input.reference, reference)) {
     throw new AppError("INTERNAL", "Generated Scripture fields disagree with its reference");
   }
   return { ...input, book, reference };
 }
 
+/** A spoken or written reference: book, chapter, and optionally a verse or verse range. */
+function referencePattern(): RegExp {
+  return new RegExp(`\\b(${[...aliases.keys()].sort((a, b) => b.length - a.length).join("|")})\\s+(?:chapter\\s+)?(\\d{1,3})(?:\\s*(?::|,?\\s+verses?\\s+|\\s+)(\\d{1,3})(?:\\s*(?:-|through|to|and)\\s*(\\d{1,3}))?)?\\b`, "g");
+}
+
+/**
+ * Every chapter the sermon names, once each and in the order it first names
+ * them ("1 Corinthians 13", "Psalm 23"): the only chapters a day may study.
+ */
+export function namedChapters(source: string): string[] {
+  const chapters = new Set<string>();
+  for (const match of normalizeSpokenReference(source).matchAll(referencePattern())) {
+    const book = aliases.get(match[1]!)!;
+    chapters.add(`${book === "Psalms" ? "Psalm" : book} ${Number(match[2])}`);
+  }
+  return [...chapters];
+}
+
 /** Conservative evidence check. An explicitly named chapter permits a passage within it. */
-export function referenceIsNamed(source: string, scripture: ScriptureRange): boolean {
-  const value = normalizeSpokenReference(source);
-  const pattern = new RegExp(`\\b(${[...aliases.keys()].sort((a, b) => b.length - a.length).join("|")})\\s+(?:chapter\\s+)?(\\d{1,3})(?:\\s*(?::|,?\\s+verses?\\s+|\\s+)(\\d{1,3})(?:\\s*(?:-|through|to|and)\\s*(\\d{1,3}))?)?\\b`, "g");
-  for (const match of value.matchAll(pattern)) {
+export function referenceIsNamed(source: string, scripture: ScriptureCitation): boolean {
+  for (const match of normalizeSpokenReference(source).matchAll(referencePattern())) {
     if (aliases.get(match[1]!) !== scripture.book || Number(match[2]) !== scripture.chapter) continue;
-    if (match[3] === undefined) return true;
+    // A whole-chapter citation needs only the chapter to be named.
+    if (match[3] === undefined || scripture.verseStart === null || scripture.verseEnd === null) return true;
     if (scripture.verseStart >= Number(match[3]) && scripture.verseEnd <= Number(match[4] ?? match[3])) return true;
   }
   return false;
+}
+
+/**
+ * A day may study any passage in a chapter the sermon names, in any form:
+ * preachers name where a reading starts ("Luke 16, verse 19") and read on.
+ * The Bible check then confirms every verse exists.
+ */
+export function chapterIsNamed(source: string, scripture: ScriptureCitation): boolean {
+  return referenceIsNamed(source, { ...scripture, verseStart: null, verseEnd: null });
+}
+
+/** Whether a free-form reference names the same passage as a canonical one ("john 3:16–18" and "John 3:16-18"). */
+export function sameReference(supplied: string, canonical: string): boolean {
+  const normalized = normalizeSpokenReference(supplied).replace(/^psalms\b/, "psalm")
+    .replace(/^song of songs\b/, "song of solomon").replace(/[–—]/g, "-").replace(/\s+/g, "");
+  return normalized === normalizeSourceText(canonical).replace(/\s+/g, "");
 }

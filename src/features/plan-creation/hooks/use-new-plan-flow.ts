@@ -1,22 +1,15 @@
-import { Alert } from "react-native";
 import { useReducer, useState } from "react";
-import { useRouter } from "expo-router";
 
 import type { PlanLength } from "@/types/domain";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
 import {
   useCreatePlanMutation,
-  usePlanGenerationQuery,
   useResolveSermonMutation,
   useUserSettingsQuery,
 } from "@/core/api/queries";
 import { isApiError } from "@/core/api/api-error";
-import {
-  errorFeedback,
-  selectionFeedback,
-  tapFeedback,
-} from "@/core/haptics/haptics";
+import { errorFeedback, selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { lookUpSermon } from "../data/look-up-sermon";
 import type { SermonSearchResult } from "../data/search-sermons";
 import {
@@ -25,18 +18,16 @@ import {
   newPlanReducer,
   type CheckedLink,
 } from "../logic/new-plan-flow";
-import { preparingHref } from "../logic/routes";
 import { checkSermonLink } from "../logic/sermon-link";
 import { getLinkFeedback } from "../logic/link-feedback";
 import { useSermonSearch } from "./use-sermon-search";
 
 /**
  * New Plan backed by the real SundayBest API: live sermon search/resolve,
- * then one server-side generation job. The screen's two-step interaction stays
- * unchanged; only the source of truth has moved off the mock store.
+ * then one server-side generation job. Asking for the plan closes New Plan at
+ * once; the generation bar above the tabs follows the build from there.
  */
 export function useNewPlanFlow() {
-  const router = useRouter();
   const session = useModalSession();
   const settingsQuery = useUserSettingsQuery();
   const resolveSermon = useResolveSermonMutation();
@@ -52,11 +43,6 @@ export function useNewPlanFlow() {
     initialNewPlanState,
   );
 
-  const generationQuery = usePlanGenerationQuery(
-    state.generationId ?? "",
-    state.generationId !== null,
-  );
-
   const search = useSermonSearch(
     state.searchQuery,
     state.step === "paste" && state.inputMode === "search",
@@ -69,17 +55,11 @@ export function useNewPlanFlow() {
   }
 
   const stepIndex = getNewPlanStepIndex(state);
-  const busy = resolveSermon.isPending || createPlan.isPending;
+  const busy = resolveSermon.isPending;
   const canContinue =
     !busy &&
     (state.step === "preview" ||
-      (state.inputMode === "search"
-        ? state.searchSelection !== null
-        : state.link.trim() !== ""));
-
-  const noCaptions =
-    generationQuery.data?.generation.status === "failed" &&
-    generationQuery.data.generation.error?.code === "noCaptions";
+      (state.inputMode === "search" ? state.searchSelection !== null : state.link.trim() !== ""));
 
   function changeLink(link: string) {
     dispatch({ type: "linkChanged", link });
@@ -89,26 +69,16 @@ export function useNewPlanFlow() {
     if (busy) return;
 
     if (state.step === "preview") {
+      // Nothing waits on the server: the request carries on in the query
+      // client after New Plan closes, and the generation bar shows it —
+      // building, or failed to start, with a retry.
       tapFeedback();
-      try {
-        const created = await createPlan.mutateAsync({
-          sermonId: state.checked.sermonId,
-          lengthDays: state.days,
-          quickCheckEnabled: state.quickCheck,
-        });
-        dispatch({
-          type: "planCreated",
-          planId: created.planId,
-          generationId: created.generationId,
-        });
-        router.push(preparingHref(created.planId, created.generationId));
-      } catch {
-        errorFeedback();
-        Alert.alert(
-          "Couldn’t create your plan",
-          "Check your connection and try again.",
-        );
-      }
+      createPlan.mutate({
+        sermonId: state.checked.sermonId,
+        lengthDays: state.days,
+        quickCheckEnabled: state.quickCheck,
+      });
+      session.exit();
       return;
     }
 
@@ -163,7 +133,6 @@ export function useNewPlanFlow() {
     state,
     stepIndex,
     shownChecked,
-    noCaptions,
     canContinue,
     busy,
     linkFeedback: getLinkFeedback(state),
@@ -194,11 +163,6 @@ export function useNewPlanFlow() {
       if (state.step === "preview" && quickCheck !== state.quickCheck) selectionFeedback();
       dispatch({ type: "quickCheckSet", quickCheck });
     },
-    tryAnotherLink: () => {
-      setShownChecked(null);
-      dispatch({ type: "anotherLink" });
-    },
-    remindLater: () => session.exit(),
   };
 }
 

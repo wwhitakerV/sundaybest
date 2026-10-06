@@ -1,4 +1,4 @@
-import type { SermonPreview } from "@/core/plan-builder";
+import type { SermonPreview } from "@/features/plan-creation/data/search-sermons";
 import {
   getNewPlanStepIndex,
   initialNewPlanState,
@@ -16,7 +16,12 @@ const sermon: SermonPreview = {
   publishedOn: null,
   transcriptStatus: "available",
 };
-const checked: CheckedLink = { url: "https://youtube.com/watch?v=abc", sermon };
+const checked: CheckedLink = {
+  sermonId: "sermon-abc",
+  url: "https://youtube.com/watch?v=abc",
+  sermon,
+};
+const choosing = { inputMode: "paste", searchQuery: "", searchSelection: null } as const;
 
 const paste = (over: Partial<Extract<NewPlanState, { step: "paste" }>> = {}): NewPlanState =>
   Object.freeze({ ...initialNewPlanState({ days: 5, quickCheck: true }), ...over }) as NewPlanState;
@@ -28,19 +33,19 @@ const preview = (over: Partial<Extract<NewPlanState, { step: "preview" }>> = {})
     checked,
     days: 5,
     quickCheck: true,
-    planId: null,
+    ...choosing,
     ...over,
   });
 
 describe("initialNewPlanState", () => {
-  it("starts on the paste step with an empty link, no error, and no plan", () => {
+  it("starts on the paste step with an empty link and no error", () => {
     expect(initialNewPlanState({ days: 3, quickCheck: false })).toEqual({
       step: "paste",
       link: "",
       linkError: null,
       days: 3,
       quickCheck: false,
-      planId: null,
+      ...choosing,
     });
   });
 });
@@ -77,15 +82,15 @@ describe("newPlanReducer", () => {
   });
 
   describe("linkAccepted", () => {
-    it("moves paste to preview, carrying link, days, quickCheck, and planId", () => {
-      const state = paste({ link: "abc", days: 4, quickCheck: false, planId: "p1" });
+    it("moves paste to preview, carrying link, days, and quickCheck", () => {
+      const state = paste({ link: "abc", days: 4, quickCheck: false });
       expect(newPlanReducer(state, { type: "linkAccepted", checked })).toEqual({
         step: "preview",
         link: "abc",
         checked,
         days: 4,
         quickCheck: false,
-        planId: "p1",
+        ...choosing,
       });
     });
 
@@ -145,50 +150,6 @@ describe("newPlanReducer", () => {
     });
   });
 
-  describe("planCreated", () => {
-    it("sets planId and stays on preview", () => {
-      expect(newPlanReducer(preview(), { type: "planCreated", planId: "p9" })).toMatchObject({
-        step: "preview",
-        planId: "p9",
-      });
-    });
-
-    it("is ignored on paste", () => {
-      const state = paste();
-      expect(newPlanReducer(state, { type: "planCreated", planId: "p9" })).toBe(state);
-    });
-  });
-
-  describe("anotherLink", () => {
-    it("returns preview to an empty paste step, keeping days and quickCheck", () => {
-      const next = newPlanReducer(preview({ days: 2, quickCheck: false, planId: "p1" }), {
-        type: "anotherLink",
-      });
-      expect(next).toEqual({
-        step: "paste",
-        link: "",
-        linkError: null,
-        days: 2,
-        quickCheck: false,
-        planId: null,
-      });
-    });
-
-    it("clears the link, error, and plan on paste too", () => {
-      const next = newPlanReducer(paste({ link: "abc", linkError: "bad", planId: "p1", days: 6 }), {
-        type: "anotherLink",
-      });
-      expect(next).toEqual({
-        step: "paste",
-        link: "",
-        linkError: null,
-        days: 6,
-        quickCheck: true,
-        planId: null,
-      });
-    });
-  });
-
   it("never mutates a frozen input", () => {
     const events = [
       { type: "linkChanged", link: "x" },
@@ -197,8 +158,6 @@ describe("newPlanReducer", () => {
       { type: "back" },
       { type: "daysPicked", days: 2 },
       { type: "quickCheckSet", quickCheck: false },
-      { type: "planCreated", planId: "p" },
-      { type: "anotherLink" },
     ] as const;
     for (const state of [paste(), preview()]) {
       for (const event of events) {

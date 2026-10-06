@@ -111,7 +111,24 @@ export const planDaySummarySchema = z.object({
   progress: planDayProgressSchema,
 });
 
+/** A Scripture the sermon names. Verse bounds are null when it names only the chapter. */
+export const planScriptureCitationSchema = z.object({
+  reference: z.string().min(1).max(100),
+  book: z.string().min(1).max(80),
+  chapter: z.number().int().positive(),
+  verseStart: z.number().int().positive().nullable(),
+  verseEnd: z.number().int().positive().nullable(),
+});
+
+/** Plan Overview's About This Plan section. Null for plans generated before it existed. */
+export const planAboutSchema = z.object({
+  overview: z.array(z.string().min(1)).min(1),
+  scripturesReferenced: z.array(planScriptureCitationSchema),
+  keyTakeaways: z.array(z.string().min(1)).min(1),
+});
+
 export const planDetailSchema = planSummarySchema.extend({
+  about: planAboutSchema.nullable(),
   days: z.array(planDaySummarySchema).min(1).max(7),
 });
 
@@ -138,6 +155,7 @@ export const removeSavedPlanResponseSchema = z.object({ saved: z.literal(false) 
 
 export type ApiPlanSummary = z.infer<typeof planSummarySchema>;
 export type ApiPlanDetail = z.infer<typeof planDetailSchema>;
+export type ApiPlanAbout = z.infer<typeof planAboutSchema>;
 export type ApiPlanDaySummary = z.infer<typeof planDaySummarySchema>;
 export type ApiQuickCheckStanding = z.infer<typeof quickCheckStandingSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;

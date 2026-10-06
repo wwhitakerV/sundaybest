@@ -11,6 +11,9 @@ import {
   TabBarAccessoryProvider,
   useTabBarAccessory,
 } from "@/ui/organisms/tab-bar/tab-bar-accessory";
+import { TabBarBannerProvider, useTabBarBanner } from "@/ui/organisms/tab-bar/tab-bar-banner";
+import { CAPSULE_HEIGHT, FAB_SIZE } from "@/ui/organisms/tab-bar/tab-bar-geometry";
+import { SFProBody } from "@/ui/typography/SFProBody";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -330,6 +333,75 @@ describe("TabBar", () => {
 
       expect(screen.queryByText("Continue Day 2")).toBeNull();
       expect(screen.getByTestId("tab-bar-collapsed")).toHaveProp("pointerEvents", "none");
+    });
+  });
+
+  describe("with a banner above the tabs", () => {
+    function BannerHost({ shown }: { shown: boolean }) {
+      useTabBarBanner(shown ? <SFProBody testID="a-banner">Generating plan</SFProBody> : null);
+      return null;
+    }
+
+    function AskingScreen() {
+      useTabBarAccessory(
+        { label: "Continue Day 2", testID: "plan-continue", onPress: () => undefined },
+        true,
+      );
+      return null;
+    }
+
+    function renderWithBanner(options: { shown?: boolean; asking?: boolean } = {}) {
+      return render(
+        <TabBarAccessoryProvider>
+          <TabBarBannerProvider>
+            <BannerHost shown={options.shown ?? true} />
+            {options.asking && <AskingScreen />}
+            <TabBar {...makeProps(1)} />
+          </TabBarBannerProvider>
+        </TabBarAccessoryProvider>,
+      );
+    }
+
+    it("shows the banner above the tabs, the bar's full width", () => {
+      renderWithBanner();
+
+      expect(screen.getByTestId("a-banner")).toBeOnTheScreen();
+      expect(screen.getByTestId("tab-bar-banner")).toHaveStyle({
+        left: 0,
+        right: 0,
+        height: CAPSULE_HEIGHT,
+      });
+    });
+
+    it("shrinks the floating button to the bar's height beside the open tabs", () => {
+      renderWithBanner();
+
+      expect(screen.getByTestId("tab-bar-fab-slot")).toHaveStyle({
+        transform: [{ scale: CAPSULE_HEIGHT / FAB_SIZE }],
+      });
+    });
+
+    it("leaves the floating button full size while no banner shows", () => {
+      renderWithBanner({ shown: false });
+
+      expect(screen.queryByTestId("a-banner")).toBeNull();
+      expect(screen.getByTestId("tab-bar-fab-slot")).toHaveStyle({ transform: [{ scale: 1 }] });
+    });
+
+    it("steps aside while a screen's own button is raised above the tabs", () => {
+      renderWithBanner({ asking: true });
+
+      fireEvent.press(screen.getByTestId("tab-bar-collapsed"));
+
+      expect(screen.getByTestId("tab-bar-banner")).toHaveProp("pointerEvents", "none");
+    });
+
+    it("sits above the gathered tabs and a screen's button beside them", () => {
+      renderWithBanner({ asking: true });
+
+      expect(screen.getByTestId("a-banner")).toBeOnTheScreen();
+      expect(screen.getByTestId("tab-bar-banner")).toHaveProp("pointerEvents", "box-none");
+      expect(screen.getByTestId("plan-continue")).toBeOnTheScreen();
     });
   });
 });

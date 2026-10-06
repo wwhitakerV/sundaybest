@@ -1,6 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
 import { Link2, Search, Sparkles, type LucideIcon } from "lucide-react-native";
-import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 
 import { FeedbackPanel } from "@/ui/organisms/FeedbackPanel";
@@ -8,7 +7,6 @@ import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { ScreenFooter } from "@/ui/organisms/ScreenFooter";
 import { Button } from "@/ui/atoms/Button";
 import { useStepTransition } from "@/hooks/use-step-transition";
-import { CaptionsSheet } from "../components/CaptionsSheet";
 import { useNewPlanFlow } from "../hooks/use-new-plan-flow";
 import { DayCountPicker } from "../components/DayCountPicker";
 import { FIELD_ICON_CENTRE } from "../components/field-geometry";
@@ -34,7 +32,6 @@ import { SFProTitle } from "@/ui/typography/SFProTitle";
 export function NewPlanScreen() {
   const flow = useNewPlanFlow();
   const theme = useTheme();
-  const focused = useIsFocused();
   const { renderedStep, bodyStyle } = useStepTransition(flow.stepIndex);
   const { state, shownChecked } = flow;
   const current = NEW_PLAN_STEPS.at(flow.stepIndex) ?? NEW_PLAN_STEPS[0];
@@ -77,15 +74,6 @@ export function NewPlanScreen() {
         ) : (
           <ScreenFooter testID="new-plan-footer">{action}</ScreenFooter>
         )
-      }
-      overlay={
-        // Only once Preparing has handed back — never over it.
-        <CaptionsSheet
-          testID="captions-sheet"
-          visible={flow.noCaptions && focused}
-          onTryAnotherLink={flow.tryAnotherLink}
-          onRemindLater={flow.remindLater}
-        />
       }
       contentStyle={styles.content}
       keyboardShouldPersistTaps="handled"
