@@ -14,6 +14,7 @@ import { FloatingButton } from "@/ui/atoms/FloatingButton";
 import { getFloatingNavBarBottom, getFloatingNavBarTintHeight } from "../floatingNavBar";
 import { GatheredTab } from "./GatheredTab";
 import { OpenTabs } from "./OpenTabs";
+import { TabBarBannerSlot } from "./TabBarBannerSlot";
 import { TabBarFab } from "./TabBarFab";
 import {
   CAPSULE_BORDER_WIDTH,
@@ -150,7 +151,13 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
           solidHeight={capsuleBottom + RAISE_LIFT}
         />
       </Animated.View>
+      {/* Beneath the tabs, so it slides up out from behind them and back. */}
+      {lastBanner != null && (
+        <TabBarBannerSlot banner={lastBanner} shown={bannerShown} style={bannerStyle} />
+      )}
+
       <Animated.View
+        testID="tab-bar-capsule"
         style={[
           styles.capsule,
           { backgroundColor: theme.colors.background, borderColor: theme.colors.hairline },
@@ -176,16 +183,6 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
           }}
         />
       </Animated.View>
-
-      {lastBanner != null && (
-        <Animated.View
-          testID="tab-bar-banner"
-          pointerEvents={bannerShown ? "box-none" : "none"}
-          style={[styles.banner, bannerStyle]}
-        >
-          {lastBanner}
-        </Animated.View>
-      )}
 
       {lastAccessory && (
         <Animated.View
@@ -238,14 +235,6 @@ const styles = StyleSheet.create({
   // whole bar, padding and all, and sits low.
   accessorySlot: {
     position: "absolute",
-    height: CAPSULE_HEIGHT,
-  },
-  // The raised place, the bar's full width: where a raised button would be.
-  banner: {
-    position: "absolute",
-    top: RAISE_GEOMETRY.raised.top,
-    left: 0,
-    right: 0,
     height: CAPSULE_HEIGHT,
   },
 });

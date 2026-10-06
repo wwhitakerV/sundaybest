@@ -2,8 +2,12 @@ import { StyleSheet, View } from "react-native";
 
 import { useTheme } from "@/theme";
 
-/** iOS's own sheet grabber, drawn to match it. */
-const GRABBER = { width: 40, height: 5, radius: 3 } as const;
+/**
+ * Every sheet's grabber, the app's own on all of them (iOS's is switched
+ * off): 8pt wider than it was, so it reads as a handle.
+ */
+export const SHEET_GRABBER = { width: 48, height: 5, radius: 3 } as const;
+const GRABBER = SHEET_GRABBER;
 
 /** The drag indicator centred at the top of a sheet. */
 export function SheetGrabber({ testID }: { testID?: string }) {

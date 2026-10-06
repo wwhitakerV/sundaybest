@@ -38,7 +38,26 @@ export type GenerationBarView =
 /** Failures no retry can fix: the sermon itself can't be built from. */
 const UNBUILDABLE = new Set<BuildErrorCode>(["noCaptions", "unsupportedSource"]);
 
-const START_FAILED = "We couldn’t start your plan. Check your connection and try again.";
+const START_FAILED = "We couldn’t start your plan.\nCheck your connection and try again.";
+
+/**
+ * Why a build failed, in the app's own words where it has them — each
+ * sentence on its own line, so "Please try again." stands apart. Otherwise
+ * the server's reason, set the same way.
+ */
+function failureReason(code: BuildErrorCode, message: string | undefined): string {
+  switch (code) {
+    case "noCaptions":
+      return "This video has no captions.\nWe need those to build your plan.";
+    case "unknown":
+    case "network":
+      return "We couldn’t create this plan right now.\nPlease try again.";
+    default:
+      return message
+        ? message.replace(/([.!?])\s+/g, "$1\n")
+        : "We couldn’t create this plan right now.\nPlease try again.";
+  }
+}
 
 function isBuilding(build: Build): boolean {
   return build.status !== "completed" && build.status !== "failed";
@@ -70,7 +89,7 @@ export function getGenerationBar(
       kind: "failed",
       id: newest.id,
       startKey: null,
-      reason: newest.error?.message ?? "We couldn’t build this plan right now. Please try again.",
+      reason: failureReason(code, newest.error?.message),
       action: UNBUILDABLE.has(code) ? "chooseAnother" : "retry",
     };
   }

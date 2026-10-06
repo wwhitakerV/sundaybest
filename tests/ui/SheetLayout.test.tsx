@@ -2,7 +2,7 @@ import { Text } from "react-native";
 import { render, screen } from "@tests/helpers/render";
 
 import { lightTheme } from "@/theme/tokens";
-import { HALF_SHEET_OPTIONS, SheetLayout } from "@/ui/SheetLayout";
+import { FORM_SHEET_GRABBER_TOP, HALF_SHEET_OPTIONS, SheetLayout } from "@/ui/SheetLayout";
 
 function renderSheet() {
   render(
@@ -28,6 +28,13 @@ describe("SheetLayout", () => {
     expect(sheet).toHaveProp("contentInsetAdjustmentBehavior", "never");
   });
 
+  it("draws its own grabber in the pinned header, 7pt from the sheet's top", () => {
+    renderSheet();
+
+    expect(screen.getByTestId("a-sheet-grabber")).toBeOnTheScreen();
+    expect(FORM_SHEET_GRABBER_TOP).toBe(7);
+  });
+
   it("pins its title on the page's background, so what scrolls under it is hidden", () => {
     renderSheet();
 
@@ -38,11 +45,11 @@ describe("SheetLayout", () => {
 });
 
 describe("HALF_SHEET_OPTIONS", () => {
-  it("presents a native form sheet, half the screen tall, with its grabber", () => {
+  it("presents a native form sheet, half the screen tall, without iOS's grabber — the sheet draws its own", () => {
     expect(HALF_SHEET_OPTIONS).toMatchObject({
       presentation: "formSheet",
       sheetAllowedDetents: [0.5],
-      sheetGrabberVisible: true,
+      sheetGrabberVisible: false,
     });
   });
 

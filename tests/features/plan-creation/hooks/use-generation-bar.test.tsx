@@ -97,7 +97,7 @@ describe("useGenerationBar", () => {
     current = [
       aGeneration({
         status: "failed",
-        error: { code: "unknown", message: "We couldn’t build this plan right now." },
+        error: { code: "unknown", message: "We couldn’t create this plan right now." },
       }),
     ];
     const { result } = renderHook(useGenerationBar);
@@ -197,7 +197,7 @@ describe("useGenerationBar", () => {
     current = [
       aGeneration({
         status: "failed",
-        error: { code: "unknown", message: "We couldn’t build this plan right now." },
+        error: { code: "unknown", message: "We couldn’t create this plan right now." },
       }),
     ];
 

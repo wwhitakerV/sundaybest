@@ -338,7 +338,7 @@ describe("TabBar", () => {
 
   describe("with a banner above the tabs", () => {
     function BannerHost({ shown }: { shown: boolean }) {
-      useTabBarBanner(shown ? <SFProBody testID="a-banner">Generating plan</SFProBody> : null);
+      useTabBarBanner(shown ? <SFProBody testID="a-banner">Creating your plan</SFProBody> : null);
       return null;
     }
 
@@ -371,6 +371,19 @@ describe("TabBar", () => {
         right: 0,
         height: CAPSULE_HEIGHT,
       });
+    });
+
+    it("slides out from behind the tabs, not over them: drawn beneath the tabs' capsule", () => {
+      renderWithBanner();
+
+      const bar = screen.getByTestId("tab-bar");
+      const drawOrder = bar.children.map((child) =>
+        typeof child === "string" ? null : (child.props as { testID?: string }).testID,
+      );
+      expect(drawOrder.indexOf("tab-bar-banner")).toBeGreaterThan(-1);
+      expect(drawOrder.indexOf("tab-bar-banner")).toBeLessThan(
+        drawOrder.indexOf("tab-bar-capsule"),
+      );
     });
 
     it("shrinks the floating button to the bar's height beside the open tabs", () => {

@@ -36,11 +36,14 @@ export function TopFade({ height, solidHeight, ramp = LINEAR_RAMP, testID }: Top
       <Svg width="100%" height={height}>
         <Defs>
           <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={theme.colors.background} stopOpacity={1} />
-            {ramp.map(({ at, opacity }) => (
+            {[
+              { offset: 0, opacity: 1 },
+              ...ramp.map(({ at, opacity }) => ({ offset: solidTo + at * (1 - solidTo), opacity })),
+            ].map(({ offset, opacity }, index) => (
               <Stop
-                key={at}
-                offset={solidTo + at * (1 - solidTo)}
+                // The stops are fixed for a fade; their order is their identity.
+                key={index}
+                offset={offset}
                 stopColor={theme.colors.background}
                 stopOpacity={opacity}
               />

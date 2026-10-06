@@ -13,13 +13,7 @@ import { space, useTheme } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
 import { TopFade } from "@/ui/atoms/TopFade";
 import { FloatingDock } from "./FloatingDock";
-import {
-  GRADUAL_FADE,
-  GRADUAL_RAMP,
-  getFrameEdges,
-  type FrameFoot,
-  type HeaderFade,
-} from "./frame-edges";
+import { GRADUAL_FADE, getFrameEdges, type FrameFoot, type HeaderFade } from "./frame-edges";
 import { PAGE_INSET, PAGE_TOP } from "./Screen";
 
 export type ScrollFrameProps = {
@@ -27,9 +21,9 @@ export type ScrollFrameProps = {
   /** Floated over the top of the scroll: a step header, a title and its filters. */
   header?: ReactNode;
   /**
-   * How the header meets what scrolls under it: `"edge"`, a short fade just
-   * below it; `"gradual"`, a thicker eased fade inside its own block, ending at
-   * its bottom edge (Plans' filters, Study's steps).
+   * How the header meets what scrolls under it (`HeaderFade`): a short fade
+   * below it by default; `"gradual"` inside its own block (Study's steps);
+   * soft, across its last row and a little past (Plans' filters).
    */
   headerFade?: HeaderFade;
   /** The full-height, full-width scroller, its content inset by `SCROLL_INSET`. */
@@ -107,7 +101,7 @@ export function ScrollFrame({
         testID={`${testID}-top-fade`}
         height={edges.top.height}
         solidHeight={edges.top.solid}
-        {...(headerFade === "gradual" && { ramp: GRADUAL_RAMP })}
+        {...(edges.top.ramp && { ramp: edges.top.ramp })}
       />
       {header ? (
         <View

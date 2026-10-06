@@ -93,7 +93,6 @@ export function StudyScreen() {
           footer={
             <StudyNav
               testID="study-nav"
-              step={view.position.step}
               {...(view.isLastPage && {
                 finishLabel: "Finish",
               })}

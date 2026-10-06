@@ -40,7 +40,7 @@ describe("getGenerationBar", () => {
       kind: "failed",
       id: null,
       startKey: "start-1",
-      reason: "We couldn’t start your plan. Check your connection and try again.",
+      reason: "We couldn’t start your plan.\nCheck your connection and try again.",
       action: "retry",
     });
   });
@@ -71,20 +71,45 @@ describe("getGenerationBar", () => {
     }
   });
 
-  it("offers to retry a build that failed for any other reason, with the server's reason", () => {
+  it("offers to retry a build that failed for any other reason, Please try again on its own line", () => {
     const failed = build({
       status: "failed",
       error: {
         code: "unknown",
-        message: "We couldn’t build this plan right now. Please try again.",
+        message: "We couldn’t create this plan right now. Please try again.",
       },
     });
     expect(getGenerationBar([failed], [])).toEqual({
       kind: "failed",
       id: "generation-1",
       startKey: null,
-      reason: "We couldn’t build this plan right now. Please try again.",
+      reason: "We couldn’t create this plan right now.\nPlease try again.",
       action: "retry",
+    });
+  });
+
+  it("says a video without captions plainly, over two lines", () => {
+    const failed = build({
+      status: "failed",
+      error: { code: "noCaptions", message: "We couldn’t find usable captions for this sermon." },
+    });
+    expect(getGenerationBar([failed], [])).toMatchObject({
+      reason: "This video has no captions.\nWe need those to build your plan.",
+    });
+  });
+
+  it("keeps the server's own reason otherwise, each sentence on its own line", () => {
+    const failed = build({
+      status: "failed",
+      error: {
+        code: "unsupportedSource",
+        message:
+          "This video doesn’t teach from the Bible enough to build a study. SundayBest builds plans from sermons that preach from Scripture.",
+      },
+    });
+    expect(getGenerationBar([failed], [])).toMatchObject({
+      reason:
+        "This video doesn’t teach from the Bible enough to build a study.\nSundayBest builds plans from sermons that preach from Scripture.",
     });
   });
 

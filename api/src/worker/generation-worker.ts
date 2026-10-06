@@ -21,8 +21,15 @@ import {
 import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
 import type { StageEvent } from "../generation/pipeline.js";
-import type { GeneratedPlan, PlanGenerationProvider } from "../providers/plan-generation-provider.js";
-import { NoScriptureError, findScriptureEvidence, teachesFromScripture } from "../generation/scripture-evidence.js";
+import type {
+  GeneratedPlan,
+  PlanGenerationProvider,
+} from "../providers/plan-generation-provider.js";
+import {
+  NoScriptureError,
+  findScriptureEvidence,
+  teachesFromScripture,
+} from "../generation/scripture-evidence.js";
 import { formatTranscript, normalizeTranscript } from "../generation/transcript.js";
 import { validateGeneratedContent } from "../generation/validation.js";
 import { newAttemptMetrics, recordAttempt, recordCall } from "./attempt-log.js";
@@ -115,26 +122,49 @@ export function createGenerationWorker(input: {
       if (context.generation.status === "completed") {
         await input.db
           .update(generationJobs)
-          .set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: new Date() })
+          .set({
+            status: "completed",
+            lockedAt: null,
+            lockedBy: null,
+            lastError: null,
+            updatedAt: new Date(),
+          })
           .where(and(eq(generationJobs.id, job.id), eq(generationJobs.lockedBy, workerId)));
         return;
       }
 
       metrics.round = context.generation.attemptCount;
-      const tracker = buildTracker(input.db, { id: context.generation.id, lengthDays: context.generation.requestedLength,
-        quickCheckEnabled: context.generation.quickCheckEnabled });
-      await tracker.stage("processingSermon", { startedAt: context.generation.startedAt ?? new Date() });
+      const tracker = buildTracker(input.db, {
+        id: context.generation.id,
+        lengthDays: context.generation.requestedLength,
+        quickCheckEnabled: context.generation.quickCheckEnabled,
+      });
+      await tracker.stage("processingSermon", {
+        startedAt: context.generation.startedAt ?? new Date(),
+      });
 
       // The same sermon and length already built by this prompt: copy it, with
       // no transcript fetch and no model calls; drop its quizzes when Quick
       // Check is off. Without the quizzes this plan needs, only they are written.
       const quickCheck = context.generation.quickCheckEnabled;
-      const reusable = await findReusablePlan(input.db, { sermonId: context.plan.sermonId, planId: context.plan.id,
-        lengthDays: context.generation.requestedLength });
+      const reusable = await findReusablePlan(input.db, {
+        sermonId: context.plan.sermonId,
+        planId: context.plan.id,
+        lengthDays: context.generation.requestedLength,
+      });
       const hasQuizzes = reusable?.days.every((day) => day.quickCheck !== null) ?? false;
       if (reusable && (!quickCheck || hasQuizzes)) {
-        const copy = quickCheck ? reusable : { ...reusable, days: reusable.days.map((day) => ({ ...day, quickCheck: null })) };
-        await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, copy, job.id, workerId);
+        const copy = quickCheck
+          ? reusable
+          : { ...reusable, days: reusable.days.map((day) => ({ ...day, quickCheck: null })) };
+        await persistGeneratedPlan(
+          input.db,
+          context.plan.id,
+          context.generation.id,
+          copy,
+          job.id,
+          workerId,
+        );
         await recordAttempt(input.db, job, metrics, null, "reused");
         return;
       }
@@ -154,10 +184,16 @@ export function createGenerationWorker(input: {
         await input.db.transaction(async (tx) => {
           // Concurrent plans for one sermon must reuse one complete transcript,
           // rather than interleaving segments from separate provider responses.
-          await tx.select({ id: sermonSources.id }).from(sermonSources)
-            .where(eq(sermonSources.id, context.sermon.id)).for("update");
-          const existing = await tx.select({ id: sermonTranscriptSegments.id }).from(sermonTranscriptSegments)
-            .where(eq(sermonTranscriptSegments.sermonId, context.sermon.id)).limit(1);
+          await tx
+            .select({ id: sermonSources.id })
+            .from(sermonSources)
+            .where(eq(sermonSources.id, context.sermon.id))
+            .for("update");
+          const existing = await tx
+            .select({ id: sermonTranscriptSegments.id })
+            .from(sermonTranscriptSegments)
+            .where(eq(sermonTranscriptSegments.sermonId, context.sermon.id))
+            .limit(1);
           if (existing.length > 0) return;
           for (const [index, segment] of transcript.segments.entries()) {
             await tx.insert(sermonTranscriptSegments).values({
@@ -188,7 +224,11 @@ export function createGenerationWorker(input: {
       const transcriptSegments = normalizeTranscript(transcriptRows);
       // SundayBest is for sermons that preach from the Bible: stop before any
       // model call when the transcript barely names or reads Scripture.
-      if (!teachesFromScripture(findScriptureEvidence(transcriptSegments.map((segment) => segment.text).join(" ")))) {
+      if (
+        !teachesFromScripture(
+          findScriptureEvidence(transcriptSegments.map((segment) => segment.text).join(" ")),
+        )
+      ) {
         throw new NoScriptureError();
       }
       const transcriptText = formatTranscript(transcriptSegments);
@@ -222,7 +262,14 @@ export function createGenerationWorker(input: {
         generated = await input.generator.generate(generationInput, hooks);
       }
       const verified = await validateGeneratedContent(generated, generationInput, input.bible);
-      await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, verified, job.id, workerId);
+      await persistGeneratedPlan(
+        input.db,
+        context.plan.id,
+        context.generation.id,
+        verified,
+        job.id,
+        workerId,
+      );
       await recordAttempt(input.db, job, metrics, null);
     } catch (cause) {
       await recordAttempt(input.db, job, metrics, { cause });
@@ -248,10 +295,21 @@ export function createGenerationWorker(input: {
   };
 }
 
-async function persistGeneratedPlan(db: Database, planId: string, generationId: string, generated: GeneratedPlan, jobId: string, workerId: string): Promise<void> {
+async function persistGeneratedPlan(
+  db: Database,
+  planId: string,
+  generationId: string,
+  generated: GeneratedPlan,
+  jobId: string,
+  workerId: string,
+): Promise<void> {
   const now = new Date();
   await db.transaction(async (tx) => {
-    const [claim] = await tx.select().from(generationJobs).where(eq(generationJobs.id, jobId)).for("update");
+    const [claim] = await tx
+      .select()
+      .from(generationJobs)
+      .where(eq(generationJobs.id, jobId))
+      .for("update");
     if (!claim || claim.status !== "running" || claim.lockedBy !== workerId) {
       throw new AppError("INTERNAL", "Generation worker no longer owns this job");
     }
@@ -304,9 +362,13 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
       if (!planDay) throw new AppError("INTERNAL", "Could not persist plan day");
 
       for (const [index, question] of day.reflections.entries()) {
-        await tx.insert(reflectionPrompts).values({ planDayId: planDay.id, position: index + 1, question });
+        await tx
+          .insert(reflectionPrompts)
+          .values({ planDayId: planDay.id, position: index + 1, question });
       }
-      await tx.insert(prayers).values({ planDayId: planDay.id, title: day.prayer.title, text: day.prayer.text });
+      await tx
+        .insert(prayers)
+        .values({ planDayId: planDay.id, title: day.prayer.title, text: day.prayer.text });
 
       if (day.quickCheck) {
         const [quiz] = await tx
@@ -328,7 +390,8 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
               variants: question.variants,
             })
             .returning();
-          if (!questionRow) throw new AppError("INTERNAL", "Could not persist Quick Check question");
+          if (!questionRow)
+            throw new AppError("INTERNAL", "Could not persist Quick Check question");
           for (const [choiceIndex, choice] of question.choices.entries()) {
             await tx.insert(quizChoices).values({
               questionId: questionRow.id,
@@ -361,36 +424,74 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
         updatedAt: now,
       })
       .where(eq(planGenerations.id, generationId));
-    await tx.update(generationJobs).set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: now })
+    await tx
+      .update(generationJobs)
+      .set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: now })
       .where(eq(generationJobs.id, jobId));
     // The published plan holds its content now; its saved steps are no longer needed.
     await tx.delete(generationSteps).where(eq(generationSteps.generationId, generationId));
   });
 }
 
-async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unknown, workerId: string): Promise<void> {
-  const message = cause instanceof Error ? cause.message.slice(0, 1000) : "Unknown generation failure";
+async function handleFailure(
+  db: Database,
+  job: ClaimedJob,
+  env: Env,
+  cause: unknown,
+  workerId: string,
+): Promise<void> {
+  const message =
+    cause instanceof Error ? cause.message.slice(0, 1000) : "Unknown generation failure";
   const shouldRetry = job.attempts < env.WORKER_MAX_ATTEMPTS && isRetryableGenerationFailure(cause);
   await db.transaction(async (tx) => {
-    const [claim] = await tx.select().from(generationJobs).where(eq(generationJobs.id, job.id)).for("update");
+    const [claim] = await tx
+      .select()
+      .from(generationJobs)
+      .where(eq(generationJobs.id, job.id))
+      .for("update");
     // A recovered job belongs to its new worker; an old worker cannot requeue it.
     if (!claim || claim.status !== "running" || claim.lockedBy !== workerId) return;
     if (shouldRetry) {
       const delaySeconds = Math.min(60, 5 * 2 ** Math.max(0, job.attempts - 1));
-      await tx.update(generationJobs).set({ status: "queued", availableAt: new Date(Date.now() + delaySeconds * 1000),
-        lockedAt: null, lockedBy: null, lastError: message, updatedAt: new Date() }).where(eq(generationJobs.id, job.id));
+      await tx
+        .update(generationJobs)
+        .set({
+          status: "queued",
+          availableAt: new Date(Date.now() + delaySeconds * 1000),
+          lockedAt: null,
+          lockedBy: null,
+          lastError: message,
+          updatedAt: new Date(),
+        })
+        .where(eq(generationJobs.id, job.id));
       return;
     }
     const failure = toPublicGenerationFailure(cause);
     const now = new Date();
-    await tx.update(generationJobs).set({ status: "failed", lockedAt: null, lockedBy: null, lastError: message, updatedAt: now })
+    await tx
+      .update(generationJobs)
+      .set({ status: "failed", lockedAt: null, lockedBy: null, lastError: message, updatedAt: now })
       .where(eq(generationJobs.id, job.id));
-    await tx.update(planGenerations).set({ status: "failed", errorCode: failure.code, errorMessage: failure.message, finishedAt: now, updatedAt: now })
-      .where(and(eq(planGenerations.id, job.generationId), ne(planGenerations.status, "completed")));
+    await tx
+      .update(planGenerations)
+      .set({
+        status: "failed",
+        errorCode: failure.code,
+        errorMessage: failure.message,
+        finishedAt: now,
+        updatedAt: now,
+      })
+      .where(
+        and(eq(planGenerations.id, job.generationId), ne(planGenerations.status, "completed")),
+      );
   });
 }
 
-const PERMANENT_FAILURE_CODES = new Set(["TRANSCRIPT_UNAVAILABLE", "SERMON_UNAVAILABLE", "SERMON_UNSUPPORTED"]);
+const PERMANENT_FAILURE_CODES = new Set([
+  "TRANSCRIPT_UNAVAILABLE",
+  "SERMON_UNAVAILABLE",
+  "SERMON_UNSUPPORTED",
+]);
 
 /**
  * Automatic retries are for transient failures: provider outages, timeouts and
@@ -403,13 +504,15 @@ export function isRetryableGenerationFailure(cause: unknown): boolean {
 }
 
 function toPublicGenerationFailure(cause: unknown): {
-  code: "invalidLink" | "unsupportedSource" | "videoUnavailable" | "noCaptions" | "network" | "unknown";
+  code:
+    "invalidLink" | "unsupportedSource" | "videoUnavailable" | "noCaptions" | "network" | "unknown";
   message: string;
 } {
   if (cause instanceof NoScriptureError) {
     return {
       code: "unsupportedSource",
-      message: "This video doesn’t teach from the Bible enough to build a study. SundayBest builds plans from sermons that preach from Scripture.",
+      message:
+        "This video doesn’t teach from the Bible enough to build a study. SundayBest builds plans from sermons that preach from Scripture.",
     };
   }
   if (cause instanceof AppError) {
@@ -436,7 +539,7 @@ function toPublicGenerationFailure(cause: unknown): {
 
   return {
     code: "unknown",
-    message: "We couldn’t build this plan right now. Please try again.",
+    message: "We couldn’t create this plan right now. Please try again.",
   };
 }
 
@@ -444,9 +547,13 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
     if (signal.aborted) return resolve();
     const timer = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(timer);
-      resolve();
-    }, { once: true });
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      { once: true },
+    );
   });
 }

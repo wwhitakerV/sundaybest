@@ -19,7 +19,10 @@ import {
 } from "../db/schema.js";
 import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
-import type { GeneratedPlan, PlanGenerationProvider } from "../providers/plan-generation-provider.js";
+import type {
+  GeneratedPlan,
+  PlanGenerationProvider,
+} from "../providers/plan-generation-provider.js";
 import type { TranscriptProvider } from "../providers/transcript-provider.js";
 
 interface ClaimedJob {
@@ -104,7 +107,13 @@ export function createGenerationWorker(input: {
       if (context.generation.status === "completed") {
         await input.db
           .update(generationJobs)
-          .set({ status: "completed", lockedAt: null, lockedBy: null, lastError: null, updatedAt: new Date() })
+          .set({
+            status: "completed",
+            lockedAt: null,
+            lockedBy: null,
+            lastError: null,
+            updatedAt: new Date(),
+          })
           .where(eq(generationJobs.id, job.id));
         return;
       }
@@ -172,7 +181,13 @@ export function createGenerationWorker(input: {
       await persistGeneratedPlan(input.db, context.plan.id, context.generation.id, generated);
       await input.db
         .update(generationJobs)
-        .set({ status: "completed", lockedAt: null, lockedBy: null, updatedAt: new Date(), lastError: null })
+        .set({
+          status: "completed",
+          lockedAt: null,
+          lockedBy: null,
+          updatedAt: new Date(),
+          lastError: null,
+        })
         .where(eq(generationJobs.id, job.id));
     } catch (cause) {
       await handleFailure(input.db, job, input.env, cause);
@@ -205,11 +220,20 @@ async function setGenerationStatus(
 ): Promise<void> {
   await db
     .update(planGenerations)
-    .set({ status, updatedAt: new Date(), ...(extra.startedAt ? { startedAt: extra.startedAt } : {}) })
+    .set({
+      status,
+      updatedAt: new Date(),
+      ...(extra.startedAt ? { startedAt: extra.startedAt } : {}),
+    })
     .where(eq(planGenerations.id, generationId));
 }
 
-async function persistGeneratedPlan(db: Database, planId: string, generationId: string, generated: GeneratedPlan): Promise<void> {
+async function persistGeneratedPlan(
+  db: Database,
+  planId: string,
+  generationId: string,
+  generated: GeneratedPlan,
+): Promise<void> {
   const now = new Date();
   await db.transaction(async (tx) => {
     await tx.delete(planDays).where(eq(planDays.planId, planId));
@@ -259,9 +283,13 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
       if (!planDay) throw new AppError("INTERNAL", "Could not persist plan day");
 
       for (const [index, question] of day.reflections.entries()) {
-        await tx.insert(reflectionPrompts).values({ planDayId: planDay.id, position: index + 1, question });
+        await tx
+          .insert(reflectionPrompts)
+          .values({ planDayId: planDay.id, position: index + 1, question });
       }
-      await tx.insert(prayers).values({ planDayId: planDay.id, title: day.prayer.title, text: day.prayer.text });
+      await tx
+        .insert(prayers)
+        .values({ planDayId: planDay.id, title: day.prayer.title, text: day.prayer.text });
 
       if (day.quickCheck) {
         const [quiz] = await tx
@@ -282,7 +310,8 @@ async function persistGeneratedPlan(db: Database, planId: string, generationId: 
               explanation: question.explanation,
             })
             .returning();
-          if (!questionRow) throw new AppError("INTERNAL", "Could not persist Quick Check question");
+          if (!questionRow)
+            throw new AppError("INTERNAL", "Could not persist Quick Check question");
           for (const [choiceIndex, choice] of question.choices.entries()) {
             await tx.insert(quizChoices).values({
               questionId: questionRow.id,
@@ -327,7 +356,10 @@ async function validateGeneratedContent(
 
   for (const day of generated.days) {
     if (day.sermonQuote && !transcript.includes(normalizeSourceText(day.sermonQuote))) {
-      throw new AppError("INTERNAL", `Generated sermon quote for day ${day.dayNumber} is not present in the transcript`);
+      throw new AppError(
+        "INTERNAL",
+        `Generated sermon quote for day ${day.dayNumber} is not present in the transcript`,
+      );
     }
     references.add(day.scripture.reference);
   }
@@ -350,8 +382,14 @@ function normalizeSourceText(value: string): string {
     .trim();
 }
 
-async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unknown): Promise<void> {
-  const message = cause instanceof Error ? cause.message.slice(0, 1000) : "Unknown generation failure";
+async function handleFailure(
+  db: Database,
+  job: ClaimedJob,
+  env: Env,
+  cause: unknown,
+): Promise<void> {
+  const message =
+    cause instanceof Error ? cause.message.slice(0, 1000) : "Unknown generation failure";
   const shouldRetry = job.attempts < env.WORKER_MAX_ATTEMPTS;
   if (shouldRetry) {
     const delaySeconds = Math.min(60, 5 * 2 ** Math.max(0, job.attempts - 1));
@@ -390,7 +428,8 @@ async function handleFailure(db: Database, job: ClaimedJob, env: Env, cause: unk
 }
 
 function toPublicGenerationFailure(cause: unknown): {
-  code: "invalidLink" | "unsupportedSource" | "videoUnavailable" | "noCaptions" | "network" | "unknown";
+  code:
+    "invalidLink" | "unsupportedSource" | "videoUnavailable" | "noCaptions" | "network" | "unknown";
   message: string;
 } {
   if (cause instanceof AppError) {
@@ -417,7 +456,7 @@ function toPublicGenerationFailure(cause: unknown): {
 
   return {
     code: "unknown",
-    message: "We couldn’t build this plan right now. Please try again.",
+    message: "We couldn’t create this plan right now. Please try again.",
   };
 }
 
@@ -425,9 +464,13 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
     if (signal.aborted) return resolve();
     const timer = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(timer);
-      resolve();
-    }, { once: true });
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      { once: true },
+    );
   });
 }

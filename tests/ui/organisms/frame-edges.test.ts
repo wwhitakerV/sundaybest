@@ -48,6 +48,31 @@ describe("getFrameEdges", () => {
     });
   });
 
+  describe("a soft top edge, over a header's last row", () => {
+    const { top } = getFrameEdges({
+      ...insets,
+      headerHeight: 150,
+      headerFade: { kind: "soft", reach: 36 },
+      foot: { kind: "none" },
+    });
+
+    it("is solid until 10pt above the row, and fully clear 10pt past the header's edge", () => {
+      expect(top.solid).toBe(150 - 36 - 10);
+      expect(top.height).toBe(150 + 10);
+    });
+
+    it("starts the content where the fade has cleared", () => {
+      expect(top.clearance).toBe(160);
+    });
+
+    it("is 80% clear at the header's bottom edge", () => {
+      const edge = (36 + 10) / (36 + 20);
+      expect(top.ramp).toContainEqual({ at: edge, opacity: 0.2 });
+      expect(top.ramp?.[0]).toEqual({ at: 0, opacity: 1 });
+      expect(top.ramp?.at(-1)).toEqual({ at: 1, opacity: 0 });
+    });
+  });
+
   describe("the bottom edge", () => {
     it("with a dock, is exactly the tab bar's tint: solid below the pill, fading 16pt above it", () => {
       const { bottom } = getFrameEdges({ ...insets, headerHeight: 0, foot: { kind: "dock" } });

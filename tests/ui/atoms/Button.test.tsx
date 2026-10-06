@@ -108,16 +108,17 @@ describe("Button loading", () => {
     return render(<Button testID="a-button" label="Get started" loading onPress={onPress} />);
   }
 
-  it("shows a spinner while loading", () => {
+  it("never spins while loading", () => {
     loadingButton();
 
-    expect(screen.getByTestId("a-button-spinner")).toBeVisible();
+    expect(screen.queryByTestId("a-button-spinner")).toBeNull();
+    expect(screen.queryByRole("progressbar")).toBeNull();
   });
 
-  it("hides its label while loading", () => {
+  it("keeps its words while loading", () => {
     loadingButton();
 
-    expect(screen.queryByText("Get started")).toBeNull();
+    expect(screen.getByText("Get started")).toBeVisible();
   });
 
   it("is still named by its label while loading", () => {

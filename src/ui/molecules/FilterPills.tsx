@@ -11,7 +11,9 @@ import { motion, radius, space, useTheme } from "@/theme";
 import type { FilterOption } from "./FilterTabs";
 import { SFProLabel } from "@/ui/typography/SFProLabel";
 
-const HEIGHT = 36;
+/** A pill's height, and so the row's: what a header fading across it reaches over. */
+export const FILTER_PILLS_HEIGHT = 36;
+const HEIGHT = FILTER_PILLS_HEIGHT;
 /** The outline round the pill picked — as heavy as Plan Detail's day outline. */
 const OUTLINE = 2;
 /** Plan Detail's day outline's spring — every selection outline moves alike. */

@@ -29,7 +29,7 @@ describe("GenerationBarHost", () => {
     );
     renderHost();
 
-    expect(await screen.findByText("Generating plan")).toBeVisible();
+    expect(await screen.findByText("Creating your plan")).toBeVisible();
   });
 
   it("floats nothing while nothing's being built", async () => {

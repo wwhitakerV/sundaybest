@@ -24,7 +24,7 @@ export function GenerationBarContent({
             numberOfLines={1}
             style={styles.title}
           >
-            {count === 1 ? "Generating plan" : `Generating ${count} plans`}
+            {count === 1 ? "Creating your plan" : `Creating ${count} plans`}
           </SFProBody>
           <SFProBody variant="detail" tone="onControlPrimaryMuted">{`${view.percent}%`}</SFProBody>
         </View>
@@ -39,14 +39,14 @@ export function GenerationBarContent({
     <View style={styles.stack}>
       <SFProBody
         variant="listItem"
-        tone={ready ? "onSuccess" : "onControlPrimary"}
+        tone={ready ? "onSuccessBright" : "onControlPrimary"}
         numberOfLines={1}
       >
-        {ready ? "Your plan is ready" : "Couldn’t build your plan"}
+        {ready ? "Your plan is ready" : "Couldn’t create your plan"}
       </SFProBody>
       <SFProBody
         variant="detail"
-        tone={ready ? "onSuccessMuted" : "onControlPrimaryMuted"}
+        tone={ready ? "onSuccessBright" : "onControlPrimaryMuted"}
         numberOfLines={1}
       >
         {ready ? view.title : view.reason}

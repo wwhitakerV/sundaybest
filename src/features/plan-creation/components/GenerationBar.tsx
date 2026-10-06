@@ -2,13 +2,14 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronUp, X } from "lucide-react-native";
 
 import { radius, space, useTheme } from "@/theme";
+import { FLOATING_NAV_BAR } from "@/ui/organisms/floatingNavBar";
 import { CompactButton } from "@/ui/atoms/CompactButton";
 import type { GenerationBarView } from "../logic/generation-bar";
 import { GenerationBarContent } from "./GenerationBarContent";
 
-/** The X's place: the pill's rounded start, square to its height. */
-const DISMISS_WIDTH = 52;
 const ICON_SIZE = 18;
+/** The X: a little larger than the chevron, as the bar's one way out. */
+const DISMISS_ICON_SIZE = 22;
 
 export type GenerationBarProps = {
   view: GenerationBarView;
@@ -41,8 +42,9 @@ export function GenerationBar({
   const theme = useTheme();
   const ready = view.kind === "ready";
   const fill = ready ? theme.colors.success : theme.colors.controlPrimary;
-  const ink = ready ? theme.colors.onSuccess : theme.colors.onControlPrimary;
-  const line = ready ? theme.colors.onSuccessFaint : theme.colors.onControlPrimaryFaint;
+  // Ready, its X and words are white on the green, its divider a faint white.
+  const ink = ready ? theme.colors.onSuccessBright : theme.colors.onControlPrimary;
+  const line = ready ? theme.colors.onSuccessBrightFaint : theme.colors.onControlPrimaryFaint;
   // A button stands out against the bar: white on the dark bar and on the
   // green one, dark only where the primary control is itself light.
   const buttonTone = !ready && theme.name === "dark" ? "dark" : "light";
@@ -56,9 +58,12 @@ export function GenerationBar({
         onPress={onDismiss}
         style={styles.dismiss}
       >
-        <X size={ICON_SIZE} color={ink} strokeWidth={theme.icon.strokeWidth} />
+        <X size={DISMISS_ICON_SIZE} color={ink} strokeWidth={theme.icon.strokeWidth} />
       </Pressable>
-      <View testID={`${testID}-divider`} style={[styles.divider, { backgroundColor: line }]} />
+      <View
+        testID={`${testID}-divider`}
+        style={[styles.divider, { backgroundColor: line, opacity: 0.7 }]}
+      />
       <Pressable
         testID={`${testID}-details`}
         accessibilityRole="button"
@@ -68,32 +73,23 @@ export function GenerationBar({
         <View style={styles.content}>
           <GenerationBarContent view={view} testID={testID} />
         </View>
-        {view.kind === "building" && (
-          <ChevronUp size={ICON_SIZE} color={ink} strokeWidth={theme.icon.strokeWidth} />
+        {!ready && (
+          <ChevronUp
+            size={ICON_SIZE}
+            color={ink}
+            strokeWidth={theme.icon.strokeWidth}
+            style={{ position: "relative", bottom: space[2] }}
+          />
         )}
       </Pressable>
       {view.kind !== "building" && (
         <View style={styles.action}>
-          {ready ? (
+          {ready && (
             <CompactButton
               testID={`${testID}-open`}
               label="Open"
               tone={buttonTone}
               onPress={onOpen}
-            />
-          ) : view.action === "retry" ? (
-            <CompactButton
-              testID={`${testID}-retry`}
-              label="Retry"
-              tone={buttonTone}
-              onPress={onRetry}
-            />
-          ) : (
-            <CompactButton
-              testID={`${testID}-choose-another`}
-              label="New sermon"
-              tone={buttonTone}
-              onPress={onChooseAnother}
             />
           )}
         </View>
@@ -110,7 +106,15 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     overflow: "hidden",
   },
-  dismiss: { width: DISMISS_WIDTH, alignItems: "center", justifyContent: "center" },
+  // The X's place: the pill's rounded start, square to its height, so the X
+  // sits at the centre of the curve.
+  dismiss: {
+    width: FLOATING_NAV_BAR.capsuleHeight - 10,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingLeft: space[8],
+    opacity: 0.9,
+  },
   divider: { width: 1 },
   details: {
     flex: 1,

@@ -6,6 +6,9 @@ import { FLOATING_NAV_BAR } from "@/ui/organisms/floatingNavBar";
 
 jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
 
+/** "← Previous" (96) and the pill's padding either side (20 + 20). */
+const PILL_WIDTH = 136;
+
 // StudyNav fades in from opacity 0 on mount (useStudyNavEntrance). Jest's
 // Reanimated mock never runs that animation, so everything inside the nav
 // stays at its opening frame; these tests assert presence
@@ -14,64 +17,62 @@ describe("StudyNav", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("is addressable as the given testID", () => {
-    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
     expect(screen.getByTestId("study-nav")).toBeOnTheScreen();
   });
 
-  it("is the pill alone, as tall as the tab bar's, for the page's dock to place and tint", () => {
-    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
+  it("floats two separate pills, Previous at the left and Next at the right", () => {
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
-    expect(screen.getByTestId("study-nav")).toHaveStyle({ height: FLOATING_NAV_BAR.capsuleHeight });
+    expect(screen.getByTestId("study-nav")).toHaveStyle({
+      flexDirection: "row",
+      justifyContent: "space-between",
+    });
     expect(screen.queryByTestId("study-nav-tint")).toBeNull();
   });
 
-  it("renders one dot per study step", () => {
-    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
+  it("shows no dots between them", () => {
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
-    expect(screen.getByTestId("study-nav-dots-dot-0")).toBeOnTheScreen();
-    expect(screen.getByTestId("study-nav-dots-dot-1")).toBeOnTheScreen();
-    expect(screen.getByTestId("study-nav-dots-dot-2")).toBeOnTheScreen();
-    expect(screen.getByTestId("study-nav-dots-dot-3")).toBeOnTheScreen();
-    expect(screen.queryByTestId("study-nav-dots-dot-4")).toBeNull();
+    expect(screen.queryByTestId("study-nav-dots")).toBeNull();
+    expect(screen.queryByTestId("study-nav-dots-dot-0")).toBeNull();
   });
 
-  it("widens the dot for the current step into a pill", () => {
-    render(<StudyNav testID="study-nav" step={2} onPrevious={jest.fn()} onNext={jest.fn()} />);
+  it("makes each pill as tall as the tab bar's, and as wide as Previous with its padding", () => {
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
-    expect(screen.getByTestId("study-nav-dots-dot-2")).toHaveStyle({ width: 20 });
-  });
-
-  it("gives Previous and Next the same fixed width, so the bar never shifts", () => {
-    render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
-
-    expect(screen.getByTestId("study-nav-prev-button")).toHaveStyle({ width: 96 });
-    expect(screen.getByTestId("study-nav-next-button")).toHaveStyle({ width: 96 });
+    for (const id of ["study-nav-prev-button", "study-nav-next-button"]) {
+      expect(screen.getByTestId(id)).toHaveStyle({
+        height: FLOATING_NAV_BAR.capsuleHeight,
+        width: PILL_WIDTH,
+      });
+    }
   });
 
   it("keeps Next's width when it turns into Finish", () => {
     render(
       <StudyNav
         testID="study-nav"
-        step={3}
+
         finishLabel="Finish"
         onPrevious={jest.fn()}
         onNext={jest.fn()}
       />,
     );
 
-    expect(screen.getByTestId("study-nav-next-button")).toHaveStyle({ width: 96 });
+    expect(screen.getByTestId("study-nav-next-button")).toHaveStyle({ width: PILL_WIDTH });
   });
 
   it("shows Previous and Next labels by default", () => {
-    render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
     expect(screen.getByText("Previous")).toBeOnTheScreen();
     expect(screen.getByText("Next")).toBeOnTheScreen();
   });
 
   it("makes no haptic of its own as Previous and Next are pressed", () => {
-    render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={jest.fn()} />);
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
     fireEvent.press(screen.getByTestId("study-nav-prev-button"));
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
@@ -81,7 +82,7 @@ describe("StudyNav", () => {
 
   it("calls onPrevious when the previous control is pressed", () => {
     const onPrevious = jest.fn();
-    render(<StudyNav testID="study-nav" step={1} onPrevious={onPrevious} onNext={jest.fn()} />);
+    render(<StudyNav testID="study-nav" onPrevious={onPrevious} onNext={jest.fn()} />);
 
     fireEvent.press(screen.getByTestId("study-nav-prev-button"));
 
@@ -90,7 +91,7 @@ describe("StudyNav", () => {
 
   it("calls onNext when the next control is pressed", () => {
     const onNext = jest.fn();
-    render(<StudyNav testID="study-nav" step={1} onPrevious={jest.fn()} onNext={onNext} />);
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={onNext} />);
 
     fireEvent.press(screen.getByTestId("study-nav-next-button"));
 
@@ -102,7 +103,7 @@ describe("StudyNav", () => {
       render(
         <StudyNav
           testID="study-nav"
-          step={3}
+
           onPrevious={jest.fn()}
           onNext={jest.fn()}
           finishLabel="Finish"
@@ -118,7 +119,7 @@ describe("StudyNav", () => {
       render(
         <StudyNav
           testID="study-nav"
-          step={3}
+
           onPrevious={jest.fn()}
           onNext={onNext}
           finishLabel="Finish"
@@ -132,7 +133,7 @@ describe("StudyNav", () => {
   });
 
   it("shows the spark burst once the entrance settles", async () => {
-    render(<StudyNav testID="study-nav" step={0} onPrevious={jest.fn()} onNext={jest.fn()} />);
+    render(<StudyNav testID="study-nav" onPrevious={jest.fn()} onNext={jest.fn()} />);
 
     expect(await screen.findByTestId("study-nav-sparks")).toBeOnTheScreen();
   });

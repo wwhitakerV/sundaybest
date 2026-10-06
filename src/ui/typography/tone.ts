@@ -14,6 +14,7 @@ export type Tone = Extract<
   | "onControlPrimaryMuted"
   | "onSuccess"
   | "onSuccessMuted"
+  | "onSuccessBright"
   | "onMediaScrim"
   | "chromeTitle"
   | "chromeStepCounter"

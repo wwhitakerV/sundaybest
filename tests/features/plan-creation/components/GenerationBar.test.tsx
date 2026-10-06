@@ -6,6 +6,7 @@ import {
 } from "@/features/plan-creation/components/GenerationBar";
 import type { GenerationBarView } from "@/features/plan-creation/logic/generation-bar";
 import { lightTheme } from "@/theme/tokens";
+import { FLOATING_NAV_BAR } from "@/ui/organisms/floatingNavBar";
 
 const building: GenerationBarView = { kind: "building", id: "generation-1", percent: 62, more: 0 };
 const ready: GenerationBarView = {
@@ -18,7 +19,7 @@ const failed: GenerationBarView = {
   kind: "failed",
   id: "generation-1",
   startKey: null,
-  reason: "We couldn’t build this plan right now. Please try again.",
+  reason: "We couldn’t create this plan right now. Please try again.",
   action: "retry",
 };
 
@@ -49,6 +50,14 @@ describe("GenerationBar", () => {
     },
   );
 
+  it("centres its X in the pill's rounded end: a square as tall as the pill", () => {
+    renderBar(building);
+
+    expect(screen.getByTestId("generation-bar-dismiss")).toHaveStyle({
+      width: FLOATING_NAV_BAR.capsuleHeight,
+    });
+  });
+
   it("is a pill, divided after its X", () => {
     renderBar(building);
 
@@ -60,7 +69,7 @@ describe("GenerationBar", () => {
     it("says so, how far along it is, and fills its line that far", () => {
       renderBar(building);
 
-      expect(screen.getByText("Generating plan")).toBeVisible();
+      expect(screen.getByText("Creating your plan")).toBeVisible();
       expect(screen.getByText("62%")).toBeVisible();
       expect(screen.getByTestId("generation-bar-progress")).toHaveStyle({
         width: "62%",
@@ -79,7 +88,7 @@ describe("GenerationBar", () => {
     it("counts every plan being built", () => {
       renderBar({ ...building, more: 1 });
 
-      expect(screen.getByText("Generating 2 plans")).toBeVisible();
+      expect(screen.getByText("Creating 2 plans")).toBeVisible();
     });
 
     it("opens the build's steps when tapped", () => {
@@ -102,6 +111,20 @@ describe("GenerationBar", () => {
       });
     });
 
+    it("writes its words in white on the green, its divider a faint white", () => {
+      renderBar(ready);
+
+      expect(screen.getByText("Your plan is ready")).toHaveStyle({
+        color: lightTheme.colors.onSuccessBright,
+      });
+      expect(screen.getByText("Break free")).toHaveStyle({
+        color: lightTheme.colors.onSuccessBright,
+      });
+      expect(screen.getByTestId("generation-bar-divider")).toHaveStyle({
+        backgroundColor: lightTheme.colors.onSuccessBrightFaint,
+      });
+    });
+
     it("opens the plan", () => {
       renderBar(ready);
 
@@ -115,7 +138,7 @@ describe("GenerationBar", () => {
     it("says so, with the reason", () => {
       renderBar(failed);
 
-      expect(screen.getByText("Couldn’t build your plan")).toBeVisible();
+      expect(screen.getByText("Couldn’t create your plan")).toBeVisible();
       expect(screen.getByText(failed.kind === "failed" ? failed.reason : "")).toBeVisible();
     });
 

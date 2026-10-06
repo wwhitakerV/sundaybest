@@ -3,10 +3,13 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useTheme } from "@/theme";
 import { lightTheme } from "@/theme/tokens";
+import { SHEET_GRABBER, SheetGrabber } from "./atoms/SheetGrabber";
 import { PAGE_INSET } from "./organisms/Screen";
 
-/** Room at the top for the sheet's own grabber, drawn by iOS. */
-const GRABBER_ROOM = 28;
+/** The grabber, this far below a form sheet's top edge. */
+export const FORM_SHEET_GRABBER_TOP = 7;
+/** The title's place below the sheet's top: where it sat under iOS's grabber. */
+const TITLE_TOP = 28;
 
 /**
  * The native form sheet a `SheetLayout` is presented in: half the screen
@@ -19,7 +22,8 @@ const GRABBER_ROOM = 28;
 export const HALF_SHEET_OPTIONS = {
   presentation: "formSheet" as const,
   sheetAllowedDetents: [0.5],
-  sheetGrabberVisible: true,
+  // The sheet draws its own grabber (`SheetGrabber`), sized as every sheet's is.
+  sheetGrabberVisible: false,
   contentStyle: { backgroundColor: lightTheme.colors.background },
 };
 
@@ -31,7 +35,7 @@ export type SheetLayoutProps = {
 
 /**
  * What a half-height sheet holds (a route presented as a native form sheet
- * — iOS draws its grabber, and a drag down or a tap outside closes it): one
+ * — it draws its own grabber, and a drag down or a tap outside closes it): one
  * scrolling list, its title pinned at the top (`{testID}-header`) and what
  * it holds under it. Nothing sits beside the list: a form sheet lays its
  * scroll view over the whole sheet, and would cover anything placed above
@@ -55,14 +59,15 @@ export function SheetLayout({ title, children, testID }: SheetLayoutProps) {
           styles.inset,
           {
             backgroundColor: theme.colors.background,
-            paddingTop: GRABBER_ROOM,
+            paddingTop: FORM_SHEET_GRABBER_TOP,
             paddingBottom: theme.spacing.sm,
           },
         ]}
       >
+        <SheetGrabber testID={`${testID}-grabber`} />
         <Text
           accessibilityRole="header"
-          style={[theme.typography.sectionTitle, { color: theme.colors.text }]}
+          style={[theme.typography.sectionTitle, styles.title, { color: theme.colors.text }]}
         >
           {title}
         </Text>
@@ -74,4 +79,5 @@ export function SheetLayout({ title, children, testID }: SheetLayoutProps) {
 
 const styles = StyleSheet.create({
   inset: { paddingHorizontal: PAGE_INSET },
+  title: { marginTop: TITLE_TOP - FORM_SHEET_GRABBER_TOP - SHEET_GRABBER.height },
 });

@@ -155,4 +155,25 @@ describe("ScrollScreen", () => {
       expect(screen.getByTestId("a-page-top-clearance")).toHaveStyle({ height: 160 });
     });
   });
+
+  describe("with a soft header fade", () => {
+    it("ends the header at its last row, the fade running 10pt past it", () => {
+      render(
+        <ScrollScreen
+          testID="a-page"
+          header={<SFProBody>The header</SFProBody>}
+          headerFade={{ kind: "soft", reach: 36 }}
+        >
+          <SFProBody>The content</SFProBody>
+        </ScrollScreen>,
+      );
+      layOut("a-page-header", 150);
+
+      expect(screen.getByTestId("a-page-header")).not.toHaveStyle({ paddingBottom: GRADUAL_FADE });
+      expect(screen.getByTestId("a-page-top-fade", { includeHiddenElements: true })).toHaveStyle({
+        height: 160,
+      });
+      expect(screen.getByTestId("a-page-top-clearance")).toHaveStyle({ height: 160 });
+    });
+  });
 });

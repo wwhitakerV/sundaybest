@@ -28,7 +28,7 @@ const palette = {
   // they're specified; this is not yet the full set.
   black: "#08090A",
   red: "#D62626",
-  green: "#1FD19B",
+  green: "#00A378",
   darkgrey: "#55555D",
   grey: "#8A8A92",
   // Navigation-chrome ink. Close to but distinct from `black` above — the
@@ -181,6 +181,10 @@ type ColorTokens = {
   onSuccessMuted: string;
   /** Lines on `success` — the generation bar's divider. */
   onSuccessFaint: string;
+  /** Bright ink on `success`, for a whole green surface: the ready sheet's words, mark, and button. */
+  onSuccessBright: string;
+  /** Lines on `success` beside that bright ink: the ready bar's divider. */
+  onSuccessBrightFaint: string;
   /** The active item in a selector or strip. */
   selected: string;
   /** Header/tab-bar icon colour, and the centered nav-title's active state. */
@@ -320,6 +324,8 @@ const lightColors: ColorTokens = {
   onSuccess: palette.black,
   onSuccessMuted: palette.blackMuted,
   onSuccessFaint: palette.blackFaint,
+  onSuccessBright: palette.white,
+  onSuccessBrightFaint: palette.whiteFaint,
   lightIcon: palette.lightIcon,
   selected: palette.green,
   chromeIcon: palette.ink,
@@ -403,6 +409,8 @@ const darkColors: ColorTokens = {
   onSuccess: palette.black,
   onSuccessMuted: palette.blackMuted,
   onSuccessFaint: palette.blackFaint,
+  onSuccessBright: palette.white,
+  onSuccessBrightFaint: palette.whiteFaint,
   lightIcon: palette.lightIcon,
   selected: palette.green,
   chromeIcon: palette.white,

@@ -45,4 +45,30 @@ describe("BuildSteps", () => {
     });
     expect(screen.queryByTestId("steps-buildingQuiz-spinner")).toBeNull();
   });
+
+  it("says under each step what it does, or what it did", () => {
+    renderSteps();
+
+    expect(screen.getByText("Heard the whole message.")).toBeVisible();
+    expect(screen.getByText("Readings, reflections, and prayers.")).toBeVisible();
+  });
+
+  it("parts the steps by room alone, with no lines between them", () => {
+    renderSteps();
+
+    expect(screen.queryByTestId("steps-findingScripture-separator")).toBeNull();
+  });
+
+  it("fades a step not yet started well back, its name and its line", () => {
+    renderSteps();
+
+    expect(screen.getByTestId("steps-buildingQuiz-words")).toHaveStyle({ opacity: 0.35 });
+  });
+
+  it("leaves a step under way or done at full strength", () => {
+    renderSteps();
+
+    expect(screen.getByTestId("steps-writingDays-words")).not.toHaveStyle({ opacity: 0.35 });
+    expect(screen.getByTestId("steps-processingSermon-words")).not.toHaveStyle({ opacity: 0.35 });
+  });
 });

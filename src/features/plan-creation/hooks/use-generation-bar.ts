@@ -11,11 +11,16 @@ import { useCreatePlanMutation } from "@/core/api/queries";
 import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
 import type { PlanGenerationStatus } from "@/types/domain";
 import { toBuild } from "../data/current-builds";
+import { clearPreview, useGenerationPreview } from "../dev/generation-preview";
 import { getGenerationBar } from "../logic/generation-bar";
 import { GENERATION_SHEET_HREF } from "../logic/routes";
 
 /** What the bar's build is building: enough to list its steps. */
-type BuildSubject = { status: PlanGenerationStatus; lengthDays: number; quickCheck: boolean };
+export type BuildSubject = {
+  status: PlanGenerationStatus;
+  lengthDays: number;
+  quickCheck: boolean;
+};
 
 /**
  * The generation bar's view model, shared by the bar and its sheet: the
@@ -31,6 +36,8 @@ export function useGenerationBar() {
   const { mutate: retryBuild } = useRetryGenerationMutation();
   const { mutate: dismissBuild } = useDismissGenerationMutation();
   const [hiddenStarts, setHiddenStarts] = useState<ReadonlySet<string>>(() => new Set());
+  // DEVELOPMENT ONLY: a previewed state stands in for the server's builds.
+  const preview = useGenerationPreview();
 
   const builds = useMemo(() => (current.data ?? []).map(toBuild), [current.data]);
   const visibleStarts = starts.filter((start) => !hiddenStarts.has(start.key));
@@ -87,6 +94,19 @@ export function useGenerationBar() {
     router.push(NEW_PLAN_HREF);
   }
 
+  const expand = () => router.push(GENERATION_SHEET_HREF);
+  if (preview) {
+    return {
+      view: preview.view,
+      subject: preview.subject,
+      dismiss: clearPreview,
+      open: clearPreview,
+      retry: clearPreview,
+      chooseAnother: clearPreview,
+      expand,
+    };
+  }
+
   return {
     view,
     subject,
@@ -94,6 +114,6 @@ export function useGenerationBar() {
     open,
     retry,
     chooseAnother,
-    expand: () => router.push(GENERATION_SHEET_HREF),
+    expand,
   };
 }

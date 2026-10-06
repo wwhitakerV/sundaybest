@@ -81,6 +81,14 @@ describe("BottomSheet", () => {
     expect(screen.UNSAFE_getByType(Modal).props).toHaveProperty("animationType", "none");
   });
 
+  it("sets its grabber 14pt below its top edge", () => {
+    render(sheet({ visible: true }));
+
+    expect(screen.getByTestId("a-sheet", { includeHiddenElements: true })).toHaveStyle({
+      paddingTop: 14,
+    });
+  });
+
   it("draws its grabber in the grabber colour", () => {
     render(sheet({ visible: true }));
 

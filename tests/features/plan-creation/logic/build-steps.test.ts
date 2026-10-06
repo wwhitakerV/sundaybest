@@ -43,4 +43,22 @@ describe("getBuildSteps", () => {
   it("ticks everything once the plan is built", () => {
     expect(states(getBuildSteps("completed", 3, false))).toEqual(["done", "done", "done"]);
   });
+
+  it("says what a step does until it's done", () => {
+    expect(getBuildSteps("processingSermon", 6, true).map((row) => row.detail)).toEqual([
+      "Reading the whole message, start to finish.",
+      "Finding the passages the sermon is built on.",
+      "Readings, reflections, and prayers.",
+      "Writing questions on what matters most.",
+    ]);
+  });
+
+  it("says what a step accomplished once it's done", () => {
+    expect(getBuildSteps("completed", 6, true).map((row) => row.detail)).toEqual([
+      "Heard the whole message.",
+      "Found the passages it’s built on.",
+      "Wrote your 6 days.",
+      "Built your quiz.",
+    ]);
+  });
 });

@@ -4,7 +4,7 @@ import { ListScreen } from "@/ui/organisms/ListScreen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { PlansSkeleton } from "../components/PlansSkeleton";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
-import { FilterPills } from "@/ui/molecules/FilterPills";
+import { FILTER_PILLS_HEIGHT, FilterPills } from "@/ui/molecules/FilterPills";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { space } from "@/theme";
 import { LibraryPlanCard } from "../components/LibraryPlanCard";
@@ -28,7 +28,8 @@ export function PlansScreen() {
   return (
     <ListScreen
       testID="plans-screen"
-      headerFade="gradual"
+      // Fades across the filters' row and a little past it, mostly clear by the header's edge.
+      headerFade={{ kind: "soft", reach: FILTER_PILLS_HEIGHT }}
       header={
         <>
           <TitleHeader title="Plans" />

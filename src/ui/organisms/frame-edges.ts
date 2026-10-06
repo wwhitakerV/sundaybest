@@ -26,8 +26,23 @@ export const GRADUAL_RAMP = [
   { at: 1, opacity: 0 },
 ] as const;
 
-/** How a header meets what scrolls under it: a short fade below it, or a gradual one within it. */
-export type HeaderFade = "edge" | "gradual";
+/** A fade's opacities down its ramp; `at` runs 0–1 from where it stops being solid. */
+type FadeRamp = readonly { at: number; opacity: number }[];
+
+/** A soft fade starts this far above the header's last row… */
+const SOFT_ABOVE = space[10];
+/** …is this opaque at the header's bottom edge (80% clear)… */
+const SOFT_EDGE_OPACITY = 0.2;
+/** …and is fully clear this far past it. */
+const SOFT_PAST = space[10];
+
+/**
+ * How a header meets what scrolls under it: `"edge"`, a short fade just below
+ * it; `"gradual"`, a thicker eased fade inside its own block; `soft`, a fade
+ * from just above the header's last row (`reach` tall — Plans' filters) to a
+ * little past its bottom edge, mostly clear by that edge.
+ */
+export type HeaderFade = "edge" | "gradual" | { kind: "soft"; reach: number };
 
 /** What sits at a frame's foot: the dock, a verdict panel in its place, or nothing. */
 export type FrameFoot = { kind: "none" } | { kind: "dock" } | { kind: "panel"; height: number };
@@ -37,7 +52,7 @@ export type FrameFoot = { kind: "none" } | { kind: "dock" } | { kind: "panel"; h
  * (solid included, measured in from the screen's edge), and how far in its
  * content starts so it's clear of both.
  */
-export type FrameEdge = { solid: number; height: number; clearance: number };
+export type FrameEdge = { solid: number; height: number; clearance: number; ramp?: FadeRamp };
 
 /**
  * A scrolling page's two edges. The scroll runs the phone's full height;
@@ -73,8 +88,14 @@ function topEdge(insetTop: number, headerHeight: number, headerFade: HeaderFade)
   }
   if (headerFade === "gradual") {
     // The ramp is the foot of the header's own block: it ends at its bottom edge.
-    return { solid: headerHeight - GRADUAL_FADE, height: headerHeight, clearance: headerHeight };
+    return {
+      solid: headerHeight - GRADUAL_FADE,
+      height: headerHeight,
+      clearance: headerHeight,
+      ramp: GRADUAL_RAMP,
+    };
   }
+  if (typeof headerFade === "object") return softTopEdge(headerHeight, headerFade.reach);
   const height = headerHeight + EDGE_FADE;
   return { solid: headerHeight, height, clearance: height };
 }
@@ -88,4 +109,22 @@ function bottomEdge(insetBottom: number, foot: FrameFoot): FrameEdge {
   }
   const solid = foot.kind === "panel" ? foot.height : insetBottom;
   return { solid, height: solid + EDGE_FADE, clearance: solid + EDGE_FADE };
+}
+
+function softTopEdge(headerHeight: number, reach: number): FrameEdge {
+  const solid = headerHeight - reach - SOFT_ABOVE;
+  const height = headerHeight + SOFT_PAST;
+  // Where the header's bottom edge falls on the ramp.
+  const edge = (reach + SOFT_ABOVE) / (reach + SOFT_ABOVE + SOFT_PAST);
+  return {
+    solid,
+    height,
+    clearance: height,
+    ramp: [
+      { at: 0, opacity: 1 },
+      { at: edge / 2, opacity: 0.7 },
+      { at: edge, opacity: SOFT_EDGE_OPACITY },
+      { at: 1, opacity: 0 },
+    ],
+  };
 }

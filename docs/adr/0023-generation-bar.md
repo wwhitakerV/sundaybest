@@ -24,7 +24,7 @@ place a screen's button uses, with the FAB shrinking beside the open tabs as
 it does for a raised button; a screen's raised button takes the place first.
 An X in its rounded start always dismisses it, then a full-height divider:
 
-- **Building:** the primary control's colours, "Generating plan", the real
+- **Building:** the primary control's colours, "Creating your plan", the real
   percentage and a line filling to it. Tapping it opens a native half sheet
   (`/generation`) listing the steps — done steps checked in the accent, the
   step under way on the app's `Spinner`.

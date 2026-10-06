@@ -79,7 +79,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius[36],
     borderTopRightRadius: radius[36],
     paddingHorizontal: space[24],
-    paddingTop: space[12],
+    // The grabber, this far below the sheet's top edge.
+    paddingTop: space[14],
     paddingBottom: space[40],
     gap: space[24],
   },
