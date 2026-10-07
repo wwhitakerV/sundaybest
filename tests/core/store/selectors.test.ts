@@ -37,6 +37,7 @@ import {
 } from "@/core/store";
 import { SAMPLE_PLAN_ID } from "@/core/mock-data";
 import { DRAFT_PLAN_ID, withDraftPlan, withPlanBeingBuilt } from "@tests/factories/pending-plans";
+import { readyToComplete, withStepsDone } from "@tests/factories/store-days";
 
 // The store's own starting data: one active 6-day plan (day 1 done, day 2
 // under way), a completed 7-day plan (30 Aug – 5 Sep), two ready plans (one
@@ -241,7 +242,7 @@ describe("getUpNext", () => {
   });
 
   it("is tomorrow once a day has been finished today", () => {
-    const done = appReducer(state, {
+    const done = appReducer(readyToComplete(state, ACTIVE, 2, TODAY, `${TODAY}T07:00:00.000Z`), {
       type: "planDay/complete",
       dayId: getPlanDay(state, ACTIVE, 2)?.id ?? "",
       today: TODAY,
@@ -359,7 +360,11 @@ describe("getQuickCheckStanding", () => {
         at,
       },
       { type: "quiz/submitAnswer", attemptId: "attempt-new", answerId: "answer-new", at },
-    ].reduce((current, action) => appReducer(current, action as AppAction), state);
+    ].reduce(
+      (current, action) => appReducer(current, action as AppAction),
+      // A Quick Check opens once its day's steps are done.
+      withStepsDone(state, SAVED, 1, TODAY, "2026-09-23T07:00:00.000Z"),
+    );
 
     expect(getQuickCheckStanding(answered, savedDay)).toEqual({
       status: "inProgress",

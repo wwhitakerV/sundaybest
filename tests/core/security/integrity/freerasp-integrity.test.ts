@@ -2,8 +2,6 @@ import { renderHook } from "@testing-library/react-native";
 import { useFreeRasp } from "freerasp-react-native";
 
 import {
-  PLACEHOLDER_APP_TEAM_ID,
-  PLACEHOLDER_WATCHER_MAIL,
   buildActions,
   shouldMonitorIntegrity,
   useIntegrityMonitor,
@@ -14,12 +12,20 @@ jest.mock("freerasp-react-native", () => ({ useFreeRasp: jest.fn() }));
 
 const mockUseFreeRasp = jest.mocked(useFreeRasp);
 
-function deps(overrides: Partial<Parameters<typeof useIntegrityMonitor>[0]> = {}) {
+/** Account values as the env supplies them (placeholders: never real ones in a test). */
+const WATCHER_MAIL = "security@example.com";
+const APP_TEAM_ID = "ABCDE12345";
+
+function deps(
+  overrides: Partial<Parameters<typeof useIntegrityMonitor>[0]> = {},
+): Parameters<typeof useIntegrityMonitor>[0] {
   return {
     variant: "production" as const,
     bundleId: "com.walterwhitaker.sundaybest",
     integrity: createIntegrityState(),
     onSessionCompromised: jest.fn(),
+    watcherMail: WATCHER_MAIL,
+    appTeamId: APP_TEAM_ID,
     ...overrides,
   };
 }
@@ -48,17 +54,17 @@ describe("useIntegrityMonitor", () => {
     expect(mockUseFreeRasp.mock.calls[0]?.[0]).toMatchObject({ isProd: false });
   });
 
-  it("passes the bundle id and the placeholder account values", () => {
+  it("passes the bundle id and the account values it's given", () => {
     renderHook(() => {
       useIntegrityMonitor(deps());
     });
 
     expect(mockUseFreeRasp.mock.calls[0]?.[0]).toMatchObject({
       isProd: true,
-      watcherMail: PLACEHOLDER_WATCHER_MAIL,
+      watcherMail: WATCHER_MAIL,
       iosConfig: {
         appBundleId: "com.walterwhitaker.sundaybest",
-        appTeamId: PLACEHOLDER_APP_TEAM_ID,
+        appTeamId: APP_TEAM_ID,
       },
     });
   });

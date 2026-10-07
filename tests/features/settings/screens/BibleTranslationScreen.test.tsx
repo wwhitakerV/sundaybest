@@ -1,7 +1,10 @@
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { http, HttpResponse } from "msw";
+import { render, screen, fireEvent, waitFor } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { API_URL, someSettings } from "@tests/factories/api";
+import { server } from "@tests/mocks/server";
 import { BibleTranslationScreen } from "@/features/settings/screens/BibleTranslationScreen";
 
 jest.mock("expo-router", () => ({
@@ -12,6 +15,7 @@ jest.mock("expo-router", () => ({
 const mockBack = jest.fn<void, []>();
 
 beforeEach(() => {
+  mockBack.mockClear();
   jest
     .mocked(useRouter)
     .mockReturnValue({ back: mockBack } as unknown as ReturnType<typeof useRouter>);
@@ -30,10 +34,46 @@ describe("BibleTranslationScreen", () => {
     expect(screen.getByText("Bible translation")).toBeVisible();
   });
 
-  it("shows placeholder body text", () => {
+  it("says what the choice changes", () => {
     render(<BibleTranslationScreen />);
 
-    expect(screen.getByText("...")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Scripture in your plans will use this translation whenever that text is available.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("marks the translation the reader chose", async () => {
+    render(<BibleTranslationScreen />);
+
+    await waitFor(() =>
+      expect(screen.getByTestId("bible-translation-options-BSB")).toHaveProp("accessibilityState", {
+        checked: true,
+        disabled: false,
+      }),
+    );
+  });
+
+  it("saves another translation when it's picked", async () => {
+    const sent: unknown[] = [];
+    server.use(
+      http.patch(`${API_URL}/v1/me/settings`, async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json({ settings: someSettings({ bibleTranslation: "KJV" }) });
+      }),
+    );
+    render(<BibleTranslationScreen />);
+    await waitFor(() =>
+      expect(screen.getByTestId("bible-translation-options-KJV")).toHaveProp("accessibilityState", {
+        checked: false,
+        disabled: false,
+      }),
+    );
+
+    fireEvent.press(screen.getByTestId("bible-translation-options-KJV"));
+
+    await waitFor(() => expect(sent).toEqual([{ bibleTranslation: "KJV" }]));
   });
 
   it("goes back to Settings when Back is pressed", () => {

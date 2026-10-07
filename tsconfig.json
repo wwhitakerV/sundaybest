@@ -13,5 +13,5 @@
     "types": ["jest"]
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "dist", "ios", "android", "coverage"]
+  "exclude": ["node_modules", "dist", "ios", "android", "coverage", "api"]
 }

@@ -1,6 +1,7 @@
 import { render, screen } from "@tests/helpers/render";
 
 import { DayStrip } from "@/features/welcome/components/DayStrip";
+import { lightTheme } from "@/theme/tokens";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
@@ -25,8 +26,8 @@ describe("DayStrip", () => {
     const active = screen.getByText("Sun");
     const inactive = screen.getByText("Mon");
 
-    expect(active).toHaveStyle({ color: "#1FD19B" });
-    expect(inactive).not.toHaveStyle({ color: "#1FD19B" });
+    expect(active).toHaveStyle({ color: lightTheme.colors.selected });
+    expect(inactive).not.toHaveStyle({ color: lightTheme.colors.selected });
   });
 
   it("is not interactive", () => {

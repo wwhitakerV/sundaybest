@@ -22,6 +22,7 @@ import {
   withDraftPlan,
   withPlanBeingBuilt,
 } from "@tests/factories/pending-plans";
+import { readyToComplete } from "@tests/factories/store-days";
 
 // Starting data: an active 6-day plan (day 1 done, day 2 under way, its quiz
 // on question 2), a completed 7-day plan, a ready 3-day plan, a saved 1-day
@@ -38,6 +39,12 @@ const AT = "2026-09-23T07:00:00.000Z";
 const TODAY = "2026-09-23";
 
 const run = (...actions: AppAction[]): AppState => actions.reduce(appReducer, state);
+/** Actions run from `base` rather than the starting state. */
+const runFrom = (base: AppState, ...actions: AppAction[]): AppState =>
+  actions.reduce(appReducer, base);
+/** The state with this day ready to complete today: its steps and Quick Check done. */
+const ready = (planId: string, dayNumber: number, base: AppState = state): AppState =>
+  readyToComplete(base, planId, dayNumber, TODAY, AT);
 /** A record by ID, from one of the state's tables. */
 const find = <T extends { id: string }>(table: Record<string, T>, id: string): T | undefined =>
   Object.values(table).find((record) => record.id === id);
@@ -138,11 +145,11 @@ describe("plans", () => {
 });
 
 describe("plan days", () => {
-  it("finishes a day, opens the next, and moves progress on", () => {
-    const next = run(completeDay(ACTIVE, 2));
+  it("finishes a day and moves progress on, the next still waiting for its own date", () => {
+    const next = runFrom(ready(ACTIVE, 2), completeDay(ACTIVE, 2));
 
     expect(getPlanDay(next, ACTIVE, 2)?.status).toBe("completed");
-    expect(getPlanDay(next, ACTIVE, 3)?.status).toBe("available");
+    expect(getPlanDay(next, ACTIVE, 3)?.status).toBe("locked");
     expect(getPlanProgress(next, ACTIVE)?.completedDayNumbers).toEqual([1, 2]);
   });
 
@@ -150,8 +157,12 @@ describe("plan days", () => {
     expect(run(completeDay(ACTIVE, 4))).toBe(state);
   });
 
+  it("won't complete a day whose steps aren't all done", () => {
+    expect(run(completeDay(ACTIVE, 2))).toBe(state);
+  });
+
   it("completes a day only once, however often it's recorded", () => {
-    const once = run(completeDay(ACTIVE, 2));
+    const once = runFrom(ready(ACTIVE, 2), completeDay(ACTIVE, 2));
     const again = appReducer(once, completeDay(ACTIVE, 2));
     const recorded = appReducer(again, {
       type: "progress/recordDayCompletion",
@@ -184,10 +195,22 @@ describe("plan days", () => {
     expect(appReducer(next, step)).toBe(next);
   });
 
-  it("completes the plan when its last day is done", () => {
-    const next = run(completeDay(READY, 1), completeDay(READY, 2), completeDay(READY, 3));
+  it("completes the plan when its last day is done, each day on its own date", () => {
+    // Each day opens on its scheduled date: work through and complete it that day.
+    const finishOnItsDate = (current: AppState, dayNumber: number): AppState => {
+      const on = getPlanDay(current, READY, dayNumber)?.scheduledOn ?? TODAY;
+      const at = `${on}T07:00:00.000Z`;
+      const readied = readyToComplete(current, READY, dayNumber, on, at);
+      return appReducer(readied, {
+        type: "planDay/complete",
+        dayId: dayId(READY, dayNumber),
+        today: on,
+        at,
+      });
+    };
+    const next = [1, 2, 3].reduce(finishOnItsDate, state);
 
-    expect(getPlanById(next, READY)).toMatchObject({ status: "completed", completedAt: AT });
+    expect(getPlanById(next, READY)?.status).toBe("completed");
   });
 });
 
@@ -453,27 +476,30 @@ describe("one domain operation, one dispatch", () => {
 
     it("marks the prayer prayed then completes the day, as the two actions in order", () => {
       const day = dayId(ACTIVE, 2);
-      const next = run(finish(day, prayerOf(day)));
+      const base = ready(ACTIVE, 2);
+      const next = runFrom(base, finish(day, prayerOf(day)));
 
-      expect(next).toEqual(run(prayed(day), completeDay(ACTIVE, 2)));
+      expect(next).toEqual(runFrom(base, prayed(day), completeDay(ACTIVE, 2)));
       expect(prayerFor(next, day)?.prayedAt).toBe(AT);
       expect(getPlanDay(next, ACTIVE, 2)?.status).toBe("completed");
     });
 
     it("still marks the prayer on a plan's last day, though completing it completes the plan", () => {
       const day = dayId(SAVED, 1);
-      const next = run(finish(day, prayerOf(day)));
+      const base = ready(SAVED, 1);
+      const next = runFrom(base, finish(day, prayerOf(day)));
 
       expect(getPlanById(next, SAVED)?.status).toBe("completed");
       expect(prayerFor(next, day)?.prayedAt).toBe(AT);
-      expect(next).toEqual(run(prayed(day), completeDay(SAVED, 1)));
+      expect(next).toEqual(runFrom(base, prayed(day), completeDay(SAVED, 1)));
     });
 
     it("completes the day alone when there is no prayer", () => {
       const day = dayId(ACTIVE, 2);
-      const next = run(finish(day, null));
+      const base = ready(ACTIVE, 2);
+      const next = runFrom(base, finish(day, null));
 
-      expect(next).toEqual(run(completeDay(ACTIVE, 2)));
+      expect(next).toEqual(runFrom(base, completeDay(ACTIVE, 2)));
       expect(prayerFor(next, day)?.prayedAt).toBeNull();
     });
 

@@ -119,8 +119,9 @@ async function toResponseError(response: Response): Promise<ApiError> {
   try {
     const parsed = apiErrorEnvelopeSchema.safeParse(await response.json());
     if (parsed.success) {
+      const { message } = parsed.data.error;
       return new ApiError(parsed.data.error.code, response.status, {
-        serverMessage: parsed.data.error.message,
+        ...(message !== undefined && { serverMessage: message }),
       });
     }
   } catch {

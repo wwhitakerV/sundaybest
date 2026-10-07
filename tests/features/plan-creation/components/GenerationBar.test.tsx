@@ -50,11 +50,11 @@ describe("GenerationBar", () => {
     },
   );
 
-  it("centres its X in the pill's rounded end: a square as tall as the pill", () => {
+  it("sets its X in the pill's rounded start, a little narrower than the pill is tall", () => {
     renderBar(building);
 
     expect(screen.getByTestId("generation-bar-dismiss")).toHaveStyle({
-      width: FLOATING_NAV_BAR.capsuleHeight,
+      width: FLOATING_NAV_BAR.capsuleHeight - 10,
     });
   });
 
@@ -142,21 +142,21 @@ describe("GenerationBar", () => {
       expect(screen.getByText(failed.kind === "failed" ? failed.reason : "")).toBeVisible();
     });
 
-    it("tries again", () => {
+    it("leaves trying again to the build's sheet, which it opens", () => {
       renderBar(failed);
 
-      fireEvent.press(screen.getByTestId("generation-bar-retry"));
+      fireEvent.press(screen.getByTestId("generation-bar-details"));
 
-      expect(handlers.onRetry).toHaveBeenCalledTimes(1);
+      expect(handlers.onExpand).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId("generation-bar-retry")).toBeNull();
+      expect(handlers.onRetry).not.toHaveBeenCalled();
     });
 
-    it("offers another sermon instead when this one can't be built from", () => {
+    it("leaves choosing another sermon to the build's sheet, too", () => {
       renderBar({ ...failed, action: "chooseAnother" });
 
-      fireEvent.press(screen.getByTestId("generation-bar-choose-another"));
-
-      expect(screen.getByText("New sermon")).toBeVisible();
-      expect(handlers.onChooseAnother).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId("generation-bar-choose-another")).toBeNull();
+      expect(handlers.onChooseAnother).not.toHaveBeenCalled();
     });
   });
 });

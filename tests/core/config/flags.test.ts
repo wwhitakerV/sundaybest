@@ -12,6 +12,8 @@ function envFor(overrides: Partial<Env> = {}): Env {
     apiUrl: "https://api.sundaybest.com",
     attestationEnabled: false,
     sentryDsn: undefined,
+    appTeamId: undefined,
+    securityWatcherEmail: undefined,
     useRnFetch: true,
     ...overrides,
   });

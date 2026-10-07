@@ -28,6 +28,9 @@ beforeEach(() => {
   mockIsAvailable.mockReturnValue(true);
 });
 
+/** The API the app talks to: the host REAL_CONFIG pins. */
+const API_URL = "https://api.sundaybest.com";
+
 /** A config that looks like a real one: two distinct, correctly-shaped pins. */
 const REAL_CONFIG: PinConfig = {
   "api.sundaybest.com": {
@@ -183,33 +186,41 @@ describe("toPinningOptions", () => {
  */
 describe("initializePinning", () => {
   it("does not enable pinning in development, so a local proxy still works", async () => {
-    await expect(initializePinning("development", REAL_CONFIG)).resolves.toBe(false);
+    await expect(initializePinning("development", API_URL, REAL_CONFIG)).resolves.toBe(false);
     expect(initializeSslPinning).not.toHaveBeenCalled();
   });
 
   it("enables pinning in production and reports that it did", async () => {
     mockIsAvailable.mockReturnValue(true);
 
-    await expect(initializePinning("production", REAL_CONFIG)).resolves.toBe(true);
+    await expect(initializePinning("production", API_URL, REAL_CONFIG)).resolves.toBe(true);
     expect(initializeSslPinning).toHaveBeenCalledWith(toPinningOptions(REAL_CONFIG));
   });
 
   /**
-   * Expo Go has no native module. Returning false rather than throwing matters:
-   * "pinning is off in this environment" is a normal state, and it has to be
-   * distinguishable from "pinning is on" by the caller.
+   * A preview or production build without the native module would run with no
+   * pinning while claiming it: it refuses to start instead.
    */
-  it("reports false when the native module is missing, rather than throwing", async () => {
+  it("refuses to start a preview build whose native module is missing", async () => {
     mockIsAvailable.mockReturnValue(false);
 
-    await expect(initializePinning("preview", REAL_CONFIG)).resolves.toBe(false);
+    await expect(initializePinning("preview", API_URL, REAL_CONFIG)).rejects.toThrow(PinningError);
+    expect(initializeSslPinning).not.toHaveBeenCalled();
+  });
+
+  it("refuses to start when the API's host has no pin", async () => {
+    await expect(
+      initializePinning("production", "https://elsewhere.example.com", REAL_CONFIG),
+    ).rejects.toThrow(PinningError);
     expect(initializeSslPinning).not.toHaveBeenCalled();
   });
 
   it("refuses to start with placeholder pins, before touching the native module", async () => {
     mockIsAvailable.mockReturnValue(true);
 
-    await expect(initializePinning("production", PIN_CONFIG)).rejects.toThrow(PinningError);
+    await expect(initializePinning("production", API_URL, PIN_CONFIG)).rejects.toThrow(
+      PinningError,
+    );
     expect(initializeSslPinning).not.toHaveBeenCalled();
   });
 });

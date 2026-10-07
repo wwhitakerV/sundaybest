@@ -24,6 +24,8 @@ function envWith(sentryDsn: string | undefined): Env {
     apiUrl: "https://api.sundaybest.com",
     attestationEnabled: false,
     sentryDsn,
+    appTeamId: undefined,
+    securityWatcherEmail: undefined,
     useRnFetch: true,
   };
 }

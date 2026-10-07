@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { act, renderApp, screen, fireEvent } from "@tests/helpers/render";
+import { servePlans } from "@tests/mocks/plans-api";
 
 // Same reason navigation.test.tsx holds Reduce Motion on: Welcome's intro
 // story would otherwise keep ticking through renderApp()'s forced fake timers.
@@ -28,8 +29,10 @@ describe("theology exams", () => {
   it(
     "opens the exams page from Fun's tile, an exam's overview from it — the tab bar out of the way — and a session from that",
     async () => {
+      // A returning reader, already onboarded: the app opens on Home.
+      servePlans([]);
       renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      await screen.findByTestId("home-tab-screen");
       // Fun has no tab for now; its route is still there.
       act(() => router.navigate("/fun"));
 
@@ -59,8 +62,10 @@ describe("theology exams", () => {
   it(
     "opens an exam's topics in a sheet over its overview",
     async () => {
+      // A returning reader, already onboarded: the app opens on Home.
+      servePlans([]);
       renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      await screen.findByTestId("home-tab-screen");
       // Fun has no tab for now; its route is still there.
       act(() => router.navigate("/fun"));
       fireEvent.press(await screen.findByTestId("fun-games-exams"));
@@ -79,8 +84,10 @@ describe("theology exams", () => {
   it(
     "opens every subject in a sheet over the exams page, and comes back open on the one picked",
     async () => {
+      // A returning reader, already onboarded: the app opens on Home.
+      servePlans([]);
       renderApp();
-      fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+      await screen.findByTestId("home-tab-screen");
       // Fun has no tab for now; its route is still there.
       act(() => router.navigate("/fun"));
       fireEvent.press(await screen.findByTestId("fun-games-exams"));

@@ -18,12 +18,15 @@ function migration(version: number, name: string, up?: (db: Database) => Promise
 
 describe("MIGRATIONS", () => {
   /**
-   * Prompt 7 builds the runner, not a schema. An empty list is the correct
-   * content, and this test is here so adding the first migration is a deliberate
-   * act that updates a test rather than a silent append.
+   * The schema's history, in order. Listed here so adding a migration is a
+   * deliberate act that updates a test rather than a silent append.
    */
-  it("is empty — there are no tables yet", () => {
-    expect(MIGRATIONS).toEqual([]);
+  it("runs its migrations in order, numbered from 1 with none skipped", () => {
+    expect(MIGRATIONS.map(({ version, name }) => [version, name])).toEqual([
+      [1, "real-data-cache-and-outbox"],
+      [2, "scope-private-reflections-to-user"],
+      [3, "scope-offline-server-state-to-user"],
+    ]);
   });
 });
 

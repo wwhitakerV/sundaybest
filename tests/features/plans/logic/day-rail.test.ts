@@ -1,3 +1,4 @@
+import type { PlanDay } from "@/types/domain";
 import {
   describeDayHeader,
   describeDaySteps,
@@ -171,18 +172,29 @@ describe("describeDaySteps", () => {
 
 describe("describeQuickCheckStep", () => {
   const quiz = {
+    id: "00000000-0000-4000-8000-000000000006",
     status: "notStarted" as const,
     questionCount: 3,
     answeredCount: 0,
     correctCount: 0,
   };
+  /** A day whose four steps are all done — Pray among them — so its Quick Check is open. */
+  const prayed: Pick<PlanDay, "status" | "completedSteps"> = {
+    status: "completed",
+    completedSteps: ["read", "scripture", "reflect", "pray"],
+  };
+  /** A day part-way through, before Pray. */
+  const underWay: Pick<PlanDay, "status" | "completedSteps"> = {
+    status: "inProgress",
+    completedSteps: ["read"],
+  };
 
   it("has none for a day without a Quick Check", () => {
-    expect(describeQuickCheckStep({ status: "completed" }, null)).toBeNull();
+    expect(describeQuickCheckStep(prayed, null)).toBeNull();
   });
 
   it("waits for the day's steps before it opens", () => {
-    const step = describeQuickCheckStep({ status: "inProgress" }, quiz);
+    const step = describeQuickCheckStep(underWay, quiz);
 
     expect(step).toMatchObject({
       key: "quickCheck",
@@ -193,7 +205,7 @@ describe("describeQuickCheckStep", () => {
   });
 
   it("is next, once the day's done, with how many questions it asks", () => {
-    expect(describeQuickCheckStep({ status: "completed" }, quiz)).toMatchObject({
+    expect(describeQuickCheckStep(prayed, quiz)).toMatchObject({
       status: "current",
       detail: "3 questions",
       opens: true,
@@ -202,24 +214,23 @@ describe("describeQuickCheckStep", () => {
 
   it("is next, half-way, with how many are answered", () => {
     expect(
-      describeQuickCheckStep(
-        { status: "completed" },
-        { ...quiz, status: "inProgress", answeredCount: 1 },
-      ),
+      describeQuickCheckStep(prayed, { ...quiz, status: "inProgress", answeredCount: 1 }),
     ).toMatchObject({ status: "current", detail: "1 of 3 answered" });
   });
 
   it("is done once taken, with how many were right", () => {
     expect(
-      describeQuickCheckStep(
-        { status: "completed" },
-        { ...quiz, status: "completed", answeredCount: 3, correctCount: 2 },
-      ),
+      describeQuickCheckStep(prayed, {
+        ...quiz,
+        status: "completed",
+        answeredCount: 3,
+        correctCount: 2,
+      }),
     ).toMatchObject({ status: "done", detail: "2 of 3 correct", opens: true });
   });
 
   it("is locked on a locked day", () => {
-    expect(describeQuickCheckStep({ status: "locked" }, quiz)).toMatchObject({
+    expect(describeQuickCheckStep({ status: "locked", completedSteps: [] }, quiz)).toMatchObject({
       status: "locked",
       detail: "3 questions",
       opens: false,
@@ -227,7 +238,7 @@ describe("describeQuickCheckStep", () => {
   });
 
   it("tells VoiceOver where it stands", () => {
-    expect(describeQuickCheckStep({ status: "inProgress" }, quiz)?.accessibilityLabel).toBe(
+    expect(describeQuickCheckStep(underWay, quiz)?.accessibilityLabel).toBe(
       "Quick Check, not open yet, After Pray",
     );
   });

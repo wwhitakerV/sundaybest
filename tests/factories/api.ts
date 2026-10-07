@@ -2,6 +2,7 @@ import type { z } from "zod";
 
 import type {
   ApiPlanGeneration,
+  ApiReminder,
   sermonSummarySchema,
   getMeResponseSchema,
   getSettingsResponseSchema,
@@ -81,6 +82,19 @@ export const aSermon = defineFactory<z.infer<typeof sermonSummarySchema>>(() => 
   durationSeconds: 2820,
   publishedOn: null,
   transcriptStatus: "available",
+  createdAt: NOW,
+  updatedAt: NOW,
+}));
+
+/** The reader's daily study reminder: on, at 6:30 AM, every day. */
+export const aReminder = defineFactory<ApiReminder>(() => ({
+  id: "00000000-0000-4000-8000-0000000000d1",
+  userId: USER_ID,
+  kind: "dailyStudy",
+  planId: null,
+  enabled: true,
+  time: "06:30",
+  days: ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
   createdAt: NOW,
   updatedAt: NOW,
 }));

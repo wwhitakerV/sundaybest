@@ -37,6 +37,7 @@ import {
 } from "./offline-cache";
 import { enqueueMutation } from "@/core/storage/mutation-outbox";
 import { removeCachedResource } from "@/core/storage/api-resource-cache";
+import { withoutUndefined } from "@/utils/object/withoutUndefined";
 
 type MeEnvelope = { user: ApiUser };
 type SettingsEnvelope = { settings: ApiUserSettings };
@@ -227,7 +228,7 @@ export function useUpdateSettingsMutation() {
         return {
           settings: {
             ...current.settings,
-            ...input,
+            ...withoutUndefined(input),
             updatedAt: new Date().toISOString(),
           },
         };
@@ -238,7 +239,7 @@ export function useUpdateSettingsMutation() {
       const previous = queryClient.getQueryData<SettingsEnvelope>(apiQueryKeys.settings);
       if (previous) {
         queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, {
-          settings: { ...previous.settings, ...input },
+          settings: { ...previous.settings, ...withoutUndefined(input) },
         });
       }
       return { previous };
@@ -290,7 +291,7 @@ export function useUpdateReminderMutation() {
         return {
           reminder: {
             ...current,
-            ...input,
+            ...withoutUndefined(input),
             updatedAt: new Date().toISOString(),
           },
         };
@@ -302,7 +303,7 @@ export function useUpdateReminderMutation() {
       if (previous) {
         queryClient.setQueryData<RemindersEnvelope>(apiQueryKeys.reminders, {
           reminders: previous.reminders.map((item) =>
-            item.kind === kind ? { ...item, ...input } : item,
+            item.kind === kind ? { ...item, ...withoutUndefined(input) } : item,
           ),
         });
       }

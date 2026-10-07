@@ -25,6 +25,16 @@ const ROTATED: SessionCredentials = {
   expiresIn: 900,
 };
 
+/** What signing back in with the install's attested key returns: distinct from a refresh. */
+const BOOTSTRAPPED: SessionCredentials = {
+  accessToken: "access-3",
+  refreshToken: "refresh-3",
+  expiresIn: 900,
+};
+
+/** What `bootstrap` is sent: the install's assertion. */
+const ASSERTED = { keyId: FAKE_KEY_ID, assertion: FAKE_ASSERTION, challenge: FAKE_CHALLENGE };
+
 function setup(
   options: {
     api?: Partial<SessionApi>;
@@ -40,7 +50,10 @@ function setup(
   );
 
   const refresh = jest.fn<Promise<SessionCredentials>, [unknown]>().mockResolvedValue(ROTATED);
-  const api: SessionApi = { refresh, ...options.api };
+  const bootstrap = jest
+    .fn<Promise<SessionCredentials>, [unknown]>()
+    .mockResolvedValue(BOOTSTRAPPED);
+  const api: SessionApi = { refresh, bootstrap, ...options.api };
 
   const { attestation, calls } = createFakeAttestation({ assertion: options.assertion });
 
@@ -51,7 +64,7 @@ function setup(
     now: options.now ?? (() => 1_000_000),
   });
 
-  return { session, secureStorage, refresh, attestationCalls: calls };
+  return { session, secureStorage, refresh, bootstrap, attestationCalls: calls };
 }
 
 describe("adopt", () => {
@@ -213,10 +226,14 @@ describe("getAccessToken", () => {
   });
 
   describe("when there is nothing to refresh with", () => {
-    it("asks for attestation when no refresh token is stored", async () => {
-      const { session, refresh } = setup();
+    it("signs back in with the install's attested key when no refresh token is stored", async () => {
+      const { session, refresh, bootstrap } = setup();
 
-      await expect(session.getAccessToken()).resolves.toEqual({ status: "needs-attestation" });
+      await expect(session.getAccessToken()).resolves.toEqual({
+        status: "ok",
+        accessToken: BOOTSTRAPPED.accessToken,
+      });
+      expect(bootstrap).toHaveBeenCalledWith(ASSERTED);
       expect(refresh).not.toHaveBeenCalled();
     });
 
@@ -233,7 +250,7 @@ describe("getAccessToken", () => {
   it("reports a keychain read failure as transient", async () => {
     const { attestation } = createFakeAttestation();
     const session = createSessionManager({
-      api: { refresh: jest.fn() },
+      api: { refresh: jest.fn(), bootstrap: jest.fn() },
       attestation,
       secureStorage: {
         get: () => Promise.reject(new Error("keychain unavailable")),
@@ -304,17 +321,22 @@ describe("getAccessToken", () => {
      * spent or it leaked. Either way it is dead: keeping it would loop, so it is
      * discarded and the caller re-attests.
      */
-    it("discards the refresh token and asks for attestation", async () => {
+    it("discards the rejected refresh token and signs back in with the attested key", async () => {
       const refresh = jest
         .fn<Promise<SessionCredentials>, [unknown]>()
         .mockRejectedValue(new ApiError("REFRESH_TOKEN_INVALID", 401));
-      const { session, secureStorage } = setup({
+      const { session, secureStorage, bootstrap } = setup({
         storedRefreshToken: "refresh-1",
         api: { refresh },
       });
 
-      await expect(session.getAccessToken()).resolves.toEqual({ status: "needs-attestation" });
-      await expect(secureStorage.get(REFRESH_KEY)).resolves.toBeNull();
+      await expect(session.getAccessToken()).resolves.toEqual({
+        status: "ok",
+        accessToken: BOOTSTRAPPED.accessToken,
+      });
+      expect(bootstrap).toHaveBeenCalledWith(ASSERTED);
+      // The rejected token is gone; only the new one is kept.
+      await expect(secureStorage.get(REFRESH_KEY)).resolves.toBe(BOOTSTRAPPED.refreshToken);
     });
 
     it("reports a retryable failure as transient and keeps the token", async () => {
@@ -366,13 +388,18 @@ describe("getAccessToken", () => {
  */
 describe("clear", () => {
   it("wipes the token in memory and the one in the keychain", async () => {
-    const { session, secureStorage, refresh } = setup();
+    const { session, secureStorage, refresh, bootstrap } = setup();
     await session.adopt(CREDENTIALS);
 
     await session.clear();
 
     expect(secureStorage.items.size).toBe(0);
-    await expect(session.getAccessToken()).resolves.toEqual({ status: "needs-attestation" });
+    // Nothing old is reused: the next request signs in afresh with the attested key.
+    await expect(session.getAccessToken()).resolves.toEqual({
+      status: "ok",
+      accessToken: BOOTSTRAPPED.accessToken,
+    });
+    expect(bootstrap).toHaveBeenCalledTimes(1);
     expect(refresh).not.toHaveBeenCalled();
   });
 
@@ -403,6 +430,10 @@ describe("clear", () => {
 
     await expect(pending).resolves.toEqual({ status: "needs-attestation" });
     expect(secureStorage.items.size).toBe(0);
-    await expect(session.getAccessToken()).resolves.toEqual({ status: "needs-attestation" });
+    // The abandoned refresh's credentials never come back: a new request signs in afresh.
+    await expect(session.getAccessToken()).resolves.toEqual({
+      status: "ok",
+      accessToken: BOOTSTRAPPED.accessToken,
+    });
   });
 });

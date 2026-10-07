@@ -1,10 +1,14 @@
 import { AccessibilityInfo } from "react-native";
-import { act, render, screen, fireEvent } from "@tests/helpers/render";
+import { http, HttpResponse } from "msw";
+import { act, render, screen, fireEvent, waitFor } from "@tests/helpers/render";
 import { useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { SAMPLE_PLAN_ID } from "@/core/mock-data";
-import { AppStoreProvider, INITIAL_STATE, type AppState } from "@/core/store";
+import { API_URL, aUser } from "@tests/factories/api";
+import { aPlan } from "@tests/factories/api-plans";
+import { servePlans } from "@tests/mocks/plans-api";
+import { server } from "@tests/mocks/server";
+import { planOverviewHref } from "@/entities/plan";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { STORY_BEATS } from "@/features/welcome/logic/story";
 import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
@@ -49,6 +53,22 @@ afterEach(() => {
   jest.useRealTimers();
   jest.restoreAllMocks();
 });
+
+/** A sample plan the reader can look at before making their own. */
+const SAMPLE = aPlan({ seed: 9, status: "ready", isSample: true, title: "A sample plan" });
+
+/** The server, for these plans: it records each time onboarding is completed. */
+function serveWelcome(plans: Parameters<typeof servePlans>[0]) {
+  servePlans(plans);
+  let onboarded = 0;
+  server.use(
+    http.post(`${API_URL}/v1/me/onboarding/complete`, () => {
+      onboarded += 1;
+      return HttpResponse.json({ user: aUser({ onboardedAt: "2026-10-05T12:00:00.000Z" }) });
+    }),
+  );
+  return { onboardings: () => onboarded };
+}
 
 describe("WelcomeScreen", () => {
   it("is addressable as welcome-screen", () => {
@@ -149,58 +169,50 @@ describe("WelcomeScreen", () => {
     expect(screen.getByText("Free. No account needed.")).toBeVisible();
   });
 
-  it("taps, and goes to the Home tab, when Get a plan now is pressed by someone with plans", () => {
+  it("taps, and goes to the Home tab, when Get a plan now is pressed by someone with plans", async () => {
+    serveWelcome([aPlan(), SAMPLE]);
     render(<WelcomeScreen />);
+    // Its plans have arrived, so it knows there are some.
+    await waitFor(() => expect(screen.getByTestId("welcome-sample-plan-button")).toBeVisible());
 
-    jest.useFakeTimers({ advanceTimers: true });
     fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-    act(() => {
-      jest.advanceTimersByTime(32);
-    });
 
     expect(tapFeedback).toHaveBeenCalledTimes(1);
-    expect(mockPush.mock.calls).toEqual([["/(tabs)/home"]]);
+    await waitFor(() => expect(mockPush.mock.calls).toEqual([["/(tabs)/home"]]));
   });
 
-  it("goes Home and straight on to paste a sermon for someone with no plans", () => {
-    const noPlans: AppState = {
-      ...INITIAL_STATE,
-      plans: Object.fromEntries(
-        Object.entries(INITIAL_STATE.plans).filter(([, plan]) => plan.isSample),
-      ),
-    };
-    render(
-      <AppStoreProvider initialState={noPlans}>
-        <WelcomeScreen />
-      </AppStoreProvider>,
+  it("goes Home and straight on to paste a sermon for someone with no plans", async () => {
+    serveWelcome([SAMPLE]);
+    render(<WelcomeScreen />);
+    await waitFor(() => expect(screen.getByTestId("welcome-sample-plan-button")).toBeVisible());
+
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+
+    await waitFor(() =>
+      expect(mockPush.mock.calls).toEqual([["/(tabs)/home"], ["/(plan-creation)/paste-sermon"]]),
     );
-
-    jest.useFakeTimers({ advanceTimers: true });
-    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
-    act(() => {
-      jest.advanceTimersByTime(32);
-    });
-
-    expect(mockPush.mock.calls).toEqual([["/(tabs)/home"], ["/(plan-creation)/paste-sermon"]]);
   });
 
-  it("shows a spinner on Get a plan now once it is pressed", () => {
+  it("records the reader as onboarded before it goes anywhere, once however often it's pressed", async () => {
+    const welcome = serveWelcome([aPlan(), SAMPLE]);
     render(<WelcomeScreen />);
 
     fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
+    fireEvent.press(screen.getByTestId("welcome-get-a-plan-now-button"));
 
-    expect(screen.getByTestId("welcome-get-a-plan-now-button-spinner")).toBeVisible();
+    await waitFor(() => expect(mockPush).toHaveBeenCalled());
+    expect(welcome.onboardings()).toBe(1);
+    expect(tapFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("navigates to Plan Overview with the sample plan when See a sample plan is pressed", () => {
+  it("navigates to Plan Overview with the sample plan when See a sample plan is pressed", async () => {
+    serveWelcome([SAMPLE]);
     render(<WelcomeScreen />);
+    await waitFor(() => expect(screen.getByTestId("welcome-sample-plan-button")).toBeVisible());
 
     fireEvent.press(screen.getByTestId("welcome-sample-plan-button"));
 
-    expect(mockPush).toHaveBeenCalledWith({
-      pathname: "/(tabs)/plans/[planId]",
-      params: { planId: SAMPLE_PLAN_ID },
-    });
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith(planOverviewHref(SAMPLE.id)));
   });
 
   it("keeps the intro on screen while it's being left", () => {

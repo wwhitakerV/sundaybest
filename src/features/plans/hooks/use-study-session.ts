@@ -97,7 +97,8 @@ export function useStudySession() {
     } as const;
   }
 
-  async function apply(action: StudyNavAction) {
+  // An arrow, not a hoisted function, so it sees `day` as the found day the check above leaves.
+  const apply = async (action: StudyNavAction) => {
     if (busy) return;
 
     if (action.type === "exit") {
@@ -156,7 +157,7 @@ export function useStudySession() {
         "SundayBest couldn't save that progress. Check your connection and try again.",
       );
     }
-  }
+  };
 
   return {
     found: true,

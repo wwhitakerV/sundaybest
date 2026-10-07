@@ -30,6 +30,8 @@ describe("parseEnv", () => {
         EXPO_PUBLIC_API_URL: "https://api.sundaybest.com",
         EXPO_PUBLIC_ATTESTATION_ENABLED: "true",
         EXPO_PUBLIC_SENTRY_DSN: "https://sentry.invalid/0",
+        EXPO_PUBLIC_APP_TEAM_ID: "ABCDE12345",
+        EXPO_PUBLIC_SECURITY_WATCHER_EMAIL: "security@example.com",
         EXPO_PUBLIC_USE_RN_FETCH: "1",
       }),
     ).toEqual({
@@ -37,6 +39,8 @@ describe("parseEnv", () => {
       apiUrl: "https://api.sundaybest.com",
       attestationEnabled: true,
       sentryDsn: "https://sentry.invalid/0",
+      appTeamId: "ABCDE12345",
+      securityWatcherEmail: "security@example.com",
       useRnFetch: true,
     });
   });

@@ -1,8 +1,15 @@
 import type { ReactNode } from "react";
 import { act, renderHook } from "@testing-library/react-native";
 
-import { AppStoreProvider, INITIAL_STATE, useAppSelector, useStoreActions } from "@/core/store";
+import {
+  AppStoreProvider,
+  INITIAL_STATE,
+  useAppSelector,
+  useStoreActions,
+  type AppState,
+} from "@/core/store";
 import * as reducerModule from "@/core/store/reducer";
+import { readyToComplete } from "@tests/factories/store-days";
 
 const DAY = "plan-today-i-choose-to-be-a-blessing-day-2";
 
@@ -12,16 +19,25 @@ function byId<T>(table: Readonly<Record<string, T>>, id: string): T | undefined 
 }
 
 /** The store's actions and state, read through the hooks a screen uses. */
-function mount() {
+function mount(initialState: AppState = INITIAL_STATE) {
   return renderHook(
     () => ({ actions: useStoreActions(), state: useAppSelector((state) => state) }),
     {
       wrapper: ({ children }: { children: ReactNode }) => (
-        <AppStoreProvider initialState={INITIAL_STATE}>{children}</AppStoreProvider>
+        <AppStoreProvider initialState={initialState}>{children}</AppStoreProvider>
       ),
     },
   );
 }
+
+/** The day ready to finish: its steps and Quick Check done, as finishing asks. */
+const READY_TO_FINISH = readyToComplete(
+  INITIAL_STATE,
+  "plan-today-i-choose-to-be-a-blessing",
+  2,
+  "2026-09-23",
+  "2026-09-23T07:00:00.000Z",
+);
 
 describe("composite store actions dispatch exactly one action", () => {
   let reducerSpy: jest.SpyInstance;
@@ -44,7 +60,7 @@ describe("composite store actions dispatch exactly one action", () => {
   };
 
   it("finishPlanDay dispatches planDay/finish once, and the day is completed", () => {
-    const { result } = mount();
+    const { result } = mount(READY_TO_FINISH);
     reducerSpy.mockClear();
     act(() => result.current.actions.finishPlanDay(DAY, `${DAY}-prayer`));
 
@@ -54,7 +70,7 @@ describe("composite store actions dispatch exactly one action", () => {
   });
 
   it("finishPlanDay accepts a null prayer", () => {
-    const { result } = mount();
+    const { result } = mount(READY_TO_FINISH);
     act(() => result.current.actions.finishPlanDay(DAY, null));
 
     expect(byId(result.current.state.planDays, DAY)?.status).toBe("completed");

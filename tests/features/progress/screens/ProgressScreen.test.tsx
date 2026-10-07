@@ -1,15 +1,12 @@
-import { Pressable } from "react-native";
-import { render, screen, fireEvent } from "@tests/helpers/render";
+import { http, HttpResponse } from "msw";
+import { render, screen, fireEvent, waitFor } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import {
-  INITIAL_STATE,
-  getDayMinutes,
-  getQuizAttempt,
-  useAppSelector,
-  useStoreActions,
-} from "@/core/store";
+import { API_URL } from "@tests/factories/api";
+import { PLAN_UNDER_WAY, PROGRESS_NOW, serveProgress } from "@tests/factories/api-progress";
+import { server } from "@tests/mocks/server";
+import { studyHref } from "@/entities/plan";
 import { ProgressScreen } from "@/features/progress/screens/ProgressScreen";
 
 jest.mock("expo-router", () => ({
@@ -19,76 +16,79 @@ jest.mock("expo-router", () => ({
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 
-// The mock history, with "today" Wednesday 23 September 2026: the active
-// plan's day 1 done yesterday (Tue 22), day 2 open today; a seven-day plan
-// done every day from Sun 30 Aug to Sat 5 Sep; day 1's Quick Check 1 of 2.
-const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
-const TEMPTATION_QUIZ = "plan-overcome-temptation-quiz";
+// "Today" is Wednesday 23 September 2026: the plan under way had its day 1
+// done yesterday (Tue 22) and day 2 open today; a seven-day plan was done every
+// day from Sun 30 Aug to Sat 5 Sep; the latest Quick Check scored 1 of 2.
 
-/** Stand-ins for finishing a day, and taking a quiz, elsewhere in the app. */
-function Elsewhere() {
-  const actions = useStoreActions();
-  const attempt = useAppSelector((state) => getQuizAttempt(state, TEMPTATION_QUIZ));
-  const attemptId = attempt?.id ?? "";
-  return (
-    <>
-      <Pressable
-        testID="finish-day"
-        onPress={() => actions.finishPlanDay(`${ACTIVE}-day-2`, null)}
-      />
-      <Pressable testID="quiz-start" onPress={() => actions.startQuizAttempt(TEMPTATION_QUIZ)} />
-      <Pressable
-        testID="quiz-answer-b"
-        onPress={() => {
-          actions.selectQuizAnswer(attemptId, `${attempt?.currentQuestionId ?? ""}-b`);
-          actions.submitQuizAnswer(attemptId);
-        }}
-      />
-      <Pressable testID="quiz-next" onPress={() => actions.moveToNextQuestion(attemptId)} />
-      <Pressable testID="quiz-finish" onPress={() => actions.completeQuizAttempt(attemptId)} />
-    </>
-  );
-}
-
-function renderProgress() {
-  return render(
-    <>
-      <ProgressScreen />
-      <Elsewhere />
-    </>,
-  );
+/** Progress, once this week's has arrived. */
+async function openProgress() {
+  const asked = serveProgress();
+  render(<ProgressScreen />);
+  await screen.findByTestId("progress-week-title");
+  return asked;
 }
 
 const press = (testID: string) => fireEvent.press(screen.getByTestId(testID));
 
+/** Presses a week arrow once it's back: a week being fetched shows its shape until it arrives. */
+async function pressWhenLoaded(testID: string) {
+  fireEvent.press(await screen.findByTestId(testID));
+}
+
 beforeEach(() => {
+  jest.useFakeTimers({ now: PROGRESS_NOW, advanceTimers: true });
+  mockPush.mockClear();
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
 });
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 describe("ProgressScreen", () => {
   it("is addressable as progress-screen", () => {
-    renderProgress();
+    serveProgress();
+    render(<ProgressScreen />);
 
     expect(screen.getByTestId("progress-screen")).toBeVisible();
   });
 
   it("shows the title", () => {
-    renderProgress();
+    serveProgress();
+    render(<ProgressScreen />);
 
     expect(screen.getByText("Progress")).toBeVisible();
   });
 
+  it("shows the week's shape while it's on its way", () => {
+    serveProgress();
+    render(<ProgressScreen />);
+
+    expect(screen.getByTestId("progress-content-pending")).toBeOnTheScreen();
+  });
+
+  it("says so, with a way to try again, when progress can't be loaded", async () => {
+    server.use(
+      http.get(`${API_URL}/v1/me/progress`, () =>
+        HttpResponse.json({ error: { code: "NOT_FOUND", message: "No" } }, { status: 404 }),
+      ),
+    );
+    render(<ProgressScreen />);
+
+    expect(await screen.findByTestId("progress-load-error")).toBeVisible();
+  });
+
   describe("the week", () => {
-    it("opens on this week", () => {
-      renderProgress();
+    it("opens on this week", async () => {
+      await openProgress();
 
       expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 20–26");
     });
 
-    it("marks the days something was finished, and today", () => {
-      renderProgress();
+    it("marks the days something was finished, and today", async () => {
+      await openProgress();
 
       expect(screen.getByTestId("progress-day-2026-09-22")).toHaveProp(
         "accessibilityLabel",
@@ -104,111 +104,91 @@ describe("ProgressScreen", () => {
       );
     });
 
-    it("steps back a week at a time through the history", () => {
-      renderProgress();
+    it("steps back a week at a time through the history, asking for each", async () => {
+      const asked = await openProgress();
 
-      press("progress-week-previous");
-      expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 13–19");
+      await pressWhenLoaded("progress-week-previous");
+      await waitFor(() =>
+        expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 13–19"),
+      );
       expect(screen.getByTestId("progress-day-2026-09-15")).toHaveProp(
         "accessibilityLabel",
         "Tue, Sep 15: not studied",
       );
 
-      press("progress-week-previous");
-      press("progress-week-previous");
-      expect(screen.getByTestId("progress-week-title")).toHaveTextContent("Aug 30 – Sep 5");
+      await pressWhenLoaded("progress-week-previous");
+      await waitFor(() =>
+        expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 6–12"),
+      );
+      await pressWhenLoaded("progress-week-previous");
+      await waitFor(() =>
+        expect(screen.getByTestId("progress-week-title")).toHaveTextContent("Aug 30 – Sep 5"),
+      );
       for (const date of ["2026-08-30", "2026-09-02", "2026-09-05"]) {
-        expect(screen.getByTestId(`progress-day-${date}`).props.accessibilityLabel).toMatch(
-          /: studied$/,
+        expect(screen.getByTestId(`progress-day-${date}`)).toHaveProp(
+          "accessibilityLabel",
+          expect.stringMatching(/: studied$/),
         );
       }
+      expect(asked).toEqual(expect.arrayContaining(["2026-09-13", "2026-08-30"]));
     });
 
-    it("steps forward again", () => {
-      renderProgress();
+    it("steps forward again", async () => {
+      await openProgress();
 
-      press("progress-week-previous");
-      press("progress-week-next");
+      await pressWhenLoaded("progress-week-previous");
+      await waitFor(() =>
+        expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 13–19"),
+      );
+      await pressWhenLoaded("progress-week-next");
 
-      expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 20–26");
-    });
-  });
-
-  describe("up next", () => {
-    it("names the day to study next, and when", () => {
-      renderProgress();
-
-      expect(screen.getByTestId("progress-up-next")).toHaveTextContent("Up next Today, Sep 23");
-    });
-
-    it("shows the plan under way: its day, time, how far through, and the reminder", () => {
-      renderProgress();
-      const minutes = getDayMinutes(INITIAL_STATE, `${ACTIVE}-day-2`);
-
-      const card = screen.getByTestId("progress-active-plan");
-      expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
-      expect(card).toHaveTextContent(`Day 2, ${minutes} min`, { exact: false });
-      expect(card).toHaveTextContent(/17%/);
-      expect(card).toHaveTextContent(/6:30 AM/);
-    });
-
-    it("opens the plan under way", () => {
-      renderProgress();
-
-      press("progress-active-plan");
-
-      expect(mockPush).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pathname: "/(tabs)/plans/[planId]",
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-          params: expect.objectContaining({ planId: ACTIVE }),
-        }),
+      await waitFor(() =>
+        expect(screen.getByTestId("progress-week-title")).toHaveTextContent("September 20–26"),
       );
     });
   });
 
+  describe("up next", () => {
+    it("names the day to study next, and when", async () => {
+      await openProgress();
+
+      expect(screen.getByTestId("progress-up-next")).toHaveTextContent("Up next Today, Sep 23");
+    });
+
+    it("shows the plan under way: its day, time, how far through, and the reminder", async () => {
+      await openProgress();
+
+      const card = screen.getByTestId("progress-active-plan");
+      expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
+      expect(card).toHaveTextContent("Day 2, 9 min", { exact: false });
+      expect(card).toHaveTextContent(/17%/);
+      await waitFor(() =>
+        expect(screen.getByTestId("progress-active-plan")).toHaveTextContent(/6:30 AM/),
+      );
+    });
+
+    it("opens the day to study next", async () => {
+      await openProgress();
+
+      press("progress-active-plan");
+
+      expect(mockPush).toHaveBeenCalledWith(studyHref(PLAN_UNDER_WAY.id, 2));
+    });
+  });
+
   describe("the totals", () => {
-    it("shows the streak, every day done, and the latest quiz score", () => {
-      renderProgress();
+    it("shows the streak, every day done, and the latest quiz score", async () => {
+      await openProgress();
 
       expect(screen.getByTestId("progress-stat-streak")).toHaveTextContent("1Day streak");
       expect(screen.getByTestId("progress-stat-days")).toHaveTextContent("8Days done");
       expect(screen.getByTestId("progress-stat-quiz")).toHaveTextContent("1/2Quiz score");
     });
 
-    it("counts the plans finished", () => {
-      renderProgress();
+    it("counts the plans finished", async () => {
+      await openProgress();
 
       expect(screen.getByTestId("progress-plans-done")).toHaveTextContent("1 plan finished");
-    });
-  });
-
-  describe("as things are finished", () => {
-    it("moves on the moment a day is finished", () => {
-      renderProgress();
-
-      press("finish-day");
-
-      expect(screen.getByTestId("progress-day-2026-09-23")).toHaveProp(
-        "accessibilityLabel",
-        "Today, Sep 23: studied",
-      );
-      expect(screen.getByTestId("progress-stat-streak")).toHaveTextContent("2Day streak");
-      expect(screen.getByTestId("progress-stat-days")).toHaveTextContent("9Days done");
-      expect(screen.getByTestId("progress-up-next")).toHaveTextContent("Up next Tomorrow, Sep 24");
-      expect(screen.getByTestId("progress-active-plan")).toHaveTextContent(/33%/);
-    });
-
-    it("shows a quiz's score the moment it's finished", () => {
-      renderProgress();
-
-      press("quiz-start");
-      press("quiz-answer-b");
-      press("quiz-next");
-      press("quiz-answer-b");
-      press("quiz-finish");
-
-      expect(screen.getByTestId("progress-stat-quiz")).toHaveTextContent("2/2Quiz score");
     });
   });
 });

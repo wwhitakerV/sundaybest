@@ -1,10 +1,12 @@
-import type { ReactNode } from "react";
-import { act, renderHook } from "@testing-library/react-native";
+import { act, renderHook, waitFor } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { aPlan } from "@tests/factories/api-plans";
+import { servePlans } from "@tests/mocks/plans-api";
 import * as haptics from "@/core/haptics/haptics";
-import { AppStoreProvider } from "@/core/store";
+import { countReflectionAnswers } from "@/core/storage/reflection-answers";
+import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
 import { usePlanComplete } from "@/features/plans/hooks/use-plan-complete";
 
 jest.mock("@/core/haptics/haptics", () => ({
@@ -14,6 +16,9 @@ jest.mock("@/core/haptics/haptics", () => ({
   warningFeedback: jest.fn(),
   errorFeedback: jest.fn(),
 }));
+
+// Notes live on the device only; the count is all Plan Complete reads.
+jest.mock("@/core/storage/reflection-answers", () => ({ countReflectionAnswers: jest.fn() }));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -25,20 +30,29 @@ jest.mock("expo-router", () => ({
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, []>();
 
-// Finished in the mock data: seven days, a note on each, a Quick Check per day and one for the plan.
-const FINISHED = "plan-break-the-cycle-of-negative-thinking";
+/** Seven days done; every Quick Check right but two answers on day 1. */
+const FINISHED = (() => {
+  const plan = aPlan({ seed: 4, title: "Break the Cycle", status: "completed", lengthDays: 7 });
+  return {
+    ...plan,
+    days: plan.days.map((day) =>
+      day.dayNumber === 1 && day.quickCheck
+        ? { ...day, quickCheck: { ...day.quickCheck, correctCount: 1 } }
+        : day,
+    ),
+  };
+})();
 
-function wrapper({ children }: { children: ReactNode }) {
-  return <AppStoreProvider>{children}</AppStoreProvider>;
-}
-
-function renderPlanComplete(params: Record<string, string>) {
+async function renderPlanComplete(params: Record<string, string> = { planId: FINISHED.id }) {
+  servePlans([FINISHED]);
   jest.mocked(useLocalSearchParams).mockReturnValue(params);
-  return renderHook(() => usePlanComplete(), { wrapper });
+  const view = renderHook(() => usePlanComplete());
+  await waitFor(() => expect(view.result.current.loading).toBe(false), { timeout: 10000 });
+  return view;
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.mocked(countReflectionAnswers).mockResolvedValue(5);
   jest.mocked(useNavigation).mockReturnValue({
     getParent: () => ({ goBack: mockExitSession }),
   });
@@ -48,56 +62,65 @@ beforeEach(() => {
 });
 
 describe("usePlanComplete", () => {
-  it("finds nothing for a plan that doesn't exist", () => {
-    const { result } = renderPlanComplete({ planId: "plan-nope" });
+  it("finds nothing for a plan the server doesn't have", async () => {
+    const { result } = await renderPlanComplete({
+      planId: "00000000-0000-4000-8000-00000000dead",
+    });
 
-    expect(result.current).toEqual({ found: false });
+    expect(result.current.found).toBe(false);
   });
 
-  it("finds nothing when the params aren't a plan", () => {
-    const { result } = renderPlanComplete({});
+  it("finds nothing when the params aren't a plan", async () => {
+    servePlans([FINISHED]);
+    jest.mocked(useLocalSearchParams).mockReturnValue({});
+    const { result } = renderHook(() => usePlanComplete());
 
-    expect(result.current).toEqual({ found: false });
+    expect(result.current.found).toBe(false);
+    await waitFor(() => expect(result.current.loading).toBe(true));
   });
 
-  it("summarises the finished plan from the store", () => {
-    const { result } = renderPlanComplete({ planId: FINISHED });
+  it("summarises the finished plan: its days, the notes on this device, and its Quick Checks", async () => {
+    const { result } = await renderPlanComplete();
 
     expect(result.current).toMatchObject({
       found: true,
-      summary: { completedDays: 7, totalDays: 7, notes: 7, quizCorrect: 16, quizTotal: 21 },
+      summary: { completedDays: 7, totalDays: 7, notes: 5, quizCorrect: 19, quizTotal: 21 },
     });
   });
 
-  it("leaves the session for the plan's overview on close", () => {
-    const { result } = renderPlanComplete({ planId: FINISHED });
+  it("counts the notes to the plan's own questions", async () => {
+    await renderPlanComplete();
 
-    act(() => {
-      if (result.current.found) result.current.close();
-    });
+    const asked = jest.mocked(countReflectionAnswers).mock.calls[0]?.[1];
+    expect(asked).toEqual(
+      FINISHED.days.flatMap((day) => day.reflectionPrompts.map(({ id }) => id)),
+    );
+  });
+
+  it("leaves the session for the plan's overview on close", async () => {
+    const { result } = await renderPlanComplete();
+
+    act(() => result.current.close());
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith({
-      pathname: "/(tabs)/plans/[planId]",
-      params: { planId: FINISHED },
-    });
+    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(FINISHED.id));
   });
 
-  it("leaves the session for New Plan on addSermon", () => {
-    const { result } = renderPlanComplete({ planId: FINISHED });
+  it("leaves the session for New Plan on addSermon", async () => {
+    const { result } = await renderPlanComplete();
 
     act(() => {
       if (result.current.found) result.current.addSermon();
     });
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith("/(plan-creation)/paste-sermon");
+    expect(mockNavigate).toHaveBeenCalledWith(NEW_PLAN_HREF);
   });
 });
 
 describe("usePlanComplete haptics", () => {
-  it("taps as Add sermon is pressed", () => {
-    const { result } = renderPlanComplete({ planId: FINISHED });
+  it("taps as Add sermon is pressed", async () => {
+    const { result } = await renderPlanComplete();
 
     act(() => {
       if (result.current.found) result.current.addSermon();
@@ -106,12 +129,10 @@ describe("usePlanComplete haptics", () => {
     expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("gives nothing as Close returns to the plan", () => {
-    const { result } = renderPlanComplete({ planId: FINISHED });
+  it("gives nothing as Close returns to the plan", async () => {
+    const { result } = await renderPlanComplete();
 
-    act(() => {
-      if (result.current.found) result.current.close();
-    });
+    act(() => result.current.close());
 
     expect(haptics.tapFeedback).not.toHaveBeenCalled();
   });

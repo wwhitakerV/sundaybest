@@ -3,7 +3,10 @@ import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { INITIAL_STATE, getStreak } from "@/core/store";
+import { getToday } from "@/core/store/clock";
 import { funDestinationHref } from "@/features/fun/logic/destinations";
+import { getStreakLabel } from "@/features/fun/logic/streak-label";
 import { FunScreen } from "@/features/fun/screens/FunScreen";
 import { theologyExamsHref } from "@/features/exams";
 
@@ -191,10 +194,11 @@ describe("FunScreen", () => {
       );
     });
 
-    it("shows the live streak on Daily Trivia", () => {
+    it("shows the live streak on Daily Trivia — as of today, whatever date that is", () => {
       render(<FunScreen />);
 
-      expect(screen.getByTestId("fun-games-trivia-badge")).toHaveTextContent(/^\d+ day streak$/);
+      const days = getStreak(INITIAL_STATE, getToday()).current;
+      expect(screen.getByTestId("fun-games-trivia-badge")).toHaveTextContent(getStreakLabel(days));
     });
 
     it("gives each game a 20 pt-rounded card at least 250 pt tall — words first, then its art, large", () => {

@@ -1,17 +1,10 @@
-import { render, screen, fireEvent, within } from "@tests/helpers/render";
+import { render, screen, fireEvent, waitFor, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { Pressable } from "react-native";
-
-import {
-  AppStoreProvider,
-  INITIAL_STATE,
-  getCurrentPlanDay,
-  getSermonForPlan,
-  useStoreActions,
-} from "@/core/store";
-import { studyHref } from "@/entities/plan";
+import { aPlan } from "@tests/factories/api-plans";
+import { servePlans } from "@tests/mocks/plans-api";
+import { planOverviewHref, studyHref } from "@/entities/plan";
 import { PlansScreen } from "@/features/plans/screens/PlansScreen";
 
 jest.mock("expo-router", () => ({
@@ -20,23 +13,64 @@ jest.mock("expo-router", () => ({
 }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
+const ART = "https://images.example.com/sermon.jpg";
 
-const ACTIVE = "plan-today-i-choose-to-be-a-blessing";
-const NEGATIVE_THINKING = "plan-break-the-cycle-of-negative-thinking";
-const STILL_PRAYING = "plan-still-praying";
-const TEMPTATION = "plan-overcome-temptation";
+/** Six days, day 1 done, day 2 today. */
+const ACTIVE = aPlan({
+  seed: 1,
+  title: "Today I Choose to Be a Blessing",
+  church: "VOUS Church",
+  lengthDays: 6,
+  completedDays: 1,
+  thumbnailUrl: ART,
+  createdAt: "2026-10-04T12:00:00.000Z",
+});
+/** Three days, not started. */
+const STILL_PRAYING = aPlan({
+  seed: 2,
+  title: "Still Praying",
+  status: "ready",
+  lengthDays: 3,
+  thumbnailUrl: ART,
+  createdAt: "2026-10-03T12:00:00.000Z",
+});
+/** Not started, kept in Saved. */
+const TEMPTATION = aPlan({
+  seed: 3,
+  title: "Overcome Temptation",
+  status: "ready",
+  lengthDays: 1,
+  saved: true,
+  thumbnailUrl: ART,
+  createdAt: "2026-10-02T12:00:00.000Z",
+});
+/** Finished, and kept in Saved. */
+const NEGATIVE_THINKING = aPlan({
+  seed: 4,
+  title: "Break the Cycle of Negative Thinking",
+  status: "completed",
+  lengthDays: 7,
+  saved: true,
+  thumbnailUrl: ART,
+  createdAt: "2026-10-01T12:00:00.000Z",
+});
+const ALL = [ACTIVE, STILL_PRAYING, TEMPTATION, NEGATIVE_THINKING];
 
-/** A stand-in for finishing a day elsewhere in the app, beside the screen. */
-function FinishDay({ dayId }: { dayId: string }) {
-  const { finishPlanDay } = useStoreActions();
-  return <Pressable testID="finish-day" onPress={() => finishPlanDay(dayId, null)} />;
+/** Plans, once these plans have arrived. */
+async function openPlans(plans: Parameters<typeof servePlans>[0] = ALL) {
+  const seen = servePlans(plans);
+  render(<PlansScreen />);
+  await waitFor(() => expect(screen.queryByTestId("plans-content-pending")).toBeNull(), {
+    timeout: 10000,
+  });
+  return seen;
 }
 
-beforeEach(() => {
-  jest
-    .mocked(useRouter)
-    .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
-});
+/** A plan card's own ID — not its panel's or words' (`plans-item-<id>-panel`). */
+const CARD = /^plans-item-[0-9a-f-]{36}$/;
+
+/** The plans listed, by test ID, in order. */
+const listed = () => screen.getAllByTestId(CARD).map((item) => String(item.props.testID));
 
 /** Fires a card's own action (Continue or Start), as VoiceOver offers it. */
 function activateCardAction(planId: string) {
@@ -45,21 +79,37 @@ function activateCardAction(planId: string) {
   });
 }
 
+beforeEach(() => {
+  mockPush.mockClear();
+  jest
+    .mocked(useRouter)
+    .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
+});
+
 describe("PlansScreen", () => {
   it("is addressable as plans-screen", () => {
+    servePlans(ALL);
     render(<PlansScreen />);
 
     expect(screen.getByTestId("plans-screen")).toBeVisible();
   });
 
   it("shows the title", () => {
+    servePlans(ALL);
     render(<PlansScreen />);
 
     expect(screen.getByText("Plans")).toBeVisible();
   });
 
-  it("shows the filters as pills", () => {
+  it("shows its plans' shape while they're on their way", () => {
+    servePlans(ALL);
     render(<PlansScreen />);
+
+    expect(screen.getByTestId("plans-content-pending")).toBeOnTheScreen();
+  });
+
+  it("shows the filters as pills", async () => {
+    await openPlans();
 
     expect(screen.getByTestId("plans-filter-pills")).toBeVisible();
     for (const label of ["All", "In progress", "Done", "Saved"]) {
@@ -67,8 +117,8 @@ describe("PlansScreen", () => {
     }
   });
 
-  it("counts each filter's plans", () => {
-    render(<PlansScreen />);
+  it("counts each filter's plans", async () => {
+    await openPlans();
 
     expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveTextContent("All4");
     expect(screen.getByTestId("plans-filter-pills-option-In progress")).toHaveTextContent(
@@ -78,8 +128,8 @@ describe("PlansScreen", () => {
     expect(screen.getByTestId("plans-filter-pills-option-Saved")).toHaveTextContent("Saved2");
   });
 
-  it("marks the filter picked as selected", () => {
-    render(<PlansScreen />);
+  it("marks the filter picked as selected", async () => {
+    await openPlans();
 
     expect(screen.getByTestId("plans-filter-pills-option-All")).toBeSelected();
 
@@ -89,161 +139,131 @@ describe("PlansScreen", () => {
     expect(screen.getByTestId("plans-filter-pills-option-All")).not.toBeSelected();
   });
 
-  it("lists every plan under All", () => {
-    render(<PlansScreen />);
+  it("lists every plan under All, newest first", async () => {
+    await openPlans();
 
-    const ids = screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID));
-
-    expect([...ids].sort()).toEqual(
-      [ACTIVE, STILL_PRAYING, TEMPTATION, NEGATIVE_THINKING].map((id) => `plans-item-${id}`).sort(),
-    );
+    expect(listed()).toEqual(ALL.map(({ id }) => `plans-item-${id}`));
   });
 
-  it("shows only the plans a filter holds", () => {
-    render(<PlansScreen />);
+  it("shows only the plans a filter holds", async () => {
+    await openPlans();
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
-    expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
-      `plans-item-${NEGATIVE_THINKING}`,
-    ]);
+    expect(listed()).toEqual([`plans-item-${NEGATIVE_THINKING.id}`]);
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
-    expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
-      `plans-item-${TEMPTATION}`,
-      `plans-item-${NEGATIVE_THINKING}`,
-    ]);
+    expect([...listed()].sort()).toEqual(
+      [`plans-item-${TEMPTATION.id}`, `plans-item-${NEGATIVE_THINKING.id}`].sort(),
+    );
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-In progress"));
-    expect(screen.getAllByTestId(/^plans-item-/).map((item) => String(item.props.testID))).toEqual([
-      `plans-item-${ACTIVE}`,
-    ]);
+    expect(listed()).toEqual([`plans-item-${ACTIVE.id}`]);
   });
 
-  it("shows a plan under way with the day it's on", () => {
-    render(<PlansScreen />);
+  it("shows a plan under way with the day it's on", async () => {
+    await openPlans();
 
-    const card = screen.getByTestId(`plans-item-${ACTIVE}`);
+    const card = screen.getByTestId(`plans-item-${ACTIVE.id}`);
     expect(card).not.toHaveTextContent(/In progress/);
     expect(card).toHaveTextContent(/Today I Choose to Be a Blessing/);
     expect(card).toHaveTextContent(/Day 2 of 6/);
   });
 
-  it("shows a plan not started with how long it runs", () => {
-    render(<PlansScreen />);
+  it("shows a plan not started with how long it runs", async () => {
+    await openPlans();
 
-    const card = screen.getByTestId(`plans-item-${STILL_PRAYING}`);
+    const card = screen.getByTestId(`plans-item-${STILL_PRAYING.id}`);
     expect(card).toHaveTextContent(/Still Praying/);
     expect(card).toHaveTextContent(/3 days/);
     expect(card).not.toHaveTextContent(/Not started/);
   });
 
-  it("shows a finished plan as done, with when it finished", () => {
-    render(<PlansScreen />);
+  it("shows a finished plan as done, with when it finished, its ring closed", async () => {
+    await openPlans();
 
-    const card = screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`);
-    expect(card).toHaveTextContent(/Finished Sep 5/);
-    expect(screen.getByTestId(`plans-progress-${NEGATIVE_THINKING}-flame`)).toBeOnTheScreen();
-  });
-
-  it("opens the plan pressed", () => {
-    render(<PlansScreen />);
-
-    fireEvent.press(screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`));
-
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: "/(tabs)/plans/[planId]",
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- expect.objectContaining()'s own type is `any` in this Jest version; the assertion itself is fully type-checked at the call site.
-        params: expect.objectContaining({ planId: NEGATIVE_THINKING }),
-      }),
+    expect(screen.getByTestId(`plans-item-${NEGATIVE_THINKING.id}`)).toHaveTextContent(
+      /Finished Oct 5/,
+    );
+    expect(screen.getByTestId(`plans-progress-${NEGATIVE_THINKING.id}`)).toHaveProp(
+      "accessibilityValue",
+      expect.objectContaining({ now: 100 }),
     );
   });
 
-  it("gives each plan the page's full width, one to a row", () => {
-    render(<PlansScreen />);
+  it("opens the plan pressed", async () => {
+    await openPlans();
 
-    for (const card of screen.getAllByTestId(/^plans-item-/)) {
+    fireEvent.press(screen.getByTestId(`plans-item-${NEGATIVE_THINKING.id}`));
+
+    expect(mockPush).toHaveBeenCalledWith(planOverviewHref(NEGATIVE_THINKING.id));
+  });
+
+  it("gives each plan the page's full width, one to a row", async () => {
+    await openPlans();
+
+    for (const card of screen.getAllByTestId(CARD)) {
       expect(card).toHaveStyle({ width: "100%" });
     }
   });
 
-  it("shows each plan's thumbnail at 16:9", () => {
-    render(<PlansScreen />);
+  it("shows each plan's artwork at 16:9", async () => {
+    await openPlans();
 
-    for (const id of [ACTIVE, NEGATIVE_THINKING, STILL_PRAYING, TEMPTATION]) {
-      expect(screen.getByTestId(`plans-thumbnail-${id}`)).toHaveStyle({
-        aspectRatio: 16 / 9,
-      });
+    for (const { id } of ALL) {
+      expect(screen.getByTestId(`plans-thumbnail-${id}`)).toHaveStyle({ aspectRatio: 16 / 9 });
     }
   });
 
-  it("offers Continue on a plan in progress, opening its study at the current day", () => {
-    const day = getCurrentPlanDay(INITIAL_STATE, ACTIVE)?.dayNumber;
-    render(<PlansScreen />);
+  it("offers Continue on a plan in progress, opening its study at the current day", async () => {
+    await openPlans();
 
-    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveProp("accessibilityActions", [
+    expect(screen.getByTestId(`plans-item-${ACTIVE.id}`)).toHaveProp("accessibilityActions", [
       { name: "activate-action", label: "Continue" },
     ]);
-    activateCardAction(ACTIVE);
+    activateCardAction(ACTIVE.id);
 
-    expect(day).toBeDefined();
-    expect(mockPush).toHaveBeenCalledWith(studyHref(ACTIVE, day ?? 0));
+    expect(mockPush).toHaveBeenCalledWith(studyHref(ACTIVE.id, 2));
   });
 
-  it("offers Start on a plan not started, opening its first day", () => {
-    render(<PlansScreen />);
+  it("offers Start on a plan not started, opening its first day once started", async () => {
+    const seen = await openPlans();
 
-    expect(screen.getByTestId(`plans-item-${STILL_PRAYING}`)).toHaveProp("accessibilityActions", [
-      { name: "activate-action", label: "Start" },
-    ]);
-    activateCardAction(STILL_PRAYING);
+    expect(screen.getByTestId(`plans-item-${STILL_PRAYING.id}`)).toHaveProp(
+      "accessibilityActions",
+      [{ name: "activate-action", label: "Start" }],
+    );
+    activateCardAction(STILL_PRAYING.id);
 
-    expect(mockPush).toHaveBeenCalledWith(studyHref(STILL_PRAYING, 1));
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith(studyHref(STILL_PRAYING.id, 1)));
+    expect(seen).toContainEqual(
+      expect.objectContaining({ method: "POST", path: `/v1/plans/${STILL_PRAYING.id}/start` }),
+    );
   });
 
-  it("shows no action on a finished plan", () => {
-    render(<PlansScreen />);
+  it("shows no action on a finished plan", async () => {
+    await openPlans();
 
-    expect(screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`)).not.toHaveProp(
+    expect(screen.getByTestId(`plans-item-${NEGATIVE_THINKING.id}`)).not.toHaveProp(
       "accessibilityActions",
     );
   });
 
-  it("names each plan's church under its title", () => {
-    const church = getSermonForPlan(INITIAL_STATE, ACTIVE)?.church;
-    render(<PlansScreen />);
+  it("names each plan's church under its title", async () => {
+    await openPlans();
 
-    expect(church).toBeTruthy();
     expect(
-      within(screen.getByTestId(`plans-item-${ACTIVE}`)).getByText(church ?? "?"),
+      within(screen.getByTestId(`plans-item-${ACTIVE.id}`)).getByText("VOUS Church"),
     ).toBeOnTheScreen();
   });
 
-  it("spaces the plans as separate cards, with no line between them", () => {
-    render(<PlansScreen />);
+  it("spaces the plans as separate cards, with no line between them", async () => {
+    await openPlans();
 
     expect(screen.queryAllByTestId("plans-divider")).toHaveLength(0);
   });
 
-  it("shows a plan's progress moving as soon as a day of it is finished", () => {
-    render(
-      <>
-        <PlansScreen />
-        <FinishDay dayId={`${ACTIVE}-day-2`} />
-      </>,
-    );
-
-    fireEvent.press(screen.getByTestId("finish-day"));
-
-    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveTextContent(/Day 3 of 6/);
-  });
-
-  it("says so when the filter picked holds no plans", () => {
-    render(
-      <AppStoreProvider initialState={{ ...INITIAL_STATE, library: {} }}>
-        <PlansScreen />
-      </AppStoreProvider>,
-    );
+  it("says so when the filter picked holds no plans", async () => {
+    await openPlans([ACTIVE, STILL_PRAYING]);
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
 
@@ -252,19 +272,19 @@ describe("PlansScreen", () => {
     expect(
       within(empty).getByText("Save a plan from its More menu to keep it here."),
     ).toBeOnTheScreen();
-    expect(screen.queryAllByTestId(/^plans-item-/)).toHaveLength(0);
+    expect(screen.queryAllByTestId(CARD)).toHaveLength(0);
   });
 
-  it("shows no empty state while the filter holds plans", () => {
-    render(<PlansScreen />);
+  it("shows no empty state while the filter holds plans", async () => {
+    await openPlans();
 
     expect(screen.queryByTestId("plans-empty")).toBeNull();
   });
 
-  it("shows each plan with a progress dial at its percent", () => {
-    render(<PlansScreen />);
+  it("shows each plan with a progress ring at its percent", async () => {
+    await openPlans();
 
-    expect(screen.getByTestId(`plans-progress-${ACTIVE}`)).toHaveProp(
+    expect(screen.getByTestId(`plans-progress-${ACTIVE.id}`)).toHaveProp(
       "accessibilityValue",
       expect.objectContaining({ now: 17 }),
     );

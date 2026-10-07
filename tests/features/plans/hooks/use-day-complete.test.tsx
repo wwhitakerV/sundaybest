@@ -1,17 +1,15 @@
-import type { ReactNode } from "react";
-import { act, renderHook } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { act, renderHook, waitFor } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { API_URL, aReminder } from "@tests/factories/api";
+import { aPlan } from "@tests/factories/api-plans";
+import { PROGRESS_NOW, serveProgress } from "@tests/factories/api-progress";
+import { servePlans } from "@tests/mocks/plans-api";
+import { server } from "@tests/mocks/server";
 import * as haptics from "@/core/haptics/haptics";
-import {
-  AppStoreProvider,
-  INITIAL_STATE,
-  appReducer,
-  getWeeklyCompletionCounts,
-  type AppState,
-} from "@/core/store";
-import { planOverviewHref } from "@/entities/plan";
+import { planCompleteHref, planOverviewHref } from "@/entities/plan";
 import { useDayComplete } from "@/features/plans/hooks/use-day-complete";
 
 jest.mock("@/core/haptics/haptics", () => ({
@@ -30,149 +28,163 @@ jest.mock("expo-router", () => ({
 }));
 
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
+const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, []>();
 
-// Three days: day 1 just finished. One day, with a Quick Check: finishing it finishes the plan.
-const STILL_PRAYING = "plan-still-praying";
-const TEMPTATION = "plan-overcome-temptation";
+/** Three days, day 1 just finished. */
+const STILL_PRAYING = aPlan({ seed: 2, title: "Still Praying", lengthDays: 3, completedDays: 1 });
+/** One day, just finished — and with it, the plan. */
+const TEMPTATION = aPlan({
+  seed: 3,
+  title: "Overcome Temptation",
+  lengthDays: 1,
+  status: "completed",
+});
 
-function finished(planId: string, from: AppState = INITIAL_STATE) {
-  return appReducer(from, {
-    type: "planDay/complete",
-    dayId: `${planId}-day-1`,
-    today: "2026-09-23",
-    at: "2026-09-23T07:00:00.000Z",
-  });
-}
-
-function useDayCompleteView() {
-  return { view: useDayComplete() };
-}
-
-function renderDayComplete(planId: string, day = "1", from: AppState = INITIAL_STATE) {
-  jest.mocked(useLocalSearchParams).mockReturnValue({ planId, day });
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <AppStoreProvider initialState={finished(planId, from)}>{children}</AppStoreProvider>
-  );
-  return renderHook(() => useDayCompleteView(), { wrapper });
+/** Day Complete for this plan's day, once its plan, progress and reminder have arrived. */
+async function renderDayComplete(plan = STILL_PRAYING, day = "1") {
+  servePlans([STILL_PRAYING, TEMPTATION]);
+  // Today's study makes a two-day run.
+  serveProgress({ streak: { current: 2, longest: 7 } });
+  jest.mocked(useLocalSearchParams).mockReturnValue({ planId: plan.id, day });
+  const view = renderHook(() => useDayComplete());
+  await waitFor(() => expect(view.result.current.loading).toBe(false));
+  return view;
 }
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  jest.useFakeTimers({ now: PROGRESS_NOW, advanceTimers: true });
   jest.mocked(useNavigation).mockReturnValue({
     getParent: () => ({ goBack: mockExitSession }),
   });
   jest.mocked(useRouter).mockReturnValue({
     navigate: mockNavigate,
+    replace: mockReplace,
   } as unknown as ReturnType<typeof useRouter>);
 });
 
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 describe("useDayComplete", () => {
-  it("finds nothing for a plan with no progress", () => {
-    const { result } = renderDayComplete("plan-nope");
+  it("finds nothing for a plan the server doesn't have", async () => {
+    servePlans([STILL_PRAYING]);
+    serveProgress();
+    jest
+      .mocked(useLocalSearchParams)
+      .mockReturnValue({ planId: "00000000-0000-4000-8000-00000000dead", day: "1" });
+    const { result } = renderHook(() => useDayComplete());
 
-    expect(result.current.view.found).toBe(false);
+    await waitFor(() => expect(result.current.error).not.toBeNull(), { timeout: 10000 });
+    expect(result.current.found).toBe(false);
   });
 
-  it("finds nothing for a day the plan doesn't have", () => {
-    const { result } = renderDayComplete(STILL_PRAYING, "9");
+  it("finds nothing for a day the plan doesn't have", async () => {
+    servePlans([STILL_PRAYING]);
+    serveProgress();
+    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: STILL_PRAYING.id, day: "6" });
+    const { result } = renderHook(() => useDayComplete());
 
-    expect(result.current.view.found).toBe(false);
+    await waitFor(() => expect(result.current.error).not.toBeNull(), { timeout: 10000 });
+    expect(result.current.found).toBe(false);
   });
 
-  it("names the day just finished", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
+  it("names the day just finished", async () => {
+    const { result } = await renderDayComplete();
 
-    expect(result.current.view).toMatchObject({ found: true, dayNumber: 1 });
+    expect(result.current).toMatchObject({ found: true, dayNumber: 1 });
   });
 
-  it("is for today, which the store fixes", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
+  it("is for today, as the server has it", async () => {
+    const { result } = await renderDayComplete();
 
-    expect(result.current.view).toMatchObject({ today: "2026-09-23" });
+    expect(result.current).toMatchObject({ today: "2026-09-23" });
   });
 
-  it("spells the streak, today's study included", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
+  it("spells the streak, today's study included", async () => {
+    const { result } = await renderDayComplete();
 
-    // The mock data's run ends yesterday (one day); finishing today makes two.
-    expect(result.current.view).toMatchObject({ streakLabel: "Two day streak" });
+    expect(result.current).toMatchObject({ streakLabel: "Two day streak" });
   });
 
-  it("holds the week's completion counts, today's included", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
-    const view = result.current.view;
+  it("holds the week's completion counts", async () => {
+    const { result } = await renderDayComplete();
+    const view = result.current;
 
-    expect(view.found && view.week).toEqual(
-      getWeeklyCompletionCounts(finished(STILL_PRAYING), "2026-09-23"),
-    );
     expect(view.found && view.week.map((day) => day.completedDayCount)).toEqual([
-      0, 0, 1, 1, 0, 0, 0,
+      0, 0, 1, 0, 0, 0, 0,
     ]);
   });
 
-  it("looks ahead to the next day's reading, at the reminder's time", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
+  it("looks ahead to the next day's reading, at the reminder's time", async () => {
+    const { result } = await renderDayComplete();
 
-    expect(result.current.view).toMatchObject({
-      upNext: { title: "A refuge", when: "Tomorrow at 6:30 AM" },
+    expect(result.current).toMatchObject({
+      upNext: { title: "Day 2 reading", when: "Tomorrow at 6:30 AM" },
     });
   });
 
-  it("says just Tomorrow when the daily reminder is off", () => {
-    const off = appReducer(INITIAL_STATE, {
-      type: "settings/reminderEnabled",
-      reminderId: "reminder-daily-study",
-      enabled: false,
-      at: "2026-09-23T06:00:00.000Z",
-    });
-    const { result } = renderDayComplete(STILL_PRAYING, "1", off);
+  it("says just Tomorrow when the daily reminder is off", async () => {
+    servePlans([STILL_PRAYING]);
+    serveProgress();
+    server.use(
+      http.get(`${API_URL}/v1/me/reminders`, () =>
+        HttpResponse.json({ reminders: [aReminder({ enabled: false })] }),
+      ),
+    );
+    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: STILL_PRAYING.id, day: "1" });
+    const { result } = renderHook(() => useDayComplete());
+    await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(result.current.view).toMatchObject({
-      upNext: { title: "A refuge", when: "Tomorrow" },
+    expect(result.current).toMatchObject({
+      upNext: { title: "Day 2 reading", when: "Tomorrow" },
     });
   });
 
-  it("looks ahead to nothing after a plan's last day", () => {
-    const { result } = renderDayComplete(TEMPTATION);
+  it("looks ahead to nothing after a plan's last day", async () => {
+    const { result } = await renderDayComplete(TEMPTATION);
 
-    expect(result.current.view).toMatchObject({ found: true, upNext: null });
+    expect(result.current).toMatchObject({ found: true, upNext: null });
   });
 
-  it("no longer offers the old ways on", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
+  it("no longer offers the old ways on", async () => {
+    const { result } = await renderDayComplete();
 
-    for (const gone of ["nextDay", "studyNextDay", "toPlans", "toHome"]) {
-      expect(result.current.view).not.toHaveProperty(gone);
+    for (const gone of ["nextDay", "studyNextDay", "toPlans", "toHome", "takeQuickCheck"]) {
+      expect(result.current).not.toHaveProperty(gone);
     }
   });
 
-  it("leaves the session for the plan's overview on done", () => {
-    const { result } = renderDayComplete(STILL_PRAYING);
+  it("leaves the session for the plan's overview on done", async () => {
+    const { result } = await renderDayComplete();
 
     act(() => {
-      if (result.current.view.found) result.current.view.done();
+      if (result.current.found) result.current.done();
     });
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(STILL_PRAYING));
+    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(STILL_PRAYING.id));
   });
 
-  it("no longer offers a Quick Check or Back to Plan", () => {
-    const { result } = renderDayComplete(TEMPTATION);
+  it("goes on to Plan Complete on done, when that day finished the plan", async () => {
+    const { result } = await renderDayComplete(TEMPTATION);
 
-    for (const gone of ["takeQuickCheck", "hasQuickCheck", "backToPlan"]) {
-      expect(result.current.view).not.toHaveProperty(gone);
-    }
+    act(() => {
+      if (result.current.found) result.current.done();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith(planCompleteHref(TEMPTATION.id));
+    expect(mockExitSession).not.toHaveBeenCalled();
   });
 });
 
 describe("useDayComplete haptics", () => {
-  it("gives nothing as it's done", () => {
-    const { result } = renderDayComplete(TEMPTATION);
+  it("gives nothing as it's done", async () => {
+    const { result } = await renderDayComplete();
 
     act(() => {
-      if (result.current.view.found) result.current.view.done();
+      if (result.current.found) result.current.done();
     });
 
     expect(haptics.tapFeedback).not.toHaveBeenCalled();

@@ -3,7 +3,7 @@ import { render, screen } from "@tests/helpers/render";
 
 import { INITIAL_STATE, getQuizQuestions, getQuizzesForPlan } from "@/core/store";
 import { QuickCheckFeedback } from "@/features/plans/components/QuickCheckFeedback";
-import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { FLOATING_NAV_BAR, getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 
 const quiz = getQuizzesForPlan(INITIAL_STATE, "plan-break-the-cycle-of-negative-thinking").at(0);
 const question = quiz && getQuizQuestions(INITIAL_STATE, quiz.id).at(0);
@@ -27,21 +27,21 @@ function renderFeedback(result: "correct" | "incorrect" = "correct") {
 }
 
 describe("QuickCheckFeedback", () => {
-  it("fills down to the screen's bottom edge, under the home indicator", () => {
+  it("keeps its way on where the tab bar's pill sits, above the home indicator", () => {
     renderFeedback();
 
     expect(screen.getByTestId("quick-check-feedback")).toHaveStyle({
-      marginBottom: -(BOTTOM_INSET + EDGE),
-      paddingBottom: BOTTOM_INSET + EDGE,
+      marginBottom: -EDGE,
+      paddingBottom: getFloatingNavBarBottom(BOTTOM_INSET) + EDGE,
     });
   });
 
-  it("reaches just past both sides of the screen", () => {
+  it("reaches just past both sides, its button in from them as the pill is", () => {
     renderFeedback();
 
     expect(screen.getByTestId("quick-check-feedback")).toHaveStyle({
-      marginHorizontal: -(PAGE_INSET + EDGE),
-      paddingHorizontal: PAGE_INSET + EDGE,
+      marginHorizontal: -EDGE,
+      paddingHorizontal: FLOATING_NAV_BAR.sideMargin + EDGE,
     });
   });
 

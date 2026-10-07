@@ -28,6 +28,8 @@ function envWith(variant: Env["variant"]): Env {
     apiUrl: "https://api.sundaybest.com",
     attestationEnabled: false,
     sentryDsn: undefined,
+    appTeamId: undefined,
+    securityWatcherEmail: undefined,
     useRnFetch: true,
   };
 }

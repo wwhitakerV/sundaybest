@@ -13,7 +13,7 @@ jest.mock("@/core/haptics/haptics", () => ({
 
 describe("PlanList filter haptics", () => {
   it("selects once when another filter is picked", () => {
-    render(<PlanList onOpenPlan={jest.fn()} />);
+    render(<PlanList plans={[]} onOpenPlan={jest.fn()} />);
 
     fireEvent.press(screen.getByTestId("home-tab-plan-filters-option-Done"));
 
@@ -22,7 +22,7 @@ describe("PlanList filter haptics", () => {
   });
 
   it("is silent when the current filter is picked again", () => {
-    render(<PlanList onOpenPlan={jest.fn()} />);
+    render(<PlanList plans={[]} onOpenPlan={jest.fn()} />);
 
     fireEvent.press(screen.getByTestId("home-tab-plan-filters-option-All"));
 

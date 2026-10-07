@@ -13,9 +13,12 @@ interface RawEnv {
   apiUrl: string | undefined;
   attestation: string | undefined;
   dsn: string | undefined;
+  /** Required outside development, with the watcher email (freeRASP). */
+  teamId?: string | undefined;
+  watcherEmail?: string | undefined;
 }
 
-function setProcessEnv({ variant, apiUrl, attestation, dsn }: RawEnv): void {
+function setProcessEnv({ variant, apiUrl, attestation, dsn, teamId, watcherEmail }: RawEnv): void {
   if (variant === undefined) delete process.env.EXPO_PUBLIC_APP_VARIANT;
   else process.env.EXPO_PUBLIC_APP_VARIANT = variant;
 
@@ -27,6 +30,12 @@ function setProcessEnv({ variant, apiUrl, attestation, dsn }: RawEnv): void {
 
   if (dsn === undefined) delete process.env.EXPO_PUBLIC_SENTRY_DSN;
   else process.env.EXPO_PUBLIC_SENTRY_DSN = dsn;
+
+  if (teamId === undefined) delete process.env.EXPO_PUBLIC_APP_TEAM_ID;
+  else process.env.EXPO_PUBLIC_APP_TEAM_ID = teamId;
+
+  if (watcherEmail === undefined) delete process.env.EXPO_PUBLIC_SECURITY_WATCHER_EMAIL;
+  else process.env.EXPO_PUBLIC_SECURITY_WATCHER_EMAIL = watcherEmail;
 }
 
 const DEFAULTS: RawEnv = {
@@ -58,6 +67,8 @@ describe("env", () => {
       apiUrl: "https://preview.api.sundaybest.com",
       attestation: "true",
       dsn: "https://sentry.invalid/0",
+      teamId: "ABCDE12345",
+      watcherEmail: "security@example.com",
     });
 
     expect(loadEnv()).toEqual({
@@ -65,6 +76,8 @@ describe("env", () => {
       apiUrl: "https://preview.api.sundaybest.com",
       attestationEnabled: true,
       sentryDsn: "https://sentry.invalid/0",
+      appTeamId: "ABCDE12345",
+      securityWatcherEmail: "security@example.com",
       useRnFetch: true,
     });
   });

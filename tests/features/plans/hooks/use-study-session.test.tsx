@@ -1,19 +1,20 @@
-import type { ReactNode } from "react";
-import { act, renderHook } from "@testing-library/react-native";
+import { http, HttpResponse } from "msw";
+import { act, renderHook, waitFor } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import * as haptics from "@/core/haptics/haptics";
-import { dayCompleteHref, quickCheckHref } from "@/entities/plan";
+import { API_URL, someSettings } from "@tests/factories/api";
+import { aPlan } from "@tests/factories/api-plans";
+import { servePlans } from "@tests/mocks/plans-api";
 import {
-  AppStoreProvider,
-  INITIAL_STATE,
-  getPlanDay,
-  getPlanProgress,
-  getPrayerForDay,
-  getReflectionsForDay,
-  useAppSelector,
-} from "@/core/store";
+  clearSavedAnswers,
+  saveReflectionAnswer,
+  savedAnswers,
+} from "@tests/mocks/reflection-answers";
+import { server } from "@tests/mocks/server";
+import * as haptics from "@/core/haptics/haptics";
+import type { ApiPlanDetail } from "@/core/api/contracts";
+import { dayCompleteHref, quickCheckHref } from "@/entities/plan";
 import { useStudySession } from "@/features/plans/hooks/use-study-session";
 
 jest.mock("@/core/haptics/haptics", () => ({
@@ -24,6 +25,10 @@ jest.mock("@/core/haptics/haptics", () => ({
   errorFeedback: jest.fn(),
 }));
 
+jest.mock("@/core/storage/reflection-answers", () =>
+  jest.requireActual<object>("@tests/mocks/reflection-answers"),
+);
+
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
@@ -33,41 +38,66 @@ jest.mock("expo-router", () => ({
 
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, []>();
-// Ready, not started: three days, day 1 open.
-const STILL_PRAYING = "plan-still-praying";
-const DAY_ID = `${STILL_PRAYING}-day-1`;
 
-function wrapper({ children }: { children: ReactNode }) {
-  return <AppStoreProvider>{children}</AppStoreProvider>;
+/** Three days, none done: day 1 open, with a Quick Check. */
+const STILL_PRAYING = aPlan({ seed: 2, title: "Still Praying", completedDays: 0 });
+/** The same, made without Quick Checks. */
+const NO_QUIZ = aPlan({ seed: 3, completedDays: 0, quickCheckEnabled: false });
+/** Day 1 part-way: Read done. */
+const READ_DONE = aPlan({ seed: 4, completedDays: 0, currentDaySteps: ["read"] });
+/** Day 1's four steps done, its Quick Check not taken. */
+const STUDIED = aPlan({
+  seed: 5,
+  completedDays: 0,
+  currentDaySteps: ["read", "scripture", "reflect", "pray"],
+});
+/** Day 1 done — its steps and its Quick Check — and day 2 open. */
+const DAY_ONE_DONE = aPlan({ seed: 6, completedDays: 1 });
+
+/** Day 1 of a plan's Daily Study, once it's loaded. */
+async function renderStudy(plan: ApiPlanDetail = STILL_PRAYING, params: object = {}) {
+  const seen = servePlans([plan]);
+  jest.mocked(useLocalSearchParams).mockReturnValue({ planId: plan.id, day: "1", ...params });
+  const view = renderHook(() => useStudySession());
+  await waitFor(() => expect(view.result.current.loading).toBe(false), { timeout: 10000 });
+  return { ...view, seen };
 }
 
-/** The session, and what the store holds for the day it works through. */
-function useSessionAndStore() {
-  const session = useStudySession();
-  const store = useAppSelector((state) => ({
-    steps: getPlanDay(state, STILL_PRAYING, 1)?.completedSteps ?? [],
-    dayStatus: getPlanDay(state, STILL_PRAYING, 1)?.status,
-    done: getPlanProgress(state, STILL_PRAYING)?.completedDayCount,
-    answers: getReflectionsForDay(state, DAY_ID).map((reflection) => reflection.answer),
-    prayedAt: getPrayerForDay(state, DAY_ID)?.prayedAt ?? null,
-  }));
-  const settings = useAppSelector((state) => state.settings);
-  return { session, store, settings };
-}
+type Session = Awaited<ReturnType<typeof renderStudy>>["result"];
 
-function renderStudy(params: Record<string, string> = { planId: STILL_PRAYING, day: "1" }) {
-  jest.mocked(useLocalSearchParams).mockReturnValue(params);
-  return renderHook(() => useSessionAndStore(), { wrapper });
-}
-
-/** Presses Next once on the open session. */
-function next(result: { current: ReturnType<typeof useSessionAndStore> }) {
+/** Presses Next, and waits for the step it records. */
+async function next(result: Session) {
+  const before = result.current.position;
   act(() => {
-    if (result.current.session.found) result.current.session.next();
+    if (result.current.found) result.current.next();
+  });
+  await waitFor(() => expect(result.current.position).not.toEqual(before));
+}
+
+/** Next to the last page: Scripture, two Reflect questions, then Pray. */
+async function toPray(result: Session) {
+  for (let page = 0; page < 4; page += 1) await next(result);
+  expect(result.current.found && result.current.isLastPage).toBe(true);
+}
+
+/** Presses Next on the last page — Finish — and lets it settle. */
+async function finish(result: Session) {
+  await act(async () => {
+    if (result.current.found) result.current.next();
+    await Promise.resolve();
   });
 }
 
+const steps = (seen: { method: string; path: string }[]) =>
+  seen
+    .filter(({ method, path }) => method === "PUT" && path.includes("/steps/"))
+    .map(({ path }) => path.split("/").at(-1));
+
+const completions = (seen: { method: string; path: string }[]) =>
+  seen.filter(({ path }) => path.endsWith("/complete"));
+
 beforeEach(() => {
+  clearSavedAnswers();
   mockReplace.mockClear();
   mockExitSession.mockClear();
   jest.mocked(useNavigation).mockReturnValue({
@@ -79,396 +109,319 @@ beforeEach(() => {
 });
 
 describe("useStudySession", () => {
-  it("finds no day when the day isn't a number", () => {
-    const { result } = renderStudy({ planId: STILL_PRAYING, day: "abc" });
+  it("finds no day when the day isn't a number", async () => {
+    const { result } = await renderStudy(STILL_PRAYING, { day: "one" });
 
-    expect(result.current.session.found).toBe(false);
+    expect(result.current.found).toBe(false);
   });
 
-  it("finds no day when the plan doesn't have it", () => {
-    const { result } = renderStudy({ planId: STILL_PRAYING, day: "9" });
+  it("finds no day when the plan doesn't have it", async () => {
+    const { result } = await renderStudy(STILL_PRAYING, { day: "6" });
 
-    expect(result.current.session.found).toBe(false);
+    expect(result.current.found).toBe(false);
   });
 
-  it("finds no day when the plan doesn't exist", () => {
-    const { result } = renderStudy({ planId: "plan-nope", day: "1" });
+  it("finds no day when the plan doesn't exist", async () => {
+    const { result } = await renderStudy(STILL_PRAYING, {
+      planId: "00000000-0000-4000-8000-00000000dead",
+    });
 
-    expect(result.current.session.found).toBe(false);
+    expect(result.current.found).toBe(false);
   });
 
-  it("opens on the first page of Read, with the day's context", () => {
-    const { result } = renderStudy();
+  it("opens on the first page of Read, with the day's context", async () => {
+    const { result } = await renderStudy();
 
-    expect(result.current.session).toMatchObject({
+    expect(result.current).toMatchObject({
       found: true,
       dayNumber: 1,
       totalDays: 3,
       position: { step: 0, page: 0 },
-      isLastPage: false,
+      pages: [1, 1, 2, 1],
     });
   });
 
-  it("moves on to Scripture on next()", () => {
-    const { result } = renderStudy();
+  it("opens on the first step not yet done", async () => {
+    const { result } = await renderStudy(READ_DONE);
 
-    next(result);
-
-    expect(result.current.session).toMatchObject({ position: { step: 1, page: 0 } });
+    expect(result.current.position).toEqual({ step: 1, page: 0 });
   });
 
-  it("records the step done, starting the day, when moving forward", () => {
-    const { result } = renderStudy();
+  it("opens on the step asked for, done or not", async () => {
+    const { result } = await renderStudy(READ_DONE, { step: "read" });
 
-    next(result);
-
-    expect(result.current.store.steps).toEqual(["read"]);
-    expect(result.current.store.dayStatus).toBe("inProgress");
+    expect(result.current.position).toEqual({ step: 0, page: 0 });
   });
 
-  it("leaves the study on previous() from the first page", () => {
-    const { result } = renderStudy();
+  it("moves on to Scripture on next(), recording Read as done", async () => {
+    const { result, seen } = await renderStudy();
+
+    await next(result);
+
+    expect(result.current.position).toEqual({ step: 1, page: 0 });
+    expect(steps(seen)).toEqual(["read"]);
+  });
+
+  it("doesn't record a step again that's already done", async () => {
+    const { result, seen } = await renderStudy(READ_DONE, { step: "read" });
+
+    await next(result);
+
+    expect(steps(seen)).toEqual([]);
+  });
+
+  it("leaves the study on previous() from the first page", async () => {
+    const { result } = await renderStudy();
 
     act(() => {
-      if (result.current.session.found) result.current.session.previous();
+      if (result.current.found) result.current.previous();
     });
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
   });
 
-  it("goes back a step on previous() after the first", () => {
-    const { result } = renderStudy();
-    next(result);
+  it("goes back a step on previous() after the first", async () => {
+    const { result } = await renderStudy();
+    await next(result);
 
-    act(() => {
-      if (result.current.session.found) result.current.session.previous();
+    await act(async () => {
+      if (result.current.found) result.current.previous();
+      await Promise.resolve();
     });
 
-    expect(result.current.session).toMatchObject({ position: { step: 0, page: 0 } });
+    expect(result.current.position).toEqual({ step: 0, page: 0 });
     expect(mockExitSession).not.toHaveBeenCalled();
   });
 
-  it("leaves the study on close()", () => {
-    const { result } = renderStudy();
-    next(result);
+  it("leaves the study on close()", async () => {
+    const { result } = await renderStudy();
 
     act(() => {
-      if (result.current.session.found) result.current.session.close();
+      if (result.current.found) result.current.close();
     });
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
   });
 
-  it("shows the answer typed, before it's saved", () => {
-    const { result } = renderStudy();
-    const reflectionId = result.current.session.found
-      ? (result.current.session.content.reflections.at(0)?.id ?? "")
-      : "";
+  it("shows the answer typed at once, and keeps it on the device, never the server", async () => {
+    const { result, seen } = await renderStudy();
+    const reflection = STILL_PRAYING.days[0]?.reflectionPrompts[0]?.id ?? "";
+    // Read as the screen does, as it renders: unanswered.
+    expect(result.current.found && result.current.answerFor(reflection)).toBe("");
 
     act(() => {
-      if (result.current.session.found) {
-        result.current.session.changeAnswer(reflectionId, "The move, mostly.");
-      }
+      if (result.current.found) result.current.changeAnswer(reflection, "Still here");
     });
 
-    expect(result.current.session.found && result.current.session.answerFor(reflectionId)).toBe(
-      "The move, mostly.",
+    await waitFor(() =>
+      expect(result.current.found && result.current.answerFor(reflection)).toBe("Still here"),
     );
-    expect(result.current.store.answers).not.toContain("The move, mostly.");
+    await waitFor(() => expect(savedAnswers().get(reflection)).toBe("Still here"));
+    expect(JSON.stringify(seen)).not.toContain("Still here");
   });
 
-  it("writes a typed answer to the day on next()", () => {
-    const { result } = renderStudy();
-    next(result);
-    next(result);
-    const reflectionId = result.current.session.found
-      ? (result.current.session.content.reflections.at(0)?.id ?? "")
-      : "";
-    act(() => {
-      if (result.current.session.found) {
-        result.current.session.changeAnswer(reflectionId, "The move, mostly.");
-      }
-    });
+  it("shows an answer already saved on the device", async () => {
+    const reflection = STILL_PRAYING.days[0]?.reflectionPrompts[0]?.id ?? "";
+    await saveReflectionAnswer("me", reflection, "Written before");
 
-    next(result);
+    const { result } = await renderStudy();
 
-    expect(result.current.store.answers.at(0)).toBe("The move, mostly.");
+    expect(result.current.found && result.current.answerFor(reflection)).toBe("Written before");
   });
 
-  it("writes a typed answer to the day on close(), too", () => {
-    const { result } = renderStudy();
-    const reflectionId = result.current.session.found
-      ? (result.current.session.content.reflections.at(0)?.id ?? "")
-      : "";
-    act(() => {
-      if (result.current.session.found) {
-        result.current.session.changeAnswer(reflectionId, "The move, mostly.");
-      }
-    });
+  it("doesn't complete the day by reaching the last page", async () => {
+    const { result, seen } = await renderStudy(NO_QUIZ);
 
-    act(() => {
-      if (result.current.session.found) result.current.session.close();
-    });
+    await toPray(result);
 
-    expect(result.current.store.answers.at(0)).toBe("The move, mostly.");
+    expect(steps(seen)).toEqual(["read", "scripture", "reflect"]);
+    expect(completions(seen)).toHaveLength(0);
   });
 
-  it("doesn't complete the day by reaching the last page", () => {
-    const { result } = renderStudy();
+  it("finishes a day without a Quick Check on next() from the last page: prayed, completed, and Day Complete shown", async () => {
+    const { result, seen } = await renderStudy(NO_QUIZ);
+    await toPray(result);
 
-    for (let guard = 0; guard < 10 && !isLast(result.current); guard += 1) next(result);
+    await finish(result);
 
-    expect(isLast(result.current)).toBe(true);
-    expect(result.current.store.done).toBe(0);
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(dayCompleteHref(NO_QUIZ.id, 1)));
+    expect(steps(seen)).toContain("pray");
+    expect(completions(seen)).toHaveLength(1);
   });
 
-  it("finishes the day on next() from the last page: completed, prayed, and Day Complete shown", () => {
-    const { result } = renderStudy();
-    for (let guard = 0; guard < 10 && !isLast(result.current); guard += 1) next(result);
+  it("opens the Quick Check, not Day Complete, on Finish — the day not completed until it's taken", async () => {
+    const { result, seen } = await renderStudy();
+    await toPray(result);
 
-    next(result);
+    await finish(result);
 
-    expect(result.current.store.dayStatus).toBe("completed");
-    expect(result.current.store.done).toBe(1);
-    expect(result.current.store.prayedAt).not.toBeNull();
-    expect(mockReplace).toHaveBeenCalledWith({
-      pathname: "/study/[planId]/day-complete",
-      params: { planId: STILL_PRAYING, day: "1" },
-    });
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith(quickCheckHref(STILL_PRAYING.id, 1)),
+    );
+    expect(completions(seen)).toHaveLength(0);
+  });
+
+  it("goes on to Day Complete on Finish, revisiting a day already done", async () => {
+    const { result, seen } = await renderStudy(DAY_ONE_DONE, { step: "pray" });
+
+    await finish(result);
+
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith(dayCompleteHref(DAY_ONE_DONE.id, 1)),
+    );
+    expect(completions(seen)).toHaveLength(1);
+  });
+
+  it("goes straight on to a Quick Check that's due, when continued with the study done", async () => {
+    servePlans([STUDIED]);
+    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: STUDIED.id, day: "1" });
+    renderHook(() => useStudySession());
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith(quickCheckHref(STUDIED.id, 1)));
+  });
+
+  it("stays on a done step asked for, though its Quick Check is due", async () => {
+    const { result } = await renderStudy(STUDIED, { step: "read" });
+
+    expect(result.current.position).toEqual({ step: 0, page: 0 });
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 
   describe("reading", () => {
-    it("starts at the store's settings: no offset, white paper", () => {
-      const { result } = renderStudy();
+    /** The settings changes sent, in order. */
+    function serveSettingsChanges() {
+      const sent: unknown[] = [];
+      server.use(
+        http.patch(`${API_URL}/v1/me/settings`, async ({ request }) => {
+          const body = (await request.json()) as object;
+          sent.push(body);
+          return HttpResponse.json({ settings: someSettings(body) });
+        }),
+      );
+      return sent;
+    }
 
-      expect(result.current.session).toMatchObject({
-        found: true,
-        reading: { textOffset: 0, paper: "white" },
+    it("starts at the reader's settings: no offset, white paper", async () => {
+      const { result } = await renderStudy();
+
+      expect(result.current.found && result.current.reading).toMatchObject({
+        textOffset: 0,
+        paper: "white",
       });
     });
 
-    it("changes the text offset, and the store holds it, on setTextOffset", () => {
-      const { result } = renderStudy();
+    it("saves a new text offset on setTextOffset", async () => {
+      const sent = serveSettingsChanges();
+      const { result } = await renderStudy();
 
       act(() => {
-        if (result.current.session.found) result.current.session.reading.setTextOffset(4);
+        if (result.current.found) result.current.reading.setTextOffset(2);
       });
 
-      expect(result.current.session).toMatchObject({ reading: { textOffset: 4 } });
-      expect(result.current.settings.readingTextOffset).toBe(4);
+      await waitFor(() => expect(sent).toEqual([{ readingTextOffset: 2 }]));
+      await waitFor(() =>
+        expect(result.current.found && result.current.reading.textOffset).toBe(2),
+      );
     });
 
-    it("refuses an offset off the scale", () => {
-      const { result } = renderStudy();
+    it("refuses an offset off the scale", async () => {
+      const sent = serveSettingsChanges();
+      const { result } = await renderStudy();
 
       act(() => {
-        if (result.current.session.found) result.current.session.reading.setTextOffset(10);
+        if (result.current.found) result.current.reading.setTextOffset(3);
       });
 
-      expect(result.current.session).toMatchObject({ reading: { textOffset: 0 } });
+      expect(sent).toEqual([]);
+      expect(haptics.selectionFeedback).not.toHaveBeenCalled();
     });
 
-    it("changes the paper, and the store holds it, on setPaper", () => {
-      const { result } = renderStudy();
+    it("saves a new paper on setPaper", async () => {
+      const sent = serveSettingsChanges();
+      const { result } = await renderStudy();
 
       act(() => {
-        if (result.current.session.found) result.current.session.reading.setPaper("night");
+        if (result.current.found) result.current.reading.setPaper("night");
       });
 
-      expect(result.current.session).toMatchObject({ reading: { paper: "night" } });
-      expect(result.current.settings.readingPaper).toBe("night");
+      await waitFor(() => expect(sent).toEqual([{ readingPaper: "night" }]));
     });
   });
 });
-
-function isLast({ session }: ReturnType<typeof useSessionAndStore>) {
-  return session.found && session.isLastPage;
-}
 
 describe("useStudySession haptics", () => {
-  /** Presses Previous once on the open session. */
-  function previous(result: { current: ReturnType<typeof useSessionAndStore> }) {
-    act(() => {
-      if (result.current.session.found) result.current.session.previous();
-    });
-  }
+  it("taps on Next", async () => {
+    const { result } = await renderStudy();
 
-  it("taps on Next from a middle page", () => {
-    const { result } = renderStudy();
-
-    next(result);
-
-    expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
-    expect(haptics.successFeedback).not.toHaveBeenCalled();
-  });
-
-  it("taps on Previous from a later page", () => {
-    const { result } = renderStudy();
-    next(result);
-    jest.mocked(haptics.tapFeedback).mockClear();
-
-    previous(result);
+    await next(result);
 
     expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("gives nothing on Previous from the first page, which closes the session", () => {
-    const { result } = renderStudy();
+  it("gives nothing on Previous from the first page, which closes the session", async () => {
+    const { result } = await renderStudy();
 
-    previous(result);
+    act(() => {
+      if (result.current.found) result.current.previous();
+    });
 
-    expect(mockExitSession).toHaveBeenCalledTimes(1);
     expect(haptics.tapFeedback).not.toHaveBeenCalled();
+  });
+
+  it("gives success on finishing the day", async () => {
+    const { result } = await renderStudy(NO_QUIZ);
+    await toPray(result);
+    jest.mocked(haptics.tapFeedback).mockClear();
+
+    await finish(result);
+
+    await waitFor(() => expect(haptics.successFeedback).toHaveBeenCalledTimes(1));
+    expect(haptics.tapFeedback).not.toHaveBeenCalled();
+  });
+
+  it("taps, and gives no success, on Finish into the Quick Check", async () => {
+    const { result } = await renderStudy();
+    await toPray(result);
+    jest.mocked(haptics.tapFeedback).mockClear();
+
+    await finish(result);
+
+    await waitFor(() => expect(haptics.tapFeedback).toHaveBeenCalledTimes(1));
     expect(haptics.successFeedback).not.toHaveBeenCalled();
   });
 
-  it("gives success and no tap on Finish", () => {
-    const { result } = renderStudy();
-    while (result.current.session.found && !result.current.session.isLastPage) next(result);
-    jest.mocked(haptics.tapFeedback).mockClear();
-
-    next(result);
-
-    expect(mockReplace).toHaveBeenCalledTimes(1);
-    expect(haptics.successFeedback).toHaveBeenCalledTimes(1);
-    expect(haptics.tapFeedback).not.toHaveBeenCalled();
-  });
-
-  it("selects once when the text size steps", () => {
-    const { result } = renderStudy();
-
-    act(() => {
-      if (result.current.session.found) result.current.session.reading.setTextOffset(4);
-    });
-
-    expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
-  });
-
-  it("is silent for a text size the store refuses", () => {
-    const { result } = renderStudy();
-
-    act(() => {
-      if (result.current.session.found) result.current.session.reading.setTextOffset(10);
-    });
-
-    expect(haptics.selectionFeedback).not.toHaveBeenCalled();
-  });
-
-  it("is silent when the text size is set to what it already is", () => {
-    const { result } = renderStudy();
-
-    act(() => {
-      if (result.current.session.found) result.current.session.reading.setTextOffset(0);
-    });
-
-    expect(haptics.selectionFeedback).not.toHaveBeenCalled();
-  });
-
-  it("selects once when another paper is picked", () => {
-    const { result } = renderStudy();
-
-    act(() => {
-      if (result.current.session.found) result.current.session.reading.setPaper("night");
-    });
-
-    expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
-  });
-
-  it("is silent when the current paper is picked again", () => {
-    const { result } = renderStudy();
-
-    act(() => {
-      if (result.current.session.found) result.current.session.reading.setPaper("white");
-    });
-
-    expect(haptics.selectionFeedback).not.toHaveBeenCalled();
-  });
-});
-
-describe("useStudySession Finish on a day with a Quick Check", () => {
-  // One day with a two-question Quick Check not yet taken.
-  const TEMPTATION = "plan-overcome-temptation";
-  // Day 1's Quick Check is already finished in the mock data.
-  const BLESSING = "plan-today-i-choose-to-be-a-blessing";
-
-  function useSessionAndDay() {
-    const session = useStudySession();
-    const dayStatus = useAppSelector((state) => getPlanDay(state, PLAN.current, 1)?.status);
-    return { session, dayStatus };
-  }
-  const PLAN = { current: TEMPTATION };
-
-  function renderOn(planId: string, initialState = INITIAL_STATE) {
-    PLAN.current = planId;
-    jest.mocked(useLocalSearchParams).mockReturnValue({ planId, day: "1" });
-    return renderHook(() => useSessionAndDay(), {
-      wrapper: ({ children }: { children: ReactNode }) => (
-        <AppStoreProvider initialState={initialState}>{children}</AppStoreProvider>
+  it("selects once when the text size steps", async () => {
+    server.use(
+      http.patch(`${API_URL}/v1/me/settings`, () =>
+        HttpResponse.json({ settings: someSettings({ readingTextOffset: 2 }) }),
       ),
-    });
-  }
+    );
+    const { result } = await renderStudy();
 
-  function toLastPage(result: { current: ReturnType<typeof useSessionAndDay> }) {
-    for (let guard = 0; guard < 10; guard += 1) {
-      const { session } = result.current;
-      if (!session.found || session.isLastPage) break;
-      act(() => session.next());
-    }
-    jest.mocked(haptics.tapFeedback).mockClear();
-  }
-
-  function finish(result: { current: ReturnType<typeof useSessionAndDay> }) {
     act(() => {
-      if (result.current.session.found) result.current.session.next();
+      if (result.current.found) result.current.reading.setTextOffset(2);
     });
-  }
 
-  it("opens the Quick Check, not Day Complete, on Finish", () => {
-    const { result } = renderOn(TEMPTATION);
-    toLastPage(result);
-
-    finish(result);
-
-    expect(mockReplace).toHaveBeenCalledTimes(1);
-    expect(mockReplace).toHaveBeenCalledWith(quickCheckHref(TEMPTATION, 1));
+    expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("leaves the day not completed on Finish, until its Quick Check is done", () => {
-    const { result } = renderOn(TEMPTATION);
-    toLastPage(result);
+  it("is silent when the text size is set to what it already is", async () => {
+    const { result } = await renderStudy();
 
-    finish(result);
+    act(() => {
+      if (result.current.found) result.current.reading.setTextOffset(0);
+    });
 
-    expect(result.current.dayStatus).not.toBe("completed");
+    expect(haptics.selectionFeedback).not.toHaveBeenCalled();
   });
 
-  it("taps, and gives no success, on Finish into the Quick Check", () => {
-    const { result } = renderOn(TEMPTATION);
-    toLastPage(result);
+  it("is silent when the current paper is picked again", async () => {
+    const { result } = await renderStudy();
 
-    finish(result);
+    act(() => {
+      if (result.current.found) result.current.reading.setPaper("white");
+    });
 
-    expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
-    expect(haptics.successFeedback).not.toHaveBeenCalled();
-  });
-
-  it("completes the day, and shows Day Complete, when its Quick Check is already completed", () => {
-    // Day 1 is made not-yet-done; its Quick Check stays finished.
-    const day = getPlanDay(INITIAL_STATE, BLESSING, 1);
-    if (!day) throw new Error("mock day missing");
-    const reopened = {
-      ...INITIAL_STATE,
-      planDays: { ...INITIAL_STATE.planDays, [day.id]: { ...day, status: "inProgress" as const } },
-    };
-    const { result } = renderOn(BLESSING, reopened);
-    expect(result.current.dayStatus).not.toBe("completed");
-    toLastPage(result);
-
-    finish(result);
-
-    expect(result.current.dayStatus).toBe("completed");
-    expect(mockReplace).toHaveBeenCalledWith(dayCompleteHref(BLESSING, 1));
-    expect(haptics.successFeedback).toHaveBeenCalledTimes(1);
-    expect(haptics.tapFeedback).not.toHaveBeenCalled();
+    expect(haptics.selectionFeedback).not.toHaveBeenCalled();
   });
 });

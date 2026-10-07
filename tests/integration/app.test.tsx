@@ -1,10 +1,10 @@
 import { renderApp, screen } from "@tests/helpers/render";
 
 describe("app routes", () => {
-  it("renders the welcome screen at /", () => {
+  it("renders the welcome screen at / for a reader not yet onboarded", async () => {
     renderApp();
 
-    expect(screen.getByTestId("welcome-screen")).toBeVisible();
+    expect(await screen.findByTestId("welcome-screen")).toBeVisible();
   });
 
   it("mounts / as the initial route", () => {
