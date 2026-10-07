@@ -1,12 +1,20 @@
 import { Text } from "react-native";
+import { Stop } from "react-native-svg";
 import { render, screen } from "@tests/helpers/render";
 
+import { edgeFade } from "@/theme";
 import { FloatingDock } from "@/ui/organisms/FloatingDock";
 import {
   FLOATING_NAV_BAR,
   getFloatingNavBarBottom,
   getFloatingNavBarTintHeight,
 } from "@/ui/organisms/floatingNavBar";
+
+function stopOpacities(within: ReturnType<typeof screen.getByTestId>) {
+  return within
+    .findAll((node) => node.type === Stop)
+    .map((stop) => stop.props.stopOpacity as unknown);
+}
 
 function renderDock() {
   return render(
@@ -45,5 +53,12 @@ describe("FloatingDock", () => {
       bottom: -capsuleBottom,
       height: getFloatingNavBarTintHeight(capsuleBottom),
     });
+  });
+
+  it("tints behind its pill at the edges' lighter peak, never fully opaque", () => {
+    renderDock();
+
+    const tint = screen.getByTestId("a-dock-tint", { includeHiddenElements: true });
+    expect(Math.max(...(stopOpacities(tint) as number[]))).toBe(edgeFade.peak);
   });
 });

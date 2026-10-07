@@ -42,7 +42,7 @@ test("excerpts match on their words, ignoring punctuation and case", () => {
 type Plan = Awaited<ReturnType<typeof plan>>;
 for (const [name, days, quickCheck, mutate] of [
   ["the wrong day count", 1, false, (p: Plan) => { p.days.push({ ...p.days[0]!, dayNumber: 2 }); }],
-  ["a blank reading", 1, false, (p: Plan) => { p.days[0]!.readingParagraphs = [" "]; }],
+  ["a blank reading", 1, false, (p: Plan) => { p.days[0]!.readingParagraphs = [{ heading: " ", content: " " }]; }],
   ["an invented sermon quote", 1, false, (p: Plan) => { p.days[0]!.sermonQuote = "Invented words"; }],
   ["an out-of-range clip", 1, false, (p: Plan) => { p.days[0]!.clipEndSeconds = 100; }],
   ["a clip without its quote", 1, false, (p: Plan) => { p.days[0]!.clipStartSeconds = 30; p.days[0]!.clipEndSeconds = 60; }],
@@ -65,10 +65,10 @@ test("the final check rejects finish the verse without both translations or outs
   const input = generationInput(1, true);
   const withVerse = () => plan(1, true, () => ({ ...quizOutput(), questions: [...quizOutput().questions, finishTheVerseQuestion()] }));
   const missing = await withVerse();
-  missing.days[0]!.quickCheck!.questions.at(-1)!.variants = null;
+  missing.days[0]!.quickCheck!.questions.find((question) => question.kind === "finishTheVerse")!.variants = null;
   assert.throws(() => validatePlanStructure(missing, input), /both translations/);
   const elsewhere = await withVerse();
-  elsewhere.days[0]!.quickCheck!.questions.at(-1)!.scriptureReference = "John 3:20";
+  elsewhere.days[0]!.quickCheck!.questions.find((question) => question.kind === "finishTheVerse")!.scriptureReference = "John 3:20";
   assert.throws(() => validatePlanStructure(elsewhere, input), /day's passage/);
 });
 

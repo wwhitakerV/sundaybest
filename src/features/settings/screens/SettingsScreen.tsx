@@ -10,6 +10,7 @@ import { MonoBody } from "@/ui/typography/MonoBody";
 import { Button } from "@/ui/atoms/Button";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SettingsSkeleton } from "../components/SettingsSkeleton";
+import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 
 /**
  * Settings, a tab of its own: the user's routine — daily reminder, Bible
@@ -26,17 +27,23 @@ export function SettingsScreen() {
       header={<TitleHeader title="Settings" />}
       contentStyle={styles.content}
     >
-      {sections?.map(({ title, rows }) => (
-        <SettingsGroup
-          key={title}
-          title={title}
-          rows={rows}
-          onOpen={({ href }) => {
-            if (href) open(href);
-          }}
-        />
-      ))}
-      {loading && !sections ? <SettingsSkeleton testID="settings-loading" /> : null}
+      <SkeletonHandoff
+        testID="settings-handoff"
+        pending={loading && !sections}
+        skeleton={<SettingsSkeleton testID="settings-loading" />}
+        style={styles.groups}
+      >
+        {sections?.map(({ title, rows }) => (
+          <SettingsGroup
+            key={title}
+            title={title}
+            rows={rows}
+            onOpen={({ href }) => {
+              if (href) open(href);
+            }}
+          />
+        ))}
+      </SkeletonHandoff>
       {failed && !sections ? (
         <View style={styles.error}>
           <SFProBody tone="textMuted">Couldn’t load your preferences.</SFProBody>
@@ -58,8 +65,9 @@ export function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  // 32pt from the title to the first group (16 more than the header's fade), as before it was pinned.
-  content: { gap: space[32], paddingTop: space[16], paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
+  // From the title to the first group, as far as Progress keeps its content from its title.
+  content: { gap: space[32], paddingTop: space[8], paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
+  groups: { gap: space[32] },
   centred: { textAlign: "center" },
   error: { gap: space[16] },
 });

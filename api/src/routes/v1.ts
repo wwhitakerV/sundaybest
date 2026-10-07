@@ -47,6 +47,7 @@ import {
   updateSettingsRequestSchema,
   verifyAttestationRequestSchema,
   archivePlanResponseSchema,
+  resetPlanResponseSchema,
   savePlanResponseSchema,
   removeSavedPlanResponseSchema,
 } from "../contracts/index.js";
@@ -352,6 +353,20 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
         archivePlanResponseSchema.parse({
           plan: await planService.archive(auth.userId, planId, auth.timezone),
         }),
+    );
+  });
+
+  app.post("/v1/plans/:planId/reset", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const { planId } = parseWithSchema(planParamSchema, request.params);
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/plans/${planId}/reset`,
+      {},
+      async () =>
+        resetPlanResponseSchema.parse(await planService.reset(auth.userId, planId, auth.timezone)),
     );
   });
 

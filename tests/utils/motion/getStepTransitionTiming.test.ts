@@ -32,9 +32,3 @@ describe("getStepTransitionTiming", () => {
     expect(getStepTransitionTiming("brisk", true)).toEqual(getStepTransitionTiming("brisk", false));
   });
 });
-
-describe("getStepTransitionTiming, drift", () => {
-  it("fades a page in without rising or staggering — its parts drift in instead", () => {
-    expect(getStepTransitionTiming("drift", false)).toMatchObject({ rise: 0, staggerMs: 0 });
-  });
-});

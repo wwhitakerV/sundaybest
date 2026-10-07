@@ -151,6 +151,7 @@ export function createGenerationWorker(input: {
         sermonId: context.plan.sermonId,
         planId: context.plan.id,
         lengthDays: context.generation.requestedLength,
+        userId: context.generation.userId,
       });
       const hasQuizzes = reusable?.days.every((day) => day.quickCheck !== null) ?? false;
       if (reusable && (!quickCheck || hasQuizzes)) {

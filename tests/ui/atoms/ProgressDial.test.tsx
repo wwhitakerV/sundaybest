@@ -86,4 +86,26 @@ describe("ProgressDial", () => {
     const arc = screen.getByTestId("a-dial-arc").props;
     expect(disc - (Number(arc.r) + Number(arc.strokeWidth) / 2)).toBe(2);
   });
+
+  it("can be bare — no disc, just its ring on a faint track — and small", () => {
+    render(<ProgressDial testID="a-dial" percent={40} bare size={24} />);
+
+    expect(screen.getByTestId("a-dial")).toHaveStyle({ width: 24, height: 24 });
+    expect(screen.queryByTestId("a-dial-disc")).toBeNull();
+    expect(screen.getByTestId("a-dial-track")).toBeOnTheScreen();
+  });
+
+  it("draws a bare ring's progress in white, firm enough to see, on its faint white track", () => {
+    render(<ProgressDial testID="a-dial" percent={40} bare size={24} />);
+
+    expect(screen.getByTestId("a-dial-arc")).toHaveProp(
+      "stroke",
+      svgColor(lightTheme.colors.inkOnDark),
+    );
+    expect(screen.getByTestId("a-dial-arc")).toHaveProp("strokeWidth", 3.5);
+    expect(screen.getByTestId("a-dial-track")).toHaveProp(
+      "stroke",
+      svgColor(lightTheme.colors.inkOnDarkFaint),
+    );
+  });
 });

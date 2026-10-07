@@ -100,6 +100,34 @@ function topEdge(insetTop: number, headerHeight: number, headerFade: HeaderFade)
   return { solid: headerHeight, height, clearance: height };
 }
 
+/**
+ * A header's own backdrop, drawn inside the header's block so it's always
+ * the header's size — no measuring: solid down the block, then `fade` tall
+ * to clear, ending `past` below the block's bottom edge. The same fades
+ * `getFrameEdges` describes from the outside, with the measured height.
+ */
+export function getHeaderBackdrop(headerFade: HeaderFade): {
+  past: number;
+  fade: number;
+  ramp: FadeRamp;
+} {
+  if (headerFade === "gradual") return { past: 0, fade: GRADUAL_FADE, ramp: GRADUAL_RAMP };
+  if (typeof headerFade === "object") {
+    const { ramp } = softTopEdge(0, headerFade.reach);
+    return {
+      past: SOFT_PAST,
+      fade: headerFade.reach + SOFT_ABOVE + SOFT_PAST,
+      ramp: ramp ?? LINEAR_RAMP,
+    };
+  }
+  return { past: EDGE_FADE, fade: EDGE_FADE, ramp: LINEAR_RAMP };
+}
+
+const LINEAR_RAMP = [
+  { at: 0, opacity: 1 },
+  { at: 1, opacity: 0 },
+] as const;
+
 function bottomEdge(insetBottom: number, foot: FrameFoot): FrameEdge {
   if (foot.kind === "dock") {
     // Exactly the tab bar's tint, so the two look like one container.

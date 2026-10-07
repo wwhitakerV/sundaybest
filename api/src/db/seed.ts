@@ -92,7 +92,11 @@ try {
           dayNumber,
           readingTitle: `Development Day ${dayNumber}`,
           readingParagraphs: [
-            "This sample exists to exercise the real API data flow. It is not production sermon-generated study content.",
+            {
+              heading: "A Sample Day",
+              content:
+                "This sample exists to exercise the real API data flow. It is not production sermon-generated study content.",
+            },
           ],
           scriptureReferenceId: scripture.id,
         })

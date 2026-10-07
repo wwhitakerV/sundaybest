@@ -6,6 +6,7 @@ import { canonicalizeCitation, canonicalizeScripture, chapterIsNamed, referenceI
 import { assertPassageReads, readsInEveryBundledTranslation } from "./scripture-text.js";
 import { clipIsValid } from "./clip.js";
 import { containsExcerpt, normalizeSourceText } from "./transcript.js";
+import { readingParagraphText } from "./reading.js";
 
 const QUICK_CHECK_MIN = 7;
 const QUICK_CHECK_MAX = 10;
@@ -43,7 +44,7 @@ export function validatePlanStructure(plan: GeneratedPlan, input: PlanGeneration
     if (day.clipStartSeconds !== null && day.clipEndSeconds !== null && !clipIsValid(day.clipStartSeconds, day.clipEndSeconds, day.sermonQuote, input)) {
       reject("Sermon clip lacks source timing, exceeds the transcript or video, or does not contain its quote");
     }
-    const reading = normalizeSourceText(day.readingParagraphs.join(" "));
+    const reading = normalizeSourceText(day.readingParagraphs.map(readingParagraphText).join(" "));
     if (readings.has(reading) && plan.generator.provider !== "development") reject("Generated days contain duplicate readings");
     readings.add(reading);
     for (const reflection of day.reflections) {

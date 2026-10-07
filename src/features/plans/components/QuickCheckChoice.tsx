@@ -24,7 +24,8 @@ export type QuickCheckChoiceProps = {
 };
 
 /**
- * One multiple-choice answer: its letter in a ring, then its words. Picked,
+ * One multiple-choice answer, raised just off the page on a subtle edge so
+ * it reads as something to tap: its letter in a ring, then its words. Picked,
  * it's outlined and its letter fills; checked, the right answer turns green
  * with a check, a wrong pick red with a cross, and the rest step back.
  */
@@ -39,8 +40,8 @@ export function QuickCheckChoice({ choice, look, picked, onPress, testID }: Quic
             borderColor: theme.colors.incorrectBorder,
           }
         : look === "selected"
-          ? { backgroundColor: theme.colors.background, borderColor: theme.colors.divider }
-          : { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider };
+          ? { backgroundColor: theme.colors.background, borderColor: theme.colors.containerBorder }
+          : { backgroundColor: theme.colors.surface, borderColor: theme.colors.containerBorder };
   const disc =
     look === "correct"
       ? theme.colors.correct
@@ -58,7 +59,13 @@ export function QuickCheckChoice({ choice, look, picked, onPress, testID }: Quic
       accessibilityState={{ selected: look === "selected", disabled: !onPress }}
       disabled={!onPress}
       onPress={onPress}
-      style={[styles.choice, surface, look === "faded" && styles.faded]}
+      style={[
+        styles.choice,
+        surface,
+        // Lifted just off the page, so each answer reads as something to tap.
+        { shadowColor: theme.colors.shadow, ...theme.elevation.choice },
+        look === "faded" && styles.faded,
+      ]}
     >
       {look === "selected" && (
         <View pointerEvents="none" style={[styles.outline, { borderColor: theme.colors.text }]} />
@@ -82,7 +89,9 @@ export function QuickCheckChoice({ choice, look, picked, onPress, testID }: Quic
           </SFProBody>
         )}
       </View>
-      <SFProBody style={styles.text}>{choice.text}</SFProBody>
+      <SFProBody variant="bodyLoose" style={styles.text}>
+        {choice.text}
+      </SFProBody>
     </Pressable>
   );
 }
@@ -94,8 +103,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: space[16],
+    // The words set in a little from the edge.
     paddingVertical: space[18],
-    paddingHorizontal: space[18],
+    paddingLeft: space[20],
+    paddingRight: space[24],
   },
   outline: {
     position: "absolute",

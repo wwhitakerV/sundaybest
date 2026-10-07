@@ -1,4 +1,11 @@
-import { Bell, BookmarkMinus, BookmarkPlus, Sparkles, type LucideIcon } from "lucide-react-native";
+import {
+  Bell,
+  BookmarkMinus,
+  BookmarkPlus,
+  RotateCcw,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react-native";
 
 import { PopoverMenu } from "@/ui/organisms/PopoverMenu";
 import type { MoreMenuKey } from "../logic/more-menu";
@@ -7,6 +14,7 @@ const TEST_IDS: Record<MoreMenuKey, string> = {
   save: "plan-overview-more-save",
   reminder: "plan-overview-more-reminder",
   howMade: "plan-overview-more-how-made",
+  reset: "plan-overview-more-reset",
 };
 
 export type PlanMoreMenuProps = {
@@ -25,6 +33,7 @@ export function PlanMoreMenu({ open, onClose, saved, items, anchor }: PlanMoreMe
     save: saved ? BookmarkMinus : BookmarkPlus,
     reminder: Bell,
     howMade: Sparkles,
+    reset: RotateCcw,
   };
 
   return (

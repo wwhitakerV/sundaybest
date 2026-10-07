@@ -1,3 +1,4 @@
+import { Stop } from "react-native-svg";
 import { StyleSheet } from "react-native";
 import { fireEvent, render, screen } from "@tests/helpers/render";
 
@@ -8,6 +9,7 @@ import {
   getFloatingNavBarTintHeight,
 } from "@/ui/organisms/floatingNavBar";
 import { PAGE_INSET, PAGE_TOP } from "@/ui/organisms/Screen";
+import { edgeFade } from "@/theme";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 
 function renderPage(extra: { feedback?: boolean } = {}) {
@@ -29,6 +31,12 @@ function layOut(testID: string, height: number) {
   fireEvent(screen.getByTestId(testID), "layout", {
     nativeEvent: { layout: { x: 0, y: 0, width: 390, height } },
   });
+}
+
+function stopOpacities(within: ReturnType<typeof screen.getByTestId>) {
+  return within
+    .findAll((node) => node.type === Stop)
+    .map((stop) => stop.props.stopOpacity as unknown);
 }
 
 describe("ScrollScreen", () => {
@@ -65,13 +73,12 @@ describe("ScrollScreen", () => {
     });
   });
 
-  it("fades the top edge out below the header, solid behind it", () => {
+  it("backs its header with the page, fading out below it, before it's even measured", () => {
     renderPage();
-    layOut("a-page-header", 100);
 
-    expect(screen.getByTestId("a-page-top-fade", { includeHiddenElements: true })).toHaveStyle({
-      height: 100 + EDGE_FADE,
-    });
+    expect(
+      screen.getByTestId("a-page-header-backdrop", { includeHiddenElements: true }),
+    ).toHaveStyle({ position: "absolute", top: 0, bottom: -EDGE_FADE });
   });
 
   it("starts its content clear of the header and its fade", () => {
@@ -126,6 +133,40 @@ describe("ScrollScreen", () => {
     });
   });
 
+  it("lets the page show faintly through its header, at the edges' lighter peak", () => {
+    renderPage();
+
+    const backdrop = screen.getByTestId("a-page-header-backdrop", { includeHiddenElements: true });
+    expect(
+      screen.getByTestId("a-page-header-backdrop-solid", { includeHiddenElements: true }),
+    ).toHaveStyle({ opacity: edgeFade.peak });
+    // The gradient picks up exactly where the solid block leaves off: no seam.
+    expect(stopOpacities(backdrop)[0]).toBe(edgeFade.peak);
+  });
+
+  it("can keep its header fully solid, for a page that asks", () => {
+    render(
+      <ScrollScreen testID="a-page" header={<SFProBody>The header</SFProBody>} solidHeader>
+        <SFProBody>The content</SFProBody>
+      </ScrollScreen>,
+    );
+
+    expect(
+      screen.getByTestId("a-page-header-backdrop-solid", { includeHiddenElements: true }),
+    ).toHaveStyle({ opacity: 1 });
+  });
+
+  it("ends a page with nothing at its foot on the same lighter peak", () => {
+    render(
+      <ScrollScreen testID="a-page">
+        <SFProBody>The content</SFProBody>
+      </ScrollScreen>,
+    );
+
+    const fade = screen.getByTestId("a-page-bottom-fade", { includeHiddenElements: true });
+    expect(Math.max(...(stopOpacities(fade) as number[]))).toBe(edgeFade.peak);
+  });
+
   describe("with a gradual header fade", () => {
     function renderGradual() {
       return render(
@@ -149,9 +190,9 @@ describe("ScrollScreen", () => {
       renderGradual();
       layOut("a-page-header", 160);
 
-      expect(screen.getByTestId("a-page-top-fade", { includeHiddenElements: true })).toHaveStyle({
-        height: 160,
-      });
+      expect(
+        screen.getByTestId("a-page-header-backdrop", { includeHiddenElements: true }),
+      ).toHaveStyle({ bottom: 0 });
       expect(screen.getByTestId("a-page-top-clearance")).toHaveStyle({ height: 160 });
     });
   });
@@ -170,9 +211,9 @@ describe("ScrollScreen", () => {
       layOut("a-page-header", 150);
 
       expect(screen.getByTestId("a-page-header")).not.toHaveStyle({ paddingBottom: GRADUAL_FADE });
-      expect(screen.getByTestId("a-page-top-fade", { includeHiddenElements: true })).toHaveStyle({
-        height: 160,
-      });
+      expect(
+        screen.getByTestId("a-page-header-backdrop", { includeHiddenElements: true }),
+      ).toHaveStyle({ bottom: -10 });
       expect(screen.getByTestId("a-page-top-clearance")).toHaveStyle({ height: 160 });
     });
   });

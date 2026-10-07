@@ -3,6 +3,7 @@ import Animated from "react-native-reanimated";
 import { ListChecks, X } from "lucide-react-native";
 
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
+import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { QuickCheckSkeleton } from "../components/QuickCheckSkeleton";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
@@ -30,130 +31,144 @@ export function QuickCheckScreen() {
     reduceMotion,
   });
 
-  if (view.loading) {
+  // While the quiz loads, its skeleton; then whatever came — handed over without a snap.
+  return (
+    <SkeletonHandoff
+      testID="quick-check-handoff"
+      fill
+      pending={view.loading}
+      skeleton={
+        <ScrollScreen
+          testID="quick-check-screen"
+          header={
+            <ScreenHeader
+              testID="quick-check-loading-header"
+              title="Quick check"
+              left={
+                <HeaderIconButton
+                  testID="quick-check-loading-close-button"
+                  icon={X}
+                  accessibilityLabel="Close"
+                  onPress={view.close}
+                />
+              }
+            />
+          }
+          contentStyle={styles.loadingContent}
+        >
+          <QuickCheckSkeleton testID="quick-check-content-pending" />
+        </ScrollScreen>
+      }
+    >
+      {renderPage()}
+    </SkeletonHandoff>
+  );
+
+  function renderPage() {
+    if (view.loading) return null;
+
+    if (!view.found) {
+      return (
+        <StudyNotFound testID="quick-check-not-found" error={view.error} onRetry={view.retry} />
+      );
+    }
+
+    const { questions, status, currentIndex, current, currentResult, action, score } = view;
+
+    const actionButton = (
+      <Button
+        testID={action.testID}
+        label={action.label}
+        disabled={view.busy || !action.enabled}
+        onPress={() => void view.act(action)}
+      />
+    );
+
+    if (status === "notStarted") {
+      return (
+        <MilestoneScreen
+          testID="quick-check-screen"
+          header={
+            <HeaderIconButton
+              testID="quick-check-close-button"
+              icon={X}
+              accessibilityLabel="Close"
+              onPress={view.close}
+            />
+          }
+          mark={<IconRing testID="quick-check-intro" icon={ListChecks} />}
+          title={`Day ${view.dayNumber} Quiz`}
+          subtitle={describeQuickCheckIntro(view.questionCount)}
+          footer={actionButton}
+        />
+      );
+    }
+
+    if (status === "completed" && score) {
+      return (
+        <MilestoneScreen
+          testID="quick-check-screen"
+          mark={
+            <ProgressRing
+              testID="quick-check-score-ring"
+              percent={score.percentage}
+              label={`${score.correct}/${score.total}`}
+            />
+          }
+          title={getScoreHeadline(score)}
+          subtitle={`${score.percentage}% right`}
+          footer={actionButton}
+        >
+          <QuickCheckResults testID="quick-check-results" items={view.review} />
+        </MilestoneScreen>
+      );
+    }
+
+    const shown = renderedPage > 0 ? questions.at(renderedPage - 1) : undefined;
+
+    const shownAnswer = shown && view.answers.find((answer) => answer.questionId === shown.id);
+
     return (
       <ScrollScreen
         testID="quick-check-screen"
         header={
-          <ScreenHeader
-            testID="quick-check-loading-header"
-            title="Quick check"
-            left={
-              <HeaderIconButton
-                testID="quick-check-loading-close-button"
-                icon={X}
-                accessibilityLabel="Close"
-                onPress={view.close}
-              />
-            }
+          <QuickCheckHeader
+            testID="quick-check"
+            total={questions.length}
+            progress={{
+              counter: currentIndex + 1,
+              index: currentIndex,
+            }}
+            onClose={view.close}
           />
         }
-        contentStyle={styles.loadingContent}
+        footer={actionButton}
+        {...(current &&
+          currentResult !== "unanswered" && {
+            feedback: (
+              <QuickCheckFeedback
+                result={currentResult}
+                question={current}
+                action={action}
+                busy={view.busy}
+                onAction={() => void view.act(action)}
+              />
+            ),
+          })}
       >
-        <QuickCheckSkeleton testID="quick-check-content-pending" />
+        <Animated.View style={bodyStyle}>
+          {shown && (
+            <QuickCheckQuestion
+              question={shown}
+              selectedChoiceId={view.selectedFor(shown.id)}
+              answeredChoiceId={shownAnswer?.choiceId ?? null}
+              onPick={view.pick}
+            />
+          )}
+        </Animated.View>
       </ScrollScreen>
     );
   }
-
-  if (!view.found) {
-    return <StudyNotFound testID="quick-check-not-found" error={view.error} onRetry={view.retry} />;
-  }
-
-  const { questions, status, currentIndex, current, currentResult, action, score } = view;
-
-  const actionButton = (
-    <Button
-      testID={action.testID}
-      label={action.label}
-      disabled={view.busy || !action.enabled}
-      onPress={() => void view.act(action)}
-    />
-  );
-
-  if (status === "notStarted") {
-    return (
-      <MilestoneScreen
-        testID="quick-check-screen"
-        header={
-          <HeaderIconButton
-            testID="quick-check-close-button"
-            icon={X}
-            accessibilityLabel="Close"
-            onPress={view.close}
-          />
-        }
-        mark={<IconRing testID="quick-check-intro" icon={ListChecks} />}
-        title={`Day ${view.dayNumber} Quiz`}
-        subtitle={describeQuickCheckIntro(view.questionCount)}
-        footer={actionButton}
-      />
-    );
-  }
-
-  if (status === "completed" && score) {
-    return (
-      <MilestoneScreen
-        testID="quick-check-screen"
-        mark={
-          <ProgressRing
-            testID="quick-check-score-ring"
-            percent={score.percentage}
-            label={`${score.correct}/${score.total}`}
-          />
-        }
-        title={getScoreHeadline(score)}
-        subtitle={`${score.percentage}% right`}
-        footer={actionButton}
-      >
-        <QuickCheckResults results={view.results} />
-      </MilestoneScreen>
-    );
-  }
-
-  const shown = renderedPage > 0 ? questions.at(renderedPage - 1) : undefined;
-
-  const shownAnswer = shown && view.answers.find((answer) => answer.questionId === shown.id);
-
-  return (
-    <ScrollScreen
-      testID="quick-check-screen"
-      header={
-        <QuickCheckHeader
-          testID="quick-check"
-          total={questions.length}
-          progress={{
-            counter: currentIndex + 1,
-            index: currentIndex,
-          }}
-          onClose={view.close}
-        />
-      }
-      footer={actionButton}
-      {...(current &&
-        currentResult !== "unanswered" && {
-          feedback: (
-            <QuickCheckFeedback
-              result={currentResult}
-              question={current}
-              action={action}
-              busy={view.busy}
-              onAction={() => void view.act(action)}
-            />
-          ),
-        })}
-    >
-      <Animated.View style={bodyStyle}>
-        {shown && (
-          <QuickCheckQuestion
-            question={shown}
-            selectedChoiceId={view.selectedFor(shown.id)}
-            answeredChoiceId={shownAnswer?.choiceId ?? null}
-            onPick={view.pick}
-          />
-        )}
-      </Animated.View>
-    </ScrollScreen>
-  );
 }
 
 const styles = StyleSheet.create({

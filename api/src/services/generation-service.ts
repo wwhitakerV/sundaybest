@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, ne } from "drizzle-orm";
+import { and, desc, eq, isNull, notInArray } from "drizzle-orm";
 
 import type { CreatePlanRequest } from "../contracts/plans.js";
 import type { Database } from "../db/client.js";
@@ -56,9 +56,10 @@ export function createGenerationService(db: Database) {
       if (!sermon[0]) throw new AppError("NOT_FOUND", "Sermon not found");
 
       return db.transaction(async (tx) => {
-        // One plan per sermon per reader: asking again opens the plan they
-        // have. One that failed to build does not count. Locking the reader
-        // serializes their creates, so two taps cannot both start one.
+        // Asking again for a sermon makes a new plan (a reader may keep two to
+        // compare) — unless one for it is still being built, which opens
+        // instead. Locking the reader serializes their creates, so two taps
+        // cannot both start one.
         await tx.select({ id: users.id }).from(users).where(eq(users.id, userId)).for("update");
         const [owned] = await tx
           .select({ planId: planGenerations.planId, generationId: planGenerations.id })
@@ -66,7 +67,7 @@ export function createGenerationService(db: Database) {
           .where(and(
             eq(planGenerations.userId, userId),
             eq(planGenerations.sermonId, input.sermonId),
-            ne(planGenerations.status, "failed"),
+            notInArray(planGenerations.status, ["completed", "failed"]),
           ))
           .orderBy(desc(planGenerations.createdAt))
           .limit(1);

@@ -25,7 +25,7 @@ export type StepTransitionOptions = {
 };
 
 /**
- * Cross-fades a multi-step screen's body between steps (Daily Study, Quick
+ * Cross-fades a multi-step screen's body between steps (Quick
  * Check, New Plan). `step` updates at once, so step indicators move
  * immediately; the returned `renderedStep` only follows once the outgoing
  * body has faded and dropped. The incoming body then fades up into place.

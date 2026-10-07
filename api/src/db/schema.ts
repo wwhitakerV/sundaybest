@@ -16,6 +16,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
+import type { StoredReadingParagraph } from "../generation/reading.js";
 
 export const userStatusEnum = pgEnum("user_status", ["active", "deleted"]);
 export const themeEnum = pgEnum("theme_preference", ["system", "light", "dark"]);
@@ -343,7 +344,9 @@ export const planDays = pgTable(
     readingTitle: text("reading_title").notNull(),
     /** The day's thesis from the plan step; never shown. Null for days written before it was kept. */
     focus: text("focus"),
-    readingParagraphs: jsonb("reading_paragraphs").$type<string[]>().notNull(),
+    // Plain strings for plans written before Read headings, never rewritten;
+    // `{ heading, content }` for every plan since.
+    readingParagraphs: jsonb("reading_paragraphs").$type<StoredReadingParagraph[]>().notNull(),
     sermonQuote: text("sermon_quote"),
     clipStartSeconds: integer("clip_start_seconds"),
     clipEndSeconds: integer("clip_end_seconds"),

@@ -15,6 +15,11 @@ export type TopFadeProps = {
    * a straight solid-to-clear ramp without it.
    */
   ramp?: readonly { at: number; opacity: number }[];
+  /**
+   * How opaque its solid end is: 1, unless it's a page edge
+   * (`edgeFade.peak`). The whole ramp is scaled by it, keeping its shape.
+   */
+  peak?: number;
   testID?: string;
 };
 
@@ -24,7 +29,13 @@ export type TopFadeProps = {
  * scrolls up under a header fades rather than stopping at its edge.
  * Absolutely positioned; never takes touches.
  */
-export function TopFade({ height, solidHeight, ramp = LINEAR_RAMP, testID }: TopFadeProps) {
+export function TopFade({
+  height,
+  solidHeight,
+  ramp = LINEAR_RAMP,
+  peak = 1,
+  testID,
+}: TopFadeProps) {
   const theme = useTheme();
   // Unique per instance: SVG gradient ids are document-global on some renderers.
   const gradientId = `top-fade-${useId()}`;
@@ -45,7 +56,8 @@ export function TopFade({ height, solidHeight, ramp = LINEAR_RAMP, testID }: Top
                 key={index}
                 offset={offset}
                 stopColor={theme.colors.background}
-                stopOpacity={opacity}
+                // Rounded, so a scaled stop is the number it reads as (0.6 × 0.85 = 0.51).
+                stopOpacity={Math.round(opacity * peak * 1000) / 1000}
               />
             ))}
           </LinearGradient>

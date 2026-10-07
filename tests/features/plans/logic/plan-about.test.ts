@@ -1,5 +1,5 @@
 import type { ApiPlanAbout } from "@/core/api/contracts";
-import { describePlanAbout } from "@/features/plans/logic/plan-about";
+import { describePlanAbout, takeawayCardWidth } from "@/features/plans/logic/plan-about";
 
 const ABOUT: ApiPlanAbout = {
   overview: ["Choosing God is a daily act."],
@@ -24,5 +24,15 @@ describe("describePlanAbout", () => {
 
   it("lists each Scripture by its reference, in the sermon's order", () => {
     expect(describePlanAbout(ABOUT)?.scriptures).toEqual(["Joshua 24:15", "Romans 12"]);
+  });
+});
+
+describe("takeawayCardWidth", () => {
+  it("leaves the next card peeking in when there are several", () => {
+    expect(takeawayCardWidth({ viewportWidth: 375, inset: 24, peek: 36, count: 3 })).toBe(291);
+  });
+
+  it("fills the page's width when there is only one", () => {
+    expect(takeawayCardWidth({ viewportWidth: 375, inset: 24, peek: 36, count: 1 })).toBe(327);
   });
 });

@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
+import { useScrollToEnd } from "@/hooks/use-scroll-to-end";
 import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
 
 type ScrollOptions = {
@@ -48,7 +49,11 @@ export function ScrollScreen({
   );
 }
 
-/** The scroll itself, its content resting clear of the frame's header, dock, and fades. */
+/**
+ * The scroll itself, its content resting clear of the frame's header, dock,
+ * and fades. When a verdict comes up (`feedback`), it scrolls all the way
+ * down, so the answer it's about is never left behind the panel.
+ */
 function ClearedScroll({
   testID,
   children,
@@ -57,9 +62,12 @@ function ClearedScroll({
   automaticallyAdjustKeyboardInsets,
 }: ScrollOptions & { testID: string; children: ReactNode }) {
   const clearance = useFrameClearance();
+  const scroll = useRef<ScrollView>(null);
+  useScrollToEnd(scroll, clearance.verdict ? clearance.bottom : null);
 
   return (
     <ScrollView
+      ref={scroll}
       testID={`${testID}-scroll`}
       style={styles.scroll}
       contentContainerStyle={[SCROLL_INSET, contentStyle]}

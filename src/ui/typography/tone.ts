@@ -25,6 +25,7 @@ export type Tone = Extract<
   | "border"
   | "correct"
   | "incorrect"
+  | "waitingInk"
   | "inkOnLight"
   | "inkOnLightMuted"
   | "inkOnDark"

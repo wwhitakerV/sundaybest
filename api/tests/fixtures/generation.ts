@@ -38,7 +38,10 @@ export function outlineOutput(lengthDays = 1): OutlineOutput {
 /** The day step for one day. */
 export function dayOutput(dayNumber = 1): DayOutput {
   return {
-    readingParagraphs: [`God's love is demonstrated in giving His Son. Study emphasis ${dayNumber}.`],
+    readingParagraphs: [{
+      heading: "Love That Gives",
+      content: `God's love is demonstrated in giving His Son. Study emphasis ${dayNumber}.`,
+    }],
     sermonQuote: sourceQuote,
     clipStartSeconds: 0,
     clipEndSeconds: 30,

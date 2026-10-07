@@ -11,7 +11,9 @@ const map = (raw: unknown, sermonInput = input) => mapDay(raw, sermonInput, day,
 
 test("the day step keeps the reading, reflections, prayer, quote and clip", () => {
   const mapped = map(dayOutput());
-  assert.deepEqual(mapped.readingParagraphs, ["God's love is demonstrated in giving His Son. Study emphasis 1."]);
+  assert.deepEqual(mapped.readingParagraphs, [
+    { heading: "Love That Gives", content: "God's love is demonstrated in giving His Son. Study emphasis 1." },
+  ]);
   assert.equal(mapped.sermonQuote, sourceQuote);
   assert.deepEqual([mapped.clipStartSeconds, mapped.clipEndSeconds], [0, 30]);
   assert.equal(mapped.reflections.length, 1);
@@ -38,9 +40,23 @@ test("a clip that does not contain its sermon quote is left out", () => {
 });
 
 test("the reading may have up to twenty paragraphs", () => {
-  const paragraphs = Array.from({ length: 20 }, (_, index) => `Paragraph ${index + 1} of the reading.`);
+  const paragraphs = Array.from({ length: 20 }, (_, index) => ({ heading: `Idea ${index + 1}`, content: `Paragraph ${index + 1} of the reading.` }));
   assert.equal(map({ ...dayOutput(), readingParagraphs: paragraphs }).readingParagraphs.length, 20);
-  assert.throws(() => map({ ...dayOutput(), readingParagraphs: [...paragraphs, "One too many."] }), /day step returned invalid content/);
+  assert.throws(() => map({ ...dayOutput(), readingParagraphs: [...paragraphs, { heading: "Extra", content: "One too many." }] }), /day step returned invalid content/);
+});
+
+test("each reading paragraph keeps its heading and content, trimmed", () => {
+  const mapped = map({ ...dayOutput(), readingParagraphs: [{ heading: "  Hope Is Not Denial ", content: " Real pain is named. " }] });
+  assert.deepEqual(mapped.readingParagraphs, [{ heading: "Hope Is Not Denial", content: "Real pain is named." }]);
+});
+
+test("a reading paragraph without its heading is rejected", () => {
+  assert.throws(() => map({ ...dayOutput(), readingParagraphs: ["Just text."] }), /day step returned invalid content/);
+  assert.throws(() => map({ ...dayOutput(), readingParagraphs: [{ heading: "", content: "Text." }] }), /day step returned invalid content/);
+});
+
+test("a heading over eighty characters is rejected", () => {
+  assert.throws(() => map({ ...dayOutput(), readingParagraphs: [{ heading: "H".repeat(81), content: "Text." }] }), /day step returned invalid content/);
 });
 
 const romans5 = { book: "Romans", chapter: 5, verseStart: 8, verseEnd: 8, reference: "Romans 5:8", connection: "  Shows God's love given before we responded.  " };

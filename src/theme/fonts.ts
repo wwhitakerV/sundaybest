@@ -1,5 +1,5 @@
-import BodoniModa9ptRegular from "../../assets/fonts/BodoniModa_9pt-Regular.ttf";
-import BodoniModa9ptMedium from "../../assets/fonts/BodoniModa_9pt-Medium.ttf";
+import LibreBaskervilleRegular from "../../assets/fonts/LibreBaskerville-Regular.ttf";
+import LibreBaskervilleMedium from "../../assets/fonts/LibreBaskerville-Medium.ttf";
 import IBMPlexMonoRegular from "../../assets/fonts/IBMPlexMono-Regular.ttf";
 import IBMPlexMonoMedium from "../../assets/fonts/IBMPlexMono-Medium.ttf";
 import IBMPlexMonoSemiBold from "../../assets/fonts/IBMPlexMono-SemiBold.ttf";
@@ -13,10 +13,15 @@ import IBMPlexMonoSemiBold from "../../assets/fonts/IBMPlexMono-SemiBold.ttf";
  * weight (e.g. IBM Plex Mono Medium's internal family name is "IBM Plex Mono
  * Medium", not "IBM Plex Mono" at a different weight) and would be a
  * typo-prone string to spread across the app otherwise.
+ *
+ * Libre Baskerville's two files are static cuts (400 and 500) of the variable
+ * `LibreBaskerville-VariableFont_wght.ttf`, made with fontTools'
+ * `varLib.instancer --static --update-name-table`: iOS can't pick a weight off
+ * a variable font's axis through `fontWeight`, so each weight is its own file.
  */
 export const FONT_ASSETS = {
-  "BodoniModa9pt-Regular": BodoniModa9ptRegular,
-  "BodoniModa9pt-Medium": BodoniModa9ptMedium,
+  "LibreBaskerville-Regular": LibreBaskervilleRegular,
+  "LibreBaskerville-Medium": LibreBaskervilleMedium,
   "IBMPlexMono-Regular": IBMPlexMonoRegular,
   "IBMPlexMono-Medium": IBMPlexMonoMedium,
   "IBMPlexMono-SemiBold": IBMPlexMonoSemiBold,
@@ -32,11 +37,11 @@ export type FontFamilyKey = keyof typeof FONT_ASSETS;
  */
 export const fonts = {
   /** SUNDAYBEST masthead and editorial headings. Never apply a bold override. */
-  masthead: "BodoniModa9pt-Medium" satisfies FontFamilyKey,
+  masthead: "LibreBaskerville-Medium" satisfies FontFamilyKey,
   /** Devotional headings / pull lines. */
-  editorialHeading: "BodoniModa9pt-Medium" satisfies FontFamilyKey,
+  editorialHeading: "LibreBaskerville-Medium" satisfies FontFamilyKey,
   /** Longer prayer or reading text. */
-  editorialBody: "BodoniModa9pt-Regular" satisfies FontFamilyKey,
+  editorialBody: "LibreBaskerville-Regular" satisfies FontFamilyKey,
   /** Dates, "Day 2 of 6", issue numbers, timestamps. */
   metaLabel: "IBMPlexMono-Medium" satisfies FontFamilyKey,
   /** Longer metadata / helper copy. */

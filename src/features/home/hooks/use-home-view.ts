@@ -35,6 +35,8 @@ export function useHomeView() {
   const prefetch = usePrefetch();
   const activeId = plan?.id ?? null;
   const openDay = currentDay && currentDay.status !== "locked" ? currentDay.dayNumber : null;
+  // Today's day done and the next not open yet: Continue says when it opens.
+  const waiting = currentDay?.status === "locked";
 
   // Every plan's artwork on Home is drawn the moment it's shown.
   const artwork = allPlans.map((candidate) => candidate.sermon.thumbnailUrl).join("\n");
@@ -64,6 +66,7 @@ export function useHomeView() {
               totalDays: plan.lengthDays,
               dayTitle: currentDay.title,
               minutes: currentDay.estimatedMinutes,
+              waiting,
             }),
             currentDay: currentDay.dayNumber,
             totalDays: plan.lengthDays,
@@ -72,6 +75,7 @@ export function useHomeView() {
           bar: {
             title: plan.title,
             day: formatDay(currentDay.dayNumber),
+            waiting,
             thumbnailUrl: plan.sermon.thumbnailUrl,
             colors: plan.sermon.thumbnailColors,
           },

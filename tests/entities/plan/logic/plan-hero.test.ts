@@ -38,4 +38,16 @@ describe("describePlanHero", () => {
       "IN PROGRESS · DAY 1 OF 1",
     );
   });
+
+  it("says the day it's on opens tomorrow, once today's is done", () => {
+    expect(
+      describePlanHero({ status: "active", currentDay: 3, totalDays: 6, waiting: true, ...DAY }),
+    ).toMatchObject({ action: "Day 3 tomorrow", waiting: true });
+  });
+
+  it("only waits on a plan under way", () => {
+    expect(
+      describePlanHero({ status: "ready", currentDay: 1, totalDays: 6, waiting: true, ...DAY }),
+    ).toMatchObject({ action: "Start Day 1" });
+  });
 });

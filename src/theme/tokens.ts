@@ -31,6 +31,9 @@ const palette = {
   green: "#00A378",
   darkgrey: "#55555D",
   grey: "#8A8A92",
+  // A waiting control's words: grey enough to read as not yet, dark enough
+  // to read on its grey fill.
+  waitingInk: "#71717A",
   // Navigation-chrome ink. Close to but distinct from `black` above — the
   // header/title/icon spec calls for this exact value, not the brand black.
   ink: "#111113",
@@ -197,6 +200,13 @@ type ColorTokens = {
   hairline: string;
   /** A segmented control's unselected track. */
   segmentBackground: string;
+  /**
+   * A way on that's waiting (a day not open yet): an opaque grey fill — plainly
+   * there, plainly not ready, never mistaken for the white or black of one that is.
+   */
+  waitingFill: string;
+  /** The words and icon on `waitingFill`. */
+  waitingInk: string;
   /** A segmented control's selected segment. */
   segmentActiveBackground: string;
   /** An active tab's background pill inside the floating tab bar. */
@@ -333,6 +343,8 @@ const lightColors: ColorTokens = {
   chromeStepCounter: palette.grey,
   hairline: palette.hairline,
   segmentBackground: palette.overlaySubtle,
+  waitingFill: palette.greyLight,
+  waitingInk: palette.waitingInk,
   segmentActiveBackground: palette.overlayMedium,
   tabActiveBackground: palette.overlayLight,
   stepLabelActive: palette.pureBlack,
@@ -418,6 +430,8 @@ const darkColors: ColorTokens = {
   chromeStepCounter: palette.grey,
   hairline: palette.hairlineOnDark,
   segmentBackground: palette.overlaySubtleOnDark,
+  waitingFill: palette.cardEdgeOnDark,
+  waitingInk: palette.grey,
   segmentActiveBackground: palette.overlayMediumOnDark,
   tabActiveBackground: palette.overlayStrongOnDark,
   stepLabelActive: palette.white,
@@ -543,7 +557,23 @@ export const motion = {
    */
   skeletonPulseMs: 900,
   skeletonDim: 0.5,
+  /**
+   * A page's parts arriving (the Daily Study): each fades in as it moves
+   * `fromX` to the left into place — never up or down — `staggerMs` behind
+   * the one before.
+   */
+  pageEnter: { durationMs: 420, staggerMs: 90, fromX: 16 },
+  /** A skeleton handing over: it fades out as what it stood for fades in. */
+  handoffMs: 280,
 } as const;
+
+/**
+ * The page's vertical edge fades — behind the status bar and a header, and
+ * the dock's and tab bar's tint: how opaque they get at their solid end, so
+ * what scrolls under them still shows, faintly. Each fade's whole ramp is
+ * scaled by it, keeping its shape.
+ */
+export const edgeFade = { peak: 0.85 } as const;
 
 /** The heights controls repeat. */
 export const controlHeight = {
@@ -592,7 +622,8 @@ const radii = {
  * these same absolute values and adapt through layout, not type size.
  */
 const typography = {
-  masthead: { fontFamily: fonts.masthead, fontSize: 18, fontWeight: "400" },
+  /** 16pt: Libre Baskerville runs ~13% wider than the Bodoni it replaced, so it keeps the same width. */
+  masthead: { fontFamily: fonts.masthead, fontSize: 16, fontWeight: "400" },
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
   /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
@@ -613,7 +644,7 @@ const typography = {
   },
   /**
    * The editorial face at its grandest: a page named like a book (Theology
-   * Exams). Bodoni's line is kept 1.25× its size: set any tighter, iOS
+   * Exams). The face's line is kept 1.25× its size: set any tighter, iOS
    * keeps the room below the baseline and trims the tops of its capitals
    * (0.75× its size) and ascenders.
    */
@@ -686,6 +717,8 @@ const typography = {
   /** A title on a large card (the Plans library's): bold, set close for up to three lines. */
   cardTitle: { fontSize: 20, fontWeight: "700", lineHeight: 25 },
   smallCardTitle: { fontSize: 18, fontWeight: "600", lineHeight: 22 },
+  /** A card title a touch lighter than `cardTitle`, at its size: a plan card's, over its artwork. */
+  offerTitle: { fontSize: 20, fontWeight: "600", lineHeight: 25 },
   /** The number on a small tile (Plan Detail's days): large enough to read at a glance. */
   tileNumber: { fontSize: 22, fontWeight: "600" },
   /** A study step's name on its row (Plan Detail's day): clear, and firm enough to tap. */
@@ -763,13 +796,28 @@ const typography = {
   stepLabel: { fontSize: 13, fontWeight: "400", lineHeight: 16 },
   /** Long-form reading (a Daily Study's Read step): body size, loosely leaded for a page of it. */
   reading: { fontSize: 17, fontWeight: "400", lineHeight: 30 },
-  /** A Scripture passage set as the page's centrepiece. Bodoni, generously leaded. */
+  /** A Scripture passage set as the page's centrepiece. The editorial face, generously leaded. */
   scripture: { fontFamily: fonts.editorialBody, fontSize: 24, fontWeight: "400", lineHeight: 36 },
+  /**
+   * A section's opening paragraph, set apart as a magazine's standfirst: the
+   * editorial face, a step below `scripture` (About this plan's overview).
+   */
+  standfirst: { fontFamily: fonts.editorialBody, fontSize: 20, fontWeight: "400", lineHeight: 30 },
   /**
    * A question set as the page's centrepiece (a theology exam's): the
    * editorial face, a step over `editorialTitle`, leaded for several lines.
    */
   question: { fontFamily: fonts.editorialHeading, fontSize: 26, fontWeight: "500", lineHeight: 34 },
+  /**
+   * A Quick Check question: the editorial face, as Scripture study is set, a
+   * touch under a screen title, leaded so a long question reads easily.
+   */
+  quizQuestion: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 24,
+    fontWeight: "500",
+    lineHeight: 33,
+  },
   /** A line to keep, set apart on a reading page: the editorial face, leaded. */
   pullLine: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500", lineHeight: 28 },
 } as const;
@@ -785,6 +833,8 @@ const elevation = {
   folio: { shadowOffset: { width: 0, height: 18 }, shadowOpacity: 0.14, shadowRadius: 16 },
   /** A menu floating over the page: a soft, wide shadow. */
   menu: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 24 },
+  /** An answer to tap, lifted just off the page: a Quick Check choice. */
+  choice: { shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
 } as const;
 
 /**

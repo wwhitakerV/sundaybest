@@ -56,3 +56,12 @@ two taps cannot both start one.
   only requests after one has finished reuse it. (One reader cannot: see above.)
 - The app is not told that an existing plan was returned; it opens it as if
   just built. Saying so needs a client contract change.
+
+## Amendment (2026-10-07): a reader may keep two plans for one sermon
+
+To compare plans written under different prompts, asking again for a sermon
+you already have now makes a **new** plan — unless one for it is still being
+built, which opens instead (so a double tap still can't start two). A
+reader's own plans are never the source of a copy: asking again is asking for
+a fresh one. Copying between different readers is unchanged. Existing plans
+are never altered by any of this.

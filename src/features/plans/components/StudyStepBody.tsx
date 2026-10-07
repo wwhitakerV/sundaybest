@@ -5,7 +5,6 @@ import { PrayStep } from "./PrayStep";
 import { ReadStep } from "./ReadStep";
 import { ReflectStep } from "./ReflectStep";
 import { ScriptureStep } from "./ScriptureStep";
-import type { FollowStyle } from "./StudyFollow";
 
 export type StudyStepBodyProps = {
   stepKey: StudyStepKey;
@@ -14,8 +13,6 @@ export type StudyStepBodyProps = {
   content: StudyDayContent;
   answerFor: (reflectionId: Id) => string;
   onAnswerChange: (reflectionId: Id, answer: string) => void;
-  /** Brings each page's content in a beat after its title. */
-  followStyle?: FollowStyle;
 };
 
 /** One Daily Study step's body, with the day's content for it. */
@@ -25,20 +22,21 @@ export function StudyStepBody({
   content,
   answerFor,
   onAnswerChange,
-  followStyle,
 }: StudyStepBodyProps) {
   const { day, scripture, reflections, prayer } = content;
   const reflection = reflections.at(page);
 
   switch (stepKey) {
     case "read":
-      return <ReadStep dayNumber={day.dayNumber} reading={day.reading} followStyle={followStyle} />;
-    case "scripture":
       return (
-        scripture && (
-          <ScriptureStep dayNumber={day.dayNumber} passage={scripture} followStyle={followStyle} />
-        )
+        <ReadStep
+          dayNumber={day.dayNumber}
+          reading={day.reading}
+          passageReference={scripture?.reference ?? ""}
+        />
       );
+    case "scripture":
+      return scripture && <ScriptureStep dayNumber={day.dayNumber} passage={scripture} />;
     case "reflect":
       return (
         reflection && (
@@ -49,13 +47,10 @@ export function StudyStepBody({
             total={reflections.length}
             answer={answerFor(reflection.id)}
             onAnswerChange={(answer) => onAnswerChange(reflection.id, answer)}
-            followStyle={followStyle}
           />
         )
       );
     case "pray":
-      return (
-        prayer && <PrayStep dayNumber={day.dayNumber} prayer={prayer} followStyle={followStyle} />
-      );
+      return prayer && <PrayStep dayNumber={day.dayNumber} prayer={prayer} />;
   }
 }

@@ -11,7 +11,7 @@ test("rejects quiz questions with multiple correct answers", () => {
       {
         dayNumber: 1,
         readingTitle: "Day 1",
-        readingParagraphs: ["Text"],
+        readingParagraphs: [{ heading: "Heading", content: "Text" }],
         sermonQuote: null,
         clipStartSeconds: null,
         clipEndSeconds: null,

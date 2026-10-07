@@ -18,11 +18,19 @@ test("streak stays alive through yesterday before today's study", () => {
 
 test("study time estimate is always a positive whole number", () => {
   const minutes = estimateDayMinutes({
-    readingParagraphs: ["Grace changes how we respond to ordinary work."],
+    readingParagraphs: [{ heading: "Ordinary Work", content: "Grace changes how we respond to ordinary work." }],
     reflectionQuestions: ["What should change today?"],
     prayerText: "Lord, make me faithful today.",
     verseCount: 2,
   });
   assert.equal(Number.isInteger(minutes), true);
   assert.equal(minutes > 0, true);
+});
+
+test("study time counts a reading's headings and text, and a plan written before headings the same way", () => {
+  const rest = { reflectionQuestions: [], prayerText: "Amen.", verseCount: 1 };
+  const words = Array.from({ length: 400 }, () => "word").join(" ");
+  const headed = estimateDayMinutes({ ...rest, readingParagraphs: [{ heading: "Two Words", content: words }] });
+  const legacy = estimateDayMinutes({ ...rest, readingParagraphs: [`Two Words ${words}`] });
+  assert.equal(headed, legacy);
 });

@@ -8,8 +8,14 @@ import { mapSupporting } from "../supporting.js";
 import { containsExcerpt, normalizeSourceText } from "../transcript.js";
 import type { Outline, OutlineDay } from "./outline.js";
 
+/** One Read paragraph: a short editorial heading and the teaching under it. */
+const readingParagraphOutput = z.object({
+  heading: z.string().min(1).max(80),
+  content: z.string().min(1).max(8000),
+});
+
 export const dayOutputSchema = z.object({
-  readingParagraphs: z.array(z.string().min(1).max(8000)).min(1).max(20),
+  readingParagraphs: z.array(readingParagraphOutput).min(1).max(20),
   sermonQuote: z.string().min(1).max(2000).nullable(),
   clipStartSeconds: z.number().int().nonnegative().nullable(),
   clipEndSeconds: z.number().int().nonnegative().nullable(),
@@ -29,7 +35,10 @@ export type DayOutput = z.infer<typeof dayOutputSchema>;
 
 /** A verified day step, as kept for a re-run. */
 export const dayContentSchema = z.object({
-  readingParagraphs: z.array(z.string().min(1)).min(1).max(20),
+  readingParagraphs: z
+    .array(z.object({ heading: z.string().min(1), content: z.string().min(1) }))
+    .min(1)
+    .max(20),
   sermonQuote: z.string().min(1).nullable(),
   clipStartSeconds: z.number().int().nonnegative().nullable(),
   clipEndSeconds: z.number().int().nonnegative().nullable(),
@@ -56,7 +65,10 @@ export function mapDay(raw: unknown, input: PlanGenerationInput, day: OutlineDay
     && clipIsValid(output.clipStartSeconds, output.clipEndSeconds, sermonQuote, input);
   const sermonNamed = [...outline.about.scripturesReferenced, ...outline.days.map((other) => other.scripture)];
   return {
-    readingParagraphs: output.readingParagraphs.map((paragraph) => paragraph.trim()),
+    readingParagraphs: output.readingParagraphs.map(({ heading, content }) => ({
+      heading: heading.trim(),
+      content: content.trim(),
+    })),
     sermonQuote,
     clipStartSeconds: clipKept ? output.clipStartSeconds : null,
     clipEndSeconds: clipKept ? output.clipEndSeconds : null,

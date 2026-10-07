@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { Link, type Href } from "expo-router";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import { BookOpen } from "lucide-react-native";
+import { BookOpen, Lock } from "lucide-react-native";
 
 import { CompactButton } from "@/ui/atoms/CompactButton";
 import { HeroBackdrop, getHeroPalette } from "@/entities/plan";
@@ -28,6 +28,8 @@ export type ActivePlanBarProps = {
     title: string;
     /** "Day 2". */
     day: string;
+    /** Today's day is done and this one isn't open yet: its button waits, greyed, with a lock. */
+    waiting?: boolean;
     thumbnailUrl: string | null;
     /** The sermon's colours, strongest first; empty until known. */
     colors: readonly string[];
@@ -50,7 +52,7 @@ export type ActivePlanBarProps = {
  */
 export function ActivePlanBar({ plan, topInset, motion, href, onContinue }: ActivePlanBarProps) {
   const theme = useTheme();
-  const { title, day, thumbnailUrl, colors } = plan;
+  const { title, day, thumbnailUrl, colors, waiting = false } = plan;
   const { style, thumbStyle, touchable } = motion;
   const { colour, light } = getHeroPalette(colors, theme.colors.featureBackdrop);
 
@@ -93,10 +95,10 @@ export function ActivePlanBar({ plan, topInset, motion, href, onContinue }: Acti
         </Link>
         <CompactButton
           testID="home-tab-plan-bar-continue"
-          label={`Continue ${day}`}
-          icon={BookOpen}
+          label={waiting ? `${day} tomorrow` : `Continue ${day}`}
+          icon={waiting ? Lock : BookOpen}
           iconOnly
-          tone={light ? "light" : "dark"}
+          tone={waiting ? "waiting" : light ? "light" : "dark"}
           onPress={onContinue}
         />
       </View>

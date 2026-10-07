@@ -52,8 +52,12 @@ else draws a page's top or foot. The scroller runs the phone's full height and
 width; the page inset sits on its content and on the header, never around the
 scroller (`<Screen padded>` around a `ScrollView` is wrong).
 
-- **The top** is the `header` slot: it floats over the scroll on a `TopFade` —
-  solid behind the status bar and the header, fading out 16pt below it — so what
+- **The top** is the `header` slot: it floats over the scroll on its own
+  backdrop (`HeaderBackdrop`, drawn inside the header's block, so it's never
+  see-through, measured or not) —
+  solid behind the status bar and the header (at `edgeFade.peak`, 0.85, so what
+  scrolls under still shows faintly — every page-edge fade and tint shares it),
+  fading out 16pt below it — so what
   scrolls up dissolves under it. With no header the status bar still gets it.
   A header with controls that sit low in it (Plans' filters, Study's steps)
   takes `headerFade="gradual"`: a thicker, eased fade inside the header's own
@@ -74,7 +78,10 @@ These hold on every screen; a screen that breaks one is unfinished.
   native splash, then `LoadingScreen` — the same wordmark on white — and
   nothing else. Content on its way is a skeleton in its own shape (`Skeleton`
   with `Bone`s and `SkeletonLines`; `ContentPending` only where nothing has a
-  shape yet), breathing gently, still under Reduce Motion. The one `Spinner`
+  shape yet), breathing gently, still under Reduce Motion. A skeleton never
+  snaps away: it hands over through `SkeletonHandoff` (fading out over the
+  content as the content fades in), around a part of a page or, with `fill`,
+  a whole pending screen. The one `Spinner`
   marks a step under way in a list of steps (the generation sheet). A button
   never spins: while its action runs it keeps its words and ignores a second
   press, and where it can it doesn't wait at all (Create plan closes New Plan
@@ -84,7 +91,11 @@ These hold on every screen; a screen that breaks one is unfinished.
   couldn't be reached), and always beside a way out (`NotFoundScreen`'s
   `secondary`, `ScreenLoadError`'s `leave`). An answer from the server — a day
   not open yet, a plan that isn't there — is said plainly, never retried.
-  Don't navigate into what's known to be locked: show it where it is.
+  Don't navigate into what's known to be locked: show it where it is. A way on that
+  isn't open yet ("Day 3 tomorrow") waits: a lock, `CompactButton`'s `waiting`
+  tone or `FloatingButton`'s `waiting` — opaque `waitingFill` with
+  `waitingInk`, no edge of its own. Never translucent, and never the white or
+  black of a button that's ready.
 - **Both ends fade, the same way everywhere.** See Scrolling pages: the
   header over a `TopFade`, the way on in the dock on the tab bar's tint. A
   custom floating bar uses `FloatingBar` or `DockTint`, never its own fade.
@@ -94,6 +105,16 @@ These hold on every screen; a screen that breaks one is unfinished.
 - **Images go through `expo-image`** (`VideoThumbnail` for artwork), cached in
   memory and on disk; artwork about to be seen is warmed with `prefetchImages`
   (`@/core/images`).
+
+## Page entrances
+
+A page whose parts arrive in turn (the Daily Study's) wraps each part in
+`PageEnter` (`src/ui/atoms`): a Reanimated CSS animation declared in its
+style — fading in as it moves left into place, never up or down, a beat
+behind the part before (`motion.pageEnter`). It plays on mount, so the page
+is keyed (`key={pageIndex}`) to play it again; never trigger an entrance from
+an effect, a key comparison, or an animation callback. Reduce Motion keeps
+the fade and drops the movement.
 
 ## Milestone pages
 

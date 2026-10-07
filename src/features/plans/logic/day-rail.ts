@@ -9,7 +9,6 @@ import type { ApiQuickCheckStanding } from "@/core/api/contracts";
  * the day picked, its four study steps and which are done, and its Quick Check.
  */
 
-
 /** Whether a scheduled day is still unavailable: future-dated or blocked by an earlier unfinished day. */
 export function isDayLockedForStudy(
   day: Pick<PlanDay, "dayNumber" | "status" | "scheduledOn">,
@@ -122,14 +121,13 @@ export function describeDaySteps(
     ? STUDY_STEPS.find(({ key }) => !day.completedSteps.includes(key))?.key
     : undefined;
   return STUDY_STEPS.map(({ key, label }) => {
-    const status: StudyStepLook["status"] =
-      locked
-        ? "locked"
-        : day.completedSteps.includes(key)
-          ? "done"
-          : key === next
-            ? "current"
-            : "upcoming";
+    const status: StudyStepLook["status"] = locked
+      ? "locked"
+      : day.completedSteps.includes(key)
+        ? "done"
+        : key === next
+          ? "current"
+          : "upcoming";
     return describeStep(key, label, details.get(key) ?? null, status);
   });
 }

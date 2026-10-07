@@ -67,7 +67,7 @@ describe("WelcomeScreen", () => {
     render(<WelcomeScreen />);
 
     expect(screen.getByText("SUNDAYBEST")).toHaveStyle({
-      fontFamily: "BodoniModa9pt-Medium",
+      fontFamily: "LibreBaskerville-Medium",
     });
   });
 

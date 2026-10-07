@@ -3,8 +3,10 @@ import {
   getQuestionKicker,
   getQuickCheckPage,
   getQuickCheckAction,
+  getResumeIndex,
   getScoreHeadline,
   splitVersePrompt,
+  verseBlank,
 } from "@/features/plans/logic/quick-check";
 
 describe("getChoiceLook", () => {
@@ -46,7 +48,6 @@ describe("getQuickCheckAction", () => {
       getQuickCheckAction({
         status: "notStarted",
         result: "unanswered",
-        hasSelection: false,
         isLastQuestion: false,
       }),
     ).toEqual({
@@ -57,17 +58,21 @@ describe("getQuickCheckAction", () => {
     });
   });
 
-  it("checks the picked answer — only once one is picked", () => {
-    const action = (hasSelection: boolean) =>
-      getQuickCheckAction({
-        status: "inProgress",
-        result: "unanswered",
-        hasSelection,
-        isLastQuestion: false,
-      });
+  it("waits for an answer before moving on — no separate check", () => {
+    expect(
+      getQuickCheckAction({ status: "inProgress", result: "unanswered", isLastQuestion: false }),
+    ).toEqual({
+      kind: "next",
+      label: "Next question",
+      testID: "quick-check-next-button",
+      enabled: false,
+    });
+  });
 
-    expect(action(false)).toMatchObject({ kind: "check", label: "Check answer", enabled: false });
-    expect(action(true)).toMatchObject({ kind: "check", enabled: true });
+  it("waits for the last answer before the score", () => {
+    expect(
+      getQuickCheckAction({ status: "inProgress", result: "unanswered", isLastQuestion: true }),
+    ).toMatchObject({ kind: "finish", label: "See your score", enabled: false });
   });
 
   it("moves on once a question is checked, right or wrong", () => {
@@ -76,7 +81,6 @@ describe("getQuickCheckAction", () => {
         getQuickCheckAction({
           status: "inProgress",
           result,
-          hasSelection: false,
           isLastQuestion: false,
         }),
       ).toMatchObject({ kind: "next", label: "Next question", enabled: true });
@@ -88,7 +92,6 @@ describe("getQuickCheckAction", () => {
       getQuickCheckAction({
         status: "inProgress",
         result: "incorrect",
-        hasSelection: false,
         isLastQuestion: true,
       }),
     ).toMatchObject({ kind: "finish", label: "See your score" });
@@ -99,10 +102,35 @@ describe("getQuickCheckAction", () => {
       getQuickCheckAction({
         status: "completed",
         result: "unanswered",
-        hasSelection: false,
         isLastQuestion: true,
       }),
     ).toMatchObject({ kind: "done", label: "Done", testID: "quick-check-done-button" });
+  });
+});
+
+describe("getResumeIndex", () => {
+  it("opens a fresh attempt on its first question", () => {
+    expect(getResumeIndex(["q1", "q2", "q3"], [])).toBe(0);
+  });
+
+  it("picks up an attempt on its first unanswered question", () => {
+    expect(getResumeIndex(["q1", "q2", "q3"], ["q1", "q2"])).toBe(2);
+  });
+
+  it("stays on the last question once every one is answered", () => {
+    expect(getResumeIndex(["q1", "q2"], ["q1", "q2"])).toBe(1);
+  });
+});
+
+describe("verseBlank", () => {
+  it("draws the blank as a line before a word fills it, never as spaces iOS won't underline", () => {
+    const blank = verseBlank(null);
+    expect(blank.length).toBeGreaterThan(0);
+    expect(blank).not.toMatch(/\s/);
+  });
+
+  it("is the picked word once there is one", () => {
+    expect(verseBlank("eternal life")).toBe("eternal life");
   });
 });
 
@@ -119,6 +147,13 @@ describe("getQuestionKicker", () => {
 });
 
 describe("splitVersePrompt", () => {
+  it("finds a blank of any length", () => {
+    expect(splitVersePrompt("For God so loved the _____.")).toEqual({
+      before: "For God so loved the ",
+      after: ".",
+    });
+  });
+
   it("splits a verse around its blank, without the instruction or quote marks", () => {
     expect(
       splitVersePrompt("Finish the verse: “…and this is not from yourselves, it is the ___.”"),

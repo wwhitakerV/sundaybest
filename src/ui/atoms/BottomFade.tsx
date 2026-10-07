@@ -17,6 +17,8 @@ export type BottomFadeProps = {
    * edge can never show through.
    */
   solidHeight?: number;
+  /** How opaque its solid end is: 1, unless it's a page edge (`edgeFade.peak`). */
+  peak?: number;
   testID?: string;
 };
 
@@ -29,6 +31,7 @@ export type BottomFadeProps = {
 export function BottomFade({
   height,
   solidHeight = height * DEFAULT_SOLID_RATIO,
+  peak = 1,
   testID,
 }: BottomFadeProps) {
   const theme = useTheme();
@@ -43,8 +46,8 @@ export function BottomFade({
         <Defs>
           <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={theme.colors.background} stopOpacity={0} />
-            <Stop offset={solidFrom} stopColor={theme.colors.background} stopOpacity={1} />
-            <Stop offset="1" stopColor={theme.colors.background} stopOpacity={1} />
+            <Stop offset={solidFrom} stopColor={theme.colors.background} stopOpacity={peak} />
+            <Stop offset="1" stopColor={theme.colors.background} stopOpacity={peak} />
           </LinearGradient>
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#${gradientId})`} />

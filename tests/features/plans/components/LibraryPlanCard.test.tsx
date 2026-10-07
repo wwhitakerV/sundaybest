@@ -1,5 +1,4 @@
-import Svg from "react-native-svg";
-import { render, screen, fireEvent, within } from "@tests/helpers/render";
+import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import {
   LibraryPlanCard,
@@ -7,12 +6,15 @@ import {
 } from "@/features/plans/components/LibraryPlanCard";
 import { lightTheme } from "@/theme/tokens";
 
+const SERMON_COLOURS = ["#C2185B", "#7B1E4A"];
+
 function renderCard(props: Partial<LibraryPlanCardProps> = {}) {
   return render(
     <LibraryPlanCard
       title="Still Praying"
       church="VOUS Church"
-      thumbnailUrl={null}
+      thumbnailUrl="https://example.com/still-praying.jpg"
+      colors={SERMON_COLOURS}
       look={{ status: "In progress", detail: "Day 2 of 6", summary: "In progress · Day 2 of 6" }}
       percent={33}
       done={false}
@@ -20,104 +22,72 @@ function renderCard(props: Partial<LibraryPlanCardProps> = {}) {
       testID="a-card"
       thumbnailTestID="a-card-thumb"
       progressTestID="a-card-progress"
-      actionTestID="a-card-action"
       {...props}
     />,
   );
 }
 
 describe("LibraryPlanCard", () => {
-  it("shows a progress dial at the plan's percent", () => {
+  it("is set on its sermon's own colour", () => {
     renderCard();
 
-    expect(screen.getByTestId("a-card-progress")).toHaveProp(
-      "accessibilityValue",
-      expect.objectContaining({ now: 33 }),
-    );
+    expect(screen.getByTestId("a-card")).toHaveStyle({ backgroundColor: "#C2185B" });
   });
 
-  it("names its church under its title", () => {
+  it("shows the sermon's artwork across its top", () => {
     renderCard();
 
-    expect(screen.getByText("VOUS Church")).toBeOnTheScreen();
+    expect(screen.getByTestId("a-card-thumb")).toBeOnTheScreen();
   });
 
-  it("leaves the church out when it isn't known", () => {
-    renderCard({ church: null });
+  it("is just its panel when there's no artwork", () => {
+    renderCard({ thumbnailUrl: null });
 
-    expect(screen.queryByText("VOUS Church")).toBeNull();
+    expect(screen.queryByTestId("a-card-thumb")).toBeNull();
+    expect(screen.getByTestId("a-card-panel")).toBeOnTheScreen();
   });
 
-  it.each(["Continue", "Start"] as const)(
-    "shows %s as its action, labelled with the title",
-    (label) => {
-      renderCard({ action: { label, onPress: jest.fn() } });
-
-      const button = screen.getByTestId("a-card-action");
-      expect(button).toHaveTextContent(label);
-      expect(button).toHaveProp("accessibilityRole", "button");
-      expect(button).toHaveProp("accessibilityLabel", `${label} Still Praying`);
-    },
-  );
-
-  it("runs its action once, and doesn't open the plan, when the action is pressed", () => {
-    const onAction = jest.fn();
-    const onPress = jest.fn();
-    renderCard({ action: { label: "Start", onPress: onAction }, onPress });
-
-    fireEvent.press(screen.getByTestId("a-card-action"));
-
-    expect(onAction).toHaveBeenCalledTimes(1);
-    expect(onPress).not.toHaveBeenCalled();
-  });
-
-  it("shows no action without one", () => {
+  it("says what the plan is, whose it is, and where it stands, in white on its panel", () => {
     renderCard();
 
-    expect(screen.queryByTestId("a-card-action")).toBeNull();
+    expect(screen.getByText("Still Praying")).toHaveStyle({ color: lightTheme.colors.inkOnDark });
+    expect(screen.getByText("VOUS Church")).toBeVisible();
+    expect(screen.getByText("Day 2 of 6")).toBeVisible();
   });
 
-  it("sits on the card's soft fill, with no edge", () => {
+  it("darkens its panel over the sermon's colour so the words always read", () => {
     renderCard();
 
-    expect(screen.getByTestId("a-card")).toHaveStyle({
-      backgroundColor: lightTheme.colors.surface,
-      borderWidth: 0,
+    expect(screen.getByTestId("a-card-panel-shade")).toHaveStyle({
+      backgroundColor: lightTheme.colors.mediaScrim,
     });
   });
 
-  it("says the day it's on beside its dial, without its status", () => {
+  it("keeps the plan's progress as a small bare ring, at the end of its last line", () => {
     renderCard();
 
-    expect(screen.getByText("Day 2 of 6")).toBeOnTheScreen();
-    expect(screen.queryByText(/In progress/)).toBeNull();
+    expect(screen.getByTestId("a-card-progress")).toHaveStyle({ width: 24, height: 24 });
+    expect(screen.queryByTestId("a-card-progress-disc")).toBeNull();
+    expect(screen.getByTestId("a-card-status")).toContainElement(
+      screen.getByTestId("a-card-progress"),
+    );
   });
 
-  it("marks a plan not yet done with a grey flame in its dial", () => {
+  it("lets its words run the panel's full width", () => {
     renderCard();
 
-    expect(
-      within(screen.getByTestId("a-card-progress-flame")).UNSAFE_getByType(Svg).props.stroke,
-    ).toBe(lightTheme.colors.textMuted);
+    expect(screen.getByTestId("a-card-words")).toHaveStyle({ flex: 1 });
+    expect(screen.queryByTestId("a-card-tile")).toBeNull();
   });
 
-  it("marks a finished plan with a red flame in its dial", () => {
-    renderCard({ done: true });
-
-    expect(
-      within(screen.getByTestId("a-card-progress-flame")).UNSAFE_getByType(Svg).props.stroke,
-    ).toBe(lightTheme.colors.accent);
-  });
-
-  it("sizes the flame to the dial: 17pt", () => {
+  it("sets its title a touch lighter than bold", () => {
     renderCard();
 
-    expect(
-      within(screen.getByTestId("a-card-progress-flame")).UNSAFE_getByType(Svg).props.width,
-    ).toBe(17);
+    expect(screen.getByText("Still Praying")).toHaveStyle(lightTheme.typography.offerTitle);
+    expect(lightTheme.typography.offerTitle.fontWeight).toBe("600");
   });
 
-  it("calls onPress when the card itself is pressed", () => {
+  it("opens the plan when pressed", () => {
     const onPress = jest.fn();
     renderCard({ onPress });
 
@@ -126,23 +96,20 @@ describe("LibraryPlanCard", () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it("offers its action to VoiceOver as an action on the card", () => {
-    const onAction = jest.fn();
-    renderCard({ action: { label: "Start", onPress: onAction } });
+  it("offers Continue to VoiceOver, as the first card does", () => {
+    const onContinue = jest.fn();
+    renderCard({ action: { label: "Continue", onPress: onContinue } });
 
     fireEvent(screen.getByTestId("a-card"), "accessibilityAction", {
       nativeEvent: { actionName: "activate-action" },
     });
 
-    expect(onAction).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId("a-card")).toHaveProp("accessibilityActions", [
-      { name: "activate-action", label: "Start" },
-    ]);
+    expect(onContinue).toHaveBeenCalledTimes(1);
   });
 
-  it("offers VoiceOver no action without one", () => {
+  it("sets its church a size under its title's line, as supporting copy", () => {
     renderCard();
 
-    expect(screen.getByTestId("a-card").props.accessibilityActions ?? []).toEqual([]);
+    expect(screen.getByText("VOUS Church")).toHaveStyle(lightTheme.typography.cardDetail);
   });
 });

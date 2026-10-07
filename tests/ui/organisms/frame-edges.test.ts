@@ -1,4 +1,10 @@
-import { EDGE_FADE, GRADUAL_FADE, GRADUAL_RAMP, getFrameEdges } from "@/ui/organisms/frame-edges";
+import {
+  EDGE_FADE,
+  GRADUAL_FADE,
+  GRADUAL_RAMP,
+  getFrameEdges,
+  getHeaderBackdrop,
+} from "@/ui/organisms/frame-edges";
 import {
   getFloatingNavBarBottom,
   getFloatingNavBarTintHeight,
@@ -31,7 +37,12 @@ describe("getFrameEdges", () => {
         foot: { kind: "none" },
       });
 
-      expect(top).toEqual({ solid: 160 - GRADUAL_FADE, height: 160, clearance: 160 });
+      expect(top).toEqual({
+        solid: 160 - GRADUAL_FADE,
+        height: 160,
+        clearance: 160,
+        ramp: GRADUAL_RAMP,
+      });
     });
 
     it("is thicker than the dock's fade", () => {
@@ -101,5 +112,40 @@ describe("getFrameEdges", () => {
 
   it("fades the top and the bottom over the same distance as the tab bar does", () => {
     expect(EDGE_FADE).toBe(16);
+  });
+});
+
+describe("getHeaderBackdrop", () => {
+  it("fades the edge's 16pt out below the header", () => {
+    expect(getHeaderBackdrop("edge")).toMatchObject({ past: EDGE_FADE, fade: EDGE_FADE });
+  });
+
+  it("keeps a gradual fade inside the header's own block, eased", () => {
+    expect(getHeaderBackdrop("gradual")).toEqual({
+      past: 0,
+      fade: GRADUAL_FADE,
+      ramp: GRADUAL_RAMP,
+    });
+  });
+
+  it("runs a soft fade from just above the header's last row to 10pt past it", () => {
+    const backdrop = getHeaderBackdrop({ kind: "soft", reach: 36 });
+
+    expect(backdrop).toMatchObject({ past: 10, fade: 36 + 10 + 10 });
+    expect(backdrop.ramp.at(-1)).toEqual({ at: 1, opacity: 0 });
+  });
+
+  it("matches the frame's own geometry for a soft fade, wherever the header ends", () => {
+    const { top } = getFrameEdges({
+      ...insets,
+      headerHeight: 150,
+      headerFade: { kind: "soft", reach: 36 },
+      foot: { kind: "none" },
+    });
+    const backdrop = getHeaderBackdrop({ kind: "soft", reach: 36 });
+
+    expect(150 + backdrop.past).toBe(top.height);
+    expect(top.height - backdrop.fade).toBe(top.solid);
+    expect(backdrop.ramp).toEqual(top.ramp);
   });
 });

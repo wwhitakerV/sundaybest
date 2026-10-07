@@ -17,7 +17,7 @@ test("a one-day plan is assembled from its plan, day, and quiz steps", async () 
   assert.equal(plan.generator.model, "test-model");
   assert.equal(plan.generator.promptVersion, PROMPT_VERSION);
   assert.equal(plan.days[0]!.quickCheck!.questions.length, QUICK_CHECK_QUESTIONS + 1);
-  assert.equal(plan.days[0]!.quickCheck!.questions.at(-1)!.kind, "finishTheVerse");
+  assert.equal(plan.days[0]!.quickCheck!.questions.filter((question) => question.kind === "finishTheVerse").length, 1);
   assert.doesNotThrow(() => validatePlanStructure(plan, input));
 });
 

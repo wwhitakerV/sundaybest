@@ -56,16 +56,17 @@ test("a reader's current builds stay listed until dismissed, finished or not", a
   }
 });
 
-test("asking again for a sermon you already have brings its plan back as ready", async () => {
+test("asking again for a sermon you already have starts a second plan, shown building", async () => {
   const harness = await apiHarness();
   try {
     const { reader, sermonId, ids } = await create(harness, "again-reader");
     await harness.worker.runOnce();
     await reader.mutate("POST", `/v1/plan-generations/${ids.generationId}/dismiss`);
     const again = await reader.mutate("POST", "/v1/plans", { sermonId, lengthDays: 2, quickCheckEnabled: true });
-    assert.deepEqual(again.json(), ids);
+    const second: { planId: string; generationId: string } = again.json();
+    assert.notEqual(second.planId, ids.planId);
     const current = (await reader.get("/v1/plan-generations/current")).json().generations;
-    assert.deepEqual(current.map((generation: { id: string; status: string }) => [generation.id, generation.status]), [[ids.generationId, "completed"]]);
+    assert.deepEqual(current.map((generation: { id: string }) => generation.id), [second.generationId]);
   } finally {
     await harness.close();
   }

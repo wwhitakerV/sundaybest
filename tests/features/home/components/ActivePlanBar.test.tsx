@@ -1,15 +1,19 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
+import { Lock } from "lucide-react-native";
+
 import { ActivePlanBar } from "@/features/home/components/ActivePlanBar";
+import { lightTheme } from "@/theme/tokens";
 
 const HREF = { pathname: "/(tabs)/home/[planId]", params: { planId: "plan-1" } } as const;
 
-function renderBar(handlers: { onContinue?: () => void } = {}) {
+function renderBar(handlers: { onContinue?: () => void; waiting?: boolean } = {}) {
   return render(
     <ActivePlanBar
       plan={{
         title: "Today I Choose to Be a Blessing",
         day: "Day 2",
+        ...(handlers.waiting && { waiting: true }),
         thumbnailUrl: null,
         colors: ["#3D403F", "#1F5A6E", "#1C1D20"],
       }}
@@ -71,5 +75,14 @@ describe("ActivePlanBar", () => {
     );
 
     expect(screen.getByTestId("home-tab-plan-bar")).toHaveProp("pointerEvents", "none");
+  });
+
+  it("greys its button out, with a lock, while the next day isn't open yet", () => {
+    renderBar({ waiting: true });
+
+    const button = screen.getByTestId("home-tab-plan-bar-continue");
+    expect(button).toHaveAccessibleName("Day 2 tomorrow");
+    expect(button).toHaveStyle({ backgroundColor: lightTheme.colors.waitingFill, borderWidth: 0 });
+    expect(screen.UNSAFE_getAllByType(Lock)).toHaveLength(1);
   });
 });

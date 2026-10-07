@@ -79,4 +79,15 @@ describe("FloatingButton", () => {
     expect(onPress).not.toHaveBeenCalled();
     expect(screen.getByTestId("a-button")).toBeDisabled();
   });
+
+  it("waits, opaque and grey, for a way on that isn't open yet", () => {
+    render(
+      <FloatingButton testID="a-button" label="Day 3 tomorrow" waiting onPress={() => undefined} />,
+    );
+
+    expect(screen.getByTestId("a-button")).toHaveStyle({
+      backgroundColor: lightTheme.colors.waitingFill,
+    });
+    expect(screen.getByText("Day 3 tomorrow")).toHaveStyle({ color: lightTheme.colors.waitingInk });
+  });
 });

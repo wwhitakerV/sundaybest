@@ -18,18 +18,18 @@ describe("SerifBody", () => {
     expect(screen.getByTestId("text")).toHaveStyle({ color: colors.text });
   });
 
-  it.each([["scripture", "scripture"]] as const)(
-    "sets the %s variant in the %s token",
-    (variant, token) => {
-      render(
-        <SerifBody testID="text" variant={variant}>
-          Hello
-        </SerifBody>,
-      );
+  it.each([
+    ["scripture", "scripture"],
+    ["standfirst", "standfirst"],
+  ] as const)("sets the %s variant in the %s token", (variant, token) => {
+    render(
+      <SerifBody testID="text" variant={variant}>
+        Hello
+      </SerifBody>,
+    );
 
-      const expected = new Map(Object.entries(typography)).get(token);
-      expect(expected).toBeDefined();
-      expect(screen.getByTestId("text")).toHaveStyle(expected);
-    },
-  );
+    const expected = new Map(Object.entries(typography)).get(token);
+    expect(expected).toBeDefined();
+    expect(screen.getByTestId("text")).toHaveStyle(expected);
+  });
 });

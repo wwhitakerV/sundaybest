@@ -7,6 +7,8 @@ export type TabBarAccessory = {
   label: string;
   testID: string;
   icon?: LucideIcon;
+  /** A way on that isn't open yet (a day tomorrow): opaque grey, grey words. */
+  waiting?: boolean;
   onPress: () => void;
 };
 
@@ -16,11 +18,16 @@ type Shown = { accessory: TabBarAccessory; owner: object };
 type AccessoryChannel = {
   show: (shown: Shown) => void;
   hide: (owner: object) => void;
+  /** A screen with no use for the floating button: it's hidden while that screen's shown. */
+  hideFab: (owner: object) => void;
+  showFab: (owner: object) => void;
 };
 
 const AccessoryChannelContext = createContext<AccessoryChannel | null>(null);
 /** What's been asked — for the tab bar. */
 const ShownAccessoryContext = createContext<Shown | null>(null);
+/** Whether a screen has asked the floating button away — for the tab bar. */
+const FabHiddenContext = createContext(false);
 
 /**
  * Lets a screen ask the tab bar to minimise beside a button of its own —
@@ -29,17 +36,47 @@ const ShownAccessoryContext = createContext<Shown | null>(null);
  */
 export function TabBarAccessoryProvider({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState<Shown | null>(null);
+  const [fabHiddenBy, setFabHiddenBy] = useState<object | null>(null);
   const [channel] = useState<AccessoryChannel>(() => ({
     show: (next) => setShown(next),
     // Only the screen that asked can take it back.
     hide: (owner) => setShown((current) => (current?.owner === owner ? null : current)),
+    hideFab: (owner) => setFabHiddenBy(owner),
+    showFab: (owner) => setFabHiddenBy((current) => (current === owner ? null : current)),
   }));
 
   return (
     <AccessoryChannelContext.Provider value={channel}>
-      <ShownAccessoryContext.Provider value={shown}>{children}</ShownAccessoryContext.Provider>
+      <ShownAccessoryContext.Provider value={shown}>
+        <FabHiddenContext.Provider value={fabHiddenBy !== null}>
+          {children}
+        </FabHiddenContext.Provider>
+      </ShownAccessoryContext.Provider>
     </AccessoryChannelContext.Provider>
   );
+}
+
+/** For the tab bar: whether the screen shown has asked the floating button away. */
+export function useTabBarFabHidden(): boolean {
+  return useContext(FabHiddenContext);
+}
+
+/**
+ * For a screen with no use for the floating button (Plan Overview): while
+ * `hide` is true and the screen is the one shown, the tab bar leaves it out,
+ * and a button the screen shows beside the tabs takes its place.
+ */
+export function useHideTabBarFab(hide: boolean) {
+  const channel = useContext(AccessoryChannelContext);
+  const isFocused = useIsFocused();
+  const [owner] = useState(() => ({}));
+  const active = hide && isFocused;
+
+  useEffect(() => {
+    if (!channel || !active) return;
+    channel.hideFab(owner);
+    return () => channel.showFab(owner);
+  }, [channel, active, owner]);
 }
 
 /** For the tab bar: the button a screen has asked it to minimise beside, if any. */
@@ -57,7 +94,7 @@ export function useTabBarAccessory(accessory: TabBarAccessory, show: boolean) {
   const isFocused = useIsFocused();
   const [owner] = useState(() => ({}));
   const onPress = useRef(accessory.onPress);
-  const { label, testID, icon } = accessory;
+  const { label, testID, icon, waiting = false } = accessory;
   const active = show && isFocused;
 
   useEffect(() => {
@@ -73,9 +110,10 @@ export function useTabBarAccessory(accessory: TabBarAccessory, show: boolean) {
         label,
         testID,
         ...(icon && { icon }),
+        ...(waiting && { waiting }),
         onPress: () => onPress.current(),
       },
     });
     return () => channel.hide(owner);
-  }, [channel, active, owner, label, testID, icon]);
+  }, [channel, active, owner, label, testID, icon, waiting]);
 }

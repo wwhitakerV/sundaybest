@@ -23,7 +23,8 @@ export const CAPSULE_INSET_IN_ROW = (FAB_SIZE - CAPSULE_HEIGHT) / 2;
  * takes taps; the room itself passes touches through.
  */
 export const RAISE_LIFT = CAPSULE_HEIGHT + GAP_TO_FAB;
-export const RAISE_GEOMETRY: TabBarRaiseGeometry = {
+/** The bar's raise geometry, but for how far the FAB drops — that depends on the safe area, so the bar adds it. */
+export const RAISE_GEOMETRY: Omit<TabBarRaiseGeometry, "fabDrop"> = {
   beside: {
     top: RAISE_LIFT + CAPSULE_INSET_IN_ROW,
     left: CAPSULE_HEIGHT + GAP_TO_FAB,

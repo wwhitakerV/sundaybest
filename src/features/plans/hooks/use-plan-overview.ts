@@ -52,6 +52,8 @@ export function usePlanOverview() {
   useEffect(() => {
     if (planId && openDay !== null) prefetch.studyDay(planId, openDay);
   }, [planId, openDay, prefetch]);
+  // Today's day done and the next not open yet: Continue says when it opens.
+  const waiting = plan?.status === "active" && currentLockedDay(plan) !== null;
   const words =
     plan && currentDay
       ? describePlanHero({
@@ -60,6 +62,7 @@ export function usePlanOverview() {
           totalDays: plan.lengthDays,
           dayTitle: currentDay.title,
           minutes: currentDay.estimatedMinutes,
+          waiting,
         })
       : plan?.status === "completed" && plan.days.at(-1)
         ? describePlanHero({
@@ -102,6 +105,7 @@ export function usePlanOverview() {
       error: planQuery.error,
       retry: () => void planQuery.refetch(),
       continueLabel: null,
+      continueWaiting: false,
       openCurrentDay,
       goBack,
     } as const;
@@ -126,6 +130,7 @@ export function usePlanOverview() {
       completedDayCount: plan.progress.completedDays,
     },
     continueLabel: words?.action ?? null,
+    continueWaiting: waiting,
     about: describePlanAbout(plan.about),
     light: getHeroPalette(colors, theme.colors.featureBackdrop).light,
     tiles: days.map((day) =>

@@ -15,7 +15,10 @@ const verseVariantSchema = z.object({
   choices: z.array(z.string().trim().min(1).max(1000)).length(4),
 });
 
-export const questionVariantsSchema = z.object({ BSB: verseVariantSchema, KJV: verseVariantSchema });
+export const questionVariantsSchema = z.object({
+  BSB: verseVariantSchema,
+  KJV: verseVariantSchema,
+});
 
 export const generatedQuestionSchema = z
   .object({
@@ -30,7 +33,10 @@ export const generatedQuestionSchema = z
   })
   .superRefine((question, ctx) => {
     if (question.choices.filter((choice) => choice.correct).length !== 1) {
-      ctx.addIssue({ code: "custom", message: "Every quiz question must have exactly one correct choice" });
+      ctx.addIssue({
+        code: "custom",
+        message: "Every quiz question must have exactly one correct choice",
+      });
     }
   });
 
@@ -44,7 +50,11 @@ export const generatedScriptureSchema = z
   })
   .superRefine((scripture, ctx) => {
     if (scripture.verseEnd < scripture.verseStart) {
-      ctx.addIssue({ code: "custom", path: ["verseEnd"], message: "verseEnd must be >= verseStart" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["verseEnd"],
+        message: "verseEnd must be >= verseStart",
+      });
     }
   });
 
@@ -62,24 +72,50 @@ export const generatedDaySchema = z
     readingTitle: z.string().trim().min(1).max(300),
     /** The day's thesis from the plan step; never shown. Kept so quizzes can be added to a reused plan. */
     focus: z.string().trim().min(1).max(600).nullable().default(null),
-    readingParagraphs: z.array(z.string().trim().min(1).max(8000)).min(1).max(20),
+    readingParagraphs: z
+      .array(
+        z.object({
+          heading: z.string().trim().min(1).max(80),
+          content: z.string().trim().min(1).max(8000),
+        }),
+      )
+      .min(1)
+      .max(20),
     sermonQuote: z.string().trim().min(1).max(2000).nullable(),
     clipStartSeconds: z.number().int().nonnegative().nullable(),
     clipEndSeconds: z.number().int().nonnegative().nullable(),
     scripture: generatedScriptureSchema,
     reflections: z.array(z.string().trim().min(1).max(1000)).min(1).max(5),
-    prayer: z.object({ title: z.string().trim().min(1).max(200), text: z.string().trim().min(1).max(5000) }),
+    prayer: z.object({
+      title: z.string().trim().min(1).max(200),
+      text: z.string().trim().min(1).max(5000),
+    }),
     supportingScriptures: z.array(generatedSupportingScriptureSchema).max(3),
     quickCheck: z
-      .object({ title: z.string().trim().min(1).max(200), questions: z.array(generatedQuestionSchema).min(1).max(10) })
+      .object({
+        title: z.string().trim().min(1).max(200),
+        questions: z.array(generatedQuestionSchema).min(1).max(10),
+      })
       .nullable(),
   })
   .superRefine((day, ctx) => {
-    if (day.clipStartSeconds !== null && day.clipEndSeconds !== null && day.clipEndSeconds <= day.clipStartSeconds) {
-      ctx.addIssue({ code: "custom", path: ["clipEndSeconds"], message: "clip end must be > clip start" });
+    if (
+      day.clipStartSeconds !== null &&
+      day.clipEndSeconds !== null &&
+      day.clipEndSeconds <= day.clipStartSeconds
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["clipEndSeconds"],
+        message: "clip end must be > clip start",
+      });
     }
     if ((day.clipStartSeconds === null) !== (day.clipEndSeconds === null)) {
-      ctx.addIssue({ code: "custom", path: ["clipStartSeconds"], message: "clip timestamps must be both present or both absent" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["clipStartSeconds"],
+        message: "clip timestamps must be both present or both absent",
+      });
     }
   });
 
@@ -94,10 +130,22 @@ export const generatedCitationSchema = z
   })
   .superRefine((citation, ctx) => {
     if ((citation.verseStart === null) !== (citation.verseEnd === null)) {
-      ctx.addIssue({ code: "custom", path: ["verseStart"], message: "verse bounds must be both present or both absent" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["verseStart"],
+        message: "verse bounds must be both present or both absent",
+      });
     }
-    if (citation.verseStart !== null && citation.verseEnd !== null && citation.verseEnd < citation.verseStart) {
-      ctx.addIssue({ code: "custom", path: ["verseEnd"], message: "verseEnd must be >= verseStart" });
+    if (
+      citation.verseStart !== null &&
+      citation.verseEnd !== null &&
+      citation.verseEnd < citation.verseStart
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["verseEnd"],
+        message: "verseEnd must be >= verseStart",
+      });
     }
   });
 
@@ -122,7 +170,11 @@ export const generatedPlanSchema = z
   })
   .superRefine((plan, ctx) => {
     const ordered = plan.days.every((day, index) => day.dayNumber === index + 1);
-    if (!ordered) ctx.addIssue({ code: "custom", message: "Generated days must be contiguous and ordered from 1" });
+    if (!ordered)
+      ctx.addIssue({
+        code: "custom",
+        message: "Generated days must be contiguous and ordered from 1",
+      });
   });
 
 export type GeneratedPlan = z.infer<typeof generatedPlanSchema>;

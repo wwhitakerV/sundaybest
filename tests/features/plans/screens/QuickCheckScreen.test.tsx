@@ -279,7 +279,7 @@ describe("QuickCheckScreen", () => {
       await screen.findByText("According to the sermon, what is a yoke?");
       await answer(second);
       press("quick-check-finish-button");
-      await screen.findByTestId("quick-check-score");
+      await screen.findByTestId("quick-check-results");
     }
 
     it("scores a perfect run", async () => {

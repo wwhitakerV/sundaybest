@@ -20,13 +20,28 @@ function isBuilding(generation: ApiPlanGeneration): boolean {
 /**
  * The reader's builds not yet dismissed — building, ready, or failed — newest
  * first. Asked again every two seconds while any is still building, and not
- * at all once none is.
+ * at all once none is. When a build it was watching finishes, the plan list
+ * is fetched again: it was last fetched when the build was asked for, before
+ * the plan was ready, so it doesn't have it yet.
  */
 export function useCurrentGenerationsQuery() {
   const api = useSundayBestApi();
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: apiQueryKeys.currentGenerations,
-    queryFn: async () => (await api.generations.current()).generations,
+    queryFn: async () => {
+      const watched = new Set(
+        (queryClient.getQueryData<ApiPlanGeneration[]>(apiQueryKeys.currentGenerations) ?? [])
+          .filter(isBuilding)
+          .map((generation) => generation.id),
+      );
+      const { generations } = await api.generations.current();
+      const finished = generations.some(
+        (generation) => watched.has(generation.id) && generation.status === "completed",
+      );
+      if (finished) void queryClient.invalidateQueries({ queryKey: apiQueryKeys.plans });
+      return generations;
+    },
     refetchInterval: (query) => (query.state.data?.some(isBuilding) ? BUILDING_POLL_MS : false),
   });
 }

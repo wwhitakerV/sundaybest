@@ -1,15 +1,10 @@
 import type { ReactNode } from "react";
-import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
-import Animated, { type AnimatedStyle } from "react-native-reanimated";
+import { StyleSheet, View } from "react-native";
 
-import { StudyDriftIn } from "./StudyDriftIn";
+import { StudyEnter } from "./StudyEnter";
 import { space } from "@/theme";
 
-/** The animated style for a study page's second beat (`useStepTransition`'s `followStyle`). */
-export type FollowStyle = StyleProp<AnimatedStyle<ViewStyle>>;
-
 export type StudyFollowProps = {
-  style?: FollowStyle;
   children: ReactNode;
 };
 
@@ -17,11 +12,11 @@ export type StudyFollowProps = {
  * Everything on a Daily Study page below its kicker and title — the reading,
  * the verses, the question, the prayer — which comes in a beat after them.
  */
-export function StudyFollow({ style, children }: StudyFollowProps) {
+export function StudyFollow({ children }: StudyFollowProps) {
   return (
-    <StudyDriftIn order={2}>
-      <Animated.View style={[styles.follow, style]}>{children}</Animated.View>
-    </StudyDriftIn>
+    <StudyEnter order={2}>
+      <View style={styles.follow}>{children}</View>
+    </StudyEnter>
   );
 }
 

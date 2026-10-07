@@ -19,6 +19,7 @@ import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
 import { sortSteps } from "./plan-service.js";
 import { requireStudyAccess } from "./study-access.js";
+import { readingParagraphForApi } from "../generation/reading.js";
 
 const STEP_ORDER = ["read", "scripture", "reflect", "pray"] as const;
 type StudyStep = (typeof STEP_ORDER)[number];
@@ -57,7 +58,7 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
         dayNumber,
         reading: {
           title: access.day.readingTitle,
-          paragraphs: access.day.readingParagraphs,
+          paragraphs: access.day.readingParagraphs.map(readingParagraphForApi),
           sermonQuote: access.day.sermonQuote,
           sermonClip:
             access.day.clipStartSeconds === null

@@ -68,10 +68,10 @@ export function saveReflectionAnswer(
     .then(async () => {
       const db = await getAppDatabase();
       if (answer.length === 0) {
-        await db.execute(
-          "DELETE FROM reflection_answers WHERE user_id = ? AND reflection_id = ?",
-          [userId, reflectionId],
-        );
+        await db.execute("DELETE FROM reflection_answers WHERE user_id = ? AND reflection_id = ?", [
+          userId,
+          reflectionId,
+        ]);
         return;
       }
 
@@ -95,6 +95,23 @@ export function saveReflectionAnswer(
   };
   void queued.then(cleanup, cleanup);
   return queued;
+}
+
+/**
+ * Clears this reader's answers to the given questions from the device — a
+ * plan reset. Only these; every other answer stays.
+ */
+export async function deleteReflectionAnswers(
+  userId: string,
+  reflectionIds: readonly string[],
+): Promise<void> {
+  if (reflectionIds.length === 0) return;
+  const db = await getAppDatabase();
+  const placeholders = reflectionIds.map(() => "?").join(", ");
+  await db.execute(
+    `DELETE FROM reflection_answers WHERE user_id = ? AND reflection_id IN (${placeholders})`,
+    [userId, ...reflectionIds],
+  );
 }
 
 export async function countReflectionAnswers(

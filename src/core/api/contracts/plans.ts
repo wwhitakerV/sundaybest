@@ -62,9 +62,18 @@ export const sermonClipSchema = z.object({
   endSeconds: z.number().nonnegative().nullable(),
 });
 
+/**
+ * One Read paragraph: its heading, then its text. A paragraph from a plan
+ * written before headings comes with none — its text exactly as written.
+ */
+const readingParagraphSchema = z.object({
+  heading: z.string().min(1).max(80).nullable(),
+  content: z.string().min(1),
+});
+
 export const dayReadingSchema = z.object({
   title: z.string().min(1).max(300),
-  paragraphs: z.array(z.string().min(1)).min(1),
+  paragraphs: z.array(readingParagraphSchema).min(1),
   sermonQuote: z.string().nullable(),
   sermonClip: sermonClipSchema.nullable(),
 });
@@ -150,6 +159,11 @@ export const createPlanResponseSchema = z.object({
 
 export const startPlanResponseSchema = z.object({ plan: planDetailSchema });
 export const archivePlanResponseSchema = z.object({ plan: planSummarySchema });
+/** A plan after a reset: back to not started, with its reflection questions' ids for the phone to clear. */
+export const resetPlanResponseSchema = z.object({
+  plan: planSummarySchema,
+  reflectionIds: z.array(apiIdSchema),
+});
 export const savePlanResponseSchema = z.object({ saved: z.literal(true) });
 export const removeSavedPlanResponseSchema = z.object({ saved: z.literal(false) });
 
@@ -159,3 +173,5 @@ export type ApiPlanAbout = z.infer<typeof planAboutSchema>;
 export type ApiPlanDaySummary = z.infer<typeof planDaySummarySchema>;
 export type ApiQuickCheckStanding = z.infer<typeof quickCheckStandingSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;
+
+export type ApiReadingParagraph = z.infer<typeof readingParagraphSchema>;

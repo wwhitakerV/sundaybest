@@ -1,6 +1,7 @@
 import { StyleSheet } from "react-native";
 
 import { ListScreen } from "@/ui/organisms/ListScreen";
+import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { PlansSkeleton } from "../components/PlansSkeleton";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
@@ -25,11 +26,13 @@ export function PlansScreen() {
     );
   }
 
-  return (
+  const list = (pending: boolean) => (
     <ListScreen
       testID="plans-screen"
       // Fades across the filters' row and a little past it, mostly clear by the header's edge.
       headerFade={{ kind: "soft", reach: FILTER_PILLS_HEIGHT }}
+      // Solid behind the title and filters: the plans never show through them.
+      solidHeader
       header={
         <>
           <TitleHeader title="Plans" />
@@ -43,11 +46,11 @@ export function PlansScreen() {
           />
         </>
       }
-      data={cards}
+      data={pending ? [] : cards}
       keyExtractor={({ plan }) => plan.id}
       contentStyle={styles.list}
       empty={
-        loading ? (
+        pending ? (
           <PlansSkeleton testID="plans-content-pending" />
         ) : (
           <PlansEmpty testID="plans-empty" {...empty} />
@@ -58,10 +61,10 @@ export function PlansScreen() {
           testID={`plans-item-${item.plan.id}`}
           thumbnailTestID={`plans-thumbnail-${item.plan.id}`}
           progressTestID={`plans-progress-${item.plan.id}`}
-          actionTestID={`plans-action-${item.plan.id}`}
           title={item.plan.title}
           church={item.church}
           thumbnailUrl={item.thumbnailUrl}
+          colors={item.plan.sermon.thumbnailColors}
           look={item.look}
           percent={item.percent}
           done={item.done}
@@ -70,6 +73,14 @@ export function PlansScreen() {
         />
       )}
     />
+  );
+
+  // The whole page hands over, so the skeleton fades out over the plans
+  // (its header is the same in both, so only the list changes).
+  return (
+    <SkeletonHandoff testID="plans-handoff" fill pending={loading} skeleton={list(true)}>
+      {list(false)}
+    </SkeletonHandoff>
   );
 }
 

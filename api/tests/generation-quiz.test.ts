@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createBibleStore } from "../src/bible/bible-store.js";
 import { mapOutline } from "../src/generation/stages/outline.js";
-import { mapQuiz, type PassageText } from "../src/generation/stages/quiz.js";
+import { mapQuiz, mixQuestionKinds, type PassageText } from "../src/generation/stages/quiz.js";
 import { QUICK_CHECK_QUESTIONS, finishTheVerseQuestion, generationInput, outlineOutput, quizOutput, sermonQuestion } from "./fixtures/generation.js";
 
 const input = generationInput(1, true);
@@ -57,7 +57,7 @@ test("new questions follow the ones already kept, never repeat them, and stop at
 });
 
 test("finish the verse is built from each translation's own wording, with the answer in the same place", () => {
-  const question = map(withQuestions(finishTheVerseQuestion())).questions.at(-1)!;
+  const question = map(withQuestions(finishTheVerseQuestion())).questions.find((candidate) => candidate.kind === "finishTheVerse")!;
   assert.equal(question.kind, "finishTheVerse");
   assert.equal(question.scriptureReference, "John 3:16");
   assert.equal(question.variants!.BSB.prompt, "Finish the verse: “For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have ___.”");
@@ -85,4 +85,23 @@ test("finish the verse whose wrong answers repeat the right one is left out", ()
   const repeated = finishTheVerseQuestion();
   repeated.verse!.BSB.distractors = ["eternal life", "great reward", "earthly peace"];
   assert.equal(map(withQuestions(repeated)).questions.length, QUICK_CHECK_QUESTIONS);
+});
+
+test("finish the verse is mixed in among the other questions, not left to the end", () => {
+  const kinds = map(withQuestions(finishTheVerseQuestion())).questions.map((question) => question.kind);
+  assert.equal(kinds.filter((kind) => kind === "finishTheVerse").length, 1);
+  assert.notEqual(kinds.at(-1), "finishTheVerse");
+});
+
+test("the two kinds are spread evenly through a quiz, each kind keeping its own order", () => {
+  const questions = [
+    ...["m1", "m2", "m3", "m4", "m5", "m6"].map((prompt) => ({ kind: "multipleChoice" as const, prompt })),
+    ...["f1", "f2", "f3"].map((prompt) => ({ kind: "finishTheVerse" as const, prompt })),
+  ];
+  assert.deepEqual(mixQuestionKinds(questions).map((question) => question.prompt), ["m1", "f1", "m2", "m3", "f2", "m4", "m5", "f3", "m6"]);
+});
+
+test("a quiz of one kind keeps its order", () => {
+  const questions = ["m1", "m2", "m3"].map((prompt) => ({ kind: "multipleChoice" as const, prompt }));
+  assert.deepEqual(mixQuestionKinds(questions), questions);
 });

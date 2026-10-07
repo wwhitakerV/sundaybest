@@ -148,7 +148,7 @@ describe("navigation", () => {
       fireEvent.press(screen.getByTestId("quick-check-check-button"));
       expect(await screen.findByText("Not quite")).toBeVisible();
       fireEvent.press(screen.getByTestId("quick-check-finish-button"));
-      await screen.findByTestId("quick-check-score");
+      await screen.findByTestId("quick-check-results");
       expect(screen.getByText("1/2")).toBeVisible();
       expect(view.getPathname()).toBe(`/study/${TEMPTATION}/quick-check`);
 

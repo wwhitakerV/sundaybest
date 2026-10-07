@@ -7,6 +7,7 @@ import { sourceContext } from "./prompts/context.js";
 import { DAY_INSTRUCTIONS, dayTask } from "./prompts/day.js";
 import { OUTLINE_INSTRUCTIONS, outlineTask } from "./prompts/outline.js";
 import { QUIZ_INSTRUCTIONS, quizTask } from "./prompts/quiz.js";
+import { selectInstructions } from "./prompts/custom.js";
 import { GENERATOR_VERSION, PROMPT_VERSION } from "./prompts/version.js";
 import { generatedPlanSchema, type GeneratedPlan, type GeneratedQuestion } from "./schema.js";
 import { namedChapters } from "./scripture.js";
@@ -17,6 +18,7 @@ import { QUICK_CHECK_MIN, mapQuiz, quizContentSchema, quizOutputSchema, type Pas
 import { stepRunner, type PipelineDeps, type StepRunner } from "./step-runner.js";
 import { normalizeSourceText } from "./transcript.js";
 import { validatePlanStructure } from "./validation.js";
+import type { ReadingParagraph } from "./reading.js";
 
 export type { PipelineDeps, StageCaller, StageEvent, StageKind, StageRequest, StageResponse, StepCheckpoint } from "./step-runner.js";
 
@@ -35,7 +37,7 @@ export async function generateStagedPlan(input: PlanGenerationInput, deps: Pipel
   const run = runner(input, deps);
 
   const outline = await run.step({
-    kind: "outline", stage: "plan", key: "plan", resumable: true, instructions: OUTLINE_INSTRUCTIONS,
+    kind: "outline", stage: "plan", key: "plan", resumable: true, instructions: selectInstructions("outline", OUTLINE_INSTRUCTIONS),
     task: (rejected) => outlineTask(input, chapters, rejected), schema: outlineOutputSchema, schemaName: "sundaybest_plan", saved: outlineSchema,
     map: async (raw) => {
       const mapped = mapOutline(raw, input);
@@ -49,7 +51,7 @@ export async function generateStagedPlan(input: PlanGenerationInput, deps: Pipel
   const outlineMark = fingerprint(outline);
   const writeDay = (day: OutlineDay, avoid: readonly string[]) => run.step({
     kind: "day", stage: `day ${day.dayNumber}`, key: `day ${day.dayNumber}@${outlineMark}`, resumable: avoid.length === 0,
-    instructions: DAY_INSTRUCTIONS, task: (rejected) => dayTask(input, outline, day, avoid, rejected),
+    instructions: selectInstructions("day", DAY_INSTRUCTIONS), task: (rejected) => dayTask(input, outline, day, avoid, rejected),
     schema: dayOutputSchema, schemaName: "sundaybest_day", saved: dayContentSchema,
     map: async (raw) => {
       const content = mapDay(raw, input, day, outline);
@@ -91,7 +93,7 @@ function runner(input: PlanGenerationInput, deps: PipelineDeps): StepRunner {
  * questions that fail verification keeps the ones that passed, and the retry
  * asks only for the rest.
  */
-async function writeQuizzes(input: PlanGenerationInput, days: readonly OutlineDay[], readings: ReadonlyArray<readonly string[]>,
+async function writeQuizzes(input: PlanGenerationInput, days: readonly OutlineDay[], readings: ReadonlyArray<readonly ReadingParagraph[]>,
   run: StepRunner, bible: BibleProvider): Promise<QuizContent[]> {
   const passages = await Promise.all(days.map((day) => passageText(day, bible)));
   const writeQuiz = (day: OutlineDay, avoid: readonly string[]) => {
@@ -100,7 +102,7 @@ async function writeQuizzes(input: PlanGenerationInput, days: readonly OutlineDa
     let kept: GeneratedQuestion[] = [];
     return run.step({
       kind: "quiz", stage: `quiz ${day.dayNumber}`, key: `quiz ${day.dayNumber}@${fingerprint([day.scripture, readings[index]])}`,
-      resumable: avoid.length === 0, instructions: QUIZ_INSTRUCTIONS,
+      resumable: avoid.length === 0, instructions: selectInstructions("quiz", QUIZ_INSTRUCTIONS),
       task: (rejected) => quizTask(day, readings[index]!, passages[index]!, [...avoid, ...kept.map((question) => question.prompt)],
         kept.length > 0 ? QUICK_CHECK_MIN - kept.length : null, rejected),
       schema: quizOutputSchema, schemaName: "sundaybest_quiz", saved: quizContentSchema,

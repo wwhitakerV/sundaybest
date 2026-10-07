@@ -317,6 +317,15 @@ shipping, not because they recur.
       before any TestFlight or App Store submission, with no alpha channel.
       The splash is set: the wordmark on white (`assets/splash-wordmark.png`,
       `scripts/render-splash-wordmark.swift`); it needs a new native build.
+- [ ] **Make a development build for a real iPhone.** Until there is one, the
+      phone shows a blank white splash (no wordmark) and lacks expo-image's
+      native module — both are native, so a JS reload can't bring them. - This Mac can't build locally: React Native needs Xcode 16.1+, which
+      needs macOS 14+; it has Xcode 14.3.1 on macOS 13. - `eas.json`'s `development` profile builds for the Simulator only. Add a
+      device profile (the same without `"simulator": true`) — plan first,
+      per `CLAUDE.md`. - Register the phone: `npx eas-cli@latest device:create` (Apple
+      developer account). Build:
+      `npx eas-cli@latest build --profile <device profile> --platform ios`.
+      The CLI is `eas-cli`; `npx eas` fetches an unrelated package.
 - [ ] **Measure speed on a real iPhone, release build.** Time a cold launch to
       Home (new and returning reader), opening a plan, opening a study day,
       and a Quick Check; note the API requests each screen makes. Record the

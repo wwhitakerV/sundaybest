@@ -6,7 +6,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import { BookOpen } from "lucide-react-native";
+import { BookOpen, Lock } from "lucide-react-native";
 
 import { space, useTheme } from "@/theme";
 import { CompactButton } from "@/ui/atoms/CompactButton";
@@ -40,7 +40,7 @@ export type HeroPlan = {
   title: string;
   church: string | null;
   /** Where the plan stands, the way on, and what today holds. */
-  words: { status: string; action: string; today: string };
+  words: { status: string; action: string; today: string; waiting?: boolean };
   totalDays: number;
   completedDayCount: number;
 };
@@ -126,11 +126,12 @@ export function HeroContent({
         pointerEvents={continueShown ? "auto" : "none"}
         style={[styles.action, continueHandOver?.style]}
       >
+        {/* Waiting on tomorrow: greyed, with a lock — still pressed to show the day where it sits. */}
         <CompactButton
           testID={testIDs.continueButton}
           label={words.action}
-          icon={BookOpen}
-          tone={light ? "light" : "dark"}
+          icon={words.waiting ? Lock : BookOpen}
+          tone={words.waiting ? "waiting" : light ? "light" : "dark"}
           onPress={onContinue}
         />
       </Animated.View>

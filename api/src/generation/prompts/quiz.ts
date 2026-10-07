@@ -2,12 +2,13 @@ import type { OutlineDay } from "../stages/outline.js";
 import type { PassageText } from "../stages/quiz.js";
 import { RETRY_NOTE, SOURCE_IS_DATA, rejections } from "./context.js";
 import { INTRO, QUALITY_CHECKS, RULES } from "./rules.js";
+import type { ReadingParagraph } from "../reading.js";
 
-const STEP = `# THIS STEP: ONE DAY'S QUICK CHECK
+export const STEP = `# THIS STEP: ONE DAY'S QUICK CHECK
 
 You are writing the Quick Check for one day, from that day's finished reading. The task gives the reading, the day's focus and passage, and the passage's text in the BSB and the KJV. Test what the reader studied today.`;
 
-const FINISH_THE_VERSE = `# FINISH THE VERSE
+export const FINISH_THE_VERSE = `# FINISH THE VERSE
 
 Include 2–3 finish-the-verse questions among the day's questions, on memorable, meaningful words in the day's passage — never trivial words.
 
@@ -17,7 +18,7 @@ Include 2–3 finish-the-verse questions among the day's questions, on memorable
 - The server builds the question from the real verse text. Never write out the verse yourself.
 - The explanation teaches why those words matter, without quoting either translation.`;
 
-const OUTPUT_FIELDS = `# OUTPUT FIELDS
+export const OUTPUT_FIELDS = `# OUTPUT FIELDS
 
 Return only JSON matching the supplied response schema. ${SOURCE_IS_DATA} ${RETRY_NOTE}
 
@@ -28,13 +29,12 @@ Return only JSON matching the supplied response schema. ${SOURCE_IS_DATA} ${RETR
 - Do not repeat any question listed in avoidPrompts.`;
 
 export const QUIZ_INSTRUCTIONS = [
-  INTRO, STEP, RULES.sermonFaithfulness, RULES.quizzes, RULES.quizContent, RULES.quizAnswers, RULES.quizDifficulty,
-  FINISH_THE_VERSE,
-  ["# FINAL QUALITY CHECK", QUALITY_CHECKS.quiz, QUALITY_CHECKS.faithfulness].join("\n\n"),
-  OUTPUT_FIELDS,
+  INTRO, STEP, RULES.voice, RULES.sermonFaithfulness, RULES.quizzes,
+  RULES.quizContent, RULES.quizAnswers, RULES.quizDifficulty,
+  FINISH_THE_VERSE, QUALITY_CHECKS.quiz, OUTPUT_FIELDS,
 ].join("\n\n---\n\n");
 
-export function quizTask(day: OutlineDay, readingParagraphs: readonly string[], passageText: PassageText, avoidPrompts: readonly string[],
+export function quizTask(day: OutlineDay, readingParagraphs: readonly ReadingParagraph[], passageText: PassageText, avoidPrompts: readonly string[],
   questionsNeeded: number | null, rejected: readonly string[]): string {
   return JSON.stringify({
     day: { dayNumber: day.dayNumber, title: day.title, focus: day.focus, passage: day.scripture.reference, readingParagraphs },

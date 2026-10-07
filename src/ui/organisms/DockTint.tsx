@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { edgeFade } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
 import { FLOATING_NAV_BAR, getFloatingNavBarTintHeight } from "./floatingNavBar";
 
@@ -27,7 +28,7 @@ export function DockTint({ capsuleBottom, testID }: DockTintProps) {
       pointerEvents="none"
       style={[styles.tint, { bottom: -capsuleBottom, height }]}
     >
-      <BottomFade height={height} solidHeight={capsuleBottom} />
+      <BottomFade height={height} solidHeight={capsuleBottom} peak={edgeFade.peak} />
     </View>
   );
 }

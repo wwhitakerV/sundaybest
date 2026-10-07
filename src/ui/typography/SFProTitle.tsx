@@ -8,6 +8,7 @@ export type SFProTitleVariant =
   | "section"
   | "card"
   | "smallCardTitle"
+  | "offer"
   | "step"
   | "nav"
   | "preview";
@@ -28,6 +29,8 @@ function typeFor(typography: Theme["typography"], variant: SFProTitleVariant) {
       return typography.cardTitle;
     case "smallCardTitle":
       return typography.smallCardTitle;
+    case "offer":
+      return typography.offerTitle;
     case "step":
       return typography.stepTitle;
     case "nav":

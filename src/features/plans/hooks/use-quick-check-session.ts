@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -11,17 +11,14 @@ import {
   useStartQuizAttemptMutation,
   useSubmitQuizAnswerMutation,
 } from "@/core/api/queries";
-import {
-  selectionFeedback,
-  successFeedback,
-  tapFeedback,
-  warningFeedback,
-} from "@/core/haptics/haptics";
+import { successFeedback, tapFeedback, warningFeedback } from "@/core/haptics/haptics";
 import {
   getQuickCheckAction,
   getQuickCheckPage,
+  getResumeIndex,
   type QuickCheckAction,
 } from "../logic/quick-check";
+import { describeQuizReview } from "../logic/quick-check-review";
 import type { QuestionResult, QuickCheckQuestionView, QuizStatus } from "../types";
 import { useStudyRoute } from "./use-study-route";
 
@@ -43,25 +40,19 @@ export function useQuickCheckSession() {
   const completeAttempt = useCompleteQuizAttemptMutation(quizId, attemptId, planId);
   const completeDay = useCompleteStudyDayMutation(planId, dayNumber);
   const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({});
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (!apiSession || apiSession.attempt.status === "completed") return;
-    const index = apiSession.quiz.questions.findIndex(
-      ({ id }) => id === apiSession.attempt.currentQuestionId,
-    );
-    setCurrentIndex(
-      index >= 0
-        ? index
-        : Math.max(0, Math.min(apiSession.quiz.questions.length - 1, apiSession.answers.length)),
-    );
-  }, [
-    apiSession?.answers.length,
-    apiSession?.attempt.currentQuestionId,
-    apiSession?.attempt.id,
-    apiSession?.attempt.status,
-    apiSession?.quiz.questions,
-  ]);
+  // Where the reader is, in this attempt. Until they act, it's where the
+  // attempt opens (`getResumeIndex`); from then on it's theirs, so a refetch
+  // after an answer never moves them.
+  const [position, setPosition] = useState<{ attemptId: string; index: number } | null>(null);
+  const currentIndex =
+    position && position.attemptId === attemptId
+      ? position.index
+      : apiSession
+        ? getResumeIndex(
+            apiSession.quiz.questions.map(({ id }) => id),
+            apiSession.answers.map(({ questionId }) => questionId),
+          )
+        : 0;
 
   const status: QuizStatus = apiSession?.attempt.status ?? standing?.status ?? "notStarted";
   const questionCount = apiSession?.quiz.questions.length ?? standing?.questionCount ?? 0;
@@ -81,7 +72,7 @@ export function useQuickCheckSession() {
   }, [apiSession]);
   const current = questions.at(currentIndex);
   const currentAnswer = current
-    ? apiSession?.answers.find((answer) => answer.questionId === current.id) ?? null
+    ? (apiSession?.answers.find((answer) => answer.questionId === current.id) ?? null)
     : null;
   const currentResult: QuestionResult = currentAnswer
     ? currentAnswer.correct
@@ -90,15 +81,7 @@ export function useQuickCheckSession() {
     : "unanswered";
   const selectedChoiceId = current ? (selectedChoices[current.id] ?? null) : null;
   const score = apiSession?.score ?? null;
-  const results = questions.map((question) => {
-    const answer = apiSession?.answers.find((candidate) => candidate.questionId === question.id);
-    const result: QuestionResult = answer
-      ? answer.correct
-        ? "correct"
-        : "incorrect"
-      : "unanswered";
-    return { question, result };
-  });
+  const review = describeQuizReview(questions, apiSession?.answers ?? []);
   const page = getQuickCheckPage({ status, currentIndex, questionCount });
   const busy =
     startAttempt.isPending ||
@@ -108,7 +91,6 @@ export function useQuickCheckSession() {
   const action = getQuickCheckAction({
     status,
     result: currentResult,
-    hasSelection: selectedChoiceId !== null,
     isLastQuestion: currentIndex === questionCount - 1,
   });
   const loading = route.loading || (shouldLoadSession && sessionQuery.isPending);
@@ -120,32 +102,13 @@ export function useQuickCheckSession() {
     try {
       if (nextAction.kind === "start") {
         tapFeedback();
-        const started = await startAttempt.mutateAsync();
-        const index = started.quiz.questions.findIndex(
-          ({ id }) => id === started.attempt.currentQuestionId,
-        );
-        setCurrentIndex(
-          index >= 0
-            ? index
-            : Math.max(0, Math.min(started.quiz.questions.length - 1, started.answers.length)),
-        );
-        return;
-      }
-
-      if (nextAction.kind === "check") {
-        if (!current || !selectedChoiceId || !attemptId) return;
-        const answer = await submitAnswer.mutateAsync({
-          questionId: current.id,
-          choiceId: selectedChoiceId,
-        });
-        if (answer.correct) successFeedback();
-        else warningFeedback();
+        await startAttempt.mutateAsync();
         return;
       }
 
       if (nextAction.kind === "next") {
         tapFeedback();
-        setCurrentIndex((index) => Math.min(questionCount - 1, index + 1));
+        setPosition({ attemptId, index: Math.min(questionCount - 1, currentIndex + 1) });
         return;
       }
 
@@ -159,6 +122,24 @@ export function useQuickCheckSession() {
       successFeedback();
       router.replace(dayCompleteHref(planId, dayNumber));
     } catch {
+      Alert.alert(
+        "Couldn't update Quick Check",
+        "SundayBest couldn't save that answer. Check your connection and try again.",
+      );
+    }
+  }
+
+  /** A tap on an answer is the answer: it's checked at once, and the verdict shows. */
+  async function answer(choiceId: string) {
+    if (!current || currentAnswer || busy || !attemptId) return;
+    setPosition({ attemptId, index: currentIndex });
+    setSelectedChoices((existing) => ({ ...existing, [current.id]: choiceId }));
+    try {
+      const checked = await submitAnswer.mutateAsync({ questionId: current.id, choiceId });
+      if (checked.correct) successFeedback();
+      else warningFeedback();
+    } catch {
+      setSelectedChoices(({ [current.id]: _unsaved, ...rest }) => rest);
       Alert.alert(
         "Couldn't update Quick Check",
         "SundayBest couldn't save that answer. Check your connection and try again.",
@@ -186,15 +167,11 @@ export function useQuickCheckSession() {
     selectedChoiceId,
     action,
     answers: apiSession?.answers ?? [],
-    results,
+    review,
     score,
     busy,
     act,
-    pick: (choiceId: string) => {
-      if (!current || currentAnswer || busy) return;
-      if (choiceId !== selectedChoiceId) selectionFeedback();
-      setSelectedChoices((existing) => ({ ...existing, [current.id]: choiceId }));
-    },
+    pick: (choiceId: string) => void answer(choiceId),
     selectedFor: (questionId: string) => selectedChoices[questionId] ?? null,
     close: () => sessionModal.exit(),
   } as const;

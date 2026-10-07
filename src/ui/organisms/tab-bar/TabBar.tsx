@@ -8,13 +8,13 @@ import Animated from "react-native-reanimated";
 // package.json restricts it, so it's a stable subpath, not a private one.
 import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
 
-import { useTheme } from "@/theme";
+import { edgeFade, useTheme } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
-import { FloatingButton } from "@/ui/atoms/FloatingButton";
 import { getFloatingNavBarBottom, getFloatingNavBarTintHeight } from "../floatingNavBar";
 import { GatheredTab } from "./GatheredTab";
 import { OpenTabs } from "./OpenTabs";
 import { TabBarBannerSlot } from "./TabBarBannerSlot";
+import { TabBarAccessorySlot } from "./TabBarAccessorySlot";
 import { TabBarFab } from "./TabBarFab";
 import {
   CAPSULE_BORDER_WIDTH,
@@ -27,7 +27,11 @@ import {
   RAISE_LIFT,
   SIDE_MARGIN,
 } from "./tab-bar-geometry";
-import { useShownTabBarAccessory, type TabBarAccessory } from "./tab-bar-accessory";
+import {
+  useShownTabBarAccessory,
+  useTabBarFabHidden,
+  type TabBarAccessory,
+} from "./tab-bar-accessory";
 import { useShownTabBarBanner } from "./tab-bar-banner";
 import { useTabBarMinimize } from "./use-tab-bar-minimize";
 import { useTabBarBannerReveal, useTabBarRaise } from "./use-tab-bar-raise";
@@ -89,6 +93,8 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
   // stops asking (and asks afresh). The last one asked for stays drawn while
   // it springs away, so it never empties mid-animation.
   const accessory = useShownTabBarAccessory();
+  // A screen with no use for the FAB: it springs away, and the screen's button reaches the edge.
+  const fabHidden = useTabBarFabHidden();
   const [raisedFor, setRaisedFor] = useState<TabBarAccessory | null>(null);
   const raised = accessory !== null && raisedFor === accessory;
   const minimized = accessory !== null && !raised;
@@ -112,8 +118,10 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
       buttonRaised: raised,
       fabShrunk: raised || (bannerShown && !minimized),
       tintRaised: raised || bannerShown,
+      fabHidden,
     },
-    RAISE_GEOMETRY,
+    // Far enough for the FAB to drop clean out of sight, below the screen's edge.
+    { ...RAISE_GEOMETRY, fabDrop: FAB_SIZE + getFloatingNavBarBottom(insets.bottom) },
   );
 
   const capsuleBottom = getFloatingNavBarBottom(insets.bottom);
@@ -149,6 +157,7 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
           testID="tab-bar-tint"
           height={tintHeight}
           solidHeight={capsuleBottom + RAISE_LIFT}
+          peak={edgeFade.peak}
         />
       </Animated.View>
       {/* Beneath the tabs, so it slides up out from behind them and back. */}
@@ -185,21 +194,17 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
       </Animated.View>
 
       {lastAccessory && (
-        <Animated.View
-          pointerEvents={accessory ? "auto" : "none"}
-          style={[styles.accessorySlot, slotStyle, buttonStyle]}
-        >
-          <FloatingButton
-            testID={lastAccessory.testID}
-            label={lastAccessory.label}
-            {...(lastAccessory.icon && { icon: lastAccessory.icon })}
-            onPress={lastAccessory.onPress}
-          />
-        </Animated.View>
+        <TabBarAccessorySlot
+          accessory={lastAccessory}
+          shown={accessory !== null}
+          style={[slotStyle, buttonStyle]}
+        />
       )}
 
+      {/* Always drawn, so it can spring away and back; out of reach while it's away. */}
       <TabBarFab
         label={fab.label}
+        hidden={fabHidden}
         onPress={() => {
           onPress?.();
           fab.onPress();
@@ -229,12 +234,5 @@ const styles = StyleSheet.create({
     height: CAPSULE_HEIGHT,
     borderRadius: CAPSULE_RADIUS,
     borderWidth: CAPSULE_BORDER_WIDTH,
-  },
-  // Beside the gathered circle or raised above the open tabs; placed by
-  // `useTabBarRaise`. Always given a `top`: without one it's centred on the
-  // whole bar, padding and all, and sits low.
-  accessorySlot: {
-    position: "absolute",
-    height: CAPSULE_HEIGHT,
   },
 });

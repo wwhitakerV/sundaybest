@@ -21,6 +21,7 @@ import { planAboutSchema } from "../contracts/plans.js";
 import { addCalendarDays, localDateInTimeZone } from "../domain/time.js";
 import { AppError } from "../http/errors.js";
 import { toSermon } from "./sermon-service.js";
+import { readingParagraphForApi, readingParagraphText, type StoredReadingParagraph } from "../generation/reading.js";
 
 const STEP_ORDER = ["read", "scripture", "reflect", "pray"] as const;
 const WORDS_PER_MINUTE = 150;
@@ -161,7 +162,7 @@ export function createPlanService(db: Database) {
       estimatedMinutes,
       reading: {
         title: row.day.readingTitle,
-        paragraphs: row.day.readingParagraphs,
+        paragraphs: row.day.readingParagraphs.map(readingParagraphForApi),
         sermonQuote: row.day.sermonQuote,
         sermonClip:
           row.day.clipStartSeconds === null
@@ -504,6 +505,48 @@ export function createPlanService(db: Database) {
         .where(eq(userPlanEnrollments.id, base.enrollment.id));
       return getSummary(userId, planId, timezone);
     },
+    /**
+     * Back to not started, for this reader only: their days and steps undone,
+     * their Quick Check attempts (and answers) gone, the plan "ready" to start
+     * again — kept, and in Saved if it was. What the plan says is never touched.
+     * Returns the plan, and its reflection questions' ids so the app can clear
+     * the answers it keeps on the phone.
+     */
+    async reset(userId: string, planId: string, timezone: string) {
+      const base = await getVisibleBase(userId, planId);
+      const enrollment = base.enrollment;
+      await db.transaction(async (tx) => {
+        const planQuizzes = tx.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.planId, planId));
+        await tx
+          .delete(quizAttempts)
+          .where(and(eq(quizAttempts.userId, userId), inArray(quizAttempts.quizId, planQuizzes)));
+        if (!enrollment) return;
+        await tx.delete(planStepProgress).where(eq(planStepProgress.enrollmentId, enrollment.id));
+        await tx.delete(planDayProgress).where(eq(planDayProgress.enrollmentId, enrollment.id));
+        await tx
+          .update(userPlanEnrollments)
+          .set({
+            status: "ready",
+            startDate: null,
+            startedTimezone: null,
+            startedAt: null,
+            completedAt: null,
+            archivedAt: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(userPlanEnrollments.id, enrollment.id));
+      });
+      // The answers to these are kept on the reader's phone, not here: the app clears them.
+      const prompts = await db
+        .select({ id: reflectionPrompts.id })
+        .from(reflectionPrompts)
+        .innerJoin(planDays, eq(planDays.id, reflectionPrompts.planDayId))
+        .where(eq(planDays.planId, planId));
+      return {
+        plan: await getSummary(userId, planId, timezone),
+        reflectionIds: prompts.map((prompt) => prompt.id),
+      };
+    },
     async save(userId: string, planId: string) {
       await getVisibleBase(userId, planId);
       await db.insert(savedPlans).values({ userId, planId }).onConflictDoNothing();
@@ -521,12 +564,16 @@ export function sortSteps(values: Array<(typeof STEP_ORDER)[number]>) {
 }
 
 export function estimateDayMinutes(input: {
-  readingParagraphs: readonly string[];
+  readingParagraphs: readonly StoredReadingParagraph[];
   reflectionQuestions: readonly string[];
   prayerText: string;
   verseCount: number;
 }): number {
-  const textWords = [...input.readingParagraphs, ...input.reflectionQuestions, input.prayerText]
+  const textWords = [
+    ...input.readingParagraphs.map(readingParagraphText),
+    ...input.reflectionQuestions,
+    input.prayerText,
+  ]
     .reduce((total, text) => total + countWords(text), 0);
   const scriptureWords = Math.max(1, input.verseCount) * APPROX_WORDS_PER_VERSE;
   return Math.max(1, Math.round((textWords + scriptureWords) / WORDS_PER_MINUTE) + PAUSE_MINUTES);

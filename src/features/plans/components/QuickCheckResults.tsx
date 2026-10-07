@@ -1,73 +1,76 @@
 import { StyleSheet, View } from "react-native";
-import { Check, X } from "lucide-react-native";
 
 import { space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
-import { SFProBody } from "@/ui/typography/SFProBody";
-import type { QuestionResult, QuickCheckQuestionView } from "../types";
-
-const MARK_SIZE = 32;
+import { MonoLabel } from "@/ui/typography/MonoLabel";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
+import { tallyQuizReview, type QuizReviewItem } from "../logic/quick-check-review";
+import { QuickCheckReviewCard } from "./QuickCheckReviewCard";
 
 export type QuickCheckResultsProps = {
-  results: readonly { question: QuickCheckQuestionView; result: QuestionResult }[];
+  items: readonly QuizReviewItem[];
+  testID: string;
 };
 
-/** A finished Quick Check's questions, each marked right or wrong. */
-export function QuickCheckResults({ results }: QuickCheckResultsProps) {
-  const theme = useTheme();
+/**
+ * A finished Quick Check, under its score: how many were right and how
+ * many missed, then every question reviewed on a card of its own — what was
+ * asked, what was answered, the right answer where it was missed, and why.
+ */
+export function QuickCheckResults({ items, testID }: QuickCheckResultsProps) {
+  const { right, missed } = tallyQuizReview(items);
 
   return (
-    <Card testID="quick-check-score" radius={32} style={styles.list}>
-      {results.map(({ question, result }, position) => {
-        const right = result === "correct";
-        return (
-          <View
-            key={question.id}
-            testID={`quick-check-result-${question.order}`}
-            accessible
-            accessibilityLabel={`${question.prompt} ${right ? "Right." : "Not right."}`}
-            style={[
-              styles.row,
-              position > 0 && { borderTopWidth: 1, borderTopColor: theme.colors.divider },
-            ]}
-          >
-            <View
-              style={[
-                styles.mark,
-                { backgroundColor: right ? theme.colors.correct : theme.colors.incorrect },
-              ]}
-            >
-              {right ? (
-                <Check size={16} color={theme.colors.onControlPrimary} strokeWidth={3} />
-              ) : (
-                <X size={16} color={theme.colors.onControlPrimary} strokeWidth={3} />
-              )}
-            </View>
-            <SFProBody style={styles.prompt} numberOfLines={1}>
-              {question.prompt}
-            </SFProBody>
-          </View>
-        );
-      })}
-    </Card>
+    <View testID={testID} style={styles.results}>
+      <Card radius={24} style={styles.tally}>
+        <Tally count={right} label="Right" tone="correct" testID={`${testID}-right-count`} />
+        <TallyDivider />
+        <Tally count={missed} label="Missed" tone="incorrect" testID={`${testID}-missed-count`} />
+      </Card>
+
+      <MonoLabel variant="labelTracked" tone="textMuted" style={styles.label}>
+        Your answers
+      </MonoLabel>
+      {items.map((item) => (
+        <QuickCheckReviewCard key={item.id} item={item} testID={`${testID}-question-${item.id}`} />
+      ))}
+    </View>
   );
 }
 
+/** One side of the tally: a count in the serif, its word under it. */
+function Tally({
+  count,
+  label,
+  tone,
+  testID,
+}: {
+  count: number;
+  label: string;
+  tone: "correct" | "incorrect";
+  testID: string;
+}) {
+  return (
+    <View style={styles.side}>
+      <SerifTitle variant="title" tone={tone} testID={testID}>
+        {String(count)}
+      </SerifTitle>
+      <MonoLabel variant="labelTracked" tone="textMuted" style={styles.label}>
+        {label}
+      </MonoLabel>
+    </View>
+  );
+}
+
+function TallyDivider() {
+  const theme = useTheme();
+  return <View style={[styles.divider, { backgroundColor: theme.colors.divider }]} />;
+}
+
 const styles = StyleSheet.create({
-  list: { overflow: "hidden" },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space[16],
-    paddingVertical: space[20],
-    paddingHorizontal: space[20],
-  },
-  mark: {
-    width: MARK_SIZE,
-    height: MARK_SIZE,
-    borderRadius: MARK_SIZE / 2,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  prompt: { flex: 1 },
+  results: { gap: space[16] },
+  tally: { flexDirection: "row", alignItems: "center", paddingVertical: space[20] },
+  side: { flex: 1, alignItems: "center", gap: space[4] },
+  divider: { width: 1, alignSelf: "stretch" },
+  label: { textTransform: "uppercase", marginTop: space[8] },
 });

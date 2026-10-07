@@ -1,5 +1,5 @@
 export { useTheme } from "./use-theme";
-export { READING_PAPERS, controlHeight, motion, radius, space } from "./tokens";
+export { READING_PAPERS, controlHeight, edgeFade, motion, radius, space } from "./tokens";
 export { getReadingTheme } from "./reading-theme";
 export { getSurfaceTheme, type Surface } from "./surface-theme";
 export { ThemeScope } from "./theme-scope";

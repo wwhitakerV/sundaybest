@@ -1,6 +1,6 @@
 // Renders the launch screen wordmark: SUNDAYBEST in the masthead face
-// (Bodoni Moda Medium), brand black, transparent background.
-// Usage: swift scripts/render-splash-wordmark.swift assets/fonts/BodoniModa_9pt-Medium.ttf assets/splash-wordmark.png
+// (Libre Baskerville Medium), brand black, transparent background.
+// Usage: swift scripts/render-splash-wordmark.swift assets/fonts/LibreBaskerville-Medium.ttf assets/splash-wordmark.png
 import AppKit
 import CoreText
 

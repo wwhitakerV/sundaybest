@@ -3,12 +3,17 @@ import { StyleSheet, View } from "react-native";
 import type { Id } from "@/types/domain";
 import { space } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
-import { getChoiceLook, getQuestionKicker, splitVersePrompt } from "../logic/quick-check";
+import {
+  getChoiceLook,
+  getQuestionKicker,
+  splitVersePrompt,
+  verseBlank,
+} from "../logic/quick-check";
 import type { QuickCheckQuestionView } from "../types";
 import { QuickCheckChoice } from "./QuickCheckChoice";
 import { QuickCheckWordChip } from "./QuickCheckWordChip";
 import { MonoBody } from "@/ui/typography/MonoBody";
-import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
 import { SerifBody } from "@/ui/typography/SerifBody";
 import { Span } from "@/ui/typography/Span";
 
@@ -51,22 +56,25 @@ export function QuickCheckQuestion({
 
       {verse ? (
         <>
-          <SFProTitle>{question.scriptureReference ?? ""}</SFProTitle>
+          <SerifTitle variant="quiz">{question.scriptureReference ?? ""}</SerifTitle>
           <Card radius={36} style={styles.verseCard}>
             <SerifBody testID="quick-check-verse">
               {verse.before}
               <Span
                 italic
-                style={styles.blank}
+                testID="quick-check-verse-blank"
+                {...(filled && { style: styles.filled })}
                 tone={
-                  filledLook === "correct"
-                    ? "correct"
-                    : filledLook === "incorrect"
-                      ? "incorrect"
-                      : "text"
+                  !filled
+                    ? "textMuted"
+                    : filledLook === "correct"
+                      ? "correct"
+                      : filledLook === "incorrect"
+                        ? "incorrect"
+                        : "text"
                 }
               >
-                {filled ? filled.text : "    "}
+                {verseBlank(filled?.text ?? null)}
               </Span>
               {verse.after}
             </SerifBody>
@@ -86,7 +94,7 @@ export function QuickCheckQuestion({
         </>
       ) : (
         <>
-          <SFProTitle>{question.prompt}</SFProTitle>
+          <SerifTitle variant="quiz">{question.prompt}</SerifTitle>
           <View style={styles.choices}>
             {question.choices.map((choice) => (
               <QuickCheckChoice
@@ -109,6 +117,6 @@ const styles = StyleSheet.create({
   body: { gap: space[16] },
   choices: { gap: space[12], marginTop: space[8] },
   verseCard: { paddingHorizontal: space[28], paddingVertical: space[24] },
-  blank: { textDecorationLine: "underline" },
+  filled: { textDecorationLine: "underline" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space[12], marginTop: space[8] },
 });

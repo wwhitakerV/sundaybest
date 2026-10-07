@@ -3,12 +3,16 @@ import { useIsFocused, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 import { House, LibraryBig } from "lucide-react-native";
 
+import { Stop } from "react-native-svg";
+
+import { edgeFade } from "@/theme";
 import { lightTheme } from "@/theme/tokens";
 import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 import { TabBar } from "@/ui/organisms/tab-bar/TabBar";
 import type { TabBarProps } from "@/ui/organisms/tab-bar/TabBar";
 import {
   TabBarAccessoryProvider,
+  useHideTabBarFab,
   useTabBarAccessory,
 } from "@/ui/organisms/tab-bar/tab-bar-accessory";
 import { TabBarBannerProvider, useTabBarBanner } from "@/ui/organisms/tab-bar/tab-bar-banner";
@@ -92,6 +96,12 @@ function makeProps(
 // The bar starts in its hidden position (opacity 0) and animates in, and the
 // Jest Reanimated mock freezes animated styles at that first frame — so these
 // assert presence (`toBeOnTheScreen`), not `toBeVisible`.
+function stopOpacities(within: ReturnType<typeof screen.getByTestId>) {
+  return within
+    .findAll((node) => node.type === Stop)
+    .map((stop) => stop.props.stopOpacity as unknown);
+}
+
 describe("TabBar", () => {
   it("is addressable as tab-bar", () => {
     render(<TabBar {...makeProps(0)} />);
@@ -387,7 +397,7 @@ describe("TabBar", () => {
       renderWithBanner();
 
       expect(screen.getByTestId("tab-bar-fab-slot")).toHaveStyle({
-        transform: [{ scale: CAPSULE_HEIGHT / FAB_SIZE }],
+        transform: [{ translateY: 0 }, { scale: CAPSULE_HEIGHT / FAB_SIZE }],
       });
     });
 
@@ -395,7 +405,9 @@ describe("TabBar", () => {
       renderWithBanner({ shown: false });
 
       expect(screen.queryByTestId("a-banner")).toBeNull();
-      expect(screen.getByTestId("tab-bar-fab-slot")).toHaveStyle({ transform: [{ scale: 1 }] });
+      expect(screen.getByTestId("tab-bar-fab-slot")).toHaveStyle({
+        transform: [{ translateY: 0 }, { scale: 1 }],
+      });
     });
 
     it("steps aside while a screen's own button is raised above the tabs", () => {
@@ -412,6 +424,49 @@ describe("TabBar", () => {
       expect(screen.getByTestId("a-banner")).toBeOnTheScreen();
       expect(screen.getByTestId("tab-bar-banner")).toHaveProp("pointerEvents", "box-none");
       expect(screen.getByTestId("plan-continue")).toBeOnTheScreen();
+    });
+  });
+
+  it("tints behind the bar at the edges' lighter peak, never fully opaque", () => {
+    render(<TabBar {...makeProps(0)} />);
+
+    const tint = screen.getByTestId("tab-bar-tint", { includeHiddenElements: true });
+    expect(Math.max(...(stopOpacities(tint) as number[]))).toBe(edgeFade.peak);
+  });
+
+  describe("on a screen that has no use for the floating button", () => {
+    function FablessScreen({ asking }: { asking: boolean }) {
+      useHideTabBarFab(true);
+      useTabBarAccessory(
+        { label: "Continue Day 2", testID: "plan-continue", onPress: () => undefined },
+        asking,
+      );
+      return null;
+    }
+
+    function renderFabless(asking = true) {
+      return render(
+        <TabBarAccessoryProvider>
+          <FablessScreen asking={asking} />
+          <TabBar {...makeProps(1)} />
+        </TabBarAccessoryProvider>,
+      );
+    }
+
+    it("sends the floating button away — out of reach of touch and VoiceOver as it goes", () => {
+      renderFabless(false);
+
+      expect(screen.queryByTestId("tab-bar-fab")).toBeNull();
+      expect(screen.getByTestId("tab-bar-fab-slot", { includeHiddenElements: true })).toHaveProp(
+        "pointerEvents",
+        "none",
+      );
+    });
+
+    it("leaves the tabs as they are", () => {
+      renderFabless(false);
+
+      expect(screen.getByTestId("tab-home")).toBeOnTheScreen();
     });
   });
 });

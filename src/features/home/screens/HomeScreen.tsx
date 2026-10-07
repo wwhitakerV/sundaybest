@@ -18,6 +18,7 @@ import { controlHeight, space } from "@/theme";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { Wordmark } from "@/ui/typography/Wordmark";
+import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 
 /** A header action's 44pt tap target — the masthead row keeps it. */
 const HEADER_HEIGHT = controlHeight.hitTarget;
@@ -65,7 +66,13 @@ export function HomeScreen() {
           style={[styles.header, headerStyle]}
         >
           <Wordmark />
-          <MonoLabel variant="headerDate" tone="textMuted" testID="home-tab-date" numberOfLines={1}>
+          <MonoLabel
+            variant="headerDate"
+            tone="textMuted"
+            testID="home-tab-date"
+            numberOfLines={1}
+            style={styles.date}
+          >
             {view.date}
           </MonoLabel>
         </Animated.View>
@@ -83,42 +90,43 @@ export function HomeScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {view.loading ? (
-            <HomeSkeleton testID="home-content-pending" />
-          ) : (
-            <>
-              {view.active ? (
-                <ActivePlanHero
-                  plan={view.active.hero}
-                  href={view.active.href}
-                  onContinue={view.continueToday}
-                  motion={heroMotion}
-                />
-              ) : (
-                <StartHereCard onAddSermon={view.addSermon} />
-              )}
+          <SkeletonHandoff
+            testID="home-handoff"
+            pending={view.loading}
+            skeleton={<HomeSkeleton testID="home-content-pending" />}
+            style={styles.home}
+          >
+            {view.active ? (
+              <ActivePlanHero
+                plan={view.active.hero}
+                href={view.active.href}
+                onContinue={view.continueToday}
+                motion={heroMotion}
+              />
+            ) : (
+              <StartHereCard onAddSermon={view.addSermon} />
+            )}
 
-              {view.hasPlans ? (
-                <PlanList plans={view.plans} onOpenPlan={view.openPlan} />
-              ) : (
-                view.sample && (
-                  <View style={styles.sample}>
-                    <SFProBody tone="textMuted" style={styles.label}>
-                      Try a sample
-                    </SFProBody>
+            {view.hasPlans ? (
+              <PlanList plans={view.plans} onOpenPlan={view.openPlan} />
+            ) : (
+              view.sample && (
+                <View style={styles.sample}>
+                  <SFProBody tone="textMuted" style={styles.label}>
+                    Try a sample
+                  </SFProBody>
 
-                    <PlanRow
-                      testID="home-tab-sample-plan"
-                      title={view.sample.title}
-                      detail={view.sample.detail}
-                      done={false}
-                      onPress={view.openSample}
-                    />
-                  </View>
-                )
-              )}
-            </>
-          )}
+                  <PlanRow
+                    testID="home-tab-sample-plan"
+                    title={view.sample.title}
+                    detail={view.sample.detail}
+                    done={false}
+                    onPress={view.openSample}
+                  />
+                </View>
+              )
+            )}
+          </SkeletonHandoff>
         </Animated.ScrollView>
       </Screen>
 
@@ -150,7 +158,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: PAGE_INSET,
+    gap: space[12],
   },
+
+  // When the row is tight, the date gives way; the wordmark never does.
+  date: { flexShrink: 1 },
 
   scroll: {
     flex: 1,
@@ -162,6 +174,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: PAGE_INSET,
     paddingTop: CONTENT_TOP,
     paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
+  },
+
+  // The page's parts, as far apart as the scroll keeps them.
+  home: {
+    gap: space[28],
   },
 
   sample: {

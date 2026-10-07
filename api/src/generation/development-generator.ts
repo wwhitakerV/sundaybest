@@ -10,7 +10,10 @@ export function createDevelopmentGenerator(): PlanGenerationProvider {
           dayNumber,
           readingTitle: `Development Day ${dayNumber}`,
           readingParagraphs: [
-            `Development-only generated content for “${input.sermon.title}”. Configure OPENAI_API_KEY before evaluating real study quality.`,
+            {
+              heading: "Development Content",
+              content: `Development-only generated content for “${input.sermon.title}”. Configure OPENAI_API_KEY before evaluating real study quality.`,
+            },
           ],
           sermonQuote: null,
           clipStartSeconds: null,

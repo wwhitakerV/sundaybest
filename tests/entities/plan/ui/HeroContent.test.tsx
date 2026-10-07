@@ -1,5 +1,7 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
+import { Lock } from "lucide-react-native";
+
 import { lightTheme } from "@/theme/tokens";
 import { HeroContent, type HeroContentProps, type HeroPlan } from "@/entities/plan/ui/HeroContent";
 
@@ -167,5 +169,25 @@ describe("HeroContent", () => {
     renderContent({ showProgress: false });
 
     expect(screen.getByTestId("a-hero-today")).not.toHaveStyle({ marginBottom: 28 });
+  });
+
+  it("greys Continue out, with a lock, while the next day isn't open yet", () => {
+    renderContent({
+      plan: {
+        words: {
+          status: "IN PROGRESS · DAY 3 OF 6",
+          action: "Day 3 tomorrow",
+          today: "Today: Grace is received · 9 min",
+          waiting: true,
+        },
+      },
+    });
+
+    const button = screen.getByTestId("a-hero-continue");
+    expect(button).toHaveAccessibleName("Day 3 tomorrow");
+    // Opaque and grey — plainly there, plainly not ready — never the hero's white or black.
+    expect(button).toHaveStyle({ backgroundColor: lightTheme.colors.waitingFill, borderWidth: 0 });
+    expect(screen.getByText("Day 3 tomorrow")).toHaveStyle({ color: lightTheme.colors.waitingInk });
+    expect(screen.UNSAFE_getAllByType(Lock)).toHaveLength(1);
   });
 });

@@ -17,6 +17,8 @@ export type FloatingButtonProps = {
   primary?: boolean;
   /** A lower-emphasis action beside the main one: edged as lightly as the bar itself. */
   quiet?: boolean;
+  /** A way on that isn't open yet (a day tomorrow): opaque grey, grey words, edged as lightly as the bar. */
+  waiting?: boolean;
   /** Nowhere to go: it can't be pressed, and steps back. */
   disabled?: boolean;
   onPress: () => void;
@@ -28,7 +30,7 @@ export type FloatingButtonProps = {
  * tall as they are, its label in the button face. White and edged more
  * heavily than a bar, so it reads as the screen's, not another tab — or
  * `quiet`, edged as lightly; `primary`, the screen's main action, it fills
- * black. The same button sits beside the gathered tab bar or alone over a
+ * black; `waiting`, a way on that isn't open yet, it's opaque grey. The same button sits beside the gathered tab bar or alone over a
  * screen. Fills the width it's given.
  */
 export function FloatingButton({
@@ -36,13 +38,14 @@ export function FloatingButton({
   icon: Icon,
   primary = false,
   quiet = false,
+  waiting = false,
   disabled = false,
   onPress,
   testID,
 }: FloatingButtonProps) {
   const theme = useTheme();
-  const edge = quiet ? theme.colors.hairline : theme.colors.borderStrong;
-  const tone: Tone = primary ? "onControlPrimary" : "text";
+  const edge = quiet || waiting ? theme.colors.hairline : theme.colors.borderStrong;
+  const tone: Tone = primary ? "onControlPrimary" : waiting ? "waitingInk" : "text";
   const ink = toneColor(theme.colors, tone);
 
   return (
@@ -56,7 +59,11 @@ export function FloatingButton({
       style={[
         styles.button,
         {
-          backgroundColor: primary ? theme.colors.controlPrimary : theme.colors.background,
+          backgroundColor: primary
+            ? theme.colors.controlPrimary
+            : waiting
+              ? theme.colors.waitingFill
+              : theme.colors.background,
           borderColor: primary ? theme.colors.controlPrimary : edge,
           gap: space[8],
         },
@@ -67,7 +74,7 @@ export function FloatingButton({
         <View testID={`${testID}-icon`}>
           <Icon
             size={ICON_SIZE}
-            color={primary ? ink : theme.colors.chromeIcon}
+            color={primary || waiting ? ink : theme.colors.chromeIcon}
             strokeWidth={theme.icon.strokeWidth}
           />
         </View>

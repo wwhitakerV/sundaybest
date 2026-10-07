@@ -47,12 +47,8 @@ export function useStudySession() {
   const initializedDay = useRef<string | null>(null);
   const redirectedToQuiz = useRef<string | null>(null);
 
-  const desiredPosition = getInitialPosition(
-    requestedStep,
-    day?.progress.completedSteps ?? [],
-  );
-  const effectivePosition =
-    day && initializedDay.current !== day.id ? desiredPosition : position;
+  const desiredPosition = getInitialPosition(requestedStep, day?.progress.completedSteps ?? []);
+  const effectivePosition = day && initializedDay.current !== day.id ? desiredPosition : position;
 
   useEffect(() => {
     if (!day || initializedDay.current === day.id) return;
@@ -80,23 +76,11 @@ export function useStudySession() {
     }
     redirectedToQuiz.current = day.id;
     router.replace(quickCheckHref(planId, dayNumber));
-  }, [
-    allStudyStepsDone,
-    day,
-    dayNumber,
-    planId,
-    quickCheckDue,
-    requestedStep,
-    router,
-  ]);
+  }, [allStudyStepsDone, day, dayNumber, planId, quickCheckDue, requestedStep, router]);
 
   const busy = completeStep.isPending || completeDay.isPending;
   const redirectingToQuickCheck = Boolean(
-    day &&
-      requestedStep === null &&
-      day.quickCheckId &&
-      allStudyStepsDone &&
-      quickCheckDue,
+    day && requestedStep === null && day.quickCheckId && allStudyStepsDone && quickCheckDue,
   );
   const loading =
     route.loading || settingsQuery.isPending || reflections.loading || redirectingToQuickCheck;
@@ -230,9 +214,7 @@ function getInitialPosition(
     return { step: Math.max(0, requestedIndex), page: 0 };
   }
 
-  const firstIncomplete = STUDY_STEPS.findIndex(
-    ({ key }) => !completedSteps.includes(key),
-  );
+  const firstIncomplete = STUDY_STEPS.findIndex(({ key }) => !completedSteps.includes(key));
   return {
     step: firstIncomplete === -1 ? STUDY_STEPS.length - 1 : firstIncomplete,
     page: 0,

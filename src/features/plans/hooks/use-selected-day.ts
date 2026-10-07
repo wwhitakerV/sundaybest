@@ -50,11 +50,9 @@ export function useSelectedDay(input: {
       day,
       header: describeDayHeader(normalized, { minutes: day.estimatedMinutes, steps, locked }),
       steps,
-      quickCheck: describeQuickCheckStep(
-        normalized,
-        quickCheckEnabled ? day.quickCheck : null,
-        { locked },
-      ),
+      quickCheck: describeQuickCheckStep(normalized, quickCheckEnabled ? day.quickCheck : null, {
+        locked,
+      }),
     },
   };
 }

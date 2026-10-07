@@ -82,16 +82,37 @@ test("a plan written by an earlier prompt is not reused", async () => {
   }
 });
 
-test("a reader asking again for a sermon they already have gets their existing plan", async () => {
+test("a reader asking again for a sermon they already have gets a second plan, written fresh", async () => {
   const harness = await apiHarness();
   try {
-    const reader = await harness.user("one-plan-reader");
+    const reader = await harness.user("duplicate-reader");
     const sermonId = await harness.resolveSermon(reader);
-    const existing = await build(harness, reader, sermonId, 1, true);
-    const repeat = await reader.mutate("POST", "/v1/plans", { sermonId, lengthDays: 7, quickCheckEnabled: false });
+    const first = await build(harness, reader, sermonId, 1, false);
+    const calls = harness.counts.openai;
+    const before = await harness.content(first.planId);
+
+    const second = await build(harness, reader, sermonId, 1, false);
+
+    assert.notEqual(second.planId, first.planId);
+    // Written by the model again — never copied from the reader's own plan.
+    assert.equal(harness.counts.openai, calls + 2);
+    // The first plan's content is left exactly as it was.
+    assert.deepEqual(await harness.content(first.planId), before);
+  } finally {
+    await harness.close();
+  }
+});
+
+test("a reader asking again while their plan for the sermon is still being built gets that one", async () => {
+  const harness = await apiHarness();
+  try {
+    const reader = await harness.user("building-reader");
+    const sermonId = await harness.resolveSermon(reader);
+    const building = await reader.mutate("POST", "/v1/plans", { sermonId, lengthDays: 1, quickCheckEnabled: false });
+    const repeat = await reader.mutate("POST", "/v1/plans", { sermonId, lengthDays: 1, quickCheckEnabled: false });
+
     assert.equal(repeat.statusCode, 200, repeat.body);
-    assert.deepEqual(repeat.json(), existing);
-    assert.equal(await harness.worker.runOnce(), false);
+    assert.deepEqual(repeat.json(), building.json());
   } finally {
     await harness.close();
   }

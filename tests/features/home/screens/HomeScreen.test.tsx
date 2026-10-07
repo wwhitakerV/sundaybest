@@ -230,6 +230,12 @@ describe("HomeScreen", () => {
     });
   });
 
+  it("lets the date give way before the masthead when the header is tight", async () => {
+    renderHome();
+
+    expect(await screen.findByTestId("home-tab-date")).toHaveStyle({ flexShrink: 1 });
+  });
+
   it("dates its header beside the masthead, as 09.30.26 in the mono", () => {
     renderHome();
 

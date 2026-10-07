@@ -16,3 +16,28 @@ export function describePlanAbout(about: ApiPlanAbout | null): PlanAboutLook | n
     takeaways: about.keyTakeaways,
   };
 }
+
+/** A takeaway's number as the list sets it, two digits: "01", "02". */
+export function takeawayNumber(index: number): string {
+  return String(index + 1).padStart(2, "0");
+}
+
+/**
+ * A takeaway card's width in About this plan's deck: the page's width inside
+ * its inset, less the peek that shows the next card waiting — unless there's
+ * only the one, which takes the whole width.
+ */
+export function takeawayCardWidth({
+  viewportWidth,
+  inset,
+  peek,
+  count,
+}: {
+  viewportWidth: number;
+  inset: number;
+  peek: number;
+  count: number;
+}): number {
+  const page = viewportWidth - inset * 2;
+  return count > 1 ? page - peek : page;
+}

@@ -38,6 +38,13 @@ beforeEach(() => {
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
 });
 
+/** Fires a card's own action (Continue or Start), as VoiceOver offers it. */
+function activateCardAction(planId: string) {
+  fireEvent(screen.getByTestId(`plans-item-${planId}`), "accessibilityAction", {
+    nativeEvent: { actionName: "activate-action" },
+  });
+}
+
 describe("PlansScreen", () => {
   it("is addressable as plans-screen", () => {
     render(<PlansScreen />);
@@ -170,22 +177,26 @@ describe("PlansScreen", () => {
     }
   });
 
-  it("shows Continue on a plan in progress, opening its study at the current day", () => {
+  it("offers Continue on a plan in progress, opening its study at the current day", () => {
     const day = getCurrentPlanDay(INITIAL_STATE, ACTIVE)?.dayNumber;
     render(<PlansScreen />);
 
-    expect(screen.getByTestId(`plans-action-${ACTIVE}`)).toHaveTextContent("Continue");
-    fireEvent.press(screen.getByTestId(`plans-action-${ACTIVE}`));
+    expect(screen.getByTestId(`plans-item-${ACTIVE}`)).toHaveProp("accessibilityActions", [
+      { name: "activate-action", label: "Continue" },
+    ]);
+    activateCardAction(ACTIVE);
 
     expect(day).toBeDefined();
     expect(mockPush).toHaveBeenCalledWith(studyHref(ACTIVE, day ?? 0));
   });
 
-  it("shows Start on a plan not started, opening its first day", () => {
+  it("offers Start on a plan not started, opening its first day", () => {
     render(<PlansScreen />);
 
-    expect(screen.getByTestId(`plans-action-${STILL_PRAYING}`)).toHaveTextContent("Start");
-    fireEvent.press(screen.getByTestId(`plans-action-${STILL_PRAYING}`));
+    expect(screen.getByTestId(`plans-item-${STILL_PRAYING}`)).toHaveProp("accessibilityActions", [
+      { name: "activate-action", label: "Start" },
+    ]);
+    activateCardAction(STILL_PRAYING);
 
     expect(mockPush).toHaveBeenCalledWith(studyHref(STILL_PRAYING, 1));
   });
@@ -193,7 +204,9 @@ describe("PlansScreen", () => {
   it("shows no action on a finished plan", () => {
     render(<PlansScreen />);
 
-    expect(screen.queryByTestId(`plans-action-${NEGATIVE_THINKING}`)).toBeNull();
+    expect(screen.getByTestId(`plans-item-${NEGATIVE_THINKING}`)).not.toHaveProp(
+      "accessibilityActions",
+    );
   });
 
   it("names each plan's church under its title", () => {

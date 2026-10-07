@@ -28,46 +28,45 @@ export function getChoiceLook(input: {
 
 /** What the Quick Check's one button does now. */
 export type QuickCheckAction = {
-  kind: "start" | "check" | "next" | "finish" | "done";
+  kind: "start" | "next" | "finish" | "done";
   label: string;
   testID: string;
   enabled: boolean;
 };
 
 /**
- * The button for where the user is: start a quiz not taken; check a picked
- * answer (not before one's picked); move on once it's checked, or to the
- * score after the last question; and Done on the score.
+ * The button for where the user is: start a quiz not taken; on a question,
+ * move on — to the next, or to the score after the last — once it's answered
+ * (a tap on an answer checks it, so there's no separate check); and Done on
+ * the score.
  */
 export function getQuickCheckAction(input: {
   status: QuizStatus;
   result: QuestionResult;
-  hasSelection: boolean;
   isLastQuestion: boolean;
 }): QuickCheckAction {
-  const { status, result, hasSelection, isLastQuestion } = input;
+  const { status, result, isLastQuestion } = input;
   if (status === "notStarted") {
     return { kind: "start", label: "Start", testID: "quick-check-start-button", enabled: true };
   }
   if (status === "completed") {
     return { kind: "done", label: "Done", testID: "quick-check-done-button", enabled: true };
   }
-  if (result === "unanswered") {
-    return {
-      kind: "check",
-      label: "Check answer",
-      testID: "quick-check-check-button",
-      enabled: hasSelection,
-    };
-  }
+  const enabled = result !== "unanswered";
   return isLastQuestion
-    ? {
-        kind: "finish",
-        label: "See your score",
-        testID: "quick-check-finish-button",
-        enabled: true,
-      }
-    : { kind: "next", label: "Next question", testID: "quick-check-next-button", enabled: true };
+    ? { kind: "finish", label: "See your score", testID: "quick-check-finish-button", enabled }
+    : { kind: "next", label: "Next question", testID: "quick-check-next-button", enabled };
+}
+
+/**
+ * Where an attempt opens: its first unanswered question, in the quiz's order
+ * (the order the server takes answers in) — or its last, once all are
+ * answered. Only for opening one; after that the reader moves through it.
+ */
+export function getResumeIndex(questionIds: readonly Id[], answeredIds: readonly Id[]): number {
+  const answered = new Set(answeredIds);
+  const next = questionIds.findIndex((id) => !answered.has(id));
+  return next === -1 ? Math.max(0, questionIds.length - 1) : next;
 }
 
 /** The line over a question: where it's from, or that it's a verse to finish. */
@@ -78,7 +77,14 @@ export function getQuestionKicker(
   return question.source === "sermon" ? "From the sermon" : "From Scripture";
 }
 
-const BLANK = "___";
+/** A prompt's blank: three or more underscores. */
+const BLANK = /_{3,}/;
+/**
+ * The blank as drawn before a word fills it: a line of underscores. Never
+ * spaces — iOS draws no underline under spaces at the end of a line, so a
+ * blank of spaces vanished wherever the verse wrapped at it.
+ */
+const BLANK_LINE = "________";
 const INSTRUCTION = /^\s*finish the verse:\s*/i;
 const QUOTES = /^[“"]|[”"]$/g;
 
@@ -89,9 +95,14 @@ const QUOTES = /^[“"]|[”"]$/g;
  */
 export function splitVersePrompt(prompt: string): { before: string; after: string } | null {
   const verse = prompt.replace(INSTRUCTION, "").trim().replace(QUOTES, "");
-  const at = verse.indexOf(BLANK);
-  if (at === -1) return null;
-  return { before: verse.slice(0, at), after: verse.slice(at + BLANK.length) };
+  const blank = BLANK.exec(verse);
+  if (!blank) return null;
+  return { before: verse.slice(0, blank.index), after: verse.slice(blank.index + blank[0].length) };
+}
+
+/** What a verse's blank shows: the word picked for it, or the blank line until there is one. */
+export function verseBlank(filled: string | null): string {
+  return filled ?? BLANK_LINE;
 }
 
 /** The score's headline: celebrating all right, encouraging most, inviting another look otherwise. */

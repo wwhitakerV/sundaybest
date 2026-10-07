@@ -9,7 +9,7 @@ function studyDay(extra: Record<string, unknown> = {}) {
     dayNumber: 1,
     reading: {
       title: "Grace is received",
-      paragraphs: ["Read this."],
+      paragraphs: [{ heading: "Grace First", content: "Read this." }],
       sermonQuote: null,
       sermonClip: null,
     },
@@ -72,5 +72,26 @@ describe("studyDaySchema", () => {
     expect(studyDaySchema.safeParse(studyDay({ supportingScriptures: [supporting] })).success).toBe(
       false,
     );
+  });
+});
+
+describe("a day's reading", () => {
+  const reading = (paragraphs: unknown) =>
+    studyDaySchema.safeParse(
+      studyDay({
+        reading: { title: "Grace is received", paragraphs, sermonQuote: null, sermonClip: null },
+      }),
+    );
+
+  it("takes each paragraph with its heading", () => {
+    expect(reading([{ heading: "Grace First", content: "Read this." }]).success).toBe(true);
+  });
+
+  it("takes a paragraph from a plan written before headings, with none", () => {
+    expect(reading([{ heading: null, content: "Read this." }]).success).toBe(true);
+  });
+
+  it("refuses a paragraph that's bare text", () => {
+    expect(reading(["Read this."]).success).toBe(false);
   });
 });

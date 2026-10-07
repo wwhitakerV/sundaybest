@@ -20,6 +20,8 @@ export interface ReuseRequest {
   lengthDays: number;
   /** The plan being built, which must not be its own source. */
   planId: string;
+  /** Who it's for: a reader's own plans are never copied — asking again is asking for a fresh one. */
+  userId: string;
 }
 
 /**
@@ -27,7 +29,8 @@ export interface ReuseRequest {
  * the current generator and prompt, preferring one with Quick Checks since it
  * serves either setting: the caller drops its quizzes, or writes only the
  * quizzes for one without. A prompt or generator change bumps its version and
- * plans are written fresh again. Development content is never reused. Null
+ * plans are written fresh again. Development content is never reused, nor a
+ * reader's own plan — asking again is asking for a fresh one. Null
  * when there is no match, or when the stored content no longer passes the plan
  * schema.
  */
@@ -43,6 +46,7 @@ export async function findReusablePlan(db: Database, request: ReuseRequest): Pro
       eq(planGenerations.promptVersion, PROMPT_VERSION),
       ne(planGenerations.modelProvider, "development"),
       ne(planGenerations.planId, request.planId),
+      ne(planGenerations.userId, request.userId),
     ))
     .orderBy(desc(planGenerations.quickCheckEnabled), desc(planGenerations.finishedAt))
     .limit(1);

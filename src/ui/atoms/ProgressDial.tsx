@@ -10,8 +10,8 @@ const SIZE = 42;
 const ARC_STROKE = 3;
 /** …and this far in from the white disc's edge. */
 const ARC_INSET = 2;
-const R = SIZE / 2 - ARC_INSET - ARC_STROKE / 2;
-const CIRCUMFERENCE = 2 * Math.PI * R;
+/** A bare ring's line: firm enough to see at its small size. */
+const BARE_STROKE = 3.5;
 
 export type ProgressDialProps = {
   /** 0–100. */
@@ -19,6 +19,13 @@ export type ProgressDialProps = {
   testID: string;
   /** A mark drawn in its middle — an icon sized to sit inside the ring. */
   children?: ReactNode;
+  /**
+   * Bare, for a dark surface: no disc — a white line on a faint white
+   * track, small and sleek (a plan card's panel).
+   */
+  bare?: boolean;
+  /** Its width and height; 42 unless asked. */
+  size?: number;
 };
 
 /**
@@ -26,38 +33,61 @@ export type ProgressDialProps = {
  * soft fill) with a thin accent line just inside its edge, filling clockwise
  * from the top to `percent`, and an optional mark in its centre. Still — it
  * marks where a thing stands, it doesn't announce a change. For a large ring
- * with its number inside, see `ProgressRing`.
+ * with its number inside, see `ProgressRing`. `bare`, for a dark surface:
+ * just a white line on a faint white track.
  */
-export function ProgressDial({ percent, testID, children }: ProgressDialProps) {
+export function ProgressDial({
+  percent,
+  testID,
+  children,
+  bare = false,
+  size = SIZE,
+}: ProgressDialProps) {
   const theme = useTheme();
+  const stroke = bare ? BARE_STROKE : ARC_STROKE;
+  const r = size / 2 - (bare ? 0 : ARC_INSET) - stroke / 2;
+  const circumference = 2 * Math.PI * r;
+  const centre = size / 2;
 
   return (
     <View
       testID={testID}
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: percent }}
-      style={styles.dial}
+      style={[styles.dial, { width: size, height: size }]}
     >
-      <Svg width={SIZE} height={SIZE} style={styles.svg}>
-        <Circle
-          testID={`${testID}-disc`}
-          cx={SIZE / 2}
-          cy={SIZE / 2}
-          r={SIZE / 2}
-          fill={theme.colors.background}
-        />
+      <Svg width={size} height={size} style={styles.svg}>
+        {bare ? (
+          <Circle
+            testID={`${testID}-track`}
+            cx={centre}
+            cy={centre}
+            r={r}
+            fill="none"
+            strokeWidth={stroke}
+            stroke={theme.colors.inkOnDarkFaint}
+          />
+        ) : (
+          <Circle
+            testID={`${testID}-disc`}
+            cx={centre}
+            cy={centre}
+            r={centre}
+            fill={theme.colors.background}
+          />
+        )}
         {percent > 0 && (
           <Circle
             testID={`${testID}-arc`}
-            cx={SIZE / 2}
-            cy={SIZE / 2}
-            r={R}
+            cx={centre}
+            cy={centre}
+            r={r}
             fill="none"
-            strokeWidth={ARC_STROKE}
-            stroke={theme.colors.accent}
+            strokeWidth={stroke}
+            stroke={bare ? theme.colors.inkOnDark : theme.colors.accent}
             strokeLinecap="round"
-            strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={CIRCUMFERENCE * (1 - percent / 100)}
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - percent / 100)}
           />
         )}
       </Svg>
@@ -67,7 +97,7 @@ export function ProgressDial({ percent, testID, children }: ProgressDialProps) {
 }
 
 const styles = StyleSheet.create({
-  dial: { width: SIZE, height: SIZE, alignItems: "center", justifyContent: "center" },
+  dial: { alignItems: "center", justifyContent: "center" },
   // Behind the mark, rotated so the arc starts at twelve o'clock.
   svg: { position: "absolute", transform: [{ rotate: "-90deg" }] },
 });

@@ -11,17 +11,25 @@ const FAB_STROKE_WIDTH = 2.5;
 
 export type TabBarFabProps = {
   label: string;
+  /** Away — on a screen with no use for it: it takes no touches and VoiceOver skips it. */
+  hidden?: boolean;
   onPress: () => void;
   /** It shrinks to the capsule's height while something's raised above the open tabs (`useTabBarRaise`). */
   style: StyleProp<AnimatedStyle<ViewStyle>>;
 };
 
 /** The round + beside the tabs: the bar's floating action button. */
-export function TabBarFab({ label, onPress, style }: TabBarFabProps) {
+export function TabBarFab({ label, hidden = false, onPress, style }: TabBarFabProps) {
   const theme = useTheme();
 
   return (
-    <Animated.View testID="tab-bar-fab-slot" style={[styles.slot, style]}>
+    <Animated.View
+      testID="tab-bar-fab-slot"
+      pointerEvents={hidden ? "none" : "auto"}
+      accessibilityElementsHidden={hidden}
+      importantForAccessibility={hidden ? "no-hide-descendants" : "auto"}
+      style={[styles.slot, style]}
+    >
       <Pressable
         testID="tab-bar-fab"
         accessibilityRole="button"

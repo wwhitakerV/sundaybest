@@ -80,7 +80,26 @@ export function mapQuiz(raw: unknown, context: QuizContext, kept: readonly Gener
     prompts.add(key);
     questions.push(built);
   }
-  return { title: parsed.data.title.trim(), questions };
+  return { title: parsed.data.title.trim(), questions: mixQuestionKinds(questions) };
+}
+
+/**
+ * The quiz's questions with its two kinds spread evenly through it — never
+ * every multiple choice and then every finish-the-verse — each kind keeping
+ * its own order. The reader answers in this order (the stored position).
+ */
+export function mixQuestionKinds<Question extends { kind: GeneratedQuestion["kind"] }>(questions: readonly Question[]): Question[] {
+  const choices = questions.filter((question) => question.kind === "multipleChoice");
+  const verses = questions.filter((question) => question.kind === "finishTheVerse");
+  const mixed: Question[] = [];
+  let c = 0;
+  let v = 0;
+  while (c < choices.length || v < verses.length) {
+    // Take from whichever kind is further behind its share of the quiz.
+    const takeChoice = v === verses.length || (c < choices.length && c / choices.length <= v / verses.length);
+    mixed.push(takeChoice ? choices[c++]! : verses[v++]!);
+  }
+  return mixed;
 }
 
 function multipleChoice(output: QuizOutputQuestion, day: OutlineDay, source: string): GeneratedQuestion | null {

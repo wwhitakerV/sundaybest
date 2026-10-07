@@ -7,12 +7,51 @@ import {
   useCurrentGenerationsQuery,
   useDismissGenerationMutation,
 } from "@/core/api/generation-queries";
+import { usePlansQuery } from "@/core/api/queries";
 
 function useBar() {
   return { current: useCurrentGenerationsQuery(), dismiss: useDismissGenerationMutation() };
 }
 
 describe("the generation bar's queries", () => {
+  it("brings the plan list up to date once a build it was watching finishes", async () => {
+    let finished = false;
+    let listed = 0;
+    server.use(
+      http.get(`${API_URL}/v1/plan-generations/current`, () =>
+        HttpResponse.json({
+          generations: [
+            finished
+              ? aGeneration({
+                  status: "completed",
+                  progress: 100,
+                  finishedAt: aGeneration().createdAt,
+                })
+              : aGeneration(),
+          ],
+        }),
+      ),
+      http.get(`${API_URL}/v1/plans`, () => {
+        listed += 1;
+        return HttpResponse.json({ plans: [] });
+      }),
+    );
+    const { result } = renderHook(() => ({
+      current: useCurrentGenerationsQuery(),
+      plans: usePlansQuery(),
+    }));
+    await waitFor(() => expect(result.current.plans.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.current.data?.[0]?.status).toBe("writingDays"));
+    const before = listed;
+
+    finished = true;
+
+    await waitFor(() => expect(result.current.current.data?.[0]?.status).toBe("completed"), {
+      timeout: 6000,
+    });
+    await waitFor(() => expect(listed).toBeGreaterThan(before));
+  });
+
   it("lists the reader's current builds", async () => {
     server.use(
       http.get(`${API_URL}/v1/plan-generations/current`, () =>

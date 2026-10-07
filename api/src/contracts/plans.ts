@@ -64,7 +64,10 @@ export const sermonClipSchema = z.object({
 
 export const dayReadingSchema = z.object({
   title: z.string().min(1).max(300),
-  paragraphs: z.array(z.string().min(1)).min(1),
+  /** Each with its heading; one from a plan written before headings has none. */
+  paragraphs: z
+    .array(z.object({ heading: z.string().min(1).nullable(), content: z.string().min(1) }))
+    .min(1),
   sermonQuote: z.string().nullable(),
   sermonClip: sermonClipSchema.nullable(),
 });
@@ -150,6 +153,11 @@ export const createPlanResponseSchema = z.object({
 
 export const startPlanResponseSchema = z.object({ plan: planDetailSchema });
 export const archivePlanResponseSchema = z.object({ plan: planSummarySchema });
+/** A plan after a reset: back to not started, with its reflection questions' ids for the app to clear. */
+export const resetPlanResponseSchema = z.object({
+  plan: planSummarySchema,
+  reflectionIds: z.array(apiIdSchema),
+});
 export const savePlanResponseSchema = z.object({ saved: z.literal(true) });
 export const removeSavedPlanResponseSchema = z.object({ saved: z.literal(false) });
 

@@ -23,7 +23,8 @@ export type CompactButtonProps = {
    * `soft` is a quiet pill — a soft fill, a hairline edge, dark words — beside
    * a black one.
    */
-  tone: "light" | "dark" | "accent" | "soft";
+  /** `waiting`: a way on that isn't open yet — opaque grey, grey words, no edge. */
+  tone: "light" | "dark" | "accent" | "soft" | "waiting";
   /** Where it sits in its row: centred (the default), or at the start. */
   align?: "center" | "start";
   onPress: () => void;
@@ -47,14 +48,21 @@ export function CompactButton({
 }: CompactButtonProps) {
   const theme = useTheme();
   const fill =
-    tone === "accent"
-      ? theme.colors.accent
-      : tone === "soft"
-        ? theme.colors.segmentBackground
-        : tone === "light"
-          ? theme.colors.inkOnDark
-          : theme.colors.inkOnLight;
-  const inkTone: Tone = tone === "light" || tone === "soft" ? "inkOnLight" : "inkOnDark";
+    tone === "waiting"
+      ? theme.colors.waitingFill
+      : tone === "accent"
+        ? theme.colors.accent
+        : tone === "soft"
+          ? theme.colors.segmentBackground
+          : tone === "light"
+            ? theme.colors.inkOnDark
+            : theme.colors.inkOnLight;
+  const inkTone: Tone =
+    tone === "waiting"
+      ? "waitingInk"
+      : tone === "light" || tone === "soft"
+        ? "inkOnLight"
+        : "inkOnDark";
   const ink = toneColor(theme.colors, inkTone);
   const icon = Icon && (
     <Icon size={iconOnly ? 20 : 16} color={ink} strokeWidth={theme.icon.strokeWidth} />
@@ -72,6 +80,7 @@ export function CompactButton({
         align === "start" && styles.start,
         { backgroundColor: fill, borderRadius: radius.pill },
         tone === "soft" && [styles.soft, { borderColor: theme.colors.containerBorder }],
+        tone === "waiting" && styles.waiting,
       ]}
     >
       {iconPosition === "start" && icon}
@@ -97,5 +106,7 @@ const styles = StyleSheet.create({
   },
   round: { width: HEIGHT, paddingHorizontal: 0 },
   soft: { borderWidth: 1 },
+  // Waiting: the grey fill alone — no edge to read as a button ready to press.
+  waiting: { borderWidth: 0 },
   start: { alignSelf: "flex-start" },
 });

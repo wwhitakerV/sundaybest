@@ -6,8 +6,8 @@ import { useTheme } from "@/theme";
 
 /** The native splash's wordmark width (`app.config.ts`), so the two are one picture. */
 const WORDMARK_WIDTH = 180;
-/** The wordmark image's own proportions (992 × 129). */
-const WORDMARK_ASPECT = 992 / 129;
+/** The wordmark image's own proportions (1123 × 130). */
+const WORDMARK_ASPECT = 1123 / 130;
 
 /**
  * The launch screen, drawn by the app: the SUNDAYBEST wordmark on white,

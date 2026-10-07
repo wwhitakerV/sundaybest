@@ -17,17 +17,17 @@ nowhere to plug in.
 All text is drawn by a family of components in `src/ui/typography/`, one per
 file, built on one private base (`ThemedText`):
 
-| Component      | Face                | `variant` → theme role                                                                                                                                          |
-| -------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Wordmark`     | Bodoni Moda         | `masthead`, "SUNDAYBEST" inside it                                                                                                                              |
-| `SerifTitle`   | Bodoni Moda Medium  | `heading` editorialHeading · `title` editorialTitle · `question` editorialQuestion                                                                              |
-| `SerifBody`    | Bodoni Moda Regular | `scripture`                                                                                                                                                     |
-| `DisplayTitle` | SF Pro              | `display`                                                                                                                                                       |
-| `SFProTitle`   | SF Pro              | `screen` screenTitle · `headline` · `headlineRegular` · `section` sectionTitle · `card` cardTitle · `step` stepTitle · `nav` navTitle · `preview` listItemLarge |
-| `SFProBody`    | SF Pro              | `body` · `bodyLoose` · `listItem` · `label` · `reading` · `detail` cardDetail                                                                                   |
-| `SFProLabel`   | SF Pro              | `button` · `compactButton` · `segment` · `segmentActive` · `filter` · `filterCount` · `tag` · `stepLabel` · `tileNumber` · `statusTime`                         |
-| `MonoLabel`    | IBM Plex Mono       | `label` metaLabel · `labelTracked` metaLabelTracked · `date` tileDate · `dayStrip` · `headerDate` · `emphasis` metaEmphasis                                     |
-| `MonoBody`     | IBM Plex Mono       | `body` metaBody · `supporting` · `counter` stepCounter                                                                                                          |
+| Component      | Face                      | `variant` → theme role                                                                                                                                          |
+| -------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Wordmark`     | Libre Baskerville         | `masthead`, "SUNDAYBEST" inside it                                                                                                                              |
+| `SerifTitle`   | Libre Baskerville Medium  | `heading` editorialHeading · `title` editorialTitle · `question` editorialQuestion                                                                              |
+| `SerifBody`    | Libre Baskerville Regular | `scripture` · `standfirst`                                                                                                                                      |
+| `DisplayTitle` | SF Pro                    | `display`                                                                                                                                                       |
+| `SFProTitle`   | SF Pro                    | `screen` screenTitle · `headline` · `headlineRegular` · `section` sectionTitle · `card` cardTitle · `step` stepTitle · `nav` navTitle · `preview` listItemLarge |
+| `SFProBody`    | SF Pro                    | `body` · `bodyLoose` · `listItem` · `label` · `reading` · `detail` cardDetail                                                                                   |
+| `SFProLabel`   | SF Pro                    | `button` · `compactButton` · `segment` · `segmentActive` · `filter` · `filterCount` · `tag` · `stepLabel` · `tileNumber` · `statusTime`                         |
+| `MonoLabel`    | IBM Plex Mono             | `label` metaLabel · `labelTracked` metaLabelTracked · `date` tileDate · `dayStrip` · `headerDate` · `emphasis` metaEmphasis                                     |
+| `MonoBody`     | IBM Plex Mono             | `body` metaBody · `supporting` · `counter` stepCounter                                                                                                          |
 
 Plus `Span` (part of a line: keeps the line's type, may take its own tone or
 italic) and `TextField` (a text input in body type).

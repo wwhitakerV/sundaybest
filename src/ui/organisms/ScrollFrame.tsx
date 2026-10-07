@@ -9,10 +9,11 @@ import {
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { space, useTheme } from "@/theme";
+import { edgeFade, space, useTheme } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
 import { TopFade } from "@/ui/atoms/TopFade";
 import { FloatingDock } from "./FloatingDock";
+import { HeaderBackdrop } from "./HeaderBackdrop";
 import { GRADUAL_FADE, getFrameEdges, type FrameFoot, type HeaderFade } from "./frame-edges";
 import { PAGE_INSET, PAGE_TOP } from "./Screen";
 
@@ -26,6 +27,12 @@ export type ScrollFrameProps = {
    * soft, across its last row and a little past (Plans' filters).
    */
   headerFade?: HeaderFade;
+  /**
+   * The header's backdrop fully opaque at its solid end, rather than the
+   * edges' lighter peak (`edgeFade.peak`) — for a header whose controls must
+   * never show the page through them (Plans' filters).
+   */
+  solidHeader?: boolean;
   /** The full-height, full-width scroller, its content inset by `SCROLL_INSET`. */
   children: ReactNode;
   /** The page's way on, in the dock where the tab bar's pill sits: one `Button`, or a bar's pill. */
@@ -42,14 +49,17 @@ export const SCROLL_INSET = { paddingHorizontal: PAGE_INSET } as const;
 /** Between a header's parts: a title and its filters. */
 const HEADER_GAP = space[12];
 
-const FrameClearanceContext = createContext({ top: 0, bottom: 0 });
+/** How far the content keeps clear of each end, and whether a verdict's panel is up and measured. */
+type FrameClearance = { top: number; bottom: number; verdict: boolean };
+
+const FrameClearanceContext = createContext<FrameClearance>({ top: 0, bottom: 0, verdict: false });
 
 /**
  * How far in from the screen's top and bottom a frame's scroller starts and
  * ends its content, so it rests clear of the header, the dock, and their
  * fades. `ScrollScreen` and `ListScreen` add it.
  */
-export function useFrameClearance(): { top: number; bottom: number } {
+export function useFrameClearance(): FrameClearance {
   return useContext(FrameClearanceContext);
 }
 
@@ -58,13 +68,15 @@ export function useFrameClearance(): { top: number; bottom: number } {
  * `MilestoneScreen`). Its scroller runs the phone's full height and width;
  * the header floats over its top and the way on floats in the dock over its
  * foot — the tab bar's own container — each on the page's colour, fading
- * into the page. So what scrolls dissolves under both ends instead of
+ * into the page. The header carries its own backdrop (`HeaderBackdrop`), so
+ * it's never see-through, even before it's measured. So what scrolls dissolves under both ends instead of
  * stopping at a line, and every page's top and foot look the same.
  */
 export function ScrollFrame({
   testID,
   header,
   headerFade = "edge",
+  solidHeader = false,
   children,
   footer,
   feedback,
@@ -92,17 +104,24 @@ export function ScrollFrame({
   return (
     <View testID={testID} style={[styles.root, { backgroundColor: theme.colors.background }]}>
       <FrameClearanceContext.Provider
-        value={{ top: edges.top.clearance, bottom: edges.bottom.clearance }}
+        value={{
+          top: edges.top.clearance,
+          bottom: edges.bottom.clearance,
+          verdict: Boolean(feedback) && panelHeight > 0,
+        }}
       >
         {children}
       </FrameClearanceContext.Provider>
 
-      <TopFade
-        testID={`${testID}-top-fade`}
-        height={edges.top.height}
-        solidHeight={edges.top.solid}
-        {...(edges.top.ramp && { ramp: edges.top.ramp })}
-      />
+      {header ? null : (
+        // No header: the status bar still gets its fade.
+        <TopFade
+          testID={`${testID}-top-fade`}
+          height={edges.top.height}
+          solidHeight={edges.top.solid}
+          peak={edgeFade.peak}
+        />
+      )}
       {header ? (
         <View
           ref={headerRef}
@@ -114,6 +133,11 @@ export function ScrollFrame({
             headerFade === "gradual" && styles.gradualRoom,
           ]}
         >
+          <HeaderBackdrop
+            fade={headerFade}
+            solid={solidHeader}
+            testID={`${testID}-header-backdrop`}
+          />
           {header}
         </View>
       ) : null}
@@ -124,6 +148,7 @@ export function ScrollFrame({
             testID={`${testID}-bottom-fade`}
             height={edges.bottom.height}
             solidHeight={edges.bottom.solid}
+            peak={edgeFade.peak}
           />
         </View>
       )}

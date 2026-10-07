@@ -288,7 +288,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     plugins: [
       expoRouterPlugin(),
       // The launch screen: the SUNDAYBEST wordmark on white, and nothing else.
-      // The image is the masthead face (Bodoni Moda Medium) in the brand black,
+      // The image is the masthead face (Libre Baskerville Medium) in the brand black,
       // rendered by scripts/render-splash-wordmark.swift; a native
       // change, so it ships with a new build, not an OTA update.
       splashScreenPlugin({
@@ -334,8 +334,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       fontPlugin({
         ios: {
           fonts: [
-            "./assets/fonts/BodoniModa_9pt-Regular.ttf",
-            "./assets/fonts/BodoniModa_9pt-Medium.ttf",
+            "./assets/fonts/LibreBaskerville-Regular.ttf",
+            "./assets/fonts/LibreBaskerville-Medium.ttf",
             "./assets/fonts/IBMPlexMono-Regular.ttf",
             "./assets/fonts/IBMPlexMono-Medium.ttf",
             "./assets/fonts/IBMPlexMono-SemiBold.ttf",

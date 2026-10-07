@@ -167,7 +167,9 @@ shared plan content.
 - `plan_id uuid not null references plans(id) on delete cascade`
 - `day_number smallint not null`
 - `reading_title text not null`
-- `reading_paragraphs jsonb not null`
+- `reading_paragraphs jsonb not null` — `{ heading, content }[]`; plans written
+  before Read headings keep plain strings, never rewritten, and the API sends
+  them as `{ heading: null, content }`
 - `sermon_quote text null`
 - `clip_start_seconds integer null`
 - `clip_end_seconds integer null`

@@ -6,8 +6,9 @@ describe("typography tokens added for the typography family", () => {
   it.each([
     [
       "editorialQuestion",
-      { fontFamily: "BodoniModa9pt-Medium", fontSize: 24, fontWeight: "500", lineHeight: 30 },
+      { fontFamily: "LibreBaskerville-Medium", fontSize: 24, fontWeight: "500", lineHeight: 30 },
     ],
+    ["masthead", { fontFamily: "LibreBaskerville-Medium", fontSize: 16, fontWeight: "400" }],
     ["listItemLarge", { fontSize: 20, fontWeight: "500" }],
     [
       "metaLabelTracked",
