@@ -16,7 +16,9 @@ export type SettingsRow = {
     | "/(tabs)/settings/bible-translation"
     | "/(tabs)/settings/text-size"
     | "/(tabs)/settings/how-plans-are-made"
-    | "/(tabs)/settings/privacy-policy";
+    | "/(tabs)/settings/privacy-policy"
+    | "/(tabs)/settings/contact-support"
+    | "/(tabs)/settings/sermon-removal";
 };
 
 function formatTextSize(textSize: TextSize): string {
@@ -40,11 +42,14 @@ export function describeSettingsSections({
   reminderTime,
   translation,
   textSize,
+  twentyFourHour = false,
 }: {
   /** The daily reminder's time, or null when it's off. */
   reminderTime: string | null;
   translation: BibleTranslation;
   textSize: TextSize;
+  /** Whether the iPhone writes times on a 24-hour clock, as the reminder's own time pill does. */
+  twentyFourHour?: boolean;
 }): { title: string; rows: SettingsRow[] }[] {
   return [
     {
@@ -54,7 +59,7 @@ export function describeSettingsSections({
           testID: "settings-daily-reminder-row",
           label: "Daily reminder",
           icon: "bell",
-          value: reminderTime ? formatClockTime(reminderTime) : "Off",
+          value: reminderTime ? formatClockTime(reminderTime, { twentyFourHour }) : "Off",
           href: "/(tabs)/settings/daily-reminder",
         },
         {
@@ -88,15 +93,23 @@ export function describeSettingsSections({
           icon: "shield",
           href: "/(tabs)/settings/privacy-policy",
         },
-        // No destination yet.
-        { testID: "settings-contact-support-row", label: "Contact support", icon: "mail" },
+        {
+          testID: "settings-contact-support-row",
+          label: "Contact support",
+          icon: "mail",
+          href: "/(tabs)/settings/contact-support",
+        },
       ],
     },
     {
       title: "For churches",
-      // No destination yet.
       rows: [
-        { testID: "settings-sermon-removal-row", label: "Request sermon removal", icon: "flag" },
+        {
+          testID: "settings-sermon-removal-row",
+          label: "Request sermon removal",
+          icon: "flag",
+          href: "/(tabs)/settings/sermon-removal",
+        },
       ],
     },
   ];

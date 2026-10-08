@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 
-import { useRemindersQuery, useUserSettingsQuery } from "@/core/api/queries";
+import { useRemindersQuery, useUserSettingsQuery } from "@/core/api/reader-queries";
 import { syncLocalReminder } from "@/core/notifications/local-reminders";
 import { TextScaleScope, textScaleFor } from "@/theme";
 

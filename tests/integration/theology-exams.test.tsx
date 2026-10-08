@@ -22,8 +22,9 @@ function measureShelf() {
  * ExamSessionScreen.test.tsx.
  */
 // Mounting the whole route tree takes about 4s alone, close to Jest's 5s
-// default, so a full parallel run would time this walk out.
-const FULL_APP_WALK_MS = 20_000;
+// default, so a full parallel run would time this walk out — and a run with
+// coverage takes about three times as long again.
+const FULL_APP_WALK_MS = 60_000;
 
 describe("theology exams", () => {
   it(

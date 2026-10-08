@@ -24,6 +24,7 @@ describe("MonoLabel", () => {
     ["date", "tileDate"],
     ["dayStrip", "dayStrip"],
     ["emphasis", "metaEmphasis"],
+    ["kicker", "kicker"],
   ] as const)("sets the %s variant in the %s token", (variant, token) => {
     render(
       <MonoLabel testID="text" variant={variant}>

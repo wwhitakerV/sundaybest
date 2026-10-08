@@ -102,10 +102,7 @@ export async function persistServerCache<T>(input: {
 }
 
 export function isOfflineTransportFailure(cause: unknown): boolean {
-  return (
-    isApiError(cause) &&
-    (cause.kind === "network" || cause.kind === "timeout")
-  );
+  return isApiError(cause) && (cause.kind === "network" || cause.kind === "timeout");
 }
 
 function canUseOfflineFallback(cause: unknown): boolean {

@@ -1,13 +1,15 @@
 import {
-  API_ERROR_CODES,
-  RETRYABLE_ERROR_CODES,
-  apiErrorEnvelopeSchema,
   challengeRequestSchema,
   challengeResponseSchema,
   refreshRequestSchema,
   sessionCredentialsSchema,
   verifyAttestationRequestSchema,
 } from "@/core/api/contracts/attestation";
+import {
+  API_ERROR_CODES,
+  RETRYABLE_ERROR_CODES,
+  apiErrorEnvelopeSchema,
+} from "@/core/api/contracts/errors";
 
 const CHALLENGE = "0f8f".repeat(8);
 const KEY_ID = "aGVsbG8gd29ybGQ";

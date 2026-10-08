@@ -228,5 +228,3 @@ export function createSundayBestApi(client: ApiClient) {
     },
   } as const;
 }
-
-export type SundayBestApi = ReturnType<typeof createSundayBestApi>;

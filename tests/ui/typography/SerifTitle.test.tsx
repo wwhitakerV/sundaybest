@@ -23,6 +23,7 @@ describe("SerifTitle", () => {
     ["title", "editorialTitle"],
     ["question", "editorialQuestion"],
     ["quiz", "quizQuestion"],
+    ["statement", "statement"],
   ] as const)("sets the %s variant in the %s token", (variant, token) => {
     render(
       <SerifTitle testID="text" variant={variant}>

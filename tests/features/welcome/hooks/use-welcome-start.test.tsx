@@ -7,7 +7,7 @@ import { API_URL, aUser } from "@tests/factories/api";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { server } from "@tests/mocks/server";
-import { usePlansQuery } from "@/core/api/queries";
+import { usePlansQuery } from "@/core/api/plan-queries";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { planOverviewHref } from "@/entities/plan";
 import { useWelcomeStart } from "@/features/welcome/hooks/use-welcome-start";

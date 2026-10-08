@@ -15,3 +15,14 @@ describe("formatClockTime", () => {
     expect(formatClockTime("7")).toBe("7:00 AM");
   });
 });
+
+describe("formatClockTime on a 24-hour clock", () => {
+  it("shows the hour as it's kept, two digits, with no AM or PM", () => {
+    expect(formatClockTime("06:30", { twentyFourHour: true })).toBe("06:30");
+    expect(formatClockTime("15:04", { twentyFourHour: true })).toBe("15:04");
+  });
+
+  it("shows midnight as zero hundred", () => {
+    expect(formatClockTime("00:05", { twentyFourHour: true })).toBe("00:05");
+  });
+});

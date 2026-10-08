@@ -41,6 +41,19 @@ export type ScrollFrameProps = {
   feedback?: ReactNode;
   /** Over everything, drawn last: a sheet, a floating close. */
   overlay?: ReactNode;
+  /**
+   * The page opens with a hero of its own colour that reaches the top of the
+   * screen, under the status bar and header (Privacy policy's pages): the
+   * content starts at the very top, and the hero leaves `heroTop` for the
+   * header itself (`useFrameClearance`).
+   */
+  heroUnderHeader?: boolean;
+  /**
+   * Whether the header's backdrop is drawn. A page with a hero under its
+   * header hides it while the hero's there, and brings it back once the page
+   * has scrolled under the header.
+   */
+  headerBackdrop?: boolean;
 };
 
 /** The page inset, on a scroller's content: `ScrollScreen` and `ListScreen` set it. */
@@ -50,9 +63,19 @@ export const SCROLL_INSET = { paddingHorizontal: PAGE_INSET } as const;
 const HEADER_GAP = space[12];
 
 /** How far the content keeps clear of each end, and whether a verdict's panel is up and measured. */
-type FrameClearance = { top: number; bottom: number; verdict: boolean };
+/**
+ * How far the content keeps clear of each end, whether a verdict's panel is
+ * up and measured, and — for a hero under the header — the room it leaves
+ * for the header (`heroTop`; 0 otherwise).
+ */
+type FrameClearance = { top: number; bottom: number; verdict: boolean; heroTop: number };
 
-const FrameClearanceContext = createContext<FrameClearance>({ top: 0, bottom: 0, verdict: false });
+const FrameClearanceContext = createContext<FrameClearance>({
+  top: 0,
+  bottom: 0,
+  verdict: false,
+  heroTop: 0,
+});
 
 /**
  * How far in from the screen's top and bottom a frame's scroller starts and
@@ -81,6 +104,8 @@ export function ScrollFrame({
   footer,
   feedback,
   overlay,
+  heroUnderHeader = false,
+  headerBackdrop = true,
 }: ScrollFrameProps) {
   const theme = useTheme();
   const insets = useContext(SafeAreaInsetsContext);
@@ -105,9 +130,10 @@ export function ScrollFrame({
     <View testID={testID} style={[styles.root, { backgroundColor: theme.colors.background }]}>
       <FrameClearanceContext.Provider
         value={{
-          top: edges.top.clearance,
+          top: heroUnderHeader ? 0 : edges.top.clearance,
           bottom: edges.bottom.clearance,
           verdict: Boolean(feedback) && panelHeight > 0,
+          heroTop: heroUnderHeader ? edges.top.solid : 0,
         }}
       >
         {children}
@@ -133,11 +159,13 @@ export function ScrollFrame({
             headerFade === "gradual" && styles.gradualRoom,
           ]}
         >
-          <HeaderBackdrop
-            fade={headerFade}
-            solid={solidHeader}
-            testID={`${testID}-header-backdrop`}
-          />
+          {headerBackdrop && (
+            <HeaderBackdrop
+              fade={headerFade}
+              solid={solidHeader}
+              testID={`${testID}-header-backdrop`}
+            />
+          )}
           {header}
         </View>
       ) : null}

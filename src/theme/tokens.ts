@@ -31,6 +31,8 @@ const palette = {
   green: "#00A378",
   darkgrey: "#55555D",
   grey: "#8A8A92",
+  // Supporting copy on a dark page: a step softer than white, well clear of `grey`.
+  silver: "#B4B4BB",
   // A waiting control's words: grey enough to read as not yet, dark enough
   // to read on its grey fill.
   waitingInk: "#71717A",
@@ -142,6 +144,11 @@ type ColorTokens = {
   textMuted: string;
   /** Inactive items in a strip or set. Darker than `textMuted`. */
   textInactive: string;
+  /**
+   * Explanatory copy meant to be read — a page's note, a choice's detail:
+   * quieter than `text`, clearly darker than `textMuted`, at regular weight.
+   */
+  textSupporting: string;
   border: string;
   /** A heavier edge, for a control that should stand out from the chrome around it. */
   borderStrong: string;
@@ -190,6 +197,8 @@ type ColorTokens = {
   onSuccessBrightFaint: string;
   /** The active item in a selector or strip. */
   selected: string;
+  /** A toggle's knob while it's off, on its `divider` track. (On, it takes `onAccent`.) */
+  toggleThumbOff: string;
   /** Header/tab-bar icon colour, and the centered nav-title's active state. */
   chromeIcon: string;
   /** The centered header title's own colour — quieter than `chromeIcon`. */
@@ -316,6 +325,7 @@ const lightColors: ColorTokens = {
   text: palette.black,
   textMuted: palette.grey,
   textInactive: palette.darkgrey,
+  textSupporting: palette.darkgrey,
   border: palette.ink300,
   borderStrong: palette.darkgrey,
   divider: palette.mist,
@@ -338,6 +348,7 @@ const lightColors: ColorTokens = {
   onSuccessBrightFaint: palette.whiteFaint,
   lightIcon: palette.lightIcon,
   selected: palette.green,
+  toggleThumbOff: palette.white,
   chromeIcon: palette.ink,
   chromeTitle: palette.darkgrey,
   chromeStepCounter: palette.grey,
@@ -403,6 +414,7 @@ const darkColors: ColorTokens = {
   text: palette.white,
   textMuted: palette.grey,
   textInactive: palette.darkgrey,
+  textSupporting: palette.silver,
   border: palette.ink600,
   borderStrong: palette.grey,
   divider: palette.mistOnDark,
@@ -425,6 +437,7 @@ const darkColors: ColorTokens = {
   onSuccessBrightFaint: palette.whiteFaint,
   lightIcon: palette.lightIcon,
   selected: palette.green,
+  toggleThumbOff: palette.greyLight,
   chromeIcon: palette.white,
   chromeTitle: palette.grey,
   chromeStepCounter: palette.grey,
@@ -565,6 +578,12 @@ export const motion = {
   pageEnter: { durationMs: 420, staggerMs: 90, fromX: 16 },
   /** A skeleton handing over: it fades out as what it stood for fades in. */
   handoffMs: 280,
+  /**
+   * Options a switch turns on (Daily reminder's time and days): each part
+   * fades in as it drifts `fromY` down into place, `staggerMs` behind the one
+   * above. Turned off, they all fade out together, quicker (`exitMs`).
+   */
+  reveal: { durationMs: 320, staggerMs: 70, fromY: 8, exitMs: 140 },
 } as const;
 
 /**
@@ -627,6 +646,13 @@ const typography = {
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
   /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
+  /** The editorial face at its largest: a reading page's one statement (Privacy policy's pages). */
+  statement: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 30,
+    fontWeight: "500",
+    lineHeight: 38,
+  },
   /** A study question set in the editorial face (Reflect, and the Welcome tour's copy of it). */
   editorialQuestion: {
     fontFamily: fonts.editorialHeading,
@@ -753,6 +779,8 @@ const typography = {
   listItem: { fontSize: 17, fontWeight: "500" },
   /** A list item's weight, larger — a sermon's title over its preview. */
   listItemLarge: { fontSize: 20, fontWeight: "500" },
+  /** A single letter standing for a day of the week, large enough to tap by: Daily reminder's days. */
+  dayLetter: { fontSize: 22, fontWeight: "600" },
   /** Button labels, both variants. Spec 15/-0.01em. */
   button: { fontSize: 18, fontWeight: "600" },
   /** A compact button's label — a smaller call to action set on a colour. */
@@ -835,6 +863,8 @@ const elevation = {
   menu: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 24 },
   /** An answer to tap, lifted just off the page: a Quick Check choice. */
   choice: { shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
+  /** A toggle's knob, sitting just proud of its track. */
+  thumb: { shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.16, shadowRadius: 4 },
 } as const;
 
 /**

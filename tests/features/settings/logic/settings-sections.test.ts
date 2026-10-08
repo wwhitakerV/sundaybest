@@ -3,7 +3,12 @@ import {
   formatShortVersion,
 } from "@/features/settings/logic/settings-sections";
 
-const PREFS = { reminderTime: "06:30", translation: "BSB", textSize: "default" } as const;
+const PREFS = {
+  reminderTime: "06:30",
+  translation: "BSB",
+  textSize: "default",
+  twentyFourHour: false,
+} as const;
 
 describe("describeSettingsSections", () => {
   it("groups the settings as Your routine, About, and For churches, in order", () => {
@@ -41,5 +46,15 @@ describe("formatShortVersion", () => {
   it("drops a trailing .0 patch: 1.0.0 → 1.0", () => {
     expect(formatShortVersion("1.0.0")).toBe("1.0");
     expect(formatShortVersion("1.2.3")).toBe("1.2.3");
+  });
+
+  it("writes the reminder's time on the iPhone's 24-hour clock when it uses one", () => {
+    const [routine] = describeSettingsSections({
+      ...PREFS,
+      reminderTime: "12:40",
+      twentyFourHour: true,
+    });
+
+    expect(routine?.rows[0]?.value).toBe("12:40");
   });
 });

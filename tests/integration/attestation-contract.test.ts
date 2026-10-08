@@ -1,8 +1,8 @@
 import {
-  apiErrorEnvelopeSchema,
   challengeResponseSchema,
   sessionCredentialsSchema,
 } from "@/core/api/contracts/attestation";
+import { apiErrorEnvelopeSchema } from "@/core/api/contracts/errors";
 import {
   API_BASE_URL,
   attestationError,

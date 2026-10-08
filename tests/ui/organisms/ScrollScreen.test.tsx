@@ -10,6 +10,7 @@ import {
 } from "@/ui/organisms/floatingNavBar";
 import { PAGE_INSET, PAGE_TOP } from "@/ui/organisms/Screen";
 import { edgeFade } from "@/theme";
+import { useFrameClearance } from "@/ui/organisms/ScrollFrame";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 
 function renderPage(extra: { feedback?: boolean } = {}) {
@@ -216,5 +217,67 @@ describe("ScrollScreen", () => {
       ).toHaveStyle({ bottom: -10 });
       expect(screen.getByTestId("a-page-top-clearance")).toHaveStyle({ height: 160 });
     });
+  });
+});
+
+describe("ScrollScreen with a hero under its header", () => {
+  /** Shows the room the frame tells a hero to leave for the header. */
+  function HeroRoom() {
+    const { heroTop } = useFrameClearance();
+    return <SFProBody testID="hero-room">{String(heroTop)}</SFProBody>;
+  }
+
+  function renderHeroPage(props: { headerBackdrop?: boolean; onScroll?: (y: number) => void }) {
+    return render(
+      <ScrollScreen
+        testID="a-page"
+        heroUnderHeader
+        header={<SFProBody>The header</SFProBody>}
+        {...props}
+      >
+        <HeroRoom />
+      </ScrollScreen>,
+    );
+  }
+
+  it("starts its content at the very top, under the status bar and header", () => {
+    renderHeroPage({});
+    layOut("a-page-header", 100);
+
+    expect(screen.getByTestId("a-page-top-clearance")).toHaveStyle({ height: 0 });
+  });
+
+  it("tells the hero how much room the header takes, so its words start below it", () => {
+    renderHeroPage({});
+    layOut("a-page-header", 100);
+
+    expect(screen.getByTestId("hero-room")).toHaveTextContent("100");
+  });
+
+  it("hides the header's backdrop while the hero is under it", () => {
+    renderHeroPage({ headerBackdrop: false });
+
+    expect(
+      screen.queryByTestId("a-page-header-backdrop", { includeHiddenElements: true }),
+    ).toBeNull();
+  });
+
+  it("brings the backdrop back once the page is under the header", () => {
+    renderHeroPage({ headerBackdrop: true });
+
+    expect(
+      screen.getByTestId("a-page-header-backdrop", { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+  });
+
+  it("says how far it has scrolled", () => {
+    const onScroll = jest.fn<void, [number]>();
+    renderHeroPage({ onScroll });
+
+    fireEvent.scroll(screen.getByTestId("a-page-scroll"), {
+      nativeEvent: { contentOffset: { x: 0, y: 120 } },
+    });
+
+    expect(onScroll).toHaveBeenCalledWith(120);
   });
 });

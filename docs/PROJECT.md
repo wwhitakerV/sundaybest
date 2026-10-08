@@ -622,6 +622,12 @@ utils -> types
 After changing any boundary rule, re-prove it with a deliberately illegal import
 rather than trusting a clean lint run.
 
+- **`api/**` is in ESLint's `globalIgnores`.** The server is its own workspace
+  (own tsconfig, typecheck, and tests, on Node), and the root `tsconfig.json`
+  excludes it. Without the ignore, the type-aware parser can't find its files in
+  the root project and every one fails to parse — and the app's React Native
+  rules would not fit it anyway.
+
 ### Test harness constraints — see [ADR 0002](./adr/0002-testing-strategy.md)
 
 - **`@testing-library/react-native` stays on 13.3.0.** RNTL 14 made `render`
@@ -658,6 +664,10 @@ rather than trusting a clean lint run.
 - **`renderRouter` calls `jest.useFakeTimers()` itself**, so route tests run on
   fake timers whether they asked or not. `tests/setup/jest.setup.ts` restores real timers
   after every test.
+- **TanStack Query's timers are `unref`ed under Jest** (`timeoutManager` in
+  `tests/setup/jest.setup.ts`). Each query left in a cache keeps a `gcTime` timer
+  (ten minutes), and a pending Node timer keeps the process alive — without this,
+  `npx jest <one file>` passed and then sat for ten minutes before exiting.
 
 ### Knip ignores
 

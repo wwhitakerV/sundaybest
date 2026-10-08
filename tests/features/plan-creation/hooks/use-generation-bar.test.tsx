@@ -6,7 +6,7 @@ import { act, renderHook, waitFor } from "@tests/helpers/render";
 import { API_URL, aGeneration } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
 import { errorFeedback, successFeedback } from "@/core/haptics/haptics";
-import { useCreatePlanMutation } from "@/core/api/queries";
+import { useCreatePlanMutation } from "@/core/api/plan-queries";
 import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
 import { useGenerationBar } from "@/features/plan-creation/hooks/use-generation-bar";
 import { useSettledFeedback } from "@/features/plan-creation/hooks/use-settled-feedback";

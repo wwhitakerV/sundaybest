@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { apiIdSchema, isoDateTimeSchema } from "./common";
 
-export const userSchema = z.object({
+const userSchema = z.object({
   id: apiIdSchema,
   displayName: z.string().trim().min(1).max(80).nullable(),
   onboardedAt: isoDateTimeSchema.nullable(),

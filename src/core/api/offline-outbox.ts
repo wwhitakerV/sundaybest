@@ -70,7 +70,12 @@ export async function flushMutationOutbox(
 
       // Transport/server failure means later items cannot be trusted to reach
       // the API either. Keep this item and every item after it in order.
-      if (!isApiError(cause) || cause.retryable || cause.kind === "network" || cause.kind === "timeout") {
+      if (
+        !isApiError(cause) ||
+        cause.retryable ||
+        cause.kind === "network" ||
+        cause.kind === "timeout"
+      ) {
         return { attempted, completed, stoppedOffline: true };
       }
 

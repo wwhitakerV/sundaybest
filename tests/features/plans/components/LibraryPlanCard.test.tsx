@@ -55,22 +55,43 @@ describe("LibraryPlanCard", () => {
     expect(screen.getByText("Day 2 of 6")).toBeVisible();
   });
 
-  it("darkens its panel over the sermon's colour so the words always read", () => {
+  it("darkens its foot in one continuous gradient, with no panel inside the card", () => {
     renderCard();
 
-    expect(screen.getByTestId("a-card-panel-shade")).toHaveStyle({
-      backgroundColor: lightTheme.colors.mediaScrim,
+    expect(screen.getByTestId("a-card-scrim")).toBeOnTheScreen();
+    expect(screen.queryByTestId("a-card-panel-shade")).toBeNull();
+    expect(screen.getByTestId("a-card-panel")).not.toHaveStyle({
+      borderRadius: expect.any(Number) as number,
+    });
+    expect(screen.getByTestId("a-card-panel")).not.toHaveStyle({
+      margin: expect.any(Number) as number,
     });
   });
 
-  it("keeps the plan's progress as a small bare ring, at the end of its last line", () => {
+  it("shows its progress as a ring with the percent inside, at the end of its last line", () => {
     renderCard();
 
-    expect(screen.getByTestId("a-card-progress")).toHaveStyle({ width: 24, height: 24 });
+    expect(screen.getByTestId("a-card-progress")).toHaveStyle({ width: 40, height: 40 });
     expect(screen.queryByTestId("a-card-progress-disc")).toBeNull();
     expect(screen.getByTestId("a-card-status")).toContainElement(
       screen.getByTestId("a-card-progress"),
     );
+    expect(screen.getByTestId("a-card-progress")).toHaveTextContent("33%");
+  });
+
+  it("says 0% on a plan not started, not just its length", () => {
+    renderCard({
+      percent: 0,
+      look: { status: "Not started", detail: "7 days", summary: "Not started · 7 days" },
+    });
+
+    expect(screen.getByTestId("a-card-progress")).toHaveTextContent("0%");
+  });
+
+  it("says 100% on a finished plan", () => {
+    renderCard({ done: true, percent: 40 });
+
+    expect(screen.getByTestId("a-card-progress")).toHaveTextContent("100%");
   });
 
   it("lets its words run the panel's full width", () => {

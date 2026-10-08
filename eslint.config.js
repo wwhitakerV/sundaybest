@@ -85,6 +85,9 @@ const SIDE_EFFECT_SDKS_CORE_ONLY = {
     // src/core/haptics and src/core/notifications
     "expo-haptics",
     "expo-notifications",
+    // the iPhone's own settings (its 12/24-hour clock), wrapped in
+    // src/core/localization
+    "expo-localization",
   ],
   message:
     "SDKs with side effects may only be imported inside src/core. Wrap this in a src/core module and import that instead.",
@@ -211,6 +214,10 @@ module.exports = defineConfig([
     "android/**",
     "patches/**",
     "expo-env.d.ts",
+    // The server is its own workspace — its own tsconfig, typecheck and tests,
+    // and Node rather than React Native. The root tsconfig excludes it too, so
+    // these app rules (and their type-aware parser) don't reach it.
+    "api/**",
   ]),
 
   // 1. Expo's recommended config (registers import, expo, react, react-hooks,

@@ -47,7 +47,9 @@ export function SettingsChoiceList<T extends string>({
             <Pressable
               testID={`${testID}-${choice.value}`}
               accessibilityRole="radio"
-              accessibilityLabel={choice.detail ? `${choice.label}. ${choice.detail}` : choice.label}
+              accessibilityLabel={
+                choice.detail ? `${choice.label}. ${choice.detail}` : choice.label
+              }
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
               onPress={() => onChange(choice.value)}
@@ -60,7 +62,7 @@ export function SettingsChoiceList<T extends string>({
               <View style={[styles.copy, { gap: space[2] }]}>
                 <SFProBody variant="listItem">{choice.label}</SFProBody>
                 {choice.detail ? (
-                  <SFProBody variant="detail" tone="textMuted">
+                  <SFProBody variant="detail" tone="textSupporting">
                     {choice.detail}
                   </SFProBody>
                 ) : null}

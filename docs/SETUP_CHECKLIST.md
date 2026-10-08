@@ -358,6 +358,20 @@ shipping, not because they recur.
       [docs/privacy/data-inventory.md](./privacy/data-inventory.md) for
       exactly what's sent and when (nothing, until the Sentry DSN above is
       provisioned).
+- [ ] **Publish the privacy policy at a public web address** and enter it in
+      App Store Connect (App Privacy → Privacy Policy URL). Apple requires
+      one before submission. The in-app policy (Settings → Privacy policy →
+      Read full policy, written in
+      `src/features/settings/logic/privacy-full-policy.ts`) is the text to
+      publish; keep the two the same.
+- [ ] **Add the business details the privacy policy still needs**, then put
+      them in the in-app policy too: the legal entity responsible for
+      SundayBest, a privacy contact (an email address or web form), and how
+      long each kind of data is kept. Have them reviewed before launch.
+- [ ] **Decide how a reader asks for their data to be deleted.** The policy
+      deliberately says nothing about deletion until the app or support can
+      actually do it; the backend contract already describes revoking
+      sessions and deleting or anonymising user rows.
 - [ ] **Confirm every item in "Security" above is actually done** — the
       attestation/session backend obligations especially. An app that
       attests but whose server doesn't verify is worse than no attestation

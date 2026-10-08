@@ -15,6 +15,10 @@ jest.mock("expo-router", () => ({
   useIsFocused: () => true,
 }));
 
+// Each test waits up to 10s for Home's plans (see `renderHome`); a full
+// parallel run can take one past Jest's 5s default.
+jest.setTimeout(20_000);
+
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 
 /** "Today I Choose to Be a Blessing", under way: six days, day 1 done, day 2 today. */

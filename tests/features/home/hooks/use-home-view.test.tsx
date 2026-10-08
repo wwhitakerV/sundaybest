@@ -7,7 +7,7 @@ import { servePlans } from "@tests/mocks/plans-api";
 import * as haptics from "@/core/haptics/haptics";
 import { planOverviewHref, studyHref } from "@/entities/plan";
 import { useHomeView } from "@/features/home/hooks/use-home-view";
-import { describeApiPlan } from "@/features/plans/logic/api-plan-wording";
+import { describeApiPlan } from "@/features/plans";
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),

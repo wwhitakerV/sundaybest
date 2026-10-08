@@ -23,12 +23,13 @@ function weekdayNumber(day: Weekday): number {
 }
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
+  handleNotification: () =>
+    Promise.resolve({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
 });
 
 /** Replaces only SundayBest notifications for one reminder kind. */
@@ -65,9 +66,11 @@ export async function syncLocalReminder(reminder: ApiReminder): Promise<void> {
   );
 }
 
-export async function cancelLocalReminder(kind: ApiReminder["kind"]): Promise<void> {
+async function cancelLocalReminder(kind: ApiReminder["kind"]): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-  const matching = scheduled.filter((request) => request.content.data?.sundayBestReminderKind === kind);
+  const matching = scheduled.filter(
+    (request) => request.content.data?.sundayBestReminderKind === kind,
+  );
   await Promise.all(
     matching.map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier)),
   );

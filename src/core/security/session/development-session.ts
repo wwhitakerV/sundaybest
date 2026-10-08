@@ -2,7 +2,7 @@ import * as Crypto from "expo-crypto";
 
 import { sessionCredentialsSchema, type SessionCredentials } from "../../api/contracts/attestation";
 import type { SecureStorage } from "../secure-storage/secure-storage";
-import type { SessionManager, SessionResult } from "./session";
+import type { SessionManager, SessionResult } from "./session-types";
 import { getDeviceTimeZone } from "../../time/device-timezone";
 
 const INSTALLATION_KEY = "development.installationId";
@@ -80,16 +80,18 @@ export function createDevelopmentSessionManager({
       return inFlight;
     },
 
-    async adopt(credentials) {
+    adopt(credentials) {
       active = {
         accessToken: credentials.accessToken,
         expiresAtMs: now() + credentials.expiresIn * 1000,
       };
+      return Promise.resolve();
     },
 
-    async clear() {
+    clear() {
       active = null;
       inFlight = null;
+      return Promise.resolve();
     },
   };
 }

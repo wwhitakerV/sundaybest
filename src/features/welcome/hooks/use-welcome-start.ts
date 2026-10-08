@@ -2,13 +2,11 @@ import { useCallback, useRef, useState } from "react";
 import { Alert } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 
-import { useCompleteOnboardingMutation, usePlansQuery } from "@/core/api/queries";
+import { useCompleteOnboardingMutation } from "@/core/api/reader-queries";
+import { usePlansQuery } from "@/core/api/plan-queries";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { planOverviewHref } from "@/entities/plan";
-import {
-  getApiSamplePlan,
-  getApiUserPlans,
-} from "@/features/plans/logic/api-plan-collections";
+import { getApiSamplePlan, getApiUserPlans } from "@/features/plans";
 import { getStartRoutes } from "../logic/start";
 
 /** Welcome's two ways in, backed entirely by the real API plan/user state. */

@@ -10,3 +10,6 @@ export { BibleTranslationScreen } from "./screens/BibleTranslationScreen";
 export { TextSizeScreen } from "./screens/TextSizeScreen";
 export { HowPlansAreMadeScreen } from "./screens/HowPlansAreMadeScreen";
 export { PrivacyPolicyScreen } from "./screens/PrivacyPolicyScreen";
+export { PrivacyTopicScreen } from "./screens/PrivacyTopicScreen";
+export { ContactSupportScreen } from "./screens/ContactSupportScreen";
+export { SermonRemovalScreen } from "./screens/SermonRemovalScreen";

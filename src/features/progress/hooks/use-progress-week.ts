@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 
 import { usePrefetch } from "@/core/api/prefetch";
-import { useProgressQuery, useRemindersQuery } from "@/core/api/queries";
+import { useProgressQuery, useRemindersQuery } from "@/core/api/reader-queries";
 import { studyHref } from "@/entities/plan";
 import { selectionFeedback } from "@/core/haptics/haptics";
 import { useToday } from "@/core/store";
 import { addDays } from "@/utils/dates/addDays";
-import { getWeekStartSunday, getWeekTitle } from "../logic/week";
+import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
+import { getWeekTitle } from "../logic/week";
 
 /** Progress view model backed by /v1/me/progress. */
 export function useProgressWeek() {

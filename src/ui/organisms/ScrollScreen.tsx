@@ -1,8 +1,19 @@
 import { useRef, type ReactNode } from "react";
-import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end";
 import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
+
+/** How often a scroll reports its position: once a frame. */
+const SCROLL_THROTTLE_MS = 16;
 
 type ScrollOptions = {
   /** Layout extras for the scroll's content (room at its foot). Never its sides. */
@@ -11,6 +22,8 @@ type ScrollOptions = {
   keyboardShouldPersistTaps?: "always" | "never" | "handled";
   /** The keyboard lifts what it would cover (answer boxes). */
   automaticallyAdjustKeyboardInsets?: boolean;
+  /** How far down it's scrolled, as it scrolls — for a page whose header changes with it. */
+  onScroll?: (y: number) => void;
 };
 
 export type ScrollScreenProps = Omit<ScrollFrameProps, "children"> &
@@ -33,6 +46,7 @@ export function ScrollScreen({
   contentStyle,
   keyboardShouldPersistTaps,
   automaticallyAdjustKeyboardInsets,
+  onScroll,
   ...frame
 }: ScrollScreenProps) {
   return (
@@ -42,6 +56,7 @@ export function ScrollScreen({
         {...(contentStyle && { contentStyle })}
         {...(keyboardShouldPersistTaps && { keyboardShouldPersistTaps })}
         {...(automaticallyAdjustKeyboardInsets && { automaticallyAdjustKeyboardInsets })}
+        {...(onScroll && { onScroll })}
       >
         {children}
       </ClearedScroll>
@@ -60,6 +75,7 @@ function ClearedScroll({
   contentStyle,
   keyboardShouldPersistTaps,
   automaticallyAdjustKeyboardInsets,
+  onScroll,
 }: ScrollOptions & { testID: string; children: ReactNode }) {
   const clearance = useFrameClearance();
   const scroll = useRef<ScrollView>(null);
@@ -74,6 +90,11 @@ function ClearedScroll({
       showsVerticalScrollIndicator={false}
       {...(keyboardShouldPersistTaps && { keyboardShouldPersistTaps })}
       {...(automaticallyAdjustKeyboardInsets && { automaticallyAdjustKeyboardInsets })}
+      {...(onScroll && {
+        scrollEventThrottle: SCROLL_THROTTLE_MS,
+        onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) =>
+          onScroll(event.nativeEvent.contentOffset.y),
+      })}
     >
       <View testID={`${testID}-top-clearance`} style={{ height: clearance.top }} />
       {children}

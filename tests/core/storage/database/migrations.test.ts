@@ -1,12 +1,8 @@
 import { createFakeDatabase } from "@tests/mocks/database";
 
 import type { Database } from "@/core/storage/database/database";
-import {
-  MIGRATIONS,
-  MigrationError,
-  runMigrations,
-  type Migration,
-} from "@/core/storage/database/migrations";
+import { MIGRATIONS, type Migration } from "@/core/storage/database/migration-list";
+import { MigrationError, runMigrations } from "@/core/storage/database/migrations";
 
 function migration(version: number, name: string, up?: (db: Database) => Promise<void>): Migration {
   return {

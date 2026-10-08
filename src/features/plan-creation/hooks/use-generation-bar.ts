@@ -7,7 +7,7 @@ import {
   usePlanStarts,
   useRetryGenerationMutation,
 } from "@/core/api/generation-queries";
-import { useCreatePlanMutation } from "@/core/api/queries";
+import { useCreatePlanMutation } from "@/core/api/plan-queries";
 import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
 import type { PlanGenerationStatus } from "@/types/domain";
 import { toBuild } from "../data/current-builds";

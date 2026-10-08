@@ -10,8 +10,8 @@ import {
   getApiInProgressPlans,
   getApiSavedPlans,
   getApiUserPlans,
-} from "@/features/plans/logic/api-plan-collections";
-import { describeApiPlan } from "@/features/plans/logic/api-plan-wording";
+} from "@/features/plans";
+import { describeApiPlan } from "@/features/plans";
 import { PlanRow } from "./PlanRow";
 import { space } from "@/theme";
 

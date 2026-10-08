@@ -2,17 +2,17 @@ import { z } from "zod";
 
 import { apiIdSchema, isoDateTimeSchema } from "./common";
 
-export const quizQuestionKindSchema = z.enum(["multipleChoice", "finishTheVerse"]);
-export const quizQuestionSourceSchema = z.enum(["sermon", "scripture"]);
+const quizQuestionKindSchema = z.enum(["multipleChoice", "finishTheVerse"]);
+const quizQuestionSourceSchema = z.enum(["sermon", "scripture"]);
 
-export const quizChoiceSchema = z.object({
+const quizChoiceSchema = z.object({
   id: apiIdSchema,
   label: z.string().min(1).max(4),
   text: z.string().min(1).max(1000),
 });
 
 /** Public question shape deliberately excludes the answer key. */
-export const publicQuizQuestionSchema = z.object({
+const publicQuizQuestionSchema = z.object({
   id: apiIdSchema,
   order: z.number().int().positive(),
   kind: quizQuestionKindSchema,
@@ -22,7 +22,7 @@ export const publicQuizQuestionSchema = z.object({
   scriptureReference: z.string().max(100).nullable(),
 });
 
-export const quizSchema = z.object({
+const quizSchema = z.object({
   id: apiIdSchema,
   planId: apiIdSchema,
   planDayId: apiIdSchema.nullable(),
@@ -30,7 +30,7 @@ export const quizSchema = z.object({
   questions: z.array(publicQuizQuestionSchema).min(1),
 });
 
-export const quizAttemptSchema = z.object({
+const quizAttemptSchema = z.object({
   id: apiIdSchema,
   quizId: apiIdSchema,
   status: z.enum(["inProgress", "completed"]),
@@ -39,7 +39,7 @@ export const quizAttemptSchema = z.object({
   completedAt: isoDateTimeSchema.nullable(),
 });
 
-export const quizScoreSchema = z.object({
+const quizScoreSchema = z.object({
   correct: z.number().int().nonnegative(),
   total: z.number().int().positive(),
   percentage: z.number().int().min(0).max(100),
@@ -49,7 +49,7 @@ export const quizScoreSchema = z.object({
  * Feedback for a submitted answer. It is intentionally separate from the
  * public question so unopened questions never carry their answer key.
  */
-export const quizAnswerFeedbackSchema = z.object({
+const quizAnswerFeedbackSchema = z.object({
   answerId: apiIdSchema,
   questionId: apiIdSchema,
   choiceId: apiIdSchema,
@@ -72,7 +72,11 @@ export const quizSessionResponseSchema = z.object({
   score: quizScoreSchema.nullable(),
 });
 
+// One session shape, named for each endpoint that answers with it, as the
+// server's contract names them.
+/** @alias */
 export const startQuizAttemptResponseSchema = quizSessionResponseSchema;
+/** @alias */
 export const getQuizAttemptResponseSchema = quizSessionResponseSchema;
 
 export const submitQuizAnswerRequestSchema = z
@@ -90,7 +94,5 @@ export const completeQuizAttemptResponseSchema = z.object({
 });
 
 export type ApiQuiz = z.infer<typeof quizSchema>;
-export type ApiQuizAttempt = z.infer<typeof quizAttemptSchema>;
 export type ApiQuizAnswerFeedback = z.infer<typeof quizAnswerFeedbackSchema>;
-export type ApiQuizScore = z.infer<typeof quizScoreSchema>;
 export type ApiQuizSession = z.infer<typeof quizSessionResponseSchema>;

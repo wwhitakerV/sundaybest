@@ -27,10 +27,6 @@ export async function getOfflineUserScope(): Promise<string | null> {
   return createExpoSecureStorage().get(CURRENT_SCOPE_KEY);
 }
 
-export async function clearOfflineUserScope(): Promise<void> {
-  await createExpoSecureStorage().remove(CURRENT_SCOPE_KEY);
-}
-
 export async function readCachedResource<T>(
   cacheKey: string,
   schema: ZodType<T>,
@@ -112,13 +108,6 @@ export async function removeCachedResource(cacheKey: string): Promise<void> {
     scopeId,
     cacheKey,
   ]);
-}
-
-export async function clearCachedServerStateForCurrentUser(): Promise<void> {
-  const scopeId = await getOfflineUserScope();
-  if (!scopeId) return;
-  const db = await getAppDatabase();
-  await db.execute("DELETE FROM api_resource_cache WHERE scope_id = ?", [scopeId]);
 }
 
 const listedCacheRowSchema = z.object({

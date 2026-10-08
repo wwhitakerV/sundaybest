@@ -9,9 +9,8 @@ import { selectionFeedback, successFeedback, tapFeedback } from "@/core/haptics/
 import {
   useCompleteStudyDayMutation,
   useCompleteStudyStepMutation,
-  useUpdateSettingsMutation,
-  useUserSettingsQuery,
-} from "@/core/api/queries";
+} from "@/core/api/study-queries";
+import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/reader-queries";
 import { readingTextOffsetSchema } from "@/core/api/contracts";
 import {
   STUDY_STEPS,
@@ -23,8 +22,11 @@ import {
   type StudyPosition,
   type StudyStepKey,
 } from "../logic/study-steps";
-import { useReflectionAnswers } from "./use-reflection-answers";
+import { useReflectionAnswers } from "@/core/storage/reflection-answer-queries";
 import { useStudyRoute } from "./use-study-route";
+
+/** Where a study opens before its day has arrived. */
+const START: StudyPosition = { step: 0, page: 0 };
 
 /** Daily Study backed by the real API, with private reflection answers on-device only. */
 export function useStudySession() {
@@ -43,18 +45,23 @@ export function useStudySession() {
   const completeStep = useCompleteStudyStepMutation(planId, dayNumber);
   const completeDay = useCompleteStudyDayMutation(planId, dayNumber);
   const pages = getStudyPages(day?.reflectionPrompts.length ?? 0);
-  const [position, setPosition] = useState<StudyPosition>({ step: 0, page: 0 });
-  const initializedDay = useRef<string | null>(null);
+  // Where the reader is, and in which day. A day opens where
+  // `getInitialPosition` says the first time it arrives; from then on the
+  // position is the reader's, so a refetch never moves them.
+  const [placed, setPlaced] = useState<{ dayId: Id; position: StudyPosition } | null>(null);
   const redirectedToQuiz = useRef<string | null>(null);
 
   const desiredPosition = getInitialPosition(requestedStep, day?.progress.completedSteps ?? []);
-  const effectivePosition = day && initializedDay.current !== day.id ? desiredPosition : position;
-
-  useEffect(() => {
-    if (!day || initializedDay.current === day.id) return;
-    initializedDay.current = day.id;
-    setPosition(desiredPosition);
-  }, [day, desiredPosition]);
+  if (day && placed?.dayId !== day.id) {
+    // A day just arrived: place the reader in it (React's "adjust state while
+    // rendering", which re-renders at once with no extra commit).
+    setPlaced({ dayId: day.id, position: desiredPosition });
+  }
+  const effectivePosition = day
+    ? placed?.dayId === day.id
+      ? placed.position
+      : desiredPosition
+    : (placed?.position ?? START);
 
   const quickCheckDue = Boolean(day?.quickCheckId && day.progress.status !== "completed");
   const allStudyStepsDone = STUDY_STEPS.every(({ key }) =>
@@ -122,7 +129,7 @@ export function useStudySession() {
           }
         }
         tapFeedback();
-        setPosition(action.to);
+        setPlaced({ dayId: day.id, position: action.to });
         return;
       }
 

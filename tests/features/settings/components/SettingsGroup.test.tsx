@@ -17,4 +17,12 @@ describe("SettingsGroup", () => {
       borderColor: lightTheme.colors.containerBorder,
     });
   });
+
+  it("sets each row's icon on the group's own grey, with no square of its own behind it", () => {
+    render(<SettingsGroup title="General" rows={ROWS} onOpen={() => undefined} />);
+
+    expect(screen.getByTestId("row-one-icon", { includeHiddenElements: true })).not.toHaveStyle({
+      backgroundColor: lightTheme.colors.segmentBackground,
+    });
+  });
 });

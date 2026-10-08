@@ -15,12 +15,12 @@ import {
   scriptureReferenceSchema,
 } from "./plans";
 
-export const scriptureVerseSchema = z.object({
+const scriptureVerseSchema = z.object({
   number: z.number().int().positive(),
   text: z.string().min(1),
 });
 
-export const translatedScriptureSchema = scriptureReferenceSchema.extend({
+const translatedScriptureSchema = scriptureReferenceSchema.extend({
   translation: bibleTranslationSchema,
   verses: z.array(scriptureVerseSchema).min(1),
   /** Whether the licensed provider permits durable on-device caching. */
@@ -31,7 +31,7 @@ export const translatedScriptureSchema = scriptureReferenceSchema.extend({
  * Scripture SundayBest chose to support the day's teaching ("Dive deeper"). The
  * sermon did not cite it; `connection` says how it ties to the reading.
  */
-export const supportingScriptureSchema = translatedScriptureSchema
+const supportingScriptureSchema = translatedScriptureSchema
   .omit({ id: true, cacheAllowed: true })
   .extend({ connection: z.string().min(1).max(600) });
 
@@ -68,4 +68,3 @@ export const completeStudyDayResponseSchema = z.object({
 });
 
 export type ApiStudyDay = z.infer<typeof studyDaySchema>;
-export type ApiSupportingScripture = z.infer<typeof supportingScriptureSchema>;

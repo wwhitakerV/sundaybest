@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useRemindersQuery, useUserSettingsQuery } from "@/core/api/queries";
+import { useRemindersQuery, useUserSettingsQuery } from "@/core/api/reader-queries";
 import { getReminder, getUserSettings, useAppSelector, useStoreActions } from "@/core/store";
 
 /**

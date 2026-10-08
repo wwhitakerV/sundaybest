@@ -1,7 +1,8 @@
 import { useTheme, type Theme } from "@/theme";
 import { ThemedText, type TypographyProps } from "./ThemedText";
 
-export type SFProBodyVariant = "body" | "bodyLoose" | "listItem" | "label" | "reading" | "detail";
+export type SFProBodyVariant =
+  "body" | "bodyLoose" | "listItem" | "label" | "reading" | "detail" | "letter";
 
 export type SFProBodyProps = TypographyProps & { variant?: SFProBodyVariant };
 
@@ -19,6 +20,8 @@ function typeFor(typography: Theme["typography"], variant: SFProBodyVariant) {
       return typography.reading;
     case "detail":
       return typography.cardDetail;
+    case "letter":
+      return typography.dayLetter;
   }
 }
 

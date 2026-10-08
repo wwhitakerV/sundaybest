@@ -1,9 +1,9 @@
 import type {
-  ApiErrorCode,
   ChallengeResponse,
   SessionCredentials,
   VerifyAttestationRequest,
 } from "../../api/contracts/attestation";
+import type { ApiErrorCode } from "../../api/contracts/errors";
 import type { RequestAssertionBinding } from "../../api/request-binding";
 
 /**

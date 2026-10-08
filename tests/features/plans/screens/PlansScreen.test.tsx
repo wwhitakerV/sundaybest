@@ -12,6 +12,10 @@ jest.mock("expo-router", () => ({
   useRouter: jest.fn(),
 }));
 
+// Each test waits up to 10s for the plans (see `openPlans`); a full parallel
+// run can take one past Jest's 5s default.
+jest.setTimeout(20_000);
+
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const ART = "https://images.example.com/sermon.jpg";
 

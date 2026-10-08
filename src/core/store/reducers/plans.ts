@@ -14,7 +14,7 @@ export function isStudyable(plan: Plan): boolean {
 }
 
 /** A ready plan, started; any other plan as it is. */
-export function started(plan: Plan, today: IsoDate, at: IsoDateTime): Plan {
+function started(plan: Plan, today: IsoDate, at: IsoDateTime): Plan {
   // Only a ready plan starts; an active one already has, and the rest can't.
   if (plan.status !== "ready") return plan;
   return { ...plan, status: "active", startDate: today, startedAt: at, updatedAt: at };

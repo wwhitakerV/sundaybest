@@ -97,14 +97,3 @@ export const bootstrapSessionRequestSchema = z.object({
 });
 
 export type BootstrapSessionRequest = z.infer<typeof bootstrapSessionRequestSchema>;
-
-// Error codes are shared by the whole API, not only attestation. Re-export
-// them here for compatibility with the security modules that historically
-// imported from this contract.
-export {
-  API_ERROR_CODES,
-  RETRYABLE_ERROR_CODES,
-  apiErrorEnvelopeSchema,
-  isRetryableErrorCode,
-  type ApiErrorCode,
-} from "./errors";

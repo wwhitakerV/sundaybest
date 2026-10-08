@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 
 import type { ApiPlanSummary } from "@/core/api/contracts";
-import { usePlansQuery, useStartPlanMutation } from "@/core/api/queries";
+import { usePlansQuery, useStartPlanMutation } from "@/core/api/plan-queries";
 import { planOverviewHref, studyHref } from "@/entities/plan";
 import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {

@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 
-import { useRemindersQuery, useUserSettingsQuery } from "@/core/api/queries";
+import { useRemindersQuery, useUserSettingsQuery } from "@/core/api/reader-queries";
 import { getAppVersion } from "@/core/config/app-version";
+import { usesTwentyFourHourClock } from "@/core/localization/clock";
 import {
   describeSettingsSections,
   formatShortVersion,
@@ -23,6 +24,7 @@ export function useSettingsView() {
         ? null
         : describeSettingsSections({
             reminderTime: reminder?.enabled ? reminder.time : null,
+            twentyFourHour: usesTwentyFourHourClock(),
             translation: settings.bibleTranslation,
             textSize: settings.textSize,
           }),

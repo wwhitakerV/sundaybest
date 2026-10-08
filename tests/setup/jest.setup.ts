@@ -1,5 +1,28 @@
+import { timeoutManager } from "@tanstack/react-query";
+
 import { server } from "../mocks/server";
 import type * as SlotModule from "expo-router/build/ui/Slot";
+
+// ---------------------------------------------------------------------------
+// TanStack Query's timers
+// ---------------------------------------------------------------------------
+// Every query a test leaves behind keeps a garbage-collection timer for its
+// `gcTime` (ten minutes), and in Node a pending timer keeps the process alive —
+// so a single suite run with `npx jest <file>` sat for ten minutes after it
+// passed. These timers still run as they would; they just no longer hold the
+// process open. The globals are looked up on every call, so a test's fake
+// timers still govern them.
+type TimerHandle = ReturnType<typeof setTimeout>;
+const unref = (handle: TimerHandle): TimerHandle => {
+  (handle as { unref?: () => void }).unref?.();
+  return handle;
+};
+timeoutManager.setTimeoutProvider<TimerHandle>({
+  setTimeout: (callback, delay) => unref(globalThis.setTimeout(callback, delay)),
+  clearTimeout: (handle) => globalThis.clearTimeout(handle),
+  setInterval: (callback, delay) => unref(globalThis.setInterval(callback, delay)),
+  clearInterval: (handle) => globalThis.clearInterval(handle),
+});
 
 // ---------------------------------------------------------------------------
 // Environment
@@ -68,6 +91,18 @@ afterAll(() => {
 jest.mock("expo-crypto", () => ({
   ...jest.requireActual<object>("expo-crypto"),
   randomUUID: () => jest.requireActual<{ randomUUID: () => string }>("node:crypto").randomUUID(),
+}));
+
+// expo-localization reads the iPhone's settings natively. The stand-in is an
+// iPhone on a 12-hour clock; a test of the 24-hour clock spies on
+// `getCalendars` to say so. A plain function, not `jest.fn`, so resetting mocks
+// between tests leaves it working.
+jest.mock("expo-localization", () => ({
+  // So `import * as` shares this object, and a spy on it reaches the app's import.
+  __esModule: true,
+  getCalendars: () => [
+    { calendar: "gregory", timeZone: "America/Chicago", uses24hourClock: false, firstWeekday: 1 },
+  ],
 }));
 
 jest.mock("expo-font", () => ({

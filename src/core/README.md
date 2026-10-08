@@ -87,7 +87,7 @@ settings, reminders, and library, and plans in every state (draft,
 generating, ready, active, completed, saved) with their days, Scripture,
 reflections, prayers, and quizzes. Everything is typed with `@/types/domain`,
 points at related records by ID, and is exported once, as `MOCK_DATA`, from
-`@/core/mock-data`. "Today" is fixed (`MOCK_TODAY`) so every date lines up.
+`@/core/mock-data`. "Today" is fixed (Wednesday 23 September 2026) so every date lines up.
 Only facts are recorded; progress, streaks, and scores are worked out by the
 store's selectors.
 
@@ -95,12 +95,17 @@ store's selectors.
 
 `storage/database/` is the SQLCipher-encrypted local database: a narrow
 `Database` port, the `expo-sqlite` adapter that keys it, and a forward-only
-migration runner (no tables yet). Its key is provisioned by
+migration runner (`migrations.ts`, running the list in `migration-list.ts`). Its key is provisioned by
 `security/database-key`, so the adapter is handed a key and never learns where it
 came from.
 
 Not "non-secret persistence" any more — the database is encrypted precisely
 because it will hold things worth encrypting.
+
+`reflection-answers.ts` keeps the reader's private reflection answers in that
+database — never sent to the API — and `reflection-answer-queries.ts` reads and
+writes them through TanStack Query (`useReflectionAnswers`,
+`useReflectionAnswerCount`), with the cache roots a plan reset clears.
 
 ## `config/`
 

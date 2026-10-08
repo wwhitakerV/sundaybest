@@ -7,8 +7,6 @@ import { SFProTitle } from "@/ui/typography/SFProTitle";
 import { formatDuration } from "@/utils/time/formatDuration";
 import type { SermonSearchResult as SermonSearchResultData } from "../data/search-sermons";
 
-const SELECTED_BORDER = 2.5;
-
 export type SermonSearchResultProps = {
   result: SermonSearchResultData;
   selected: boolean;

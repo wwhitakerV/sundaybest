@@ -3,11 +3,8 @@ import { useReducer, useState } from "react";
 import type { PlanLength } from "@/types/domain";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { readClipboardText } from "@/core/clipboard/read-clipboard-text";
-import {
-  useCreatePlanMutation,
-  useResolveSermonMutation,
-  useUserSettingsQuery,
-} from "@/core/api/queries";
+import { useCreatePlanMutation, useResolveSermonMutation } from "@/core/api/plan-queries";
+import { useUserSettingsQuery } from "@/core/api/reader-queries";
 import { isApiError } from "@/core/api/api-error";
 import { errorFeedback, selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { lookUpSermon } from "../data/look-up-sermon";

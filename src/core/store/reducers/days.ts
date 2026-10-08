@@ -34,9 +34,7 @@ function workableDay(state: AppState, dayId: string, today: IsoDate) {
 function withDay(state: AppState, day: PlanDay, today: IsoDate, at: IsoDateTime): AppState {
   const next = { ...state, planDays: withRecord(state.planDays, day) };
   const plan = findById(next.plans, day.planId);
-  return plan
-    ? startPlan(next, { type: "plan/start", planId: plan.id, today, at })
-    : next;
+  return plan ? startPlan(next, { type: "plan/start", planId: plan.id, today, at }) : next;
 }
 
 /** An open day, under way. */
@@ -100,7 +98,7 @@ export function completePlanDay(
     completedAt: action.at,
     updatedAt: action.at,
   };
-  let next = withDay(state, day, action.today, action.at);
+  const next = withDay(state, day, action.today, action.at);
 
   const siblings = listAll(next.planDays).filter((other) => other.planId === day.planId);
   const allDone =

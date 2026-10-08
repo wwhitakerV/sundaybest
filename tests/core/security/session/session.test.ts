@@ -8,8 +8,9 @@ import {
 } from "@tests/mocks/attestation";
 import { createInMemorySecureStorage } from "@tests/mocks/secure-storage";
 
-import { createSessionManager, type SessionApi } from "@/core/security/session/session";
-import type { AssertionResult } from "@/core/security/attestation/attestation";
+import { createSessionManager } from "@/core/security/session/session";
+import type { SessionApi } from "@/core/security/session/session-types";
+import type { AssertionResult, AttestationResult } from "@/core/security/attestation/attestation";
 
 const REFRESH_KEY = "session.refreshToken";
 
@@ -39,6 +40,7 @@ function setup(
   options: {
     api?: Partial<SessionApi>;
     assertion?: AssertionResult;
+    attest?: AttestationResult;
     storedRefreshToken?: string;
     now?: () => number;
   } = {},
@@ -55,7 +57,10 @@ function setup(
     .mockResolvedValue(BOOTSTRAPPED);
   const api: SessionApi = { refresh, bootstrap, ...options.api };
 
-  const { attestation, calls } = createFakeAttestation({ assertion: options.assertion });
+  const { attestation, calls } = createFakeAttestation({
+    assertion: options.assertion,
+    attest: options.attest,
+  });
 
   const session = createSessionManager({
     api,
@@ -244,6 +249,127 @@ describe("getAccessToken", () => {
       });
 
       await expect(session.getAccessToken()).resolves.toEqual({ status: "needs-attestation" });
+    });
+  });
+
+  describe("when the install has no attested key yet", () => {
+    const NO_KEY: AssertionResult = { status: "needs-attestation" };
+
+    it("attests afresh, keeping the credentials it brings", async () => {
+      const { session, secureStorage, bootstrap } = setup({
+        assertion: NO_KEY,
+        attest: { status: "attested", keyId: FAKE_KEY_ID, credentials: CREDENTIALS },
+      });
+
+      await expect(session.getAccessToken()).resolves.toEqual({
+        status: "ok",
+        accessToken: CREDENTIALS.accessToken,
+      });
+      expect(bootstrap).not.toHaveBeenCalled();
+      await expect(secureStorage.get(REFRESH_KEY)).resolves.toBe(CREDENTIALS.refreshToken);
+    });
+
+    it.each<[string, AttestationResult, unknown]>([
+      [
+        "unavailable where attestation is off",
+        { status: "disabled" },
+        { status: "unavailable", reason: "disabled" },
+      ],
+      [
+        "unavailable on a device that can't attest",
+        { status: "unsupported", reason: "platform" },
+        { status: "unavailable", reason: "unsupported" },
+      ],
+      [
+        "transient when attesting fails for now",
+        { status: "transient", stage: "verify", code: "RATE_LIMITED" },
+        { status: "transient", code: "RATE_LIMITED" },
+      ],
+      [
+        "rejected when attesting is refused",
+        { status: "rejected", stage: "verify", code: "ATTESTATION_INVALID" },
+        { status: "rejected", code: "ATTESTATION_INVALID" },
+      ],
+    ])("reports the session %s", async (_case, attest, expected) => {
+      const { session } = setup({ assertion: NO_KEY, attest });
+
+      await expect(session.getAccessToken()).resolves.toEqual(expected);
+    });
+  });
+
+  it("signs in with the key another sign-in made meanwhile", async () => {
+    // No key at first; attesting finds one already made; the second assertion works.
+    const createAssertion = jest
+      .fn<Promise<AssertionResult>, []>()
+      .mockResolvedValueOnce({ status: "needs-attestation" })
+      .mockResolvedValue({ status: "ok", ...ASSERTED });
+    const bootstrap = jest
+      .fn<Promise<SessionCredentials>, [unknown]>()
+      .mockResolvedValue(BOOTSTRAPPED);
+    const session = createSessionManager({
+      api: { refresh: jest.fn(), bootstrap },
+      attestation: {
+        attest: () => Promise.resolve({ status: "already-attested", keyId: FAKE_KEY_ID }),
+        createAssertion,
+        reset: () => Promise.resolve(),
+      },
+      secureStorage: createInMemorySecureStorage(),
+      now: () => 1_000_000,
+    });
+
+    await expect(session.getAccessToken()).resolves.toEqual({
+      status: "ok",
+      accessToken: BOOTSTRAPPED.accessToken,
+    });
+    expect(bootstrap).toHaveBeenCalledWith(ASSERTED);
+  });
+
+  it("abandons a sign-in that answers after the session was cleared", async () => {
+    let answer: (credentials: SessionCredentials) => void = () => {};
+    const bootstrap = jest.fn<Promise<SessionCredentials>, [unknown]>(
+      () =>
+        new Promise((resolve) => {
+          answer = resolve;
+        }),
+    );
+    const { session, secureStorage } = setup({ api: { bootstrap } });
+    const pending = session.getAccessToken();
+    // Until the sign-in is out, waiting on the server.
+    for (let tick = 0; tick < 50 && bootstrap.mock.calls.length === 0; tick += 1) {
+      await Promise.resolve();
+    }
+    expect(bootstrap).toHaveBeenCalledTimes(1);
+
+    await session.clear();
+    answer(BOOTSTRAPPED);
+
+    await expect(pending).resolves.toEqual({ status: "needs-attestation" });
+    await expect(secureStorage.get(REFRESH_KEY)).resolves.toBeNull();
+  });
+
+  describe("when signing back in is turned down", () => {
+    it("reports a retryable failure as transient", async () => {
+      const bootstrap = jest
+        .fn<Promise<SessionCredentials>, [unknown]>()
+        .mockRejectedValue(new ApiError("RATE_LIMITED", 429));
+      const { session } = setup({ api: { bootstrap } });
+
+      await expect(session.getAccessToken()).resolves.toEqual({
+        status: "transient",
+        code: "RATE_LIMITED",
+      });
+    });
+
+    it("reports a final failure as rejected", async () => {
+      const bootstrap = jest
+        .fn<Promise<SessionCredentials>, [unknown]>()
+        .mockRejectedValue(new ApiError("KEY_REVOKED", 403));
+      const { session } = setup({ api: { bootstrap } });
+
+      await expect(session.getAccessToken()).resolves.toEqual({
+        status: "rejected",
+        code: "KEY_REVOKED",
+      });
     });
   });
 

@@ -1,9 +1,4 @@
-import type {
-  ApiQuiz,
-  ApiQuizAnswerFeedback,
-  ApiQuizScore,
-  ApiStudyDay,
-} from "@/core/api/contracts";
+import type { ApiQuiz, ApiQuizAnswerFeedback, ApiStudyDay } from "@/core/api/contracts";
 import type { Id } from "@/types/domain";
 
 /** Study content shaped exactly for the existing UI, sourced from the API. */
@@ -32,4 +27,3 @@ export type QuickCheckQuestionView = ApiQuiz["questions"][number] & {
 };
 
 export type QuickCheckAnswerView = ApiQuizAnswerFeedback;
-export type QuickCheckScoreView = ApiQuizScore;

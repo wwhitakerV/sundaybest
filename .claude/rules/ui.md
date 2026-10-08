@@ -116,6 +116,44 @@ is keyed (`key={pageIndex}`) to play it again; never trigger an entrance from
 an effect, a key comparison, or an animation callback. Reduce Motion keeps
 the fade and drops the movement.
 
+## Controls are ours, never iOS's glass
+
+On or off is `Toggle` (`src/ui/atoms`), never react-native's `Switch`; a value
+picked from a control (a time) opens in `Popover`, never a native compact
+picker's own popover. Every floating container is `Popover`, so all of them
+share one look and one motion.
+
+A change saved optimistically never disables the page's controls while it's
+out — a control greyed for the moment a save takes makes the whole page
+flicker on every change. Ignore a second tap in the view model instead.
+
+## Options behind a switch
+
+When a switch turns a feature on (Daily reminder), what it governs is shown
+only while it's on: each part is wrapped in `Reveal` (`src/ui/atoms`), mounted
+with the switch on. It cascades in from the top — fading, drifting
+`motion.reveal.fromY` down, a beat behind the part above — and fades out all
+together, quicker, when turned off. Never a disabled, greyed-out section.
+
+## Reading pages
+
+A page that's only words to read (Privacy policy and its pages) is set like a
+typeset document, not Settings: white dominates, and typography carries it.
+
+- The app's bar (Back, the page's title beside it) over a compact hero in the
+  soft `surface` grey that runs up under the status bar (`PrivacyHero`, on
+  `ScrollScreen`'s `heroUnderHeader`): a small red `kicker` eyebrow, one serif
+  statement (`SerifTitle variant="statement"`), a line of plain words.
+- Serif only there and in one featured statement (`PrivacyQuote`, a thin red
+  rule beside it). Everything else is SF Pro in full ink — never `textMuted`
+  for what's meant to be read.
+- Sections: a `section` heading over paragraphs, and items each named then
+  said, with hairlines between — never in cards. A card only for something you
+  tap (the short version's rows). A real setting gets a small soft button.
+- Red sparingly: the eyebrow, a section number, the rule, an action. Never
+  green, which belongs to things done.
+- Every Settings page ends clear of the floating tab bar (`SettingsSubpage`).
+
 ## Milestone pages
 
 A page that marks a moment between steps — a day done, a plan complete, a
@@ -161,7 +199,7 @@ insets.
   text-size dot), `sheet` for a sheet. The entrances keep their own tuning
   until they're redesigned.
 - Do not draw a sheet or menu with `Modal`'s own `animationType`: compose
-  `BottomSheet` or `PopoverMenu`, which slide and grow as iOS's do and stay
+  `BottomSheet`, or `Popover` (`PopoverMenu` for a menu), which slide and grow as iOS's do and stay
   mounted while they leave (`usePresence`).
 - Do not use a warm grey for a line or fill. Edges are `containerBorder`, row
   lines `divider`, tracks `progressTrack` (see `src/theme/README.md`).

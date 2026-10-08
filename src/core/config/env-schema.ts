@@ -54,7 +54,10 @@ const EXPECTATIONS = new Map<string, string>([
   ],
   ["EXPO_PUBLIC_ATTESTATION_ENABLED", 'must be a boolean string, e.g. "true" or "false"'],
   ["EXPO_PUBLIC_SENTRY_DSN", "must be a URL when set; leave it empty to disable crash reporting"],
-  ["EXPO_PUBLIC_APP_TEAM_ID", "must be the 10-character Apple Developer Team ID outside development"],
+  [
+    "EXPO_PUBLIC_APP_TEAM_ID",
+    "must be the 10-character Apple Developer Team ID outside development",
+  ],
   ["EXPO_PUBLIC_SECURITY_WATCHER_EMAIL", "must be a valid email address outside development"],
   [
     "EXPO_PUBLIC_USE_RN_FETCH",
@@ -104,7 +107,9 @@ const envSchema = z
     // An empty string is how a .env file expresses "unset", so it is accepted
     // and normalised to undefined below.
     EXPO_PUBLIC_SENTRY_DSN: z.union([z.url(), z.literal("")]).optional(),
-    EXPO_PUBLIC_APP_TEAM_ID: z.union([z.string().regex(/^[A-Z0-9]{10}$/), z.literal("")]).optional(),
+    EXPO_PUBLIC_APP_TEAM_ID: z
+      .union([z.string().regex(/^[A-Z0-9]{10}$/), z.literal("")])
+      .optional(),
     EXPO_PUBLIC_SECURITY_WATCHER_EMAIL: z.union([z.email(), z.literal("")]).optional(),
 
     // Required, and only ever "1". Expo SDK 57 swaps `globalThis.fetch` for

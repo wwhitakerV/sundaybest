@@ -1,11 +1,8 @@
 import type { Reminder, User, UserSettings } from "@/types/domain";
 
-/**
- * "Today" in the mock data is Wednesday 23 September 2026. Every date in it
- * is set relative to that: the active plan started yesterday, the completed
- * one finished three weeks ago.
- */
-export const MOCK_TODAY = "2026-09-23";
+// "Today" in the mock data is Wednesday 23 September 2026. Every date in it
+// is set relative to that: the active plan started yesterday, the completed
+// one finished three weeks ago.
 
 export const MOCK_USER: User = {
   id: "user-local",

@@ -2,7 +2,7 @@ import { useTheme, type Theme } from "@/theme";
 import { ThemedText, type TypographyProps } from "./ThemedText";
 
 export type MonoLabelVariant =
-  "label" | "labelTracked" | "date" | "dayStrip" | "headerDate" | "emphasis";
+  "label" | "labelTracked" | "date" | "dayStrip" | "headerDate" | "emphasis" | "kicker";
 
 export type MonoLabelProps = TypographyProps & { variant?: MonoLabelVariant };
 
@@ -20,6 +20,8 @@ function typeFor(typography: Theme["typography"], variant: MonoLabelVariant) {
       return typography.headerDate;
     case "emphasis":
       return typography.metaEmphasis;
+    case "kicker":
+      return typography.kicker;
   }
 }
 

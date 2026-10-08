@@ -1,6 +1,7 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 
-import type { ApiErrorCode, SessionCredentials } from "@/core/api/contracts/attestation";
+import type { SessionCredentials } from "@/core/api/contracts/attestation";
+import type { ApiErrorCode } from "@/core/api/contracts/errors";
 import { defineFactory } from "@tests/factories/build";
 
 /**

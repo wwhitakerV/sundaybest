@@ -6,11 +6,11 @@ import { dayCompleteHref } from "@/entities/plan";
 import { useModalSession } from "@/hooks/use-modal-session";
 import {
   useCompleteQuizAttemptMutation,
-  useCompleteStudyDayMutation,
   useQuizSessionQuery,
   useStartQuizAttemptMutation,
   useSubmitQuizAnswerMutation,
-} from "@/core/api/queries";
+} from "@/core/api/quiz-queries";
+import { useCompleteStudyDayMutation } from "@/core/api/study-queries";
 import { successFeedback, tapFeedback, warningFeedback } from "@/core/haptics/haptics";
 import {
   getQuickCheckAction,

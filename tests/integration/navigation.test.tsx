@@ -79,8 +79,11 @@ async function studyTheDay() {
   fireEvent.press(screen.getByTestId("study-nav-next-button"));
 }
 
-/** The long walks run on fake timers, through the whole route tree. */
-const LONG_FLOW_TIMEOUT_MS = 20_000;
+/**
+ * The long walks run on fake timers, through the whole route tree — seconds
+ * alone, and about three times as long in a full run with coverage.
+ */
+const LONG_FLOW_TIMEOUT_MS = 60_000;
 
 describe("navigation", () => {
   it(
@@ -198,6 +201,25 @@ describe("navigation", () => {
 
       fireEvent.press(await screen.findByTestId("daily-reminder-back-button"));
       expect(view.getPathname()).toBe("/settings");
+    },
+    LONG_FLOW_TIMEOUT_MS,
+  );
+
+  it(
+    "opens a privacy topic from Privacy policy, from Settings, and comes back",
+    async () => {
+      const view = await openApp();
+
+      fireEvent.press(screen.getByTestId("tab-settings"));
+      fireEvent.press(await screen.findByTestId("settings-privacy-policy-row"));
+      expect(view.getPathname()).toBe("/settings/privacy-policy");
+
+      fireEvent.press(await screen.findByTestId("privacy-short-version-keep"));
+      expect(view.getPathname()).toBe("/settings/privacy/keep");
+      expect(await screen.findByTestId("privacy-topic-quote")).toBeVisible();
+
+      fireEvent.press(screen.getByTestId("privacy-topic-back-button"));
+      expect(view.getPathname()).toBe("/settings/privacy-policy");
     },
     LONG_FLOW_TIMEOUT_MS,
   );

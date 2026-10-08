@@ -19,3 +19,7 @@ package-lock.json
 # authored file (src/features/exams/data) — and the hand-off drops it comes from
 src/features/exams/data/content/
 assets/theology-exams/
+
+# the server workspace: its own package, tooling, and style — as for ESLint
+# (eslint.config.js) and the root tsconfig
+api/

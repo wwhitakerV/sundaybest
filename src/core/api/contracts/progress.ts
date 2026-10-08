@@ -3,22 +3,22 @@ import { z } from "zod";
 import { apiIdSchema, isoDateSchema, isoDateTimeSchema } from "./common";
 import { planSummarySchema } from "./plans";
 
-export const progressDayActivitySchema = z.object({
+const progressDayActivitySchema = z.object({
   date: isoDateSchema,
   completedDayCount: z.number().int().nonnegative(),
 });
 
-export const streakSchema = z.object({
+const streakSchema = z.object({
   current: z.number().int().nonnegative(),
   longest: z.number().int().nonnegative(),
 });
 
-export const progressTotalsSchema = z.object({
+const progressTotalsSchema = z.object({
   completedDayCount: z.number().int().nonnegative(),
   completedPlanCount: z.number().int().nonnegative(),
 });
 
-export const latestQuickCheckScoreSchema = z.object({
+const latestQuickCheckScoreSchema = z.object({
   attemptId: apiIdSchema,
   quizId: apiIdSchema,
   correct: z.number().int().nonnegative(),
@@ -27,7 +27,7 @@ export const latestQuickCheckScoreSchema = z.object({
   completedAt: isoDateTimeSchema,
 });
 
-export const progressUpNextSchema = z.object({
+const progressUpNextSchema = z.object({
   plan: planSummarySchema,
   day: z.object({
     id: apiIdSchema,

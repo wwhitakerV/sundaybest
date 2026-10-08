@@ -44,7 +44,8 @@ export async function enqueueMutation(input: {
   idempotencyKey: string;
 }): Promise<void> {
   const scopeId = await getOfflineUserScope();
-  if (!scopeId) throw new Error("Cannot queue a server mutation without an authenticated offline scope");
+  if (!scopeId)
+    throw new Error("Cannot queue a server mutation without an authenticated offline scope");
 
   const db = await getAppDatabase();
   await db.execute(

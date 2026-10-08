@@ -1,6 +1,6 @@
 import { Redirect } from "expo-router";
 
-import { useCurrentUserQuery } from "@/core/api/queries";
+import { useCurrentUserQuery } from "@/core/api/reader-queries";
 import { WelcomeScreen } from "@/features/welcome";
 import { LoadingScreen } from "@/ui/organisms/LoadingScreen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";

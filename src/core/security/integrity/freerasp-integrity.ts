@@ -1,4 +1,5 @@
 import type { ThreatEventActions } from "freerasp-react-native";
+import type * as FreeRasp from "freerasp-react-native";
 
 import type { Env } from "../../config/env-schema";
 import {
@@ -160,7 +161,7 @@ export function buildActions({
   return Object.fromEntries(INTEGRITY_SIGNALS.map((signal) => [signal, handle(signal)]));
 }
 
-type FreeRaspModule = typeof import("freerasp-react-native");
+type FreeRaspModule = typeof FreeRasp;
 
 type UseFreeRasp = FreeRaspModule["useFreeRasp"];
 

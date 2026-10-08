@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 
 import { useResetPlanMutation } from "@/core/api/plan-reset";
-import { useSetPlanSavedMutation } from "@/core/api/queries";
+import { useSetPlanSavedMutation } from "@/core/api/plan-queries";
 import { errorFeedback, selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {
   DAILY_REMINDER_HREF,

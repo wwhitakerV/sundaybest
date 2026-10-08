@@ -9,6 +9,8 @@
 - `contracts/*` are executable Zod contracts for `/v1`.
 - `sundaybest-api.ts` is the typed resource façade features call.
 - `query-keys.ts` is the one source of truth for TanStack Query cache keys.
+- The TanStack Query hooks are split by resource: `reader-queries.ts` (the reader, their settings, reminders and progress), `plan-queries.ts`, `study-queries.ts`, `quiz-queries.ts`, and `generation-queries.ts`. `query-cache-sync.ts` holds the cache and offline-copy updates those writes share; `plan-reset.ts` is the reset flow.
+- `client-errors.ts` turns every failure the client meets into one typed `ApiError`.
 - `BACKEND_SCHEMA.md` freezes the PostgreSQL ownership model and server invariants before the server workspace exists.
 
 The transport model deliberately does **not** mirror the current mock store one-for-one. Server-owned plan content and per-user progress are separate in the API contract even while the existing local mock store keeps its current normalized shape. This lets the backend be correct without forcing a risky all-at-once UI rewrite.

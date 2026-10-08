@@ -2,7 +2,7 @@
  * Mock data for every screen — one connected set of records, as `AppData`,
  * standing in for the local database until it holds real data.
  *
- * "Today" is `MOCK_TODAY` (Wednesday 23 September 2026). There is one plan
+ * "Today" is Wednesday 23 September 2026. There is one plan
  * per image in `assets/images/mock/`, each built from a sermon named, titled,
  * and pictured after the same file:
  *
@@ -77,7 +77,6 @@ import { SCRIPTURE_VARIANTS } from "./scripture-variants";
 import { MOCK_SERMONS } from "./sermons";
 import { MOCK_REMINDERS, MOCK_SETTINGS, MOCK_USER } from "./user";
 
-export { MOCK_TODAY } from "./user";
 export { SAMPLE_PLAN_ID } from "./plan-the-church-must-not-partner-with-the-world";
 
 /** Records keyed by ID. */

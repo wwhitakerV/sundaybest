@@ -14,7 +14,7 @@ export const planLengthSchema = z.union([
   z.literal(6),
   z.literal(7),
 ]);
-export const weekdaySchema = z.enum(["sun", "mon", "tue", "wed", "thu", "fri", "sat"]);
+const weekdaySchema = z.enum(["sun", "mon", "tue", "wed", "thu", "fri", "sat"]);
 export const weekdayListSchema = z
   .array(weekdaySchema)
   .min(1)
@@ -35,16 +35,18 @@ export const readingTextOffsetSchema = z.union([
 ]);
 export const studyStepSchema = z.enum(["read", "scripture", "reflect", "pray"]);
 const STUDY_STEP_ORDER = ["read", "scripture", "reflect", "pray"] as const;
-export const completedStudyStepsSchema = z.array(studyStepSchema).max(4).superRefine((steps, ctx) => {
-  if (new Set(steps).size !== steps.length) {
-    ctx.addIssue({ code: "custom", message: "Completed study steps must be unique" });
-  }
+export const completedStudyStepsSchema = z
+  .array(studyStepSchema)
+  .max(4)
+  .superRefine((steps, ctx) => {
+    if (new Set(steps).size !== steps.length) {
+      ctx.addIssue({ code: "custom", message: "Completed study steps must be unique" });
+    }
 
-  const ordered = steps.every((step, index) => STUDY_STEP_ORDER[index] === step);
-  if (!ordered) {
-    ctx.addIssue({ code: "custom", message: "Completed study steps must be an ordered prefix" });
-  }
-});
+    const ordered = steps.every((step, index) => STUDY_STEP_ORDER[index] === step);
+    if (!ordered) {
+      ctx.addIssue({ code: "custom", message: "Completed study steps must be an ordered prefix" });
+    }
+  });
 
 export const mutationAckSchema = z.object({ ok: z.literal(true) });
-export type MutationAck = z.infer<typeof mutationAckSchema>;

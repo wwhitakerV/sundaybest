@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { apiIdSchema, isoDateTimeSchema, planLengthSchema } from "./common";
 
-export const planGenerationStatusSchema = z.enum([
+const planGenerationStatusSchema = z.enum([
   "validating",
   "preparing",
   "processingSermon",
@@ -13,7 +13,7 @@ export const planGenerationStatusSchema = z.enum([
   "failed",
 ]);
 
-export const planGenerationErrorSchema = z.object({
+const planGenerationErrorSchema = z.object({
   code: z.enum([
     "invalidLink",
     "unsupportedSource",
@@ -25,7 +25,7 @@ export const planGenerationErrorSchema = z.object({
   message: z.string().min(1).max(1000),
 });
 
-export const planGenerationSchema = z.object({
+const planGenerationSchema = z.object({
   id: apiIdSchema,
   planId: apiIdSchema,
   sermonId: apiIdSchema.nullable(),

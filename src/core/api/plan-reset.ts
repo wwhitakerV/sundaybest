@@ -1,18 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { LOCAL_ANSWERS, LOCAL_ANSWER_COUNTS } from "@/core/storage/reflection-answer-queries";
 import { deleteReflectionAnswers } from "@/core/storage/reflection-answers";
-import { listPlansResponseSchema, type ApiPlanSummary } from "./contracts";
+import { listPlansResponseSchema } from "./contracts";
 import { createIdempotencyKey } from "./idempotency";
 import { offlineCacheKeys, persistServerCache } from "./offline-cache";
-import { useCurrentUserQuery } from "./queries";
+import { useCurrentUserQuery } from "./reader-queries";
+import type { PlansEnvelope } from "./query-cache-sync";
 import { apiQueryKeys } from "./query-keys";
 import { useSundayBestApi } from "./ApiProvider";
-
-type PlansEnvelope = { plans: ApiPlanSummary[] };
-
-/** The device-only reflection answers' cache roots (`useReflectionAnswers`). */
-const LOCAL_ANSWERS = ["local", "reflection-answers"] as const;
-const LOCAL_ANSWER_COUNTS = ["local", "reflection-answer-count"] as const;
 
 /**
  * Resets a plan for this reader: the server takes it back to not started —

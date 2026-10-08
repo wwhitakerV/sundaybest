@@ -1,6 +1,6 @@
 import { Alert } from "react-native";
 
-import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/queries";
+import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/reader-queries";
 import type { BibleTranslation } from "@/types/domain";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SettingsChoiceList } from "../components/SettingsChoiceList";
@@ -26,7 +26,7 @@ export function BibleTranslationScreen() {
 
   return (
     <SettingsSubpage testID="bible-translation" title="Bible translation">
-      <SFProBody tone="textMuted">
+      <SFProBody tone="textSupporting">
         Scripture in your plans will use this translation whenever that text is available.
       </SFProBody>
       <SettingsChoiceList

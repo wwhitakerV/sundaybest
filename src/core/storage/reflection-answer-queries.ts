@@ -1,19 +1,27 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useCurrentUserQuery } from "@/core/api/queries";
+import { useCurrentUserQuery } from "@/core/api/reader-queries";
 import {
   countReflectionAnswers,
   getReflectionAnswers,
   saveReflectionAnswer,
   type LocalReflectionAnswer,
-} from "@/core/storage/reflection-answers";
+} from "./reflection-answers";
+
+/**
+ * The device-only reflection answers, read and written through TanStack
+ * Query so the Daily Study and Plan Complete see one copy. These are the
+ * cache roots; a plan reset clears everything under them.
+ */
+export const LOCAL_ANSWERS = ["local", "reflection-answers"] as const;
+export const LOCAL_ANSWER_COUNTS = ["local", "reflection-answer-count"] as const;
 
 function answersKey(userId: string | null, ids: readonly string[]) {
-  return ["local", "reflection-answers", userId ?? "no-user", ...ids] as const;
+  return [...LOCAL_ANSWERS, userId ?? "no-user", ...ids] as const;
 }
 
 function countRoot(userId: string | null) {
-  return ["local", "reflection-answer-count", userId ?? "no-user"] as const;
+  return [...LOCAL_ANSWER_COUNTS, userId ?? "no-user"] as const;
 }
 
 function countKey(userId: string | null, ids: readonly string[]) {

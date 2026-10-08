@@ -5,7 +5,7 @@ import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { PlansSkeleton } from "../components/PlansSkeleton";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
-import { FILTER_PILLS_HEIGHT, FilterPills } from "@/ui/molecules/FilterPills";
+import { FilterPills } from "@/ui/molecules/FilterPills";
 import { TitleHeader } from "@/ui/molecules/TitleHeader";
 import { space } from "@/theme";
 import { LibraryPlanCard } from "../components/LibraryPlanCard";
@@ -30,7 +30,7 @@ export function PlansScreen() {
     <ListScreen
       testID="plans-screen"
       // Fades across the filters' row and a little past it, mostly clear by the header's edge.
-      headerFade={{ kind: "soft", reach: FILTER_PILLS_HEIGHT }}
+      headerFade="edge"
       // Solid behind the title and filters: the plans never show through them.
       solidHeader
       header={

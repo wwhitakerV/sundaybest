@@ -19,7 +19,7 @@ import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
  * version at the foot. Its title stays pinned, as Plans' and Progress' do.
  */
 export function SettingsScreen() {
-  const { sections, version, loading, failed, retry, open } = useSettingsView();
+  const { sections, loading, failed, retry, open } = useSettingsView();
 
   return (
     <ScrollScreen
@@ -50,23 +50,13 @@ export function SettingsScreen() {
           <Button testID="settings-retry" label="Try again" variant="secondary" onPress={retry} />
         </View>
       ) : null}
-      {version && (
-        <MonoBody
-          variant="supporting"
-          tone="textMuted"
-          style={styles.centred}
-          testID="settings-version"
-        >
-          {`SundayBest ${version}`}
-        </MonoBody>
-      )}
     </ScrollScreen>
   );
 }
 
 const styles = StyleSheet.create({
   // From the title to the first group, as far as Progress keeps its content from its title.
-  content: { gap: space[32], paddingTop: space[8], paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
+  content: { paddingBottom: FLOATING_NAV_BAR_CLEARANCE },
   groups: { gap: space[32] },
   centred: { textAlign: "center" },
   error: { gap: space[16] },

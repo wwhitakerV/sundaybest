@@ -1,8 +1,9 @@
-import { StyleSheet, Switch } from "react-native";
+import { StyleSheet } from "react-native";
 import { ListChecks } from "lucide-react-native";
 
 import { space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
+import { Toggle } from "@/ui/atoms/Toggle";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
 export type QuickCheckToggleProps = {
@@ -21,13 +22,11 @@ export function QuickCheckToggle({ value, onChange, testID }: QuickCheckTogglePr
       <SFProBody variant="listItem" style={styles.label}>
         Add a quick check quiz
       </SFProBody>
-      <Switch
+      <Toggle
         testID={testID}
         value={value}
         onValueChange={onChange}
         accessibilityLabel="Add a quick check quiz"
-        trackColor={{ true: theme.colors.controlPrimary, false: theme.colors.divider }}
-        ios_backgroundColor={theme.colors.divider}
       />
     </Card>
   );

@@ -1,5 +1,8 @@
 import { toApiError } from "../../api/api-error";
-import { buildRequestAssertionPayload, type RequestAssertionBinding } from "../../api/request-binding";
+import {
+  buildRequestAssertionPayload,
+  type RequestAssertionBinding,
+} from "../../api/request-binding";
 import type { SecureStorage } from "../secure-storage/secure-storage";
 import type {
   AppAttestDevice,

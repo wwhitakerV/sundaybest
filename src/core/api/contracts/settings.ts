@@ -13,7 +13,7 @@ import {
   weekdayListSchema,
 } from "./common";
 
-export const userSettingsSchema = z.object({
+const userSettingsSchema = z.object({
   userId: apiIdSchema,
   theme: themePreferenceSchema,
   textSize: textSizeSchema,
@@ -44,7 +44,7 @@ export const updateSettingsRequestSchema = z
 
 export const reminderKindSchema = z.enum(["dailyStudy", "quickCheck"]);
 
-export const reminderSchema = z.object({
+const reminderSchema = z.object({
   id: apiIdSchema,
   userId: apiIdSchema,
   kind: reminderKindSchema,

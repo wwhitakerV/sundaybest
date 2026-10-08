@@ -1,7 +1,7 @@
 import type { z } from "zod";
 
 import type { AttestationApi } from "../security/attestation/attestation";
-import type { SessionApi } from "../security/session/session";
+import type { SessionApi } from "../security/session/session-types";
 import type { DevelopmentSessionApi } from "../security/session/development-session";
 import { ApiError } from "./api-error";
 import { getDeviceTimeZone } from "../time/device-timezone";

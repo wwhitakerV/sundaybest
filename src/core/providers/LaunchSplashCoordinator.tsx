@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 
-import { useCurrentUserQuery, usePlansQuery, useUserSettingsQuery } from "@/core/api/queries";
+import { useCurrentUserQuery, useUserSettingsQuery } from "@/core/api/reader-queries";
+import { usePlansQuery } from "@/core/api/plan-queries";
 import {
   getMeResponseSchema,
   getSettingsResponseSchema,

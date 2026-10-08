@@ -9,11 +9,11 @@ import {
 } from "./common";
 import { sermonSummarySchema } from "./sermons";
 
-export const planStatusSchema = z.enum(["ready", "active", "completed", "archived"]);
-export const planDayStatusSchema = z.enum(["locked", "available", "inProgress", "completed"]);
-export const quickCheckStatusSchema = z.enum(["notStarted", "inProgress", "completed"]);
+const planStatusSchema = z.enum(["ready", "active", "completed", "archived"]);
+const planDayStatusSchema = z.enum(["locked", "available", "inProgress", "completed"]);
+const quickCheckStatusSchema = z.enum(["notStarted", "inProgress", "completed"]);
 
-export const quickCheckStandingSchema = z.object({
+const quickCheckStandingSchema = z.object({
   id: apiIdSchema,
   status: quickCheckStatusSchema,
   questionCount: z.number().int().nonnegative(),
@@ -21,13 +21,13 @@ export const quickCheckStandingSchema = z.object({
   correctCount: z.number().int().nonnegative(),
 });
 
-export const planProgressSchema = z.object({
+const planProgressSchema = z.object({
   completedDays: z.number().int().nonnegative(),
   currentDayNumber: z.number().int().min(1).max(7).nullable(),
   percentage: z.number().int().min(0).max(100),
 });
 
-export const planCurrentDaySchema = z.object({
+const planCurrentDaySchema = z.object({
   id: apiIdSchema,
   dayNumber: z.number().int().min(1).max(7),
   title: z.string().min(1).max(300),
@@ -57,7 +57,7 @@ export const planSummarySchema = z.object({
   updatedAt: isoDateTimeSchema,
 });
 
-export const sermonClipSchema = z.object({
+const sermonClipSchema = z.object({
   startSeconds: z.number().nonnegative(),
   endSeconds: z.number().nonnegative().nullable(),
 });
@@ -107,7 +107,7 @@ export const planDayProgressSchema = z.object({
   completedAt: isoDateTimeSchema.nullable(),
 });
 
-export const planDaySummarySchema = z.object({
+const planDaySummarySchema = z.object({
   id: apiIdSchema,
   dayNumber: z.number().int().min(1).max(7),
   estimatedMinutes: z.number().int().positive(),
@@ -121,7 +121,7 @@ export const planDaySummarySchema = z.object({
 });
 
 /** A Scripture the sermon names. Verse bounds are null when it names only the chapter. */
-export const planScriptureCitationSchema = z.object({
+const planScriptureCitationSchema = z.object({
   reference: z.string().min(1).max(100),
   book: z.string().min(1).max(80),
   chapter: z.number().int().positive(),
@@ -130,7 +130,7 @@ export const planScriptureCitationSchema = z.object({
 });
 
 /** Plan Overview's About This Plan section. Null for plans generated before it existed. */
-export const planAboutSchema = z.object({
+const planAboutSchema = z.object({
   overview: z.array(z.string().min(1)).min(1),
   scripturesReferenced: z.array(planScriptureCitationSchema),
   keyTakeaways: z.array(z.string().min(1)).min(1),

@@ -1,10 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
 
 import { NEW_PLAN_HREF, parsePlanParams, planOverviewHref } from "@/entities/plan";
-import { usePlanQuery } from "@/core/api/queries";
+import { usePlanQuery } from "@/core/api/plan-queries";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { tapFeedback } from "@/core/haptics/haptics";
-import { useReflectionAnswerCount } from "./use-reflection-answers";
+import { useReflectionAnswerCount } from "@/core/storage/reflection-answer-queries";
 
 /** The completed plan's real server summary plus private device-only note count. */
 export function usePlanComplete() {

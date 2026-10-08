@@ -7,7 +7,7 @@ import {
   useCurrentGenerationsQuery,
   useDismissGenerationMutation,
 } from "@/core/api/generation-queries";
-import { usePlansQuery } from "@/core/api/queries";
+import { usePlansQuery } from "@/core/api/plan-queries";
 
 function useBar() {
   return { current: useCurrentGenerationsQuery(), dismiss: useDismissGenerationMutation() };

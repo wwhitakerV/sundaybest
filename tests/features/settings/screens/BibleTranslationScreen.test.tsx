@@ -6,6 +6,7 @@ import type * as ExpoRouter from "expo-router";
 import { API_URL, someSettings } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
 import { BibleTranslationScreen } from "@/features/settings/screens/BibleTranslationScreen";
+import { lightTheme } from "@/theme/tokens";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -42,6 +43,14 @@ describe("BibleTranslationScreen", () => {
         "Scripture in your plans will use this translation whenever that text is available.",
       ),
     ).toBeVisible();
+  });
+
+  it("sets what the choice changes in the darker supporting grey", () => {
+    render(<BibleTranslationScreen />);
+
+    expect(screen.getByText(/Scripture in your plans will use this translation/)).toHaveStyle({
+      color: lightTheme.colors.textSupporting,
+    });
   });
 
   it("marks the translation the reader chose", async () => {

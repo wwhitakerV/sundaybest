@@ -2,13 +2,13 @@ import type { SermonPreview } from "../data/search-sermons";
 import type { PlanLength } from "@/types/domain";
 
 /** The two ways a sermon can enter the first step. */
-export type SermonInputMode = "paste" | "search";
+type SermonInputMode = "paste" | "search";
 
 /** The link checked on the first step, and the sermon it points to. */
 export type CheckedLink = { sermonId: string; url: string; sermon: SermonPreview };
 
 /** A search row is only a selection until Continue explicitly commits it. */
-export type SearchSelection = { id: string; checked: CheckedLink };
+type SearchSelection = { id: string; checked: CheckedLink };
 
 type Shared = {
   link: string;

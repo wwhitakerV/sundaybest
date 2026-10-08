@@ -1,10 +1,10 @@
 import { useRouter } from "expo-router";
 
 import { planCompleteHref, planOverviewHref } from "@/entities/plan";
-import { useProgressQuery, useRemindersQuery } from "@/core/api/queries";
+import { useProgressQuery, useRemindersQuery } from "@/core/api/reader-queries";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { useToday } from "@/core/store";
-import { getWeekStartSunday } from "@/features/progress/logic/week";
+import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { describeStreak, describeUpNextTime } from "../logic/day-complete";
 import { useStudyRoute } from "./use-study-route";
 

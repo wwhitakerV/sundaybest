@@ -26,17 +26,9 @@ export const resolveSermonRequestSchema = z
 
 export const resolveSermonResponseSchema = z.object({ sermon: sermonSummarySchema });
 
-export const searchSermonsQuerySchema = z
-  .object({
-    q: z.string().trim().min(2).max(120),
-    limit: z.coerce.number().int().min(1).max(20).default(10),
-  })
-  .strict();
-
 export const searchSermonsResponseSchema = z.object({
   sermons: z.array(sermonSummarySchema),
 });
 
 export type ApiSermonSummary = z.infer<typeof sermonSummarySchema>;
 export type ResolveSermonRequest = z.infer<typeof resolveSermonRequestSchema>;
-export type SearchSermonsQuery = z.infer<typeof searchSermonsQuerySchema>;

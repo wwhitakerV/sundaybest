@@ -1,6 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 
-import { usePlanQuery, useStudyDayQuery } from "@/core/api/queries";
+import { usePlanQuery } from "@/core/api/plan-queries";
+import { useStudyDayQuery } from "@/core/api/study-queries";
 import { parseStudyParams } from "@/entities/plan";
 
 /**

@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import { isRunningInExpoGo } from "expo";
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 import { env } from "../config/env";
 import { flags } from "../config/flags";
@@ -14,7 +14,8 @@ import {
 import { createIntegrityState, type IntegrityState } from "../security/integrity/policy";
 import { createExpoSecureStorage } from "../security/secure-storage/expo-secure-storage";
 import { createDevelopmentSessionManager } from "../security/session/development-session";
-import { createSessionManager, type SessionManager } from "../security/session/session";
+import { createSessionManager } from "../security/session/session";
+import type { SessionManager } from "../security/session/session-types";
 import { createBootstrapApi } from "./bootstrap-api";
 import { createApiClient } from "./client";
 import { resolveApiBaseUrl } from "./resolve-api-url";
@@ -22,7 +23,7 @@ import { createSundayBestApi } from "./sundaybest-api";
 
 export type SundayBestApi = ReturnType<typeof createSundayBestApi>;
 
-export type ApiRuntime = {
+type ApiRuntime = {
   api: SundayBestApi;
   session: SessionManager;
   integrity: IntegrityState;
@@ -33,7 +34,8 @@ export type ApiRuntime = {
 const ApiRuntimeContext = createContext<ApiRuntime | null>(null);
 
 export function ApiProvider({ children }: { children: ReactNode }) {
-  const runtime = useMemo(createRuntime, []);
+  // Created once for the life of the provider.
+  const [runtime] = useState(createRuntime);
 
   return (
     <ApiRuntimeContext.Provider value={runtime}>
@@ -46,7 +48,7 @@ export function ApiProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useApiRuntime(): ApiRuntime {
+function useApiRuntime(): ApiRuntime {
   const runtime = useContext(ApiRuntimeContext);
 
   if (!runtime) {
@@ -159,21 +161,11 @@ function getIntegrityConfig(): {
 }
 
 const disabledAttestation: Attestation = {
-  async attest() {
-    return {
-      status: "disabled",
-    };
-  },
+  attest: () => Promise.resolve({ status: "disabled" }),
 
-  async createAssertion() {
-    return {
-      status: "disabled",
-    };
-  },
+  createAssertion: () => Promise.resolve({ status: "disabled" }),
 
-  async reset() {
-    return Promise.resolve();
-  },
+  reset: () => Promise.resolve(),
 };
 
 declare const require: (path: string) => {

@@ -40,7 +40,6 @@ export function updateReminderTime(
   };
 }
 
-
 export function updateReminderDays(
   state: AppState,
   action: Action<"settings/reminderDays">,
@@ -51,7 +50,8 @@ export function updateReminderDays(
   const unique = allowed.filter((day) => action.days.includes(day));
   if (unique.length === 0) return state;
   const unchanged =
-    unique.length === reminder.days.length && unique.every((day, index) => reminder.days[index] === day);
+    unique.length === reminder.days.length &&
+    unique.every((day, index) => reminder.days[index] === day);
   if (unchanged) return state;
   return {
     ...state,
@@ -111,7 +111,6 @@ export function updateReadingPaper(
     settings: { ...state.settings, readingPaper: action.paper, updatedAt: action.at },
   };
 }
-
 
 export function updateTheme(state: AppState, action: Action<"settings/theme">): AppState {
   if (state.settings.theme === action.theme) return state;

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { ApiPlanDetail } from "@/core/api/contracts";
-import { usePlanQuery, useStartPlanMutation } from "@/core/api/queries";
+import { usePlanQuery, useStartPlanMutation } from "@/core/api/plan-queries";
 import {
   PLANS_HREF,
   describePlanHero,

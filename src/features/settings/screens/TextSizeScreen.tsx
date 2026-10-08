@@ -1,11 +1,16 @@
 import { Alert, StyleSheet, View } from "react-native";
 
-import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/queries";
+import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/reader-queries";
 import { radius, space, useTheme } from "@/theme";
 import type { TextSize } from "@/types/domain";
+import { PassageCard, PassageHeading } from "@/entities/scripture";
+import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
+import { Span } from "@/ui/typography/Span";
 import { SettingsChoiceList, type SettingsChoice } from "../components/SettingsChoiceList";
 import { SettingsSubpage } from "../components/SettingsSubpage";
+import { DEFAULT_BIBLE_TRANSLATION } from "../logic/bible-translations";
+import { previewPassage } from "../logic/text-size-preview";
 
 const SIZES: readonly SettingsChoice<TextSize>[] = [
   { value: "small", label: "Small" },
@@ -19,6 +24,9 @@ export function TextSizeScreen() {
   const settingsQuery = useUserSettingsQuery();
   const update = useUpdateSettingsMutation();
   const value = settingsQuery.data?.settings.textSize ?? "default";
+  const passage = previewPassage(
+    settingsQuery.data?.settings.bibleTranslation ?? DEFAULT_BIBLE_TRANSLATION,
+  );
 
   function select(next: TextSize) {
     if (next === value || update.isPending) return;
@@ -40,16 +48,21 @@ export function TextSizeScreen() {
             backgroundColor: theme.colors.surface,
             borderColor: theme.colors.containerBorder,
             borderRadius: radius[24],
-            gap: space[8],
+            gap: space[12],
           },
         ]}
       >
         <SFProBody variant="label" tone="textMuted">
           PREVIEW
         </SFProBody>
-        <SFProBody variant="reading">
-          Your word is a lamp for my feet, a light on my path.
-        </SFProBody>
+        {/* As the Daily Study sets Scripture: its heading, then the verse on its card. */}
+        <PassageHeading reference={passage.reference} translation={passage.translation} />
+        <PassageCard testID="text-size-preview-verse">
+          <Span>
+            <MonoLabel variant="emphasis">{`${passage.verse} `}</MonoLabel>
+            {passage.text}
+          </Span>
+        </PassageCard>
       </View>
       <SettingsChoiceList
         testID="text-size-options"
@@ -58,8 +71,9 @@ export function TextSizeScreen() {
         onChange={select}
         disabled={settingsQuery.isPending}
       />
-      <SFProBody variant="detail" tone="textMuted">
-        This changes text throughout SundayBest. Daily Study also keeps its separate reading-size control.
+      <SFProBody variant="detail" tone="textSupporting">
+        This changes text throughout SundayBest. Daily Study also keeps its separate reading-size
+        control.
       </SFProBody>
     </SettingsSubpage>
   );

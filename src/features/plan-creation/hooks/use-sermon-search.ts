@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useSundayBestApi } from "@/core/api/ApiProvider";
-import {
-  toSermonSearchResult,
-  type SermonSearchResult,
-} from "../data/search-sermons";
+import { toSermonSearchResult, type SermonSearchResult } from "../data/search-sermons";
 import {
   haveSameSermonSearchResults,
   normalizeSermonSearchQuery,
@@ -14,124 +11,105 @@ import {
   type SermonSearchStatus,
 } from "../logic/sermon-search";
 
-type SermonSearchState = {
-  results: readonly SermonSearchResult[];
-  status: SermonSearchStatus;
+type Rows = readonly SermonSearchResult[];
+
+type SearchState = {
+  /** The rows on screen, kept while a new search waits or runs. */
+  shown: Rows;
+  /** The last search that answered, by its key: reused for the same words. */
+  completed: { key: string; results: Rows } | null;
+  /** The search out now, or the one that failed, by its key. */
+  pending: { key: string; status: "searching" | "error" } | null;
 };
+
+const NO_ROWS: Rows = [];
+const NOTHING_YET: SearchState = { shown: NO_ROWS, completed: null, pending: null };
+
+/** The same rows, if a search found the same sermons in the same order, so nothing re-renders. */
+const keepSame = (current: Rows, next: Rows): Rows =>
+  haveSameSermonSearchResults(current, next) ? current : next;
 
 /**
  * Search timing and presentation state for the real SundayBest sermon API.
  * Existing rows stay mounted while a new query is in flight so typing never
  * blanks the results area between requests.
+ *
+ * What the reader sees — idle, waiting, a reused result — is worked out from
+ * the query as it renders; the effect only times the search.
  */
 export function useSermonSearch(query: string, enabled: boolean) {
   const api = useSundayBestApi();
-  const [search, setSearch] = useState<SermonSearchState>({
-    results: [],
-    status: "idle",
-  });
+  const [state, setState] = useState<SearchState>(NOTHING_YET);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
   const inFlightKeyRef = useRef<string | null>(null);
-  const completedKeyRef = useRef<string | null>(null);
-  const completedResultsRef = useRef<readonly SermonSearchResult[]>([]);
+
+  const normalized = normalizeSermonSearchQuery(query);
+  const key = sermonSearchQueryKey(normalized);
+  const tooShort = normalized.length < SERMON_SEARCH_MIN_CHARACTERS;
+  const completedKey = state.completed?.key ?? null;
+
+  const view: { results: Rows; status: SermonSearchStatus } =
+    !enabled || tooShort
+      ? { results: NO_ROWS, status: "idle" }
+      : state.completed && completedKey === key
+        ? { results: keepSame(state.shown, state.completed.results), status: "ready" }
+        : state.pending?.key === key
+          ? { results: state.shown, status: state.pending.status }
+          : { results: state.shown, status: "waiting" };
+
+  // Words too short forget the last search; switched off only clears the rows.
+  const forget = enabled && tooShort && state.completed !== null;
+  if (view.results !== state.shown || forget) {
+    setState({
+      ...state,
+      shown: view.results,
+      completed: forget ? null : state.completed,
+    });
+  }
 
   const runSearch = useCallback(
-    async (rawQuery: string) => {
-      const normalized = normalizeSermonSearchQuery(rawQuery);
-      const key = sermonSearchQueryKey(normalized);
-
-      if (normalized.length < SERMON_SEARCH_MIN_CHARACTERS) {
-        requestIdRef.current += 1;
-        inFlightKeyRef.current = null;
-        completedKeyRef.current = null;
-        completedResultsRef.current = [];
-        setSearch({ results: [], status: "idle" });
-        return;
-      }
-
-      if (key === inFlightKeyRef.current) return;
-      if (key === completedKeyRef.current) {
-        setSearch((current) => ({
-          results: haveSameSermonSearchResults(
-            current.results,
-            completedResultsRef.current,
-          )
-            ? current.results
-            : completedResultsRef.current,
-          status: "ready",
-        }));
-        return;
-      }
+    async (words: string, searchKey: string) => {
+      if (searchKey === inFlightKeyRef.current) return;
 
       const requestId = requestIdRef.current + 1;
       requestIdRef.current = requestId;
-      inFlightKeyRef.current = key;
-      setSearch((current) => ({ ...current, status: "searching" }));
+      inFlightKeyRef.current = searchKey;
+      setState((current) => ({ ...current, pending: { key: searchKey, status: "searching" } }));
 
       try {
-        const response = await api.sermons.search(normalized);
+        const response = await api.sermons.search(words);
         if (requestId !== requestIdRef.current) return;
 
-        const results = response.sermons.map(toSermonSearchResult);
         inFlightKeyRef.current = null;
-        completedKeyRef.current = key;
-        completedResultsRef.current = results;
-        setSearch((current) => ({
-          results: haveSameSermonSearchResults(current.results, results)
-            ? current.results
-            : results,
-          status: "ready",
-        }));
+        const results = response.sermons.map(toSermonSearchResult);
+        setState((current) => {
+          const rows = keepSame(current.shown, results);
+          return { shown: rows, completed: { key: searchKey, results: rows }, pending: null };
+        });
       } catch {
         if (requestId !== requestIdRef.current) return;
         inFlightKeyRef.current = null;
-        setSearch((current) => ({ ...current, status: "error" }));
+        setState((current) => ({ ...current, pending: { key: searchKey, status: "error" } }));
       }
     },
     [api],
   );
 
+  const searchable = enabled && !tooShort && key !== completedKey;
+
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    if (!enabled) {
-      requestIdRef.current += 1;
-      inFlightKeyRef.current = null;
-      setSearch({ results: [], status: "idle" });
-      return;
-    }
-
-    const normalized = normalizeSermonSearchQuery(query);
-    const key = sermonSearchQueryKey(normalized);
-
+    // Any change makes a search already out stale.
     requestIdRef.current += 1;
     inFlightKeyRef.current = null;
 
-    if (normalized.length < SERMON_SEARCH_MIN_CHARACTERS) {
-      completedKeyRef.current = null;
-      completedResultsRef.current = [];
-      setSearch({ results: [], status: "idle" });
-      return;
-    }
+    if (!searchable) return;
 
-    if (key === completedKeyRef.current) {
-      setSearch((current) => ({
-        results: haveSameSermonSearchResults(
-          current.results,
-          completedResultsRef.current,
-        )
-          ? current.results
-          : completedResultsRef.current,
-        status: "ready",
-      }));
-      return;
-    }
-
-    setSearch((current) => ({ ...current, status: "waiting" }));
     timeoutRef.current = setTimeout(() => {
       timeoutRef.current = null;
-      void runSearch(normalized);
+      void runSearch(normalized, key);
     }, SERMON_SEARCH_DEBOUNCE_MS);
 
     return () => {
@@ -140,7 +118,8 @@ export function useSermonSearch(query: string, enabled: boolean) {
         timeoutRef.current = null;
       }
     };
-  }, [enabled, query, runSearch]);
+    // `query` too, not just its key: any keystroke restarts the wait, as typing should.
+  }, [query, searchable, normalized, key, runSearch]);
 
   const submit = useCallback(() => {
     if (!enabled) return;
@@ -148,12 +127,12 @@ export function useSermonSearch(query: string, enabled: boolean) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-    void runSearch(query);
-  }, [enabled, query, runSearch]);
+    if (searchable) void runSearch(normalized, key);
+  }, [enabled, searchable, normalized, key, runSearch]);
 
   return {
-    results: search.results,
-    status: search.status,
+    results: view.results,
+    status: view.status,
     submit,
   };
 }

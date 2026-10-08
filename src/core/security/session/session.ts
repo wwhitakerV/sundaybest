@@ -1,12 +1,12 @@
 import { toApiError } from "../../api/api-error";
+import { sessionCredentialsSchema, type SessionCredentials } from "../../api/contracts/attestation";
 import {
-  sessionCredentialsSchema,
-  type BootstrapSessionRequest,
-  type RefreshRequest,
-  type SessionCredentials,
-} from "../../api/contracts/attestation";
-import type { Attestation, FailureCode } from "../attestation/attestation";
-import type { SecureStorage } from "../secure-storage/secure-storage";
+  assertionFailureToSession,
+  attestFailureToSession,
+  requestFailureToSession,
+  type AssertionOk,
+} from "./session-results";
+import type { SessionDeps, SessionManager, SessionResult } from "./session-types";
 
 const REFRESH_KEY = "session.refreshToken";
 
@@ -18,45 +18,6 @@ const REFRESH_KEY = "session.refreshToken";
  * spurious 401s into a refresh nobody notices.
  */
 const EXPIRY_SKEW_MS = 60_000;
-
-export type SessionResult =
-  | { status: "ok"; accessToken: string }
-  /** Session bootstrap could not recover a usable attested install. */
-  | { status: "needs-attestation" }
-  /** Attestation cannot run here at all, so there will never be a session. */
-  | { status: "unavailable"; reason: "disabled" | "unsupported" }
-  | { status: "transient"; code: FailureCode }
-  | { status: "rejected"; code: FailureCode };
-
-export interface SessionApi {
-  refresh(request: RefreshRequest): Promise<SessionCredentials>;
-  bootstrap(request: BootstrapSessionRequest): Promise<SessionCredentials>;
-}
-
-export interface SessionManager {
-  /** A usable access token, refreshing first if the current one is stale. */
-  getAccessToken(): Promise<SessionResult>;
-
-  /** Seeds the session from the credentials `attestation.attest()` returned. */
-  adopt(credentials: SessionCredentials): Promise<void>;
-
-  /**
-   * Drops everything: the in-memory token, the stored refresh token, and any
-   * refresh in flight. Called when tampering or an integrity failure is
-   * detected — the app should not be holding anything that keeps it talking to
-   * the backend.
-   */
-  clear(): Promise<void>;
-}
-
-export interface SessionDeps {
-  api: SessionApi;
-  attestation: Attestation;
-  secureStorage: SecureStorage;
-  /** Injected so expiry is testable without fake timers. */
-  now?: () => number;
-  skewMs?: number;
-}
 
 interface ActiveToken {
   accessToken: string;
@@ -124,23 +85,6 @@ export function createSessionManager({
     }
   }
 
-  function assertionFailureToSession(
-    result: Exclude<Awaited<ReturnType<Attestation["createAssertion"]>>, { status: "ok" }>,
-  ): SessionResult {
-    switch (result.status) {
-      case "needs-attestation":
-        return { status: "needs-attestation" };
-      case "disabled":
-        return { status: "unavailable", reason: "disabled" };
-      case "unsupported":
-        return { status: "unavailable", reason: "unsupported" };
-      case "transient":
-        return { status: "transient", code: result.code };
-      case "rejected":
-        return { status: "rejected", code: result.code };
-    }
-  }
-
   /**
    * Gets fresh credentials without a refresh token. A valid existing App Attest
    * key proves the install through an assertion; a brand-new install performs
@@ -160,55 +104,34 @@ export function createSessionManager({
           // A key appeared between the assertion and attest calls (another
           // bootstrap won the race). Try the assertion path once more.
           break;
-        case "disabled":
-          return { status: "unavailable", reason: "disabled" };
-        case "unsupported":
-          return { status: "unavailable", reason: "unsupported" };
-        case "transient":
-          return { status: "transient", code: result.code };
-        case "rejected":
-          return { status: "rejected", code: result.code };
+        default:
+          return attestFailureToSession(result);
       }
 
       const retryAssertion = await attestation.createAssertion();
       if (retryAssertion.status !== "ok") return assertionFailureToSession(retryAssertion);
-      try {
-        const credentials = sessionCredentialsSchema.parse(
-          await api.bootstrap({
-            keyId: retryAssertion.keyId,
-            assertion: retryAssertion.assertion,
-            challenge: retryAssertion.challenge,
-          }),
-        );
-        if (generation !== expectedGeneration) return { status: "needs-attestation" };
-        await storeCredentials(credentials);
-        return { status: "ok", accessToken: credentials.accessToken };
-      } catch (cause) {
-        const error = toApiError(cause);
-        return error.retryable
-          ? { status: "transient", code: error.code }
-          : { status: "rejected", code: error.code };
-      }
+      return exchangeAssertion(retryAssertion, expectedGeneration);
     }
 
     if (assertion.status !== "ok") return assertionFailureToSession(assertion);
 
+    return exchangeAssertion(assertion, expectedGeneration);
+  }
+
+  /** Trades an install's assertion for credentials, unless the session was cleared meanwhile. */
+  async function exchangeAssertion(
+    { keyId, assertion, challenge }: AssertionOk,
+    expectedGeneration: number,
+  ): Promise<SessionResult> {
     try {
       const credentials = sessionCredentialsSchema.parse(
-        await api.bootstrap({
-          keyId: assertion.keyId,
-          assertion: assertion.assertion,
-          challenge: assertion.challenge,
-        }),
+        await api.bootstrap({ keyId, assertion, challenge }),
       );
       if (generation !== expectedGeneration) return { status: "needs-attestation" };
       await storeCredentials(credentials);
       return { status: "ok", accessToken: credentials.accessToken };
     } catch (cause) {
-      const error = toApiError(cause);
-      return error.retryable
-        ? { status: "transient", code: error.code }
-        : { status: "rejected", code: error.code };
+      return requestFailureToSession(toApiError(cause));
     }
   }
 
@@ -227,21 +150,11 @@ export function createSessionManager({
     // A fresh assertion every time. This is what a stolen refresh token lacks.
     const assertion = await attestation.createAssertion();
 
-    switch (assertion.status) {
-      case "needs-attestation":
-        await discardRefreshToken();
-        return bootstrap(startedAt);
-      case "disabled":
-        return { status: "unavailable", reason: "disabled" };
-      case "unsupported":
-        return { status: "unavailable", reason: "unsupported" };
-      case "transient":
-        return { status: "transient", code: assertion.code };
-      case "rejected":
-        return { status: "rejected", code: assertion.code };
-      case "ok":
-        break;
+    if (assertion.status === "needs-attestation") {
+      await discardRefreshToken();
+      return bootstrap(startedAt);
     }
+    if (assertion.status !== "ok") return assertionFailureToSession(assertion);
 
     let credentials: SessionCredentials;
     try {
@@ -267,9 +180,7 @@ export function createSessionManager({
         return bootstrap(startedAt);
       }
 
-      return error.retryable
-        ? { status: "transient", code: error.code }
-        : { status: "rejected", code: error.code };
+      return requestFailureToSession(error);
     }
 
     // The session was cleared while this was in flight. Honour that.

@@ -73,14 +73,12 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
                 onPress={() => onOpen(row)}
                 style={[styles.row, { gap: space[16], paddingHorizontal: space[16] }]}
               >
+                {/* On the group's own grey: no square of its own, which only added weight. */}
                 <View
-                  style={[
-                    styles.badge,
-                    {
-                      backgroundColor: theme.colors.segmentBackground,
-                      borderRadius: radius[10],
-                    },
-                  ]}
+                  testID={`${row.testID}-icon`}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  style={styles.badge}
                 >
                   <Icon
                     size={ICON_SIZE}

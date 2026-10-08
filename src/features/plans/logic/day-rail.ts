@@ -1,4 +1,4 @@
-import type { IsoDate, PlanDay, StudyStep } from "@/types/domain";
+import type { PlanDay, StudyStep } from "@/types/domain";
 import { formatShortDate } from "@/utils/dates/formatShortDate";
 import { STUDY_STEPS } from "./study-steps";
 import { formatDay } from "@/entities/plan";
@@ -8,20 +8,6 @@ import type { ApiQuickCheckStanding } from "@/core/api/contracts";
  * Plan Detail's days: a row of tiles — where you are at a glance — and, for
  * the day picked, its four study steps and which are done, and its Quick Check.
  */
-
-/** Whether a scheduled day is still unavailable: future-dated or blocked by an earlier unfinished day. */
-export function isDayLockedForStudy(
-  day: Pick<PlanDay, "dayNumber" | "status" | "scheduledOn">,
-  days: readonly Pick<PlanDay, "dayNumber" | "status">[],
-  today: IsoDate,
-): boolean {
-  if (day.status !== "locked") return false;
-  const due = day.scheduledOn !== null && day.scheduledOn <= today;
-  if (!due) return true;
-  return days.some(
-    (candidate) => candidate.dayNumber < day.dayNumber && candidate.status !== "completed",
-  );
-}
 
 /** How a day's tile reads: its number, its date, its mark, and whether it's the day the plan's on. */
 export type DayTileLook = {

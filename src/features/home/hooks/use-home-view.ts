@@ -9,15 +9,11 @@ import {
   studyHref,
 } from "@/entities/plan";
 import { tapFeedback } from "@/core/haptics/haptics";
-import { usePlansQuery } from "@/core/api/queries";
+import { usePlansQuery } from "@/core/api/plan-queries";
 import { useToday } from "@/core/store";
 import { formatDotDate } from "@/utils/dates/formatDotDate";
-import {
-  getApiActivePlan,
-  getApiSamplePlan,
-  getApiUserPlans,
-} from "@/features/plans/logic/api-plan-collections";
-import { describeApiPlan } from "@/features/plans/logic/api-plan-wording";
+import { getApiActivePlan, getApiSamplePlan, getApiUserPlans } from "@/features/plans";
+import { describeApiPlan } from "@/features/plans";
 import { homePlanOverviewHref } from "../logic/routes";
 import { usePrefetch } from "@/core/api/prefetch";
 import { prefetchImages } from "@/core/images/prefetch-images";
