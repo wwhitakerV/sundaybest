@@ -24,6 +24,11 @@ type ScrollOptions = {
   automaticallyAdjustKeyboardInsets?: boolean;
   /** How far down it's scrolled, as it scrolls — for a page whose header changes with it. */
   onScroll?: (y: number) => void;
+  /**
+   * The page fits the screen and never scrolls (Progress): its content fills
+   * the space between the frame's ends, for a part of it to take what's left.
+   */
+  fixed?: boolean;
 };
 
 export type ScrollScreenProps = Omit<ScrollFrameProps, "children"> &
@@ -47,6 +52,7 @@ export function ScrollScreen({
   keyboardShouldPersistTaps,
   automaticallyAdjustKeyboardInsets,
   onScroll,
+  fixed,
   ...frame
 }: ScrollScreenProps) {
   return (
@@ -57,6 +63,7 @@ export function ScrollScreen({
         {...(keyboardShouldPersistTaps && { keyboardShouldPersistTaps })}
         {...(automaticallyAdjustKeyboardInsets && { automaticallyAdjustKeyboardInsets })}
         {...(onScroll && { onScroll })}
+        {...(fixed && { fixed })}
       >
         {children}
       </ClearedScroll>
@@ -76,6 +83,7 @@ function ClearedScroll({
   keyboardShouldPersistTaps,
   automaticallyAdjustKeyboardInsets,
   onScroll,
+  fixed = false,
 }: ScrollOptions & { testID: string; children: ReactNode }) {
   const clearance = useFrameClearance();
   const scroll = useRef<ScrollView>(null);
@@ -86,8 +94,9 @@ function ClearedScroll({
       ref={scroll}
       testID={`${testID}-scroll`}
       style={styles.scroll}
-      contentContainerStyle={[SCROLL_INSET, contentStyle]}
+      contentContainerStyle={[SCROLL_INSET, fixed && styles.fill, contentStyle]}
       showsVerticalScrollIndicator={false}
+      scrollEnabled={!fixed}
       {...(keyboardShouldPersistTaps && { keyboardShouldPersistTaps })}
       {...(automaticallyAdjustKeyboardInsets && { automaticallyAdjustKeyboardInsets })}
       {...(onScroll && {
@@ -105,4 +114,6 @@ function ClearedScroll({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
+  // A fixed page's content runs the full height between the ends.
+  fill: { flexGrow: 1 },
 });

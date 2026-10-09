@@ -189,7 +189,6 @@ export function PlanOverviewScreen() {
         <PlanMoreMenu
           open={view.more.open}
           onClose={view.more.close}
-          saved={view.more.saved}
           items={view.more.items}
           anchor={{
             top: navTop + NAV_BUTTON + MENU_GAP,

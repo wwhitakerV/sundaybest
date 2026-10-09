@@ -19,6 +19,7 @@ describe("SFProBody", () => {
     ["label", "label"],
     ["reading", "reading"],
     ["detail", "cardDetail"],
+    ["rowDetail", "rowDetail"],
     ["letter", "dayLetter"],
   ] as const)("sets the %s variant in the %s token", (variant, token) => {
     render(

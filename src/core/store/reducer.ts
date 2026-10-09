@@ -14,15 +14,7 @@ import {
   startPlanGeneration,
   updateGenerationStep,
 } from "./reducers/generation";
-import {
-  archivePlan,
-  completePlan,
-  createPlan,
-  removeSavedPlan,
-  savePlan,
-  startPlan,
-  updatePlan,
-} from "./reducers/plans";
+import { archivePlan, completePlan, createPlan, startPlan, updatePlan } from "./reducers/plans";
 import {
   completeQuizAttempt,
   moveToNextQuestion,
@@ -75,10 +67,6 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return completePlan(state, action);
     case "plan/archive":
       return archivePlan(state, action);
-    case "plan/save":
-      return savePlan(state, action);
-    case "plan/removeSaved":
-      return removeSavedPlan(state, action);
     case "plan/createAndBuild":
       return createAndBuildPlan(state, action);
 

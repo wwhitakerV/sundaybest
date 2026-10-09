@@ -8,6 +8,7 @@ import { Toggle } from "@/ui/atoms/Toggle";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { ReminderDays } from "../components/ReminderDays";
 import { ReminderTime } from "../components/ReminderTime";
+import { SettingsFootnote } from "../components/SettingsFootnote";
 import { SettingsSubpage } from "../components/SettingsSubpage";
 import { useDailyReminder } from "../hooks/use-daily-reminder";
 
@@ -18,11 +19,21 @@ export function DailyReminderScreen() {
   const view = useDailyReminder();
 
   return (
-    <SettingsSubpage testID="daily-reminder" title="Daily reminder">
+    <SettingsSubpage
+      testID="daily-reminder"
+      title="Daily reminder"
+      footnote={
+        view.enabled && (
+          <Reveal order={2}>
+            <SettingsFootnote text="Reminders are scheduled on this iPhone. Your time and day preferences stay synced with your SundayBest profile." />
+          </Reveal>
+        )
+      }
+    >
       <Card style={[styles.row, { gap: space[16], padding: space[18] }]}>
         <View style={[styles.copy, { gap: space[4] }]}>
-          <SFProBody variant="listItem">Daily study reminder</SFProBody>
-          <SFProBody variant="detail" tone="textSupporting">
+          <SFProBody>Daily study reminder</SFProBody>
+          <SFProBody variant="rowDetail" tone="textSupporting">
             A quiet nudge to return to today&apos;s study.
           </SFProBody>
         </View>
@@ -40,9 +51,7 @@ export function DailyReminderScreen() {
           <Reveal order={0}>
             <Section label="TIME">
               <Card style={[styles.row, { paddingHorizontal: space[18], minHeight: TIME_ROW }]}>
-                <SFProBody variant="listItem" style={styles.copy}>
-                  Remind me at
-                </SFProBody>
+                <SFProBody style={styles.copy}>Remind me at</SFProBody>
                 <ReminderTime
                   testID="daily-reminder-time"
                   time={view.time}
@@ -59,12 +68,6 @@ export function DailyReminderScreen() {
                 onToggle={view.toggleDay}
               />
             </Section>
-          </Reveal>
-          <Reveal order={2}>
-            <SFProBody variant="detail" tone="textSupporting">
-              Reminders are scheduled on this iPhone. Your time and day preferences stay synced with
-              your SundayBest profile.
-            </SFProBody>
           </Reveal>
         </>
       )}

@@ -3,22 +3,14 @@ import { formatShortDate } from "@/utils/dates/formatShortDate";
 import { STUDY_STEPS } from "./study-steps";
 import { formatDay } from "@/entities/plan";
 import type { ApiQuickCheckStanding } from "@/core/api/contracts";
+import type { DayTileLook } from "@/ui/molecules/DayTile";
 
 /**
  * Plan Detail's days: a row of tiles — where you are at a glance — and, for
  * the day picked, its four study steps and which are done, and its Quick Check.
  */
 
-/** How a day's tile reads: its number, its date, its mark, and whether it's the day the plan's on. */
-export type DayTileLook = {
-  number: number;
-  /** Its date, once the plan's schedule gives it one. */
-  date: string | null;
-  /** A check when done, a lock when not open yet — words never. */
-  mark: "done" | "locked" | null;
-  today: boolean;
-  accessibilityLabel: string;
-};
+export type { DayTileLook };
 
 /** A day's tile: done (a check), locked (a lock), or the day the plan's on (`currentDayNumber`) — and dated, once scheduled. */
 export function describeDayTile(

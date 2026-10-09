@@ -1,3 +1,4 @@
+import type { ApiQuizSession } from "@/core/api/contracts";
 import type { Id } from "@/types/domain";
 import type { QuestionResult, QuickCheckAnswerView, QuickCheckQuestionView } from "../types";
 import { getQuestionKicker, splitVersePrompt } from "./quick-check";
@@ -64,4 +65,31 @@ export function tallyQuizReview(items: readonly QuizReviewItem[]): {
     right: items.filter((item) => item.result === "correct").length,
     missed: items.filter((item) => item.result === "incorrect").length,
   };
+}
+
+/**
+ * A session's questions as the Quick Check shows them, each with its right
+ * answer and why once it's been answered.
+ */
+export function toQuestionViews(session: ApiQuizSession | null): QuickCheckQuestionView[] {
+  if (!session) return [];
+  const feedbackByQuestion = new Map(
+    session.answers.map((answer) => [answer.questionId, answer] as const),
+  );
+  return session.quiz.questions.map((question) => {
+    const feedback = feedbackByQuestion.get(question.id);
+    return {
+      ...question,
+      correctChoiceId: feedback?.correctChoiceId ?? null,
+      explanation: feedback?.explanation ?? null,
+    };
+  });
+}
+
+/** A review with what was missed first — each keeping its question's number. */
+export function missedFirst(items: readonly QuizReviewItem[]): QuizReviewItem[] {
+  return [
+    ...items.filter((item) => item.result === "incorrect"),
+    ...items.filter((item) => item.result !== "incorrect"),
+  ];
 }

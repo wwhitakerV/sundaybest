@@ -121,3 +121,37 @@ export async function countReflectionAnswers(
   const answers = await getReflectionAnswers(userId, reflectionIds);
   return Object.values(answers).filter(({ answer }) => answer.trim().length > 0).length;
 }
+
+/** How many private answers this user has written on this device, in all — Progress's "Your words". */
+export async function countAllReflectionAnswers(userId: string): Promise<number> {
+  const db = await getAppDatabase();
+  const rows = await db.query(
+    "SELECT COUNT(*) AS count FROM reflection_answers WHERE user_id = ? AND length(trim(answer)) > 0",
+    [userId],
+  );
+  const parsed = countRowSchema.safeParse(rows[0]);
+  return parsed.success ? parsed.data.count : 0;
+}
+
+const countRowSchema = z.object({ count: z.number().int().nonnegative() });
+
+/**
+ * Every private answer this user has written on this device, by question —
+ * read in one query, for a list too long to ask after one by one (Progress's
+ * weeks).
+ */
+export async function getAllReflectionAnswers(userId: string): Promise<Record<string, string>> {
+  const db = await getAppDatabase();
+  const rows = await db.query(
+    "SELECT reflection_id, answer, answered_at, updated_at FROM reflection_answers WHERE user_id = ?",
+    [userId],
+  );
+  const result: Record<string, string> = {};
+  for (const row of rows) {
+    const parsed = reflectionAnswerRowSchema.safeParse(row);
+    if (parsed.success && parsed.data.answer.trim().length > 0) {
+      result[parsed.data.reflection_id] = parsed.data.answer;
+    }
+  }
+  return result;
+}

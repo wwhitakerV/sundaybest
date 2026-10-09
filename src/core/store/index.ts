@@ -41,7 +41,6 @@ export {
   isExamResponseValid,
 } from "./exam-responses";
 export { getPlanGeneration, isGeneratingPlan } from "./selectors/generation";
-export { getLibraryItem, getLibraryItems, getLibraryPlans, isSaved } from "./selectors/library";
 export {
   getActivePlan,
   getCompletedPlans,

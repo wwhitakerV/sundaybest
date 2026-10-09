@@ -8,6 +8,7 @@ export { SettingsScreen } from "./screens/SettingsScreen";
 export { DailyReminderScreen } from "./screens/DailyReminderScreen";
 export { BibleTranslationScreen } from "./screens/BibleTranslationScreen";
 export { TextSizeScreen } from "./screens/TextSizeScreen";
+export { MeetTheCreatorScreen } from "./screens/MeetTheCreatorScreen";
 export { HowPlansAreMadeScreen } from "./screens/HowPlansAreMadeScreen";
 export { PrivacyPolicyScreen } from "./screens/PrivacyPolicyScreen";
 export { PrivacyTopicScreen } from "./screens/PrivacyTopicScreen";

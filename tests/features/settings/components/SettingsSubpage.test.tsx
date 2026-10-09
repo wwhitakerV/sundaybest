@@ -5,7 +5,8 @@ import type * as ExpoRouter from "expo-router";
 
 import { SettingsSubpage } from "@/features/settings/components/SettingsSubpage";
 import { space } from "@/theme";
-import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
+import { lightTheme } from "@/theme/tokens";
+import { getFloatingNavBarTop } from "@/ui/organisms/floatingNavBar";
 import { EDGE_FADE } from "@/ui/organisms/frame-edges";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
@@ -42,28 +43,52 @@ describe("SettingsSubpage", () => {
     expect(content.marginTop).toBe(-EDGE_FADE);
   });
 
-  it("ends a page with a hero 32pt sooner, still clear of the tab bar", () => {
-    render(
-      <SettingsSubpage testID="a-page" hero={{ overHero: true, onScroll: () => undefined }}>
-        <SFProBody>Body</SFProBody>
-      </SettingsSubpage>,
-    );
-
-    const content = StyleSheet.flatten(
-      screen.getByTestId("a-page-screen-scroll").props
-        .contentContainerStyle as StyleProp<ViewStyle>,
-    );
-    expect(content.paddingBottom).toBe(FLOATING_NAV_BAR_CLEARANCE);
-  });
-
-  it("ends its content clear of the floating tab bar, so nothing reads under it", () => {
+  it("ends its last line 24pt above the floating tab bar", () => {
     subpage();
 
     const content = StyleSheet.flatten(
       screen.getByTestId("a-page-screen-scroll").props
         .contentContainerStyle as StyleProp<ViewStyle>,
     );
-    expect(content.paddingBottom).toBe(FLOATING_NAV_BAR_CLEARANCE + space[32]);
+    const frameFoot = Number(
+      StyleSheet.flatten(
+        screen.getByTestId("a-page-screen-bottom-clearance").props.style as StyleProp<ViewStyle>,
+      ).height,
+    );
+    // The frame keeps clear of the home indicator and its fade: the inset, and the fade.
+    const insetBottom = frameFoot - EDGE_FADE;
+    expect(Number(content.paddingBottom) + frameFoot).toBe(
+      getFloatingNavBarTop(insetBottom) + space[24],
+    );
+  });
+
+  it("spaces its blocks apart, never its last block from the room under it", () => {
+    subpage();
+
+    const content = StyleSheet.flatten(
+      screen.getByTestId("a-page-screen-scroll").props
+        .contentContainerStyle as StyleProp<ViewStyle>,
+    );
+    expect(content.gap ?? 0).toBe(0);
+    expect(screen.getByTestId("a-page-body")).toHaveStyle({ gap: space[24] });
+  });
+
+  it("sets its footnote apart at its foot: centred, in the supporting grey", () => {
+    render(
+      <SettingsSubpage testID="a-page" title="Text size" footnote="A line at the foot.">
+        <SFProBody>Body</SFProBody>
+      </SettingsSubpage>,
+    );
+
+    expect(screen.getByText("A line at the foot.")).toHaveStyle({
+      ...lightTheme.typography.cardDetail,
+      color: lightTheme.colors.textSupporting,
+      textAlign: "center",
+    });
+    expect(screen.getByTestId("a-page-footnote")).toHaveStyle({
+      marginTop: "auto",
+      paddingTop: space[40],
+    });
   });
 
   it("is the app's scrolling page, its body clear of the floating header and its fade", () => {

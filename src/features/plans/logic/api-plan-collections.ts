@@ -30,34 +30,8 @@ export function getApiCompletedPlans(plans: readonly ApiPlanSummary[]): ApiPlanS
     .sort((a, b) => compareNullableIsoDesc(a.completedAt, b.completedAt));
 }
 
-export function getApiSavedPlans(plans: readonly ApiPlanSummary[]): ApiPlanSummary[] {
-  return [...plans]
-    .filter((plan) => plan.saved && plan.status !== "archived")
-    .sort(byUpdatedNewest);
-}
-
-export function getApiPlansForFilter(
-  plans: readonly ApiPlanSummary[],
-  filter: string,
-): ApiPlanSummary[] {
-  switch (filter) {
-    case "In progress":
-      return getApiInProgressPlans(plans);
-    case "Done":
-      return getApiCompletedPlans(plans);
-    case "Saved":
-      return getApiSavedPlans(plans);
-    default:
-      return getApiUserPlans(plans);
-  }
-}
-
 function byCreatedNewest(a: ApiPlanSummary, b: ApiPlanSummary): number {
   return b.createdAt.localeCompare(a.createdAt);
-}
-
-function byUpdatedNewest(a: ApiPlanSummary, b: ApiPlanSummary): number {
-  return b.updatedAt.localeCompare(a.updatedAt);
 }
 
 function compareNullableIsoDesc(a: string | null, b: string | null): number {

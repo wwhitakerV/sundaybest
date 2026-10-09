@@ -318,17 +318,12 @@ For a day with Quick Check enabled, the invariant is:
 
 The API, not only the client, enforces that invariant.
 
-## Saved plans
+## Saved plans (removed)
 
-### `saved_plans`
-
-- `user_id uuid not null references users(id)`
-- `plan_id uuid not null references plans(id)`
-- `saved_at timestamptz not null`
-- primary key `(user_id, plan_id)`
-
-Do not create a polymorphic saved-item table until another saved entity is an
-actual product feature.
+Saving a plan is no longer part of the product (October 8, 2026): the app
+doesn't read a plan's `saved` field or call `/v1/plans/{id}/saved`. The
+server's `saved_plans` table and its endpoints are left for the server's own
+cleanup.
 
 ## Generation
 

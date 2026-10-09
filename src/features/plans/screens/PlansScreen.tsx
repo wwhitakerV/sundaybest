@@ -1,24 +1,38 @@
+import { useState } from "react";
 import { StyleSheet } from "react-native";
 
 import { ListScreen } from "@/ui/organisms/ListScreen";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { PlansSkeleton } from "../components/PlansSkeleton";
-import { PAGE_INSET } from "@/ui/organisms/Screen";
-import { FilterPills } from "@/ui/molecules/FilterPills";
-import { TitleHeader } from "@/ui/molecules/TitleHeader";
-import { space } from "@/theme";
+import { radius, space } from "@/theme";
 import { LibraryPlanCard } from "../components/LibraryPlanCard";
 import { PlansEmpty } from "../components/PlansEmpty";
+import { PlansHeader } from "../components/PlansHeader";
 import { usePlansLibrary } from "../hooks/use-plans-library";
 
 /**
- * The library: the user's plans, filtered by pills — All, In progress, Done,
- * Saved — each list and count derived from the API plan cache.
+ * The library: the user's plans from the API plan cache, under a pinned
+ * header — the title, the filters (In progress and Done, each with its count)
+ * centred beside it, and the search at the right. Scrolled, the filters take
+ * the title's place.
  */
 export function PlansScreen() {
-  const { filter, setFilter, filters, cards, empty, openPlan, actionFor, loading, error, retry } =
-    usePlansLibrary();
+  const {
+    filters,
+    filter,
+    pickFilter,
+    openSearch,
+    cards,
+    empty,
+    openPlan,
+    actionFor,
+    loading,
+    error,
+    retry,
+  } = usePlansLibrary();
+  // Scrolled from the top: the header gives the title's room to the filters.
+  const [collapsed, setCollapsed] = useState(false);
 
   if (error) {
     return (
@@ -29,23 +43,20 @@ export function PlansScreen() {
   const list = (pending: boolean) => (
     <ListScreen
       testID="plans-screen"
-      // Fades across the filters' row and a little past it, mostly clear by the header's edge.
-      headerFade="edge"
-      // Solid behind the title and filters: the plans never show through them.
-      solidHeader
-      header={
-        <>
-          <TitleHeader title="Plans" />
-
-          <FilterPills
-            testID="plans-filter-pills"
-            options={filters}
-            selected={filter}
-            onSelect={setFilter}
-            bleed={PAGE_INSET}
+      // The header stays pinned on solid white, nothing behind it; the cards round into its foot.
+      pinned={{
+        rounded: radius[28],
+        bar: (
+          <PlansHeader
+            collapsed={collapsed}
+            filters={filters}
+            filter={filter}
+            onPickFilter={pickFilter}
+            onSearch={openSearch}
           />
-        </>
-      }
+        ),
+      }}
+      onScroll={(y) => setCollapsed(y > COLLAPSE_AT)}
       data={pending ? [] : cards}
       keyExtractor={({ plan }) => plan.id}
       contentStyle={styles.list}
@@ -83,6 +94,9 @@ export function PlansScreen() {
     </SkeletonHandoff>
   );
 }
+
+/** How far the list scrolls before the title gives way to the filters. */
+const COLLAPSE_AT = space[8];
 
 /** Room under the last plan, so it scrolls clear of the tab bar and its tint. */
 const LIST_FOOT = 140;

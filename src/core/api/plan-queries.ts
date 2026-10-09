@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type CreatePlanRequest,
   type ResolveSermonRequest,
@@ -11,12 +11,10 @@ import { planQueryOptions } from "./query-options";
 import { useSundayBestApi } from "./ApiProvider";
 import {
   cachedServerQuery,
-  isOfflineTransportFailure,
   offlineCacheKeys,
   persistServerCache,
 } from "./offline-cache";
 import { type PlanEnvelope, type PlansEnvelope, persistPlansCache } from "./query-cache-sync";
-import { enqueueMutation } from "@/core/storage/mutation-outbox";
 
 // Plans: the list, one plan, and the writes that make, start, and keep them.
 
@@ -32,6 +30,30 @@ export function usePlansQuery(enabled = true) {
         fetcher: () => api.plans.list(),
       }),
     enabled,
+  });
+}
+
+/** How long a search's answer is fresh, and how long it's kept for the same words again. */
+const SEARCH_FRESH_MS = 30_000;
+const SEARCH_KEPT_MS = 5 * 60_000;
+
+/**
+ * A search of the reader's plans by its words, once they settle (the caller
+ * debounces them). The last answer stays while the next is out, so results
+ * never blank between searches, and a search gone stale is cancelled. Kept
+ * briefly: a plan that changes shows changed the next time it's searched.
+ */
+export function usePlanSearchQuery(words: string) {
+  const api = useSundayBestApi();
+  return useQuery({
+    queryKey: apiQueryKeys.planSearch(words),
+    queryFn: ({ signal }) => api.plans.search(words, signal),
+    enabled: words.length > 0,
+    placeholderData: keepPreviousData,
+    staleTime: SEARCH_FRESH_MS,
+    gcTime: SEARCH_KEPT_MS,
+    // A search that fails says so at once; the reader's next keystroke is the retry.
+    retry: false,
   });
 }
 
@@ -100,54 +122,3 @@ export function useStartPlanMutation() {
   });
 }
 
-export function useSetPlanSavedMutation() {
-  const api = useSundayBestApi();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ planId, saved }: { planId: string; saved: boolean }) => {
-      const idempotencyKey = createIdempotencyKey(`plan:${planId}:${saved ? "save" : "unsave"}`);
-      try {
-        return saved
-          ? await api.plans.save(planId, idempotencyKey)
-          : await api.plans.removeSaved(planId, idempotencyKey);
-      } catch (cause) {
-        if (!isOfflineTransportFailure(cause)) throw cause;
-        await enqueueMutation({
-          kind: "plan.setSaved",
-          entityKey: planId,
-          payload: { planId, saved },
-          idempotencyKey,
-        });
-        return { saved };
-      }
-    },
-    onMutate: async ({ planId, saved }) => {
-      await Promise.all([
-        queryClient.cancelQueries({ queryKey: apiQueryKeys.plans }),
-        queryClient.cancelQueries({ queryKey: apiQueryKeys.plan(planId) }),
-      ]);
-      const previousPlans = queryClient.getQueryData<PlansEnvelope>(apiQueryKeys.plans);
-      const previousPlan = queryClient.getQueryData<PlanEnvelope>(apiQueryKeys.plan(planId));
-      queryClient.setQueryData<PlansEnvelope>(apiQueryKeys.plans, (current) =>
-        current
-          ? { plans: current.plans.map((item) => (item.id === planId ? { ...item, saved } : item)) }
-          : current,
-      );
-      queryClient.setQueryData<PlanEnvelope>(apiQueryKeys.plan(planId), (current) =>
-        current ? { plan: { ...current.plan, saved } } : current,
-      );
-      return { previousPlans, previousPlan, planId };
-    },
-    onError: (_error, _variables, context) => {
-      if (!context) return;
-      if (context.previousPlans)
-        queryClient.setQueryData(apiQueryKeys.plans, context.previousPlans);
-      if (context.previousPlan)
-        queryClient.setQueryData(apiQueryKeys.plan(context.planId), context.previousPlan);
-    },
-    onSuccess: () => {
-      void persistPlansCache(queryClient);
-    },
-  });
-}

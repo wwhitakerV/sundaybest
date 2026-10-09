@@ -1,5 +1,9 @@
 import { space } from "@/theme";
-import { getFloatingNavBarBottom, getFloatingNavBarTintHeight } from "./floatingNavBar";
+import {
+  getFloatingNavBarBottom,
+  getFloatingNavBarTintHeight,
+  getFloatingNavBarTop,
+} from "./floatingNavBar";
 import { PAGE_TOP } from "./Screen";
 
 /**
@@ -155,4 +159,13 @@ function softTopEdge(headerHeight: number, reach: number): FrameEdge {
       { at: 1, opacity: 0 },
     ],
   };
+}
+
+/**
+ * The room at the foot of a page's content so its last line ends `gap` above
+ * the floating tab bar: up to the bar's top edge, less what the frame already
+ * keeps there (the safe area's inset and the edge's fade).
+ */
+export function getFootAboveTabBar(insetBottom: number, gap: number): number {
+  return getFloatingNavBarTop(insetBottom) + gap - (insetBottom + EDGE_FADE);
 }

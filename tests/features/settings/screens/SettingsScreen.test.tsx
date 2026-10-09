@@ -99,6 +99,14 @@ describe("SettingsScreen", () => {
     expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/text-size");
   });
 
+  it("navigates to Meet the creator when pressed", async () => {
+    render(<SettingsScreen />);
+
+    fireEvent.press(await screen.findByTestId("settings-meet-the-creator-row"));
+
+    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/meet-the-creator");
+  });
+
   it("navigates to How Plans Are Made when pressed", async () => {
     render(<SettingsScreen />);
 

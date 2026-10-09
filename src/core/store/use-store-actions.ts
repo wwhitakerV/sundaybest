@@ -74,12 +74,6 @@ function createStoreActions(dispatch: Dispatch<AppAction>) {
     archivePlan: (planId: Id) => {
       dispatch({ type: "plan/archive", planId, at: at() });
     },
-    savePlan: (planId: Id) => {
-      dispatch({ type: "plan/save", planId, libraryItemId: createId("library"), at: at() });
-    },
-    removeSavedPlan: (planId: Id) => {
-      dispatch({ type: "plan/removeSaved", planId });
-    },
 
     // Plan days ----------------------------------------------------------------
 

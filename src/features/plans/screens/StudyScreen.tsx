@@ -109,11 +109,10 @@ function StudyPage({ view }: { view: FoundStudy }) {
             <StudyNav
               testID="study-nav"
               {...(view.isLastPage && {
-                finishLabel: "Finish",
+                finishLabel: view.finishLabel,
               })}
               onPrevious={view.previous}
               onNext={view.next}
-              disabled={view.busy}
             />
           }
           contentStyle={styles.bodyContent}

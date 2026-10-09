@@ -7,7 +7,7 @@ import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { Skeleton } from "@/ui/molecules/Skeleton";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
-import { DAY_TILE_HEIGHT } from "./DayTile";
+import { DAY_TILE_HEIGHT } from "@/ui/molecules/DayTile";
 
 /** The hero's words and button, about as tall as they draw. */
 const HERO_HEIGHT = 260;

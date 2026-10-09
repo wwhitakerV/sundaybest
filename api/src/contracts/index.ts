@@ -9,3 +9,5 @@ export * from "./sermons.js";
 export * from "./settings.js";
 export * from "./study.js";
 export * from "./user.js";
+export * from "./week.js";
+export * from "./weeks.js";

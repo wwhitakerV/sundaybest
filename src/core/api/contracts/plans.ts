@@ -45,7 +45,6 @@ export const planSummarySchema = z.object({
   estimatedMinutes: z.number().int().positive(),
   quickCheckEnabled: z.boolean(),
   isSample: z.boolean(),
-  saved: z.boolean(),
   sermon: sermonSummarySchema,
   progress: planProgressSchema,
   currentDay: planCurrentDaySchema.nullable(),
@@ -144,6 +143,14 @@ export const planDetailSchema = planSummarySchema.extend({
 export const listPlansResponseSchema = z.object({ plans: z.array(planSummarySchema) });
 export const getPlanResponseSchema = z.object({ plan: planDetailSchema });
 
+/**
+ * The reader's plans that match a search, best first, each with the text the
+ * words were found in (its title, church, or a day's passage or heading).
+ */
+export const searchPlansResponseSchema = z.object({
+  results: z.array(z.object({ plan: planSummarySchema, matched: z.string().min(1).max(300) })),
+});
+
 export const createPlanRequestSchema = z
   .object({
     sermonId: apiIdSchema,
@@ -164,10 +171,9 @@ export const resetPlanResponseSchema = z.object({
   plan: planSummarySchema,
   reflectionIds: z.array(apiIdSchema),
 });
-export const savePlanResponseSchema = z.object({ saved: z.literal(true) });
-export const removeSavedPlanResponseSchema = z.object({ saved: z.literal(false) });
 
 export type ApiPlanSummary = z.infer<typeof planSummarySchema>;
+export type ApiPlanSearchResult = z.infer<typeof searchPlansResponseSchema>["results"][number];
 export type ApiPlanDetail = z.infer<typeof planDetailSchema>;
 export type ApiPlanAbout = z.infer<typeof planAboutSchema>;
 export type ApiPlanDaySummary = z.infer<typeof planDaySummarySchema>;

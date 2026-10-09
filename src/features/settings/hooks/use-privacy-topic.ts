@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { parsePrivacyTopicParams } from "../logic/privacy-routes";
-import type { PrivacySettingHref } from "../logic/privacy-topic";
+import type { AboutSettingHref } from "../logic/about-section";
 import { PRIVACY_TOPICS } from "../logic/privacy-topics";
 
 /**
@@ -16,6 +16,6 @@ export function usePrivacyTopic() {
   return {
     topic,
     back: () => router.back(),
-    open: (href: PrivacySettingHref) => router.push(href),
+    open: (href: AboutSettingHref) => router.push(href),
   } as const;
 }

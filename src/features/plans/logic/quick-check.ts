@@ -47,14 +47,19 @@ export function getQuickCheckAction(input: {
 }): QuickCheckAction {
   const { status, result, isLastQuestion } = input;
   if (status === "notStarted") {
-    return { kind: "start", label: "Start", testID: "quick-check-start-button", enabled: true };
+    return {
+      kind: "start",
+      label: "Start Quick Check",
+      testID: "quick-check-start-button",
+      enabled: true,
+    };
   }
   if (status === "completed") {
     return { kind: "done", label: "Done", testID: "quick-check-done-button", enabled: true };
   }
   const enabled = result !== "unanswered";
   return isLastQuestion
-    ? { kind: "finish", label: "See your score", testID: "quick-check-finish-button", enabled }
+    ? { kind: "finish", label: "Finish", testID: "quick-check-finish-button", enabled }
     : { kind: "next", label: "Next question", testID: "quick-check-next-button", enabled };
 }
 
@@ -141,7 +146,17 @@ export function getQuickCheckPage(input: {
   return status === "completed" ? questionCount + 1 : Math.max(0, currentIndex) + 1;
 }
 
-/** What the Quick Check's first page says it is: how many questions, on the day's study. */
-export function describeQuickCheckIntro(questionCount: number): string {
-  return `${questionCount} ${questionCount === 1 ? "question" : "questions"} on today's study`;
+/** About how long a question takes, read and answered. */
+const SECONDS_PER_QUESTION = 15;
+
+/**
+ * What the Quick Check's first page says, as facts: how many questions and
+ * about how long — and, the first time the reader meets one, what it's for.
+ */
+export function describeQuickCheckIntro(questionCount: number, firstTime: boolean): string {
+  const minutes = Math.max(1, Math.round((questionCount * SECONDS_PER_QUESTION) / 60));
+  const facts = `${questionCount} ${questionCount === 1 ? "question" : "questions"} · about ${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  return firstTime
+    ? `A few questions on what you just read, to help it stay with you. ${facts}.`
+    : facts;
 }

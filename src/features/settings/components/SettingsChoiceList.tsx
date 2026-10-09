@@ -59,10 +59,10 @@ export function SettingsChoiceList<T extends string>({
                 pressed && !disabled && { backgroundColor: theme.colors.segmentBackground },
               ]}
             >
-              <View style={[styles.copy, { gap: space[2] }]}>
-                <SFProBody variant="listItem">{choice.label}</SFProBody>
+              <View style={[styles.copy, { gap: space[4] }]}>
+                <SFProBody>{choice.label}</SFProBody>
                 {choice.detail ? (
-                  <SFProBody variant="detail" tone="textSupporting">
+                  <SFProBody variant="rowDetail" tone="textSupporting">
                     {choice.detail}
                   </SFProBody>
                 ) : null}
@@ -78,6 +78,6 @@ export function SettingsChoiceList<T extends string>({
 
 const styles = StyleSheet.create({
   card: { borderWidth: 1, overflow: "hidden" },
-  row: { minHeight: 68, flexDirection: "row", alignItems: "center", paddingVertical: space[12] },
+  row: { minHeight: 68, flexDirection: "row", alignItems: "center", paddingVertical: space[14] },
   copy: { flex: 1 },
 });

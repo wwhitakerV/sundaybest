@@ -1,87 +1,77 @@
-import { Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ChevronRight } from "lucide-react-native";
+import {
+  Archive,
+  EyeOff,
+  FileText,
+  Lock,
+  Route,
+  SlidersHorizontal,
+  Smartphone,
+  UserX,
+  type LucideIcon,
+} from "lucide-react-native";
 
-import { space, useTheme } from "@/theme";
-import { SFProBody } from "@/ui/typography/SFProBody";
-import { PrivacyHero } from "../components/PrivacyHero";
-import { PrivacyPromises } from "../components/PrivacyPromises";
-import { PrivacyShortVersion } from "../components/PrivacyShortVersion";
+import { space } from "@/theme";
+import { AboutLead } from "../components/AboutLead";
+import { AboutRows } from "../components/AboutRows";
+import { AboutSection } from "../components/AboutSection";
 import { SettingsSubpage } from "../components/SettingsSubpage";
-import { usePrivacyHero } from "../hooks/use-privacy-hero";
-import { privacyTopicHref } from "../logic/privacy-routes";
+import { privacyTopicHref, type PrivacyTopicId } from "../logic/privacy-routes";
 import { PRIVACY_LANDING, PRIVACY_TOPICS } from "../logic/privacy-topics";
 import { FULL_PRIVACY_POLICY } from "../logic/privacy-full-policy";
 
-const CHEVRON = 18;
+const GLANCE_ICONS: Record<(typeof PRIVACY_LANDING.glance)[number]["icon"], LucideIcon> = {
+  account: UserX,
+  reflections: Lock,
+  tracking: EyeOff,
+};
+
+const TOPIC_ICONS: Record<PrivacyTopicId, LucideIcon> = {
+  keep: Archive,
+  device: Smartphone,
+  use: Route,
+  controls: SlidersHorizontal,
+  policy: FileText,
+};
 
 /**
- * Privacy policy: its promise up top, its three strongest promises, the short
- * version as four rows, and the complete policy one tap away.
+ * Privacy policy: its promise as the page's title, the three answers most
+ * people come for on a card, then each page of the details a row away, and
+ * when it took effect as its footnote.
  */
 export function PrivacyPolicyScreen() {
   const router = useRouter();
-  const theme = useTheme();
-  const hero = usePrivacyHero();
 
   return (
     <SettingsSubpage
       testID="privacy-policy"
       title="Privacy policy"
-      contentStyle={{ gap: space[32] }}
-      hero={{ overHero: hero.overHero, onScroll: hero.onScroll }}
+      gap={space[32]}
+      footnote={FULL_PRIVACY_POLICY.effective}
     >
-      <PrivacyHero
-        testID="privacy-policy-hero"
-        eyebrow={PRIVACY_LANDING.eyebrow}
-        statement={PRIVACY_LANDING.statement}
-        intro={PRIVACY_LANDING.intro}
-        onReach={hero.onReach}
+      <AboutLead title={PRIVACY_LANDING.statement} intro={PRIVACY_LANDING.intro} />
+
+      <AboutRows
+        testID="privacy-policy-glance"
+        rows={PRIVACY_LANDING.glance.map((answer) => ({
+          key: answer.icon,
+          title: answer.title,
+          text: answer.text,
+          icon: GLANCE_ICONS[answer.icon],
+        }))}
       />
 
-      <PrivacyPromises testID="privacy-trust" promises={PRIVACY_LANDING.promises} />
-
-      <PrivacyShortVersion
-        testID="privacy-short-version"
-        heading={PRIVACY_LANDING.shortVersion}
-        rows={PRIVACY_TOPICS.flatMap((topic) =>
-          topic.row
-            ? [
-                {
-                  id: topic.id,
-                  label: topic.row,
-                  onPress: () => router.push(privacyTopicHref(topic.id)),
-                },
-              ]
-            : [],
-        )}
-      />
-
-      <View style={{ gap: space[8] }}>
-        <Pressable
-          testID="privacy-policy-complete"
-          accessibilityRole="button"
-          accessibilityLabel={PRIVACY_LANDING.complete}
-          onPress={() => router.push(privacyTopicHref("policy"))}
-          style={[styles.complete, { gap: space[6] }]}
-        >
-          <SFProBody variant="listItem" tone="accent">
-            {PRIVACY_LANDING.complete}
-          </SFProBody>
-          <ChevronRight
-            size={CHEVRON}
-            color={theme.colors.accent}
-            strokeWidth={theme.icon.strokeWidth}
-          />
-        </Pressable>
-        <SFProBody variant="detail" tone="textMuted">
-          {FULL_PRIVACY_POLICY.effective}
-        </SFProBody>
-      </View>
+      <AboutSection heading={PRIVACY_LANDING.details}>
+        <AboutRows
+          testID="privacy-policy-details"
+          rows={PRIVACY_TOPICS.map((topic) => ({
+            key: topic.id,
+            title: topic.row,
+            icon: TOPIC_ICONS[topic.id],
+            onPress: () => router.push(privacyTopicHref(topic.id)),
+          }))}
+        />
+      </AboutSection>
     </SettingsSubpage>
   );
 }
-
-const styles = StyleSheet.create({
-  complete: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", minHeight: 44 },
-});

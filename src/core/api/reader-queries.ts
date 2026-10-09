@@ -6,7 +6,6 @@ import {
   getMeResponseSchema,
   getRemindersResponseSchema,
   getSettingsResponseSchema,
-  progressResponseSchema,
 } from "./contracts";
 import { createIdempotencyKey } from "./idempotency";
 import { apiQueryKeys, isStudyDayQueryKey } from "./query-keys";
@@ -64,19 +63,23 @@ export function useRemindersQuery() {
   });
 }
 
-export function useProgressQuery(weekStart: string, enabled = true) {
+/**
+ * A week of study for Progress. Kept in memory only, never on the device:
+ * its key verses are Scripture text some translations don't allow storing.
+ */
+export function useWeekQuery(weekStart: string) {
   const api = useSundayBestApi();
   return useQuery({
-    queryKey: apiQueryKeys.progress(weekStart),
-    queryFn: () =>
-      cachedServerQuery({
-        cacheKey: offlineCacheKeys.progress(weekStart),
-        resourceType: "progress",
-        schema: progressResponseSchema,
-        fetcher: () => api.progress.get(weekStart),
-      }),
-    enabled,
+    queryKey: apiQueryKeys.week(weekStart),
+    queryFn: () => api.week.get(weekStart),
+    placeholderData: (previous) => previous,
   });
+}
+
+/** Every week a plan ran in, for finding one again. In memory only, like the week it opens. */
+export function useWeeksQuery() {
+  const api = useSundayBestApi();
+  return useQuery({ queryKey: apiQueryKeys.weeks, queryFn: () => api.weeks.get() });
 }
 
 export function useCompleteOnboardingMutation() {

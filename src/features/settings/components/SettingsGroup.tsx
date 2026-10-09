@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Sparkles,
   Type,
+  UserStar,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -23,6 +24,7 @@ const ICONS: Record<SettingsIcon, LucideIcon> = {
   type: Type,
   sparkles: Sparkles,
   shield: ShieldCheck,
+  userStar: UserStar,
   mail: Mail,
   flag: Flag,
 };
@@ -86,7 +88,7 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
                     strokeWidth={theme.icon.strokeWidth}
                   />
                 </View>
-                <SFProBody variant="listItem" style={styles.label} numberOfLines={1}>
+                <SFProBody style={styles.label} numberOfLines={1}>
                   {row.label}
                 </SFProBody>
                 {row.value && <SFProBody tone="textMuted">{row.value}</SFProBody>}

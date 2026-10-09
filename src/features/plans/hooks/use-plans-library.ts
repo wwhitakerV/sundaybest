@@ -8,12 +8,10 @@ import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {
   getApiCompletedPlans,
   getApiInProgressPlans,
-  getApiPlansForFilter,
-  getApiSavedPlans,
   getApiUserPlans,
 } from "../logic/api-plan-collections";
 import { describeApiLibraryPlan } from "../logic/api-plan-wording";
-import { describeEmptyFilter, getPlanFilterOptions } from "../logic/plan-filters";
+import { describeEmptyLibrary, getPlanFilterOptions, type PlanFilter } from "../logic/plan-filters";
 import { usePrefetch } from "@/core/api/prefetch";
 import { prefetchImages } from "@/core/images/prefetch-images";
 
@@ -27,14 +25,24 @@ type LibraryCard = {
 };
 type CardAction = { label: "Continue" | "Start"; onPress: () => void };
 
-/** Plans tab backed directly by the API/TanStack cache. */
+/**
+ * Plans tab backed directly by the API/TanStack cache: every plan, or those
+ * in progress or done, each filter with its count; the search opens from it.
+ */
 export function usePlansLibrary() {
   const router = useRouter();
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState<PlanFilter | null>(null);
   const plansQuery = usePlansQuery();
   const startMutation = useStartPlanMutation();
   const allPlans = plansQuery.data?.plans ?? [];
-  const filtered = getApiPlansForFilter(allPlans, filter);
+  const inProgress = getApiInProgressPlans(allPlans);
+  const completed = getApiCompletedPlans(allPlans);
+  const filtered =
+    filter === "In progress"
+      ? inProgress
+      : filter === "Done"
+        ? completed
+        : getApiUserPlans(allPlans);
 
   const cards: LibraryCard[] = filtered.map((plan) => ({
     plan,
@@ -68,13 +76,6 @@ export function usePlansLibrary() {
     done: card.plan.status === "completed",
   }));
 
-  const filters = getPlanFilterOptions({
-    all: getApiUserPlans(allPlans).length,
-    inProgress: getApiInProgressPlans(allPlans).length,
-    done: getApiCompletedPlans(allPlans).length,
-    saved: getApiSavedPlans(allPlans).length,
-  });
-
   function openPlan(planId: string) {
     router.push(planOverviewHref(planId));
   }
@@ -101,14 +102,17 @@ export function usePlansLibrary() {
   }
 
   return {
+    filters: getPlanFilterOptions({ inProgress: inProgress.length, done: completed.length }),
+    /** The filter picked, or null with none — every plan. */
     filter,
-    setFilter: (next: string) => {
-      if (next !== filter) selectionFeedback();
-      setFilter(next);
+    /** Picks a filter; picking the one picked again lets it go. */
+    pickFilter: (label: PlanFilter) => {
+      selectionFeedback();
+      setFilter((current) => (current === label ? null : label));
     },
-    filters,
+    openSearch: () => router.push("/plan-search"),
     cards: displayCards,
-    empty: describeEmptyFilter(filter),
+    empty: describeEmptyLibrary(filter),
     loading: plansQuery.isPending,
     error: plansQuery.data === undefined ? plansQuery.error : null,
     retry: () => void plansQuery.refetch(),

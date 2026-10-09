@@ -69,6 +69,35 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
 - Content rests clear of both (`useFrameClearance`, from `getFrameEdges`); never
   hand-tune room for a header, footer, or fade, and never hand-roll a fade.
 - Home and Plan Overview draw their own heroes and are the only exceptions.
+- Plans pins its header (`ListScreen`'s `pinned`): the title; the filters —
+  In progress and Done with their counts, as `FilterPills` (a second tap on
+  the one picked lets it go) — centred in the room beside it; and the search
+  at the right (`HeaderIconButton` `soft`, the dates pill's grey). It stays
+  under the status bar on solid white with no fade and no shadow — the list
+  starts below the status bar, so nothing ever shows behind it. Once the list
+  scrolls, the title is bumped left off the screen and the filters spring
+  left into its place (`PlansHeader`, `motion.slide`); back at the top, both
+  return. Pills whose outline springs get room either side (`bleed`), so it's
+  never clipped. The cards never meet a straight cut under it: the bar's foot
+  carries two inward corners at the cards' sides and radius (`pinned.rounded`,
+  `RoundedEdge`), so a card scrolls up into a rounded window. Plans only, and
+  the top only.
+
+## Search
+
+A search is full screen and fades in with the keyboard up (Plans' search,
+`/plan-search`): the field (`SearchField`) sits on the keyboard with the close
+beside it, 8pt from the screen's edges and the keys, and the results fill the
+page from the top — compact rows, small artwork, titles regular up to two
+lines, the whole row tappable. The words found are black and medium, the rest
+of a title holding them the supporting grey (weight alone is too faint). Under
+the title, one quiet line says why it matched — the church when the title did,
+else where the words were found — and where the plan stands ("Day 2 of 7"),
+so plans of one title are told apart. The words are debounced before they're
+searched. Rows already shown that still match stay mounted while the next
+search is out and move to their new place when it answers (`motion.results`);
+a skeleton in the rows' shape shows only when there are none to keep. A
+field's clear is iOS's: a small grey-filled `CircleX`.
 
 ## Loading, errors, footers, and images
 
@@ -135,24 +164,62 @@ with the switch on. It cascades in from the top — fading, drifting
 `motion.reveal.fromY` down, a beat behind the part above — and fades out all
 together, quicker, when turned off. Never a disabled, greyed-out section.
 
-## Reading pages
+## About pages and Settings subpages
 
-A page that's only words to read (Privacy policy and its pages) is set like a
-typeset document, not Settings: white dominates, and typography carries it.
+Every Settings subpage composes `SettingsSubpage`: the bar (Back, the page's
+title beside it), a body whose blocks are `gap` apart, and a page that ends
+24pt above the floating tab bar. The gap lives on the body, never between the
+last block and the foot. A page's closing line (an effective date, a note on
+what a setting does, what to leave out, a motto) is its `footnote`, never a
+line hugging the block above or at the top of the page: one style on every
+subpage — left-aligned, `rowDetail` (15 on a 22 line), the supporting grey,
+inset 19pt so it lines up with the words inside the cards — set well apart at
+the foot, at the bottom of the screen on a short page.
 
-- The app's bar (Back, the page's title beside it) over a compact hero in the
-  soft `surface` grey that runs up under the status bar (`PrivacyHero`, on
-  `ScrollScreen`'s `heroUnderHeader`): a small red `kicker` eyebrow, one serif
-  statement (`SerifTitle variant="statement"`), a line of plain words.
-- Serif only there and in one featured statement (`PrivacyQuote`, a thin red
-  rule beside it). Everything else is SF Pro in full ink — never `textMuted`
-  for what's meant to be read.
-- Sections: a `section` heading over paragraphs, and items each named then
-  said, with hairlines between — never in cards. A card only for something you
-  tap (the short version's rows). A real setting gets a small soft button.
-- Red sparingly: the eyebrow, a section number, the rule, an action. Never
-  green, which belongs to things done.
-- Every Settings page ends clear of the floating tab bar (`SettingsSubpage`).
+About's pages (Meet the creator, How plans are made, Privacy policy and its
+pages, Contact support, Request sermon removal) are built only from what the
+rest of the app already uses — never a hero, an eyebrow, or a device of their
+own:
+
+- **Open** with `AboutLead`: the app's page title (`SFProTitle "screen"`), then
+  a line in the Study's reading type and grey (`SFProBody "reading"`,
+  `textInactive`).
+- **Sections** (`AboutSection`): the Study's paragraph heading
+  (`SFProTitle "step"`), paragraphs in the reading type.
+- **Lists** (`AboutRows`): Settings' own soft card, hairlines between rows;
+  a quiet icon, the row's name in the **regular** weight, its description in
+  `rowDetail` (15 on a 22 line), a chevron where it goes somewhere.
+- **One strong line** (`AboutCallout`): serif standfirst on a soft card, as the
+  Study sets Scripture.
+- **Forms**: `SettingsField` (New plan's field: soft fill, hairline edge, an
+  icon), `Chip` for a choice, the app's `Button`.
+
+Row and option labels across Settings are regular, never medium — iOS
+Settings' weight. Medium is for titles and headings; semibold only on buttons.
+
+## Progress
+
+Progress is a week of study (`/v1/me/week`), built only from the app's own
+parts: the week's head (source and dates in the tracked mono label, the title
+in the serif), its seven days as Plan Detail's `DayTile`s with the springing
+outline for the day picked (never a dot), the picked day's panel — fixed in
+height — showing one passage at a time (its key verse in the Study's
+Scripture face and what the reader wrote, from the phone; or ready, still
+here, or opening), the Study's step bars for several passages, and Settings-
+style rows of what's gathered in all. A day is studied only when a passage was
+finished on it; reading a missed day later doesn't fill it. The page fits
+the screen and never scrolls (`ScrollScreen`'s `fixed`): the day panel takes
+the room the rest leaves, and the rows end 24pt above the tab bar. The week's
+dates (dark, semibold, on Daily reminder's soft pill) open the weeks: up to
+eight, a list in the app's `Popover`; past four, the full-screen weeks
+(`/weeks`), zooming out of the pill (`Link.AppleZoom`) — a search, years as
+Plans' filter pills, months, and each week a card with everything that helps
+place it (artwork, title, church, passages, the first thing written, days
+studied). A card opens the app's `PopoverMenu` with the tab bar's own icons:
+see the week on Progress (`Flame`), or open one of its plans (`LibraryBig`).
+Swiping the days moves between the same weeks. In development builds, a
+Preview button steps the picker through made-up histories. No streaks, counts
+in the strip, or guilt states. Copy states facts, never guesses.
 
 ## Milestone pages
 
@@ -163,6 +230,17 @@ the mark 96pt below the safe area, then 20 / 8 / 20 / 32 / 16); a page passes
 its mark, title, subtitle, badge, content, and footer, never spacing. A header
 on one is only its close — no title — and floats, so it never moves the mark.
 The only filled flame in the app is Plan Complete's; every other is an outline.
+
+A day ends on one page. With a Quick Check, the last study step reads "Quick
+Check", and its start page is the bridge — the Study's step bars as its mark,
+"Today's study is done.", the facts (questions, about how long; what it's for
+the first time), and "Start Quick Check"; its close leaves it waiting on the
+plan. Finishing the last question scores it and completes the day at once,
+then goes straight to the day's finish page: the day done, Progress's week
+strip, what it gave (passage heading, key verse in quotes, what was written),
+its Quick Check (what was remembered, every answer, missed first, numbers
+kept), and what's next as facts. Done goes back to the plan. One success
+haptic, when the day completes.
 
 ## Haptics
 

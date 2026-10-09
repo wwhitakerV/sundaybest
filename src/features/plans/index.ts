@@ -5,6 +5,7 @@
  * Deep imports such as `@/features/<name>/screens/Thing` are blocked by lint.
  */
 export { PlansScreen } from "./screens/PlansScreen";
+export { PlanSearchScreen } from "./screens/PlanSearchScreen";
 export { PlanOverviewScreen } from "./screens/PlanOverviewScreen";
 export { StudyScreen } from "./screens/StudyScreen";
 export { DayCompleteScreen } from "./screens/DayCompleteScreen";
@@ -17,7 +18,6 @@ export {
   getApiCompletedPlans,
   getApiInProgressPlans,
   getApiSamplePlan,
-  getApiSavedPlans,
   getApiUserPlans,
 } from "./logic/api-plan-collections";
 export { describeApiPlan } from "./logic/api-plan-wording";

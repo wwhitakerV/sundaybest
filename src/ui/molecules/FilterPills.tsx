@@ -23,7 +23,8 @@ type Frame = { x: number; width: number };
 
 export type FilterPillsProps<Option extends FilterOption> = {
   options: readonly Option[];
-  selected: Option["label"];
+  /** The one picked — or null, none, where a row lets its pick go (Plans). */
+  selected: Option["label"] | null;
   onSelect: (label: Option["label"]) => void;
   /**
    * How far the row reaches past its container on each side — the page's
@@ -31,11 +32,13 @@ export type FilterPillsProps<Option extends FilterOption> = {
    * lines up with the page.
    */
   bleed?: number;
+  /** Closer set: a little less room inside each pill and between them, for a row in a tight space. */
+  tight?: boolean;
   testID?: string;
 };
 
 /**
- * A row of filters as pills, each its label and count, with no fill — as
+ * A row of filters as pills, each its label and its count (if it has one), with no fill — as
  * Plan Detail's days have none. The one picked is outlined in black: one
  * outline, drawn once its pill is measured, that slides to each pill picked
  * and lands without a bounce. It scrolls sideways when the pills outgrow the
@@ -46,10 +49,11 @@ export function FilterPills<Option extends FilterOption>({
   selected,
   onSelect,
   bleed = 0,
+  tight = false,
   testID,
 }: FilterPillsProps<Option>) {
   const [frames, setFrames] = useState<ReadonlyMap<string, Frame>>(new Map());
-  const picked = frames.get(selected);
+  const picked = selected === null ? undefined : frames.get(selected);
 
   function measure(label: string, { nativeEvent: { layout } }: LayoutChangeEvent) {
     setFrames((current) => new Map(current).set(label, { x: layout.x, width: layout.width }));
@@ -61,7 +65,7 @@ export function FilterPills<Option extends FilterOption>({
       horizontal
       showsHorizontalScrollIndicator={false}
       style={[styles.row, { marginHorizontal: -bleed }]}
-      contentContainerStyle={{ gap: space[8], paddingHorizontal: bleed }}
+      contentContainerStyle={{ gap: tight ? space[4] : space[8], paddingHorizontal: bleed }}
     >
       {picked && <Outline frame={picked} {...(testID && { testID: `${testID}-indicator` })} />}
       {options.map((option) => {
@@ -79,15 +83,21 @@ export function FilterPills<Option extends FilterOption>({
             onPress={() => onSelect(option.label)}
             style={[
               styles.pill,
-              { borderRadius: radius.pill, paddingHorizontal: space[16], gap: space[4] },
+              {
+                borderRadius: radius.pill,
+                paddingHorizontal: tight ? space[12] : space[16],
+                gap: space[4],
+              },
             ]}
           >
             <SFProLabel variant="segment" tone="text">
               {option.label}
             </SFProLabel>
-            <SFProLabel variant="segment" tone="textInactive">
-              {option.count}
-            </SFProLabel>
+            {option.count !== undefined && (
+              <SFProLabel variant="segment" tone="textInactive">
+                {option.count}
+              </SFProLabel>
+            )}
           </Pressable>
         );
       })}

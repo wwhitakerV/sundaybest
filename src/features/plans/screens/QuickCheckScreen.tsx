@@ -1,6 +1,6 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
-import { ListChecks, X } from "lucide-react-native";
+import { X } from "lucide-react-native";
 
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
@@ -9,7 +9,7 @@ import { QuickCheckSkeleton } from "../components/QuickCheckSkeleton";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { Button } from "@/ui/atoms/Button";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
-import { IconRing } from "@/ui/atoms/IconRing";
+import { StepProgress } from "@/ui/atoms/StepProgress";
 import { ProgressRing } from "@/ui/atoms/ProgressRing";
 import { QuickCheckFeedback } from "../components/QuickCheckFeedback";
 import { QuickCheckHeader } from "../components/QuickCheckHeader";
@@ -96,9 +96,14 @@ export function QuickCheckScreen() {
               onPress={view.close}
             />
           }
-          mark={<IconRing testID="quick-check-intro" icon={ListChecks} />}
-          title={`Day ${view.dayNumber} Quiz`}
-          subtitle={describeQuickCheckIntro(view.questionCount)}
+          // The Study's steps: Read, Scripture, Reflect, and Pray done — the Quick Check next.
+          mark={
+            <View testID="quick-check-intro" style={styles.steps}>
+              <StepProgress steps={STUDY_AND_CHECK} activeIndex={STUDY_AND_CHECK - 1} />
+            </View>
+          }
+          title="Today's study is done."
+          subtitle={describeQuickCheckIntro(view.questionCount, view.firstTime)}
           footer={actionButton}
         />
       );
@@ -171,7 +176,13 @@ export function QuickCheckScreen() {
   }
 }
 
+/** The Study's four steps and the Quick Check after them. */
+const STUDY_AND_CHECK = 5;
+/** The steps' width as the page's mark: wide enough to read as the Study's bar. */
+const STEPS_WIDTH = 200;
+
 const styles = StyleSheet.create({
+  steps: { width: STEPS_WIDTH },
   loadingContent: {
     paddingTop: space[24],
   },

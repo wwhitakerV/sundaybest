@@ -64,6 +64,9 @@ const palette = {
   overlayStrongOnDark: "rgba(255, 255, 255, 0.18)",
   // Darkening laid over video thumbnails, under their play button and time.
   scrim: "rgba(0, 0, 0, 0.45)",
+  /** A light dim behind a popover that wants the page to step back a little. */
+  dimLight: "rgba(0, 0, 0, 0.12)",
+  dimOnDark: "rgba(0, 0, 0, 0.4)",
   // Quick Check's verdicts: a deep green for right and the brand red for
   // wrong, each with a soft tint to fill and a lighter line to edge it.
   correctInk: "#2E8A5E",
@@ -159,6 +162,10 @@ type ColorTokens = {
    * soft buttons. One token, so every container's edge is the same line.
    */
   containerBorder: string;
+  /** An edge that holds against the soft `surface` grey, where `containerBorder` fades into it: a pill on Text size's preview. */
+  edgeOnSurface: string;
+  /** Behind a popover that dims the page a little while it's open (Progress's weeks). */
+  popoverDim: string;
   /** A sheet's drag indicator: quiet, but plainly there. */
   grabber: string;
   /** The unfilled track of a ring or a scale, and a ring not yet earned. */
@@ -330,6 +337,8 @@ const lightColors: ColorTokens = {
   borderStrong: palette.darkgrey,
   divider: palette.mist,
   containerBorder: palette.cardEdge,
+  edgeOnSurface: palette.grabber,
+  popoverDim: palette.dimLight,
   grabber: palette.grabber,
   progressTrack: palette.greyLight,
   skeleton: palette.cardEdge,
@@ -419,6 +428,8 @@ const darkColors: ColorTokens = {
   borderStrong: palette.grey,
   divider: palette.mistOnDark,
   containerBorder: palette.cardEdgeOnDark,
+  edgeOnSurface: palette.grabberOnDark,
+  popoverDim: palette.dimOnDark,
   grabber: palette.grabberOnDark,
   progressTrack: palette.ink600,
   skeleton: palette.cardEdgeOnDark,
@@ -584,6 +595,17 @@ export const motion = {
    * above. Turned off, they all fade out together, quicker (`exitMs`).
    */
   reveal: { durationMs: 320, staggerMs: 70, fromY: 8, exitMs: 140 },
+  /**
+   * Progress's day panel arriving with a new day or passage: it fades in as it
+   * rises `fromY` into place, easing out. Under Reduce Motion, the fade alone.
+   */
+  panelEnter: { durationMs: 480, fromY: 8 },
+  /**
+   * Search results as the words change: a row moves to its new place, a new
+   * one fades in, one that no longer matches fades out (`exitMs`). Never
+   * remounted. Under Reduce Motion, they settle without moving.
+   */
+  results: { moveMs: 240, enterMs: 200 },
 } as const;
 
 /**
@@ -646,13 +668,6 @@ const typography = {
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
   /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
-  /** The editorial face at its largest: a reading page's one statement (Privacy policy's pages). */
-  statement: {
-    fontFamily: fonts.editorialHeading,
-    fontSize: 30,
-    fontWeight: "500",
-    lineHeight: 38,
-  },
   /** A study question set in the editorial face (Reflect, and the Welcome tour's copy of it). */
   editorialQuestion: {
     fontFamily: fonts.editorialHeading,
@@ -716,6 +731,13 @@ const typography = {
     fontFamily: fonts.metaLabel,
     fontSize: 13,
     fontWeight: "500",
+    letterSpacing: 1,
+  },
+  /** `metaLabelTracked` in the semibold cut: a tracked label that's also a control (Progress's week dates). */
+  metaLabelTrackedStrong: {
+    fontFamily: fonts.metaEmphasis,
+    fontSize: 13,
+    fontWeight: "600",
     letterSpacing: 1,
   },
   /**
@@ -791,6 +813,12 @@ const typography = {
   tileTitle: { fontSize: 17, fontWeight: "700", lineHeight: 22 },
   /** Supporting copy on a card, under its title: a line or two, quiet. */
   cardDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
+  /** A row's description under its name (Settings' options, About's rows): leaded, so two or three lines still read easily. */
+  rowDetail: { fontSize: 15, fontWeight: "400", lineHeight: 22 },
+  /** A search result's title: regular, leaded for two lines read at a glance (Plans' search). */
+  resultTitle: { fontSize: 17, fontWeight: "400", lineHeight: 23 },
+  /** The words a search found, inside a regular line: medium, the rest left regular. */
+  match: { fontWeight: "500" },
   /** A line of facts under a page's title ("12 subjects · 48 exams"): the system face, firm and easy to read. */
   summaryStrong: { fontSize: 15, fontWeight: "600", lineHeight: 20 },
   /** A fact set plainly in a row ("15 questions", "8–12 min"): the system face, small and firm enough to read. */
@@ -808,6 +836,8 @@ const typography = {
   fallbackAction: { fontSize: 15, fontWeight: "600" },
   /** The clock in a drawn phone's status bar (the Welcome tour's phones). */
   statusTime: { fontSize: 17, fontWeight: "600" },
+  /** A message's title on an emptied page (Plans' search): medium, a step under a page's own title. */
+  messageTitle: { fontSize: 24, fontWeight: "500", lineHeight: 30 },
   /** Top-level tab-root titles (Plans, Progress, Settings). Spec 24/500/1.12/-0.02em. */
   screenTitle: { fontSize: 29, fontWeight: "500", lineHeight: 32, letterSpacing: -0.58 },
   /** A header's right-aligned step count ("1 of 2"). Spec 11 mono/0.02em. */
@@ -863,6 +893,8 @@ const elevation = {
   menu: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 24 },
   /** An answer to tap, lifted just off the page: a Quick Check choice. */
   choice: { shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
+  /** A control floating over what's behind it — the search bar on the keyboard: soft, close. */
+  floating: { shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12 },
   /** A toggle's knob, sitting just proud of its track. */
   thumb: { shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.16, shadowRadius: 4 },
 } as const;

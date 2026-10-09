@@ -6,10 +6,10 @@ import { SFProLabel } from "@/ui/typography/SFProLabel";
 const GAP = space[20];
 const COUNT_GAP = 1;
 
-/** One filter in a filter row: what it's called, and how many it holds. */
+/** One filter in a filter row: what it's called, and how many it holds — if it says. */
 export type FilterOption = {
   label: string;
-  count: number;
+  count?: number;
 };
 
 export type FilterTabsProps<Option extends FilterOption> = {
@@ -47,13 +47,15 @@ export function FilterTabs<Option extends FilterOption>({
             <SFProLabel variant="filter" tone={isSelected ? "chromeIcon" : "textMuted"}>
               {option.label}
             </SFProLabel>
-            <SFProLabel
-              variant="filterCount"
-              tone={isSelected ? "chromeIcon" : "textMuted"}
-              style={styles.count}
-            >
-              {option.count}
-            </SFProLabel>
+            {option.count !== undefined && (
+              <SFProLabel
+                variant="filterCount"
+                tone={isSelected ? "chromeIcon" : "textMuted"}
+                style={styles.count}
+              >
+                {option.count}
+              </SFProLabel>
+            )}
           </Pressable>
         );
       })}

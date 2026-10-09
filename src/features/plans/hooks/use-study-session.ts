@@ -176,6 +176,8 @@ export function useStudySession() {
     position: effectivePosition,
     pages,
     isLastPage: isLastStudyPage(effectivePosition, pages),
+    /** The last step's way on: on to the day's Quick Check when one's due, otherwise Finish. */
+    finishLabel: quickCheckDue && day.quickCheckId ? "Quick Check" : "Finish",
     busy,
     content: {
       day: {

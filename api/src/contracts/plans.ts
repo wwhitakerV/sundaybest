@@ -138,6 +138,23 @@ export const planDetailSchema = planSummarySchema.extend({
 export const listPlansResponseSchema = z.object({ plans: z.array(planSummarySchema) });
 export const getPlanResponseSchema = z.object({ plan: planDetailSchema });
 
+/** A search of the reader's own plans: words, at least one character. */
+export const searchPlansQuerySchema = z
+  .object({
+    q: z.string().trim().min(1).max(120),
+    limit: z.coerce.number().int().min(1).max(30).default(20),
+  })
+  .strict();
+
+/**
+ * The reader's plans that match, best first: a title starting with the words,
+ * then a word in it, then anywhere in it, then the church, then a day's
+ * passage or heading. `matched` is the text the words were found in.
+ */
+export const searchPlansResponseSchema = z.object({
+  results: z.array(z.object({ plan: planSummarySchema, matched: z.string().min(1).max(300) })),
+});
+
 export const createPlanRequestSchema = z
   .object({
     sermonId: apiIdSchema,
@@ -166,4 +183,5 @@ export type ApiPlanDetail = z.infer<typeof planDetailSchema>;
 export type ApiPlanAbout = z.infer<typeof planAboutSchema>;
 export type ApiPlanDaySummary = z.infer<typeof planDaySummarySchema>;
 export type ApiQuickCheckStanding = z.infer<typeof quickCheckStandingSchema>;
+export type SearchPlansResponse = z.infer<typeof searchPlansResponseSchema>;
 export type CreatePlanRequest = z.infer<typeof createPlanRequestSchema>;

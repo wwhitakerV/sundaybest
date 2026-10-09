@@ -13,13 +13,18 @@ describe("PRIVACY_TOPICS", () => {
     ]);
   });
 
-  it("numbers the four pages 01 to 04", () => {
-    expect(PRIVACY_TOPICS.slice(0, 4).map(({ eyebrow }) => eyebrow)).toEqual([
-      "Privacy / 01",
-      "Privacy / 02",
-      "Privacy / 03",
-      "Privacy / 04",
+  it("lists every page in the details by its row's name", () => {
+    expect(PRIVACY_TOPICS.map(({ row }) => row)).toEqual([
+      "What we keep",
+      "What stays on your iPhone",
+      "How we use your data",
+      "Your controls",
+      "The complete policy",
     ]);
+  });
+
+  it("never stacks a label over a page's title", () => {
+    for (const topic of PRIVACY_TOPICS) expect(topic).not.toHaveProperty("eyebrow");
   });
 
   it("gives every page a statement, an opening line, and something to read under headings", () => {

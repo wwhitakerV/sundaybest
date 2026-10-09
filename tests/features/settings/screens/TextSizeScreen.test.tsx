@@ -91,11 +91,12 @@ describe("TextSizeScreen", () => {
     );
   });
 
-  it("sets its explanatory note in the darker supporting grey", () => {
+  it("sets its explanatory note as a centred footnote, in the darker supporting grey", () => {
     render(<TextSizeScreen />);
 
     expect(screen.getByText(/This changes text throughout SundayBest/)).toHaveStyle({
       color: lightTheme.colors.textSupporting,
+      textAlign: "center",
     });
   });
 

@@ -26,6 +26,10 @@ export type HeaderIconButtonProps = {
    * No border.
    */
   overlay?: "light" | "dark";
+  /** On the page's soft grey, as Progress's dates pill: no edge, a little darker while pressed. */
+  soft?: boolean;
+  /** Floating over the keyboard, beside a `raised` search: a card's edge, lifted by a soft shadow. */
+  raised?: boolean;
   testID?: string;
 };
 
@@ -47,6 +51,8 @@ export function HeaderIconButton({
   size = DEFAULT_ICON_SIZE,
   bordered = true,
   overlay,
+  soft = false,
+  raised = false,
   testID,
 }: HeaderIconButtonProps) {
   const theme = useTheme();
@@ -65,7 +71,7 @@ export function HeaderIconButton({
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
-        style={[
+        style={({ pressed }) => [
           styles.button,
           {
             backgroundColor:
@@ -73,9 +79,18 @@ export function HeaderIconButton({
                 ? theme.colors.overlayButtonDark
                 : overlay === "light"
                   ? theme.colors.overlayButtonLight
-                  : theme.colors.background,
-            borderColor: bordered && !overlay ? theme.colors.hairline : "transparent",
+                  : soft
+                    ? pressed
+                      ? theme.colors.segmentActiveBackground
+                      : theme.colors.segmentBackground
+                    : theme.colors.background,
+            borderColor: raised
+              ? theme.colors.containerBorder
+              : bordered && !overlay && !soft
+                ? theme.colors.hairline
+                : "transparent",
           },
+          raised && { shadowColor: theme.colors.shadow, ...theme.elevation.floating },
         ]}
       >
         <Icon

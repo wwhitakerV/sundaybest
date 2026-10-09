@@ -49,6 +49,12 @@ export type ScrollFrameProps = {
    */
   heroUnderHeader?: boolean;
   /**
+   * The top edge with no header: the status bar's fade (the default), or
+   * nothing at all — for a page whose own content never scrolls under the
+   * status bar (`ListScreen`'s pinned list).
+   */
+  topEdge?: "fade" | "none";
+  /**
    * Whether the header's backdrop is drawn. A page with a hero under its
    * header hides it while the hero's there, and brings it back once the page
    * has scrolled under the header.
@@ -106,6 +112,7 @@ export function ScrollFrame({
   overlay,
   heroUnderHeader = false,
   headerBackdrop = true,
+  topEdge = "fade",
 }: ScrollFrameProps) {
   const theme = useTheme();
   const insets = useContext(SafeAreaInsetsContext);
@@ -139,7 +146,7 @@ export function ScrollFrame({
         {children}
       </FrameClearanceContext.Provider>
 
-      {header ? null : (
+      {header || topEdge === "none" ? null : (
         // No header: the status bar still gets its fade.
         <TopFade
           testID={`${testID}-top-fade`}

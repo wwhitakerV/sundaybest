@@ -1,3 +1,4 @@
+import { ABOUT_CARD, ABOUT_READING, ABOUT_TITLE, boldOnPage } from "@tests/helpers/type-on-page";
 import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
@@ -34,99 +35,84 @@ const topic = (id: string) => {
   return found;
 };
 
+const IDS = ["keep", "device", "use", "controls", "policy"];
+
 describe("PrivacyTopicScreen", () => {
-  it.each(["keep", "device", "use", "controls", "policy"])(
-    "names the %s page in the bar, and opens on its eyebrow, serif statement, and opening line",
-    (id) => {
-      open(id);
+  it.each(IDS)("names the %s page in the bar, then opens on its title and opening line", (id) => {
+    open(id);
 
-      expect(within(screen.getByTestId("privacy-topic")).getByText(topic(id).title)).toBeVisible();
-      const hero = within(screen.getByTestId("privacy-topic-hero"));
-      expect(hero.getByText(topic(id).eyebrow)).toHaveStyle({
-        ...lightTheme.typography.kicker,
-        color: lightTheme.colors.accent,
-      });
-      expect(hero.getByRole("header", { name: topic(id).statement })).toHaveStyle(
-        lightTheme.typography.statement,
-      );
-      expect(hero.getByText(topic(id).intro)).toHaveStyle({ color: lightTheme.colors.text });
-    },
-  );
-
-  it("runs the hero to the very top of the screen, under the status bar and Back", () => {
-    open("keep");
-
-    expect(screen.getByTestId("privacy-topic-screen-top-clearance")).toHaveStyle({ height: 0 });
-    expect(
-      screen.queryByTestId("privacy-topic-screen-header-backdrop", { includeHiddenElements: true }),
-    ).toBeNull();
+    expect(within(screen.getByTestId("privacy-topic")).getByText(topic(id).title)).toBeVisible();
+    expect(screen.getByRole("header", { name: topic(id).statement })).toHaveStyle(ABOUT_TITLE);
+    expect(screen.getByText(topic(id).intro)).toHaveStyle(ABOUT_READING);
+    expect(screen.queryByTestId("privacy-topic-hero")).toBeNull();
   });
 
-  it("gives the page back its header's backdrop once the hero's scrolled away", () => {
-    open("keep");
-    fireEvent(screen.getByTestId("privacy-topic-hero"), "layout", {
-      nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 300 } },
-    });
-
-    fireEvent.scroll(screen.getByTestId("privacy-topic-screen-scroll"), {
-      nativeEvent: { contentOffset: { x: 0, y: 400 } },
-    });
-
-    expect(
-      screen.getByTestId("privacy-topic-screen-header-backdrop", { includeHiddenElements: true }),
-    ).toBeOnTheScreen();
-  });
-
-  it("features one strong statement, in serif, set apart by a red rule", () => {
+  it("features its strong statement in serif, on a soft card, as Scripture is", () => {
     open("keep");
 
     const quote = screen.getByTestId("privacy-topic-quote");
-    expect(quote).toHaveStyle({ borderLeftColor: lightTheme.colors.accent });
+    expect(quote).toHaveStyle(ABOUT_CARD);
     expect(within(quote).getByText(topic("keep").quote ?? "")).toHaveStyle(
       lightTheme.typography.standfirst,
     );
   });
 
-  it("sets out each section under its heading: each item named, then said, in full ink", () => {
+  it("heads each section as the Study heads a paragraph, its items on a card: named lightly, then said with room", () => {
     open("keep");
 
-    for (const section of topic("keep").sections) {
+    for (const [index, section] of topic("keep").sections.entries()) {
       expect(screen.getByRole("header", { name: section.heading })).toHaveStyle(
-        lightTheme.typography.sectionTitle,
+        lightTheme.typography.stepTitle,
       );
-      const items = section.items ?? [];
-      for (const label of items.flatMap((item) => (item.label ? [item.label] : []))) {
-        expect(screen.getByText(label)).toBeVisible();
-      }
-      for (const item of items) {
-        expect(screen.getByText(item.text)).toHaveStyle({ color: lightTheme.colors.text });
+      expect(screen.getByTestId(`privacy-topic-section-${index}-items`)).toHaveStyle(ABOUT_CARD);
+      for (const item of section.items ?? []) {
+        expect(screen.getByText(item.label ?? "")).toHaveStyle(lightTheme.typography.body);
+        expect(screen.getByText(item.text)).toHaveStyle({
+          ...lightTheme.typography.rowDetail,
+          color: lightTheme.colors.textSupporting,
+        });
       }
     }
   });
 
-  it("keeps items to hairlines, never cards", () => {
-    open("keep");
+  it("sets a section's paragraphs in the Study's reading type", () => {
+    open("use");
 
-    for (const items of screen.getAllByTestId("privacy-items")) {
-      expect(items).not.toHaveStyle({ borderWidth: expect.any(Number) as number });
-    }
+    const [paragraph] = topic("use").sections[1]?.paragraphs ?? [];
+    expect(screen.getByText(paragraph ?? "")).toHaveStyle(ABOUT_READING);
   });
 
-  it("gives a real action a small button that goes there", () => {
+  it("goes to a setting it talks about from a row, as Settings does", () => {
     open("controls");
 
-    fireEvent.press(screen.getByText("Open reminder settings"));
-
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/daily-reminder");
+    fireEvent.press(screen.getByRole("button", { name: "Daily reminder" }));
+    expect(mockPush).toHaveBeenLastCalledWith("/(tabs)/settings/daily-reminder");
+    fireEvent.press(screen.getByRole("button", { name: "Bible translation" }));
+    expect(mockPush).toHaveBeenLastCalledWith("/(tabs)/settings/bible-translation");
   });
 
-  it("reads the complete policy as a document: dated, each section numbered in red above its heading", () => {
+  it("dates the complete policy, and numbers its sections", () => {
     open("policy");
 
     expect(screen.getByText(topic("policy").effective ?? "")).toBeVisible();
     const [first] = topic("policy").sections;
-    expect(screen.getByRole("header", { name: first?.heading ?? "" })).toBeVisible();
-    expect(screen.getByText("01")).toHaveStyle({ color: lightTheme.colors.accent });
+    expect(screen.getByRole("header", { name: `1. ${first?.heading ?? ""}` })).toBeVisible();
+  });
+
+  it("sets a policy's plain statements in full ink, on a card", () => {
+    open("policy");
+
+    const [statement] = topic("policy").sections[1]?.items ?? [];
+    expect(screen.getByText(statement?.text ?? "")).toHaveStyle({
+      ...lightTheme.typography.body,
+      color: lightTheme.colors.text,
+    });
+  });
+
+  it.each(IDS)("sets nothing on the %s page in bold", (id) => {
+    open(id);
+
+    expect(boldOnPage("privacy-topic")).toEqual([]);
   });
 
   it("says so for a page there isn't, with the way back", () => {

@@ -19,6 +19,8 @@ import {
   resolveSermonResponseSchema,
   searchSermonsResponseSchema,
   progressResponseSchema,
+  weekResponseSchema,
+  weeksResponseSchema,
   retryPlanGenerationResponseSchema,
   startQuizAttemptResponseSchema,
   submitQuizAnswerRequestSchema,
@@ -122,6 +124,18 @@ export function createSundayBestApi(client: ApiClient) {
             : "/v1/me/progress",
           schema: progressResponseSchema,
         }),
+    },
+
+    week: {
+      get: (weekStart: string) =>
+        client.request({
+          path: `/v1/me/week?weekStart=${encodeURIComponent(weekStart)}`,
+          schema: weekResponseSchema,
+        }),
+    },
+
+    weeks: {
+      get: () => client.request({ path: "/v1/me/weeks", schema: weeksResponseSchema }),
     },
 
     plans: createPlansApi(client),

@@ -2,7 +2,6 @@ import type { Id } from "./common";
 import type { Prayer, Reflection } from "./devotion";
 import type { ExamAttempt } from "./exam";
 import type { PlanGeneration } from "./generation";
-import type { LibraryItem } from "./library";
 import type { Plan, PlanDay } from "./plan";
 import type { Quiz, QuizAnswer, QuizAttempt, QuizQuestion } from "./quiz";
 import type { Reminder } from "./reminder";
@@ -39,7 +38,6 @@ export type AppData = {
   /** Attempts at a theology exam; each carries its own responses and result. */
   examAttempts: EntityTable<ExamAttempt>;
   reminders: EntityTable<Reminder>;
-  library: EntityTable<LibraryItem>;
   /** The plan being built right now, if any. */
   generation: PlanGeneration | null;
 };

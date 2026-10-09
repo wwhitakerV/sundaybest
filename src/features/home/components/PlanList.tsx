@@ -5,17 +5,12 @@ import type { ApiPlanSummary } from "@/core/api/contracts";
 import type { Id } from "@/types/domain";
 import { FilterTabs } from "@/ui/molecules/FilterTabs";
 import { selectionFeedback } from "@/core/haptics/haptics";
-import {
-  getApiCompletedPlans,
-  getApiInProgressPlans,
-  getApiSavedPlans,
-  getApiUserPlans,
-} from "@/features/plans";
+import { getApiCompletedPlans, getApiInProgressPlans, getApiUserPlans } from "@/features/plans";
 import { describeApiPlan } from "@/features/plans";
 import { PlanRow } from "./PlanRow";
 import { space } from "@/theme";
 
-type Filter = "All" | "In progress" | "Done" | "Saved";
+type Filter = "All" | "In progress" | "Done";
 
 export type PlanListProps = {
   plans: readonly ApiPlanSummary[];
@@ -30,7 +25,6 @@ export function PlanList({ plans: allPlans, onOpenPlan }: PlanListProps) {
       { label: "All" as const, plans: getApiUserPlans(allPlans) },
       { label: "In progress" as const, plans: getApiInProgressPlans(allPlans) },
       { label: "Done" as const, plans: getApiCompletedPlans(allPlans) },
-      { label: "Saved" as const, plans: getApiSavedPlans(allPlans) },
     ],
     [allPlans],
   );

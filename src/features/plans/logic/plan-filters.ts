@@ -1,58 +1,28 @@
-import {
-  getCompletedPlans,
-  getInProgressPlans,
-  getLibraryPlans,
-  getUserPlans,
-  type AppState,
-} from "@/core/store";
-import type { Plan } from "@/types/domain";
+/** Plans' two filters; with neither picked, every plan shows. */
+export type PlanFilter = "In progress" | "Done";
 
-export type PlanFilterOption = { label: string; count: number };
-
-/** How many plans each filter holds — read from the store's selectors. */
-export type PlanCounts = { all: number; inProgress: number; done: number; saved: number };
-
-/** The Plans tab's filter row: each filter's label with how many plans it holds. */
-export function getPlanFilterOptions(counts: PlanCounts): PlanFilterOption[] {
+/** The filters, each with how many plans it holds. */
+export function getPlanFilterOptions(counts: {
+  inProgress: number;
+  done: number;
+}): { label: PlanFilter; count: number }[] {
   return [
-    { label: "All", count: counts.all },
     { label: "In progress", count: counts.inProgress },
     { label: "Done", count: counts.done },
-    { label: "Saved", count: counts.saved },
   ];
 }
 
-/** What the library says when the filter picked holds no plans. */
-export function describeEmptyFilter(filter: string): { title: string; message: string } {
+/** What the library says when the plans showing are none. */
+export function describeEmptyLibrary(filter: PlanFilter | null): {
+  title: string;
+  message: string;
+} {
   switch (filter) {
     case "In progress":
       return { title: "Nothing in progress", message: "Start a plan and it will show here." };
     case "Done":
       return { title: "No finished plans yet", message: "Plans you finish will show here." };
-    case "Saved":
-      return {
-        title: "Nothing saved yet",
-        message: "Save a plan from its More menu to keep it here.",
-      };
     default:
       return { title: "No plans yet", message: "Add a sermon and your first plan will show here." };
-  }
-}
-
-/**
- * The plans a filter shows, straight from the store's selectors — never a
- * second list kept alongside: All is every plan the user has, In progress
- * those under way, Done those finished, Saved those kept in the library.
- */
-export function getPlansForFilter(state: AppState, filter: string): Plan[] {
-  switch (filter) {
-    case "In progress":
-      return getInProgressPlans(state);
-    case "Done":
-      return getCompletedPlans(state);
-    case "Saved":
-      return getLibraryPlans(state);
-    default:
-      return getUserPlans(state);
   }
 }

@@ -7,6 +7,12 @@ export const apiQueryKeys = {
   plans: ["api", "plans"] as const,
   progressRoot: ["api", "progress"] as const,
   progress: (weekStart: string) => ["api", "progress", weekStart] as const,
+  /** Under the progress root, so finishing a study refreshes it. */
+  week: (weekStart: string) => ["api", "progress", "week", weekStart] as const,
+  /** Every week a plan ran in — under the progress root too. */
+  weeks: ["api", "progress", "weeks"] as const,
+  /** A search of the reader's plans, by its words — beside the plans, not under them. */
+  planSearch: (query: string) => ["api", "plan-search", query] as const,
   sermonSearch: (query: string) => ["api", "sermons", "search", query] as const,
   plan: (planId: string) => ["api", "plans", planId] as const,
   /** The reader's builds not yet dismissed: what the generation bar shows. */

@@ -39,7 +39,8 @@ export function NotFoundScreen({
         <SFProTitle accessibilityRole="header" style={styles.centred}>
           {title}
         </SFProTitle>
-        <SFProBody tone="textMuted" style={styles.centred}>
+        {/* Leaded, so a message on two lines reads as two easy lines. */}
+        <SFProBody variant="bodyLoose" tone="textMuted" style={styles.centred}>
           {message}
         </SFProBody>
       </View>

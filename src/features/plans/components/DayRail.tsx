@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { motion, radius, space, useTheme } from "@/theme";
 import { getRailScrollOffset, getRailTabX, type DayTileLook } from "../logic/day-rail";
-import { DAY_TILE_HEIGHT, DAY_TILE_WIDTH, DayTile } from "./DayTile";
+import { DAY_TILE_HEIGHT, DAY_TILE_WIDTH, DayTile } from "@/ui/molecules/DayTile";
 
 /** Between one day and the next — room enough that each reads as a point on a journey. */
 const DAY_GAP = space[6];

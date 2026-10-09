@@ -77,7 +77,7 @@ export function ReminderTime({ time, onChange, testID }: ReminderTimeProps) {
           },
         ]}
       >
-        <SFProBody variant="listItem">{label}</SFProBody>
+        <SFProBody>{label}</SFProBody>
       </Pressable>
 
       {/*

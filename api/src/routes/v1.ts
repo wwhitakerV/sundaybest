@@ -31,9 +31,13 @@ import {
   reminderKindSchema,
   resolveSermonRequestSchema,
   resolveSermonResponseSchema,
+  searchPlansQuerySchema,
+  searchPlansResponseSchema,
   searchSermonsQuerySchema,
   searchSermonsResponseSchema,
   progressResponseSchema,
+  weekResponseSchema,
+  weeksResponseSchema,
   isoDateSchema,
   retryPlanGenerationResponseSchema,
   sessionCredentialsSchema,
@@ -72,6 +76,9 @@ import { createSermonService } from "../services/sermon-service.js";
 import { availableTranslations } from "../providers/bible-provider.js";
 import { createSettingsService } from "../services/settings-service.js";
 import { createStudyService } from "../services/study-service.js";
+import { createWeekService } from "../services/week-service.js";
+import { createWeeksService } from "../services/weeks-service.js";
+import { createPlanSearchService } from "../services/plan-search-service.js";
 import { createUserService } from "../services/user-service.js";
 
 const emptyObjectSchema = z.object({}).strict();
@@ -91,6 +98,9 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
   const planService = createPlanService(db);
   const progressService = createProgressService(db);
   const studyService = createStudyService(db, context.bible);
+  const weekService = createWeekService(db, context.bible);
+  const weeksService = createWeeksService(db);
+  const planSearchService = createPlanSearchService(db, planService);
   const quizService = createQuizService(db);
 
   app.post("/v1/attest/challenge", async (request) => {
@@ -292,10 +302,34 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     );
   });
 
+  app.get("/v1/me/week", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const query = parseWithSchema(
+      z.object({ weekStart: isoDateSchema.optional() }).strict(),
+      request.query ?? {},
+    );
+    return weekResponseSchema.parse(
+      await weekService.get(auth.userId, auth.timezone, query.weekStart),
+    );
+  });
+
+  app.get("/v1/me/weeks", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    return weeksResponseSchema.parse(await weeksService.get(auth.userId, auth.timezone));
+  });
+
   app.get("/v1/plans", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     return listPlansResponseSchema.parse({
       plans: await planService.list(auth.userId, auth.timezone),
+    });
+  });
+
+  app.get("/v1/plans/search", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const query = parseWithSchema(searchPlansQuerySchema, request.query);
+    return searchPlansResponseSchema.parse({
+      results: await planSearchService.search(auth.userId, auth.timezone, query.q, query.limit),
     });
   });
 
@@ -412,8 +446,16 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
   app.post("/v1/plan-generations/:generationId/dismiss", async (request) => {
     const auth = await requireAuth(request, db, context.jwt);
     const { generationId } = parseWithSchema(generationParamSchema, request.params);
-    return idempotent(request, context, auth.userId, `POST /v1/plan-generations/${generationId}/dismiss`, {}, async () =>
-      dismissPlanGenerationResponseSchema.parse({ generation: await generationService.dismiss(auth.userId, generationId) }),
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/plan-generations/${generationId}/dismiss`,
+      {},
+      async () =>
+        dismissPlanGenerationResponseSchema.parse({
+          generation: await generationService.dismiss(auth.userId, generationId),
+        }),
     );
   });
 

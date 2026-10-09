@@ -18,7 +18,12 @@ import type { Env } from "./env-schema";
  *     lands.
  */
 
-export const FEATURE_FLAGS = ["attestation", "crashReporting", "verboseLogging"] as const;
+export const FEATURE_FLAGS = [
+  "attestation",
+  "crashReporting",
+  "verboseLogging",
+  "designPreviews",
+] as const;
 
 export type FeatureFlag = (typeof FEATURE_FLAGS)[number];
 
@@ -47,6 +52,10 @@ export function createStaticFlagSource(config: Env): FlagSource {
     // Never in a shipped build: logs on a real device are readable, and the
     // security rules forbid user or device data reaching them.
     verboseLogging: config.variant !== "production",
+    // Tools for looking at a design's states with made-up data — the week
+    // picker's growth, say. Off for now; when on, development builds only:
+    // never a reader's. Turn back on with `config.variant === "development"`.
+    designPreviews: false,
   };
 
   const snapshot = Object.freeze({ ...values });
@@ -64,6 +73,8 @@ export function createStaticFlagSource(config: Env): FlagSource {
           return values.crashReporting;
         case "verboseLogging":
           return values.verboseLogging;
+        case "designPreviews":
+          return values.designPreviews;
       }
     },
     snapshot() {

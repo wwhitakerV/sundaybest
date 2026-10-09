@@ -7,19 +7,29 @@ import type { PrivacyTopic } from "./privacy-topic";
  * the code before changing it, and say nothing it doesn't do yet.
  */
 export const PRIVACY_LANDING = {
-  eyebrow: "Privacy at SundayBest",
   statement: "Your study belongs to you.",
   intro: "SundayBest keeps only what it needs to build your plans and remember your progress.",
-  promises: ["No account required", "Reflections stay on your iPhone", "No ads or tracking"],
-  shortVersion: "The short version",
-  complete: "Read the complete privacy policy",
+  /** The three answers most people come for, each with what it means. */
+  glance: [
+    { icon: "account", title: "No account required", text: "No name, email, or password. Ever." },
+    {
+      icon: "reflections",
+      title: "Your reflections stay on your iPhone",
+      text: "What you write is never sent to us.",
+    },
+    {
+      icon: "tracking",
+      title: "No ads or tracking",
+      text: "Nothing follows you across other apps or websites.",
+    },
+  ],
+  details: "The details",
 } as const;
 
 const KEEP: PrivacyTopic = {
   id: "keep",
   title: "What we keep",
   row: "What we keep",
-  eyebrow: "Privacy / 01",
   statement: "What SundayBest keeps.",
   intro:
     "Only what's needed to build your plans, remember your progress, and keep your preferences the way you set them.",
@@ -64,7 +74,6 @@ const DEVICE: PrivacyTopic = {
   id: "device",
   title: "What stays on your iPhone",
   row: "What stays on your iPhone",
-  eyebrow: "Privacy / 02",
   statement: "What stays on your iPhone.",
   intro: "Some of what you do in SundayBest never leaves your iPhone at all.",
   quote: "The reflections you write are yours alone. They're never sent to us.",
@@ -95,7 +104,6 @@ const USE: PrivacyTopic = {
   id: "use",
   title: "How we use your data",
   row: "How we use your data",
-  eyebrow: "Privacy / 03",
   statement: "How your data is used.",
   intro: "Everything SundayBest keeps is used to run SundayBest for you, and for nothing else.",
   quote: "We never sell your information, show you ads, or track you across other apps.",
@@ -138,7 +146,6 @@ const CONTROLS: PrivacyTopic = {
   id: "controls",
   title: "Your controls",
   row: "Your controls",
-  eyebrow: "Privacy / 04",
   statement: "You're in control.",
   intro: "You decide how SundayBest works for you, and you can change your mind at any time.",
   sections: [
@@ -146,8 +153,8 @@ const CONTROLS: PrivacyTopic = {
       heading: "Preferences",
       paragraphs: ["Change your Bible translation, reading size, or reminders whenever you want."],
       actions: [
-        { label: "Open Bible translation", href: "/(tabs)/settings/bible-translation" },
-        { label: "Open text size", href: "/(tabs)/settings/text-size" },
+        { label: "Bible translation", href: "/(tabs)/settings/bible-translation" },
+        { label: "Text size", href: "/(tabs)/settings/text-size" },
       ],
     },
     {
@@ -161,7 +168,7 @@ const CONTROLS: PrivacyTopic = {
       paragraphs: [
         "Turn SundayBest's reminders off in the app, or stop its notifications in your iPhone's Settings.",
       ],
-      actions: [{ label: "Open reminder settings", href: "/(tabs)/settings/daily-reminder" }],
+      actions: [{ label: "Daily reminder", href: "/(tabs)/settings/daily-reminder" }],
     },
   ],
 };

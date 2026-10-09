@@ -28,29 +28,53 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
   return {
     async getDay(userId: string, planId: string, dayNumber: number, timezone: string) {
       const access = await requireStudyAccess({ db, userId, planId, dayNumber, timezone });
-      const [scriptureRows, promptRows, prayerRows, quizRows, stepRows, settingsRows] = await Promise.all([
-        db.select().from(scriptureReferences).where(eq(scriptureReferences.id, access.day.scriptureReferenceId)).limit(1),
-        db
-          .select()
-          .from(reflectionPrompts)
-          .where(eq(reflectionPrompts.planDayId, access.day.id))
-          .orderBy(asc(reflectionPrompts.position)),
-        db.select().from(prayers).where(eq(prayers.planDayId, access.day.id)).limit(1),
-        db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.planDayId, access.day.id)).limit(1),
-        db
-          .select({ step: planStepProgress.step })
-          .from(planStepProgress)
-          .where(and(eq(planStepProgress.enrollmentId, access.enrollment.id), eq(planStepProgress.planDayId, access.day.id))),
-        db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1),
-      ]);
+      const [scriptureRows, promptRows, prayerRows, quizRows, stepRows, settingsRows] =
+        await Promise.all([
+          db
+            .select()
+            .from(scriptureReferences)
+            .where(eq(scriptureReferences.id, access.day.scriptureReferenceId))
+            .limit(1),
+          db
+            .select()
+            .from(reflectionPrompts)
+            .where(eq(reflectionPrompts.planDayId, access.day.id))
+            .orderBy(asc(reflectionPrompts.position)),
+          db.select().from(prayers).where(eq(prayers.planDayId, access.day.id)).limit(1),
+          db
+            .select({ id: quizzes.id })
+            .from(quizzes)
+            .where(eq(quizzes.planDayId, access.day.id))
+            .limit(1),
+          db
+            .select({ step: planStepProgress.step })
+            .from(planStepProgress)
+            .where(
+              and(
+                eq(planStepProgress.enrollmentId, access.enrollment.id),
+                eq(planStepProgress.planDayId, access.day.id),
+              ),
+            ),
+          db.select().from(userSettings).where(eq(userSettings.userId, userId)).limit(1),
+        ]);
       const scripture = scriptureRows[0];
       const prayer = prayerRows[0];
       const settings = settingsRows[0];
-      if (!scripture || !prayer || !settings) throw new AppError("INTERNAL", "Study content is incomplete");
+      if (!scripture || !prayer || !settings)
+        throw new AppError("INTERNAL", "Study content is incomplete");
 
       const translation = settings.bibleTranslation;
-      const { verses, cacheAllowed: scriptureCacheAllowed } = await loadScripture(db, bibleProvider, scripture, translation);
-      const supportingScriptures = await loadSupporting(bibleProvider, access.day.supportingScriptures, translation);
+      const { verses, cacheAllowed: scriptureCacheAllowed } = await loadScripture(
+        db,
+        bibleProvider,
+        scripture,
+        translation,
+      );
+      const supportingScriptures = await loadSupporting(
+        bibleProvider,
+        access.day.supportingScriptures,
+        translation,
+      );
 
       return {
         id: access.day.id,
@@ -63,7 +87,10 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
           sermonClip:
             access.day.clipStartSeconds === null
               ? null
-              : { startSeconds: access.day.clipStartSeconds, endSeconds: access.day.clipEndSeconds },
+              : {
+                  startSeconds: access.day.clipStartSeconds,
+                  endSeconds: access.day.clipEndSeconds,
+                },
         },
         scripture: {
           id: scripture.id,
@@ -77,7 +104,11 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
           cacheAllowed: scriptureCacheAllowed,
         },
         supportingScriptures,
-        reflectionPrompts: promptRows.map((prompt) => ({ id: prompt.id, order: prompt.position, question: prompt.question })),
+        reflectionPrompts: promptRows.map((prompt) => ({
+          id: prompt.id,
+          order: prompt.position,
+          question: prompt.question,
+        })),
         prayer: { id: prayer.id, title: prayer.title, text: prayer.text },
         quickCheckId: quizRows[0]?.id ?? null,
         progress: {
@@ -94,30 +125,61 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
       };
     },
 
-    async completeStep(userId: string, planId: string, dayNumber: number, step: StudyStep, timezone: string) {
+    async completeStep(
+      userId: string,
+      planId: string,
+      dayNumber: number,
+      step: StudyStep,
+      timezone: string,
+    ) {
       const access = await requireStudyAccess({ db, userId, planId, dayNumber, timezone });
       if (access.progress.completedAt) {
         const rows = await db
           .select({ step: planStepProgress.step })
           .from(planStepProgress)
-          .where(and(eq(planStepProgress.enrollmentId, access.enrollment.id), eq(planStepProgress.planDayId, access.day.id)));
-        return { completedSteps: sortSteps(rows.map((row) => row.step)), updatedAt: access.progress.completedAt.toISOString() };
+          .where(
+            and(
+              eq(planStepProgress.enrollmentId, access.enrollment.id),
+              eq(planStepProgress.planDayId, access.day.id),
+            ),
+          );
+        return {
+          completedSteps: sortSteps(rows.map((row) => row.step)),
+          updatedAt: access.progress.completedAt.toISOString(),
+        };
       }
 
       const existing = await db
         .select({ step: planStepProgress.step })
         .from(planStepProgress)
-        .where(and(eq(planStepProgress.enrollmentId, access.enrollment.id), eq(planStepProgress.planDayId, access.day.id)));
+        .where(
+          and(
+            eq(planStepProgress.enrollmentId, access.enrollment.id),
+            eq(planStepProgress.planDayId, access.day.id),
+          ),
+        );
       const completed = sortSteps(existing.map((row) => row.step));
-      if (completed.includes(step)) return { completedSteps: completed, updatedAt: new Date().toISOString() };
+      if (completed.includes(step))
+        return { completedSteps: completed, updatedAt: new Date().toISOString() };
       const expected = STEP_ORDER[completed.length];
-      if (expected !== step) throw new AppError("STUDY_INCOMPLETE", `Complete ${expected ?? "the previous step"} first`);
+      if (expected !== step)
+        throw new AppError("STUDY_INCOMPLETE", `Complete ${expected ?? "the previous step"} first`);
 
       const now = new Date();
       await db.transaction(async (tx) => {
-        await tx.insert(planStepProgress).values({ enrollmentId: access.enrollment.id, planDayId: access.day.id, step, completedAt: now });
+        await tx
+          .insert(planStepProgress)
+          .values({
+            enrollmentId: access.enrollment.id,
+            planDayId: access.day.id,
+            step,
+            completedAt: now,
+          });
         if (!access.progress.startedAt) {
-          await tx.update(planDayProgress).set({ startedAt: now }).where(eq(planDayProgress.id, access.progress.id));
+          await tx
+            .update(planDayProgress)
+            .set({ startedAt: now })
+            .where(eq(planDayProgress.id, access.progress.id));
         }
       });
       return { completedSteps: [...completed, step], updatedAt: now.toISOString() };
@@ -135,28 +197,51 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
       const steps = await db
         .select({ step: planStepProgress.step })
         .from(planStepProgress)
-        .where(and(eq(planStepProgress.enrollmentId, access.enrollment.id), eq(planStepProgress.planDayId, access.day.id)));
+        .where(
+          and(
+            eq(planStepProgress.enrollmentId, access.enrollment.id),
+            eq(planStepProgress.planDayId, access.day.id),
+          ),
+        );
       if (sortSteps(steps.map((row) => row.step)).length !== STEP_ORDER.length) {
         throw new AppError("STUDY_INCOMPLETE", "Complete Read, Scripture, Reflect and Pray first");
       }
 
       if (access.plan.quickCheckEnabled) {
-        const quizRows = await db.select({ id: quizzes.id }).from(quizzes).where(eq(quizzes.planDayId, access.day.id)).limit(1);
+        const quizRows = await db
+          .select({ id: quizzes.id })
+          .from(quizzes)
+          .where(eq(quizzes.planDayId, access.day.id))
+          .limit(1);
         const quiz = quizRows[0];
         if (!quiz) throw new AppError("INTERNAL", "Quick Check content is missing");
         const completedAttempt = await db
           .select({ id: quizAttempts.id })
           .from(quizAttempts)
-          .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, quiz.id), eq(quizAttempts.status, "completed")))
+          .where(
+            and(
+              eq(quizAttempts.userId, userId),
+              eq(quizAttempts.quizId, quiz.id),
+              eq(quizAttempts.status, "completed"),
+            ),
+          )
           .limit(1);
-        if (!completedAttempt[0]) throw new AppError("QUICK_CHECK_REQUIRED", "Complete Quick Check before finishing this day");
+        if (!completedAttempt[0])
+          throw new AppError(
+            "QUICK_CHECK_REQUIRED",
+            "Complete Quick Check before finishing this day",
+          );
       }
 
       const now = new Date();
       const planCompletedAt = await db.transaction(async (tx): Promise<Date | null> => {
         await tx
           .update(planDayProgress)
-          .set({ completedAt: now, completedLocalDate: access.localDate, completedTimezone: timezone })
+          .set({
+            completedAt: now,
+            completedLocalDate: access.localDate,
+            completedTimezone: timezone,
+          })
           .where(eq(planDayProgress.id, access.progress.id));
 
         // Recount directly after the update; the server never trusts a client-provided day count.
@@ -174,7 +259,10 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
         return null;
       });
 
-      return { completedAt: now.toISOString(), planCompletedAt: planCompletedAt?.toISOString() ?? null };
+      return {
+        completedAt: now.toISOString(),
+        planCompletedAt: planCompletedAt?.toISOString() ?? null,
+      };
     },
   };
 }
@@ -183,26 +271,40 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
  * Bundled public-domain text is served from memory. Gateway text is kept in
  * `scripture_texts` only when its license allows caching.
  */
-async function loadScripture(
+export async function loadScripture(
   db: Database,
   bibleProvider: BibleProvider,
   scripture: typeof scriptureReferences.$inferSelect,
   translation: (typeof scriptureTexts.$inferSelect)["translation"],
 ): Promise<{ verses: Array<{ number: number; text: string }>; cacheAllowed: boolean }> {
   if (bibleProvider.servesLocally(translation)) {
-    const passage = await bibleProvider.getPassage({ reference: scripture.canonicalReference, translation });
+    const passage = await bibleProvider.getPassage({
+      reference: scripture.canonicalReference,
+      translation,
+    });
     return { verses: passage.verses, cacheAllowed: passage.cacheAllowed };
   }
   const [cached] = await db
     .select()
     .from(scriptureTexts)
-    .where(and(eq(scriptureTexts.referenceId, scripture.id), eq(scriptureTexts.translation, translation)))
+    .where(
+      and(
+        eq(scriptureTexts.referenceId, scripture.id),
+        eq(scriptureTexts.translation, translation),
+      ),
+    )
     .limit(1);
   if (cached) return { verses: cached.verses, cacheAllowed: true };
 
-  const passage = await bibleProvider.getPassage({ reference: scripture.canonicalReference, translation });
+  const passage = await bibleProvider.getPassage({
+    reference: scripture.canonicalReference,
+    translation,
+  });
   if (passage.cacheAllowed) {
-    const provider = { provider: passage.provider, providerVersion: passage.providerVersion ?? null };
+    const provider = {
+      provider: passage.provider,
+      providerVersion: passage.providerVersion ?? null,
+    };
     await db
       .insert(scriptureTexts)
       .values({ referenceId: scripture.id, translation, verses: passage.verses, ...provider })
@@ -226,13 +328,15 @@ async function loadSupporting(
 ) {
   const parsed = z.array(generatedSupportingScriptureSchema).safeParse(stored);
   if (!parsed.success) return [];
-  const passages = await Promise.all(parsed.data.map(async ({ connection, ...passage }) => {
-    try {
-      const text = await bibleProvider.getPassage({ reference: passage.reference, translation });
-      return [{ ...passage, connection, translation, verses: text.verses }];
-    } catch {
-      return [];
-    }
-  }));
+  const passages = await Promise.all(
+    parsed.data.map(async ({ connection, ...passage }) => {
+      try {
+        const text = await bibleProvider.getPassage({ reference: passage.reference, translation });
+        return [{ ...passage, connection, translation, verses: text.verses }];
+      } catch {
+        return [];
+      }
+    }),
+  );
   return passages.flat();
 }

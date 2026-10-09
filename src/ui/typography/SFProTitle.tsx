@@ -11,7 +11,8 @@ export type SFProTitleVariant =
   | "offer"
   | "step"
   | "nav"
-  | "preview";
+  | "preview"
+  | "message";
 
 export type SFProTitleProps = TypographyProps & { variant?: SFProTitleVariant };
 
@@ -37,6 +38,8 @@ function typeFor(typography: Theme["typography"], variant: SFProTitleVariant) {
       return typography.navTitle;
     case "preview":
       return typography.listItemLarge;
+    case "message":
+      return typography.messageTitle;
   }
 }
 

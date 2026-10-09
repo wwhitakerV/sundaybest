@@ -101,8 +101,6 @@ export type AppAction =
   | ({ type: "plan/start"; planId: Id; today: IsoDate } & At)
   | ({ type: "plan/complete"; planId: Id } & At)
   | ({ type: "plan/archive"; planId: Id } & At)
-  | ({ type: "plan/save"; planId: Id; libraryItemId: Id } & At)
-  | { type: "plan/removeSaved"; planId: Id }
   // Plan days
   | ({ type: "planDay/start"; dayId: Id; today: IsoDate } & At)
   | ({ type: "planDay/update"; dayId: Id; completedStep: StudyStep; today: IsoDate } & At)

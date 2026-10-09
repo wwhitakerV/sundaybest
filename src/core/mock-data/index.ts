@@ -11,7 +11,7 @@
  * | Today I Choose to Be a Blessing            | active    | 6    | day 1 done (its quiz taken, one wrong), day 2 under way; a quiz every day |
  * | Break the Cycle of Negative Thinking       | completed | 7    | every day done, a quiz each: day 6's half-way, day 7's perfect            |
  * | Still Praying                              | ready     | 3    | not started, no Quick Check                                               |
- * | Overcome Temptation                        | ready     | 1    | saved to the library, quiz untaken                                        |
+ * | Overcome Temptation                        | ready     | 1    | not started, quiz untaken                                                 |
  * | The Church Must Not Partner with the World | ready     | 5    | the sample anyone can try                                                 |
  *
  * Their days, readings, and Scripture are placeholders until the real
@@ -55,7 +55,6 @@ import {
   TEMPTATION_QUIZ_QUESTIONS,
   TEMPTATION_QUIZZES,
   TEMPTATION_REFLECTIONS,
-  TEMPTATION_SAVED,
   TEMPTATION_SCRIPTURE,
 } from "./plan-overcome-temptation";
 import {
@@ -72,7 +71,6 @@ import {
   CHURCH_AND_WORLD_REFLECTIONS,
   CHURCH_AND_WORLD_SCRIPTURE,
 } from "./plan-the-church-must-not-partner-with-the-world";
-import { MOCK_LIBRARY_EXTRAS } from "./library";
 import { SCRIPTURE_VARIANTS } from "./scripture-variants";
 import { MOCK_SERMONS } from "./sermons";
 import { MOCK_REMINDERS, MOCK_SETTINGS, MOCK_USER } from "./user";
@@ -134,6 +132,5 @@ export const MOCK_DATA: AppData = {
   quizAnswers: toTable([...BLESSING_QUIZ_ANSWERS, ...NEGATIVE_THINKING_QUIZ_ANSWERS]),
   examAttempts: {},
   reminders: toTable(MOCK_REMINDERS),
-  library: toTable([TEMPTATION_SAVED, ...MOCK_LIBRARY_EXTRAS]),
   generation: null,
 };

@@ -47,6 +47,13 @@ export default function RootLayout() {
            * normally; leaving it dismisses the whole modal in one slide down,
            * back to whatever screen opened it.
            */}
+          {/* Progress's weeks: zooms out of the week's dates (iOS 18's zoom, set by the link). */}
+          <Stack.Screen name="weeks" />
+          {/* Plans' search: dissolves in over Plans, full screen, the keyboard rising with it. */}
+          <Stack.Screen
+            name="plan-search"
+            options={{ presentation: "fullScreenModal", animation: "fade" }}
+          />
           <Stack.Screen name="study" options={{ presentation: "fullScreenModal" }} />
           {/*
            * New Plan — its two steps — is the same kind of full-screen modal:

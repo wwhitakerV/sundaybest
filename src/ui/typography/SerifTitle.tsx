@@ -1,7 +1,7 @@
 import { useTheme, type Theme } from "@/theme";
 import { ThemedText, type TypographyProps } from "./ThemedText";
 
-export type SerifTitleVariant = "heading" | "title" | "question" | "quiz" | "statement";
+export type SerifTitleVariant = "heading" | "title" | "question" | "quiz";
 
 export type SerifTitleProps = TypographyProps & { variant?: SerifTitleVariant };
 
@@ -15,8 +15,6 @@ function typeFor(typography: Theme["typography"], variant: SerifTitleVariant) {
       return typography.editorialQuestion;
     case "quiz":
       return typography.quizQuestion;
-    case "statement":
-      return typography.statement;
   }
 }
 

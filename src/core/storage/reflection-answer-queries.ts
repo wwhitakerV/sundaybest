@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useCurrentUserQuery } from "@/core/api/reader-queries";
 import {
+  countAllReflectionAnswers,
+  getAllReflectionAnswers,
   countReflectionAnswers,
   getReflectionAnswers,
   saveReflectionAnswer,
@@ -89,5 +91,39 @@ export function useReflectionAnswerCount(reflectionIds: readonly string[]) {
     queryKey: countKey(userId, ids),
     queryFn: () => countReflectionAnswers(userId!, ids),
     enabled: userId !== null,
+  });
+}
+
+/**
+ * How many reflections this reader has written on this phone, in all. Under
+ * the counts' cache root, so a plan reset clears it; read afresh each time
+ * it's shown, since the Study writes answers under other keys.
+ */
+export function useReflectionTotal() {
+  const me = useCurrentUserQuery();
+  const userId = me.data?.user.id ?? null;
+  return useQuery({
+    queryKey: [...countRoot(userId), "all"] as const,
+    queryFn: () => countAllReflectionAnswers(userId!),
+    enabled: userId !== null,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
+
+/**
+ * Every private answer written on this phone, by question — for Progress's
+ * weeks, where each week shows the first thing written in it. Under the
+ * answers' root, so a plan reset clears it; read afresh each time it's shown.
+ */
+export function useAllReflectionAnswers() {
+  const me = useCurrentUserQuery();
+  const userId = me.data?.user.id ?? null;
+  return useQuery({
+    queryKey: [...LOCAL_ANSWERS, userId ?? "no-user", "all"] as const,
+    queryFn: () => getAllReflectionAnswers(userId!),
+    enabled: userId !== null,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }

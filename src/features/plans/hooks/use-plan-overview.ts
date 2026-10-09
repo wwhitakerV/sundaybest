@@ -31,7 +31,7 @@ export function usePlanOverview() {
   useClearReadyBuild(planId);
   const startMutation = useStartPlanMutation();
   const plan = planQuery.data?.plan ?? null;
-  const more = usePlanMoreMenu(planId, plan?.saved ?? false);
+  const more = usePlanMoreMenu(planId);
   const today = useToday();
   const days = plan?.days ?? [];
   const currentDayNumber = plan?.progress.currentDayNumber ?? null;

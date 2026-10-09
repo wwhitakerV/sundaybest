@@ -27,8 +27,11 @@ import {
   removeSavedPlanResponseSchema,
   resolveSermonRequestSchema,
   resolveSermonResponseSchema,
+  searchPlansResponseSchema,
   searchSermonsResponseSchema,
   progressResponseSchema,
+  weekResponseSchema,
+  weeksResponseSchema,
   retryPlanGenerationResponseSchema,
   savePlanResponseSchema,
   sessionCredentialsSchema,
@@ -50,7 +53,8 @@ const devSessionRequestSchema = z
       .min(1)
       .max(128)
       .meta({
-        description: "Stable development-install identifier. Reusing it reuses the same anonymous user.",
+        description:
+          "Stable development-install identifier. Reusing it reuses the same anonymous user.",
         examples: ["swagger-local"],
       })
       .optional(),
@@ -379,8 +383,11 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         ResolveSermonResponse: jsonSchema(resolveSermonResponseSchema),
         SearchSermonsResponse: jsonSchema(searchSermonsResponseSchema),
         ProgressResponse: jsonSchema(progressResponseSchema),
+        WeekResponse: jsonSchema(weekResponseSchema),
+        WeeksResponse: jsonSchema(weeksResponseSchema),
 
         ListPlansResponse: jsonSchema(listPlansResponseSchema),
+        SearchPlansResponse: jsonSchema(searchPlansResponseSchema),
 
         GetPlanResponse: jsonSchema(getPlanResponseSchema),
 
@@ -690,22 +697,64 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         get: {
           tags: ["Progress"],
           operationId: "getProgress",
-          summary: "Get progress dashboard data",
+          summary: "Get the week and the streak",
           description:
-            "Returns the requested seven-day activity window plus streak, totals, latest Quick Check score, and the active plan's next day.",
+            "Returns the requested seven-day window, with how many plan days were finished on each date, and the streak.",
           security: auth,
           parameters: [
             {
               name: "weekStart",
               in: "query",
               required: false,
-              description: "First calendar date of the seven-day window. The client normally sends Sunday.",
+              description:
+                "First calendar date of the seven-day window. The client normally sends Sunday.",
               schema: { type: "string", format: "date" },
               example: "2026-10-04",
             },
           ],
           responses: {
             "200": ok("Progress dashboard", "ProgressResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/me/week": {
+        get: {
+          tags: ["Progress"],
+          operationId: "getWeek",
+          summary: "Get a week of study",
+          description:
+            "Returns a Sunday-to-Saturday week: each day's state (studied, today, not studied, upcoming) and one passage per plan scheduled on it, newest sermon first, with a key verse once it's done and its reflection ids (answers stay on the reader's phone); the week's plans; the reader's first week; and their all-time passages, books, activity, and Quick Check recall.",
+          security: auth,
+          parameters: [
+            {
+              name: "weekStart",
+              in: "query",
+              required: false,
+              description:
+                "Any date in the week wanted; the week runs from its Sunday. Defaults to this week.",
+              schema: { type: "string", format: "date" },
+              example: "2026-10-04",
+            },
+          ],
+          responses: {
+            "200": ok("A week of study", "WeekResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/me/weeks": {
+        get: {
+          tags: ["Progress"],
+          operationId: "getWeeks",
+          summary: "Get every week a plan ran in",
+          description:
+            "Returns every week a plan ran in, up to this one, newest first: how many of its days had study in them, and its plans, newest sermon first, with their artwork, church, that week's passages and whether each was read, and the reflection ids of the days read (answers stay on the reader's phone).",
+          security: auth,
+          responses: {
+            "200": ok("Every week a plan ran in", "WeeksResponse"),
             ...commonErrors,
           },
         },
@@ -734,6 +783,36 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           requestBody: requestBody("CreatePlanRequest"),
           responses: {
             "200": ok("Plan generation accepted", "CreatePlanResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/plans/search": {
+        get: {
+          tags: ["Plans"],
+          operationId: "searchPlans",
+          summary: "Search the current user's plans",
+          description:
+            "Matches the words against each plan's title, church, and days' passages and headings, best first. Samples not started and archived plans are left out.",
+          security: auth,
+          parameters: [
+            {
+              name: "q",
+              in: "query",
+              required: true,
+              schema: { type: "string", minLength: 1, maxLength: 120 },
+              example: "grace",
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 30, default: 20 },
+            },
+          ],
+          responses: {
+            "200": ok("Matching plans", "SearchPlansResponse"),
             ...commonErrors,
           },
         },

@@ -1,4 +1,4 @@
-import type { LibraryItem, Plan, Quiz, QuizQuestion } from "@/types/domain";
+import type { Plan, Quiz, QuizQuestion } from "@/types/domain";
 
 import { makeDayRecords } from "./plan-day-records";
 import { makeChoices } from "./quiz-choices";
@@ -6,8 +6,8 @@ import { SERMON_TEMPTATION } from "./sermons";
 import { MOCK_SETTINGS, MOCK_USER } from "./user";
 
 /**
- * A saved plan: a single day from "Overcome Temptation", built and saved to
- * the library for later. Not started; its Quick Check hasn't been taken.
+ * A single day from "Overcome Temptation", built and waiting. Not started;
+ * its Quick Check hasn't been taken.
  */
 
 const BUILT_AT = "2026-09-19T21:11:00.000Z";
@@ -69,18 +69,6 @@ export const TEMPTATION_DAYS = [RECORDS.day];
 export const TEMPTATION_SCRIPTURE = [RECORDS.scripture];
 export const TEMPTATION_REFLECTIONS = RECORDS.reflections;
 export const TEMPTATION_PRAYERS = [RECORDS.prayer];
-
-/** Saved for later — the Plans tab's "Saved". */
-export const TEMPTATION_SAVED: LibraryItem = {
-  id: `library-${PLAN_TEMPTATION.id}`,
-  createdAt: "2026-09-19T21:12:00.000Z",
-  updatedAt: "2026-09-19T21:12:00.000Z",
-  userId: MOCK_USER.id,
-  kind: "plan",
-  itemId: PLAN_TEMPTATION.id,
-  savedAt: "2026-09-19T21:12:00.000Z",
-  note: "For a Sunday afternoon.",
-};
 
 // ---------------------------------------------------------------------------
 // Quick Check — not taken yet, so every question is unanswered

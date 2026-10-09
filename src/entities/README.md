@@ -37,7 +37,6 @@ Promote code when its **second** consumer exists; Welcome's mock screens count.
 | `scripture` | `PassageHeading`, `PassageCard`                                                                    | A passage's reference and translation; the passage on its card |
 | `study`     | `StepKicker`, `ReflectionCard`, `PrayerHeading`                                                    | Daily Study step parts                                         |
 | `sermon`    | `SermonClipCard`                                                                                   | "Hear this part of the sermon", playing or not                 |
-| `streak`    | `WeekDays`                                                                                         | The week's seven days, each lit when studied                   |
 
 ## Welcome copies that stay separate
 

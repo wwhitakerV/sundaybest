@@ -7,7 +7,6 @@ import { getAppDatabase } from "./database/app-database";
 const outboxKindSchema = z.enum([
   "study.completeStep",
   "study.completeDay",
-  "plan.setSaved",
   "plan.archive",
   "settings.update",
   "reminder.update",

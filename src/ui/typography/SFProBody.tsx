@@ -2,7 +2,15 @@ import { useTheme, type Theme } from "@/theme";
 import { ThemedText, type TypographyProps } from "./ThemedText";
 
 export type SFProBodyVariant =
-  "body" | "bodyLoose" | "listItem" | "label" | "reading" | "detail" | "letter";
+  | "body"
+  | "bodyLoose"
+  | "listItem"
+  | "label"
+  | "reading"
+  | "detail"
+  | "rowDetail"
+  | "result"
+  | "letter";
 
 export type SFProBodyProps = TypographyProps & { variant?: SFProBodyVariant };
 
@@ -20,6 +28,10 @@ function typeFor(typography: Theme["typography"], variant: SFProBodyVariant) {
       return typography.reading;
     case "detail":
       return typography.cardDetail;
+    case "rowDetail":
+      return typography.rowDetail;
+    case "result":
+      return typography.resultTitle;
     case "letter":
       return typography.dayLetter;
   }

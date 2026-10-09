@@ -27,9 +27,8 @@ const PILL_WIDTH = LABEL_WIDTH + PILL_PADDING * 2;
 export type StudyNavProps = {
   onPrevious: () => void;
   onNext: () => void;
-  /** Replaces Next with this label on the last step. */
+  /** Replaces Next on the last step: "Finish", or "Quick Check" when one comes next. */
   finishLabel?: string;
-  disabled?: boolean;
   testID?: string;
 };
 
@@ -37,15 +36,9 @@ export type StudyNavProps = {
  * The Daily Study pager: Previous and Next (or Finish), two floating pills
  * as tall as the tab bar's, one at each side of the page's dock, which
  * places and tints them (`ScrollFrame`'s `footer`). Each pill is the whole
- * button. Plays its entrance once on mount via `useStudyNavEntrance`.
+ * button, and never fades — not pressed, not while a step saves. Plays its entrance once on mount via `useStudyNavEntrance`.
  */
-export function StudyNav({
-  onPrevious,
-  onNext,
-  finishLabel,
-  disabled = false,
-  testID,
-}: StudyNavProps) {
+export function StudyNav({ onPrevious, onNext, finishLabel, testID }: StudyNavProps) {
   const theme = useTheme();
   const { entranceStyle, showSparks } = useStudyNavEntrance();
   const arrow = {
@@ -60,7 +53,6 @@ export function StudyNav({
         {...(testID && { testID: `${testID}-prev-button` })}
         label="Previous"
         onPress={onPrevious}
-        disabled={disabled}
       >
         <ArrowLeft {...arrow} />
         <SFProBody variant="label">Previous</SFProBody>
@@ -70,10 +62,9 @@ export function StudyNav({
         {...(testID && { testID: `${testID}-next-button` })}
         label={finishLabel ?? "Next"}
         onPress={onNext}
-        disabled={disabled}
         burst={<SparkBurst fire={showSparks} {...(testID && { testID: `${testID}-sparks` })} />}
       >
-        <SFProBody variant="label">{finishLabel ? "Finish" : "Next"}</SFProBody>
+        <SFProBody variant="label">{finishLabel ?? "Next"}</SFProBody>
         <ArrowRight {...arrow} />
       </NavPill>
     </Animated.View>
@@ -84,14 +75,12 @@ export function StudyNav({
 function NavPill({
   label,
   onPress,
-  disabled,
   testID,
   burst,
   children,
 }: {
   label: string;
   onPress: () => void;
-  disabled: boolean;
   testID?: string;
   /** Drawn over the whole pill: the entrance's spark burst. */
   burst?: ReactNode;
@@ -104,13 +93,11 @@ function NavPill({
       {...(testID && { testID })}
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
       onPress={onPress}
-      disabled={disabled}
+      // Never fades: a tap while a step saves is ignored by the Study's view model, not greyed out.
       style={[
         styles.pill,
         { backgroundColor: theme.colors.background, borderColor: theme.colors.hairline },
-        disabled && styles.disabled,
       ]}
     >
       {burst}
@@ -136,5 +123,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: space[6],
   },
-  disabled: { opacity: 0.45 },
 });

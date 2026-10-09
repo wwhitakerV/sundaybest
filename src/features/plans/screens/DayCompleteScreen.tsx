@@ -1,22 +1,28 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Flame } from "lucide-react-native";
 
-import { WeekDays } from "@/entities/streak";
-import { radius, space, useTheme } from "@/theme";
+import { WeekStrip } from "@/features/progress";
+import { space } from "@/theme";
 import { Button } from "@/ui/atoms/Button";
-import { Card } from "@/ui/atoms/Card";
 import { IconRing } from "@/ui/atoms/IconRing";
 import { ContentPending } from "@/ui/molecules/ContentPending";
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { SFProBody } from "@/ui/typography/SFProBody";
-import { StudyNotFound } from "../components/StudyNotFound";
+import { DayGained } from "../components/DayGained";
 import { NextDayCard } from "../components/NextDayCard";
+import { QuickCheckResults } from "../components/QuickCheckResults";
+import { StudyNotFound } from "../components/StudyNotFound";
 import { useDayComplete } from "../hooks/use-day-complete";
 
-const STREAK_ICON = 20;
+const stay = () => undefined;
 
+/**
+ * A day's one finish page, a single scroll: the day done and its sermon;
+ * this week's strip, the day filled; what it gave — its key verse and what
+ * was written; its Quick Check, when it had one — what was remembered and
+ * every answer, missed first; and what's next. Done goes back to the plan.
+ */
 export function DayCompleteScreen() {
-  const theme = useTheme();
   const view = useDayComplete();
 
   if (!view.found && view.loading) {
@@ -42,32 +48,35 @@ export function DayCompleteScreen() {
       testID="day-complete-screen"
       mark={<IconRing testID="day-complete-ring" icon={Flame} done />}
       title={`Day ${view.dayNumber} done`}
-      badge={
-        view.streakLabel && (
-          <View
-            testID="day-complete-streak"
-            style={[
-              styles.streak,
-              {
-                backgroundColor: theme.colors.segmentBackground,
-              },
-            ]}
-          >
-            <Flame
-              size={STREAK_ICON}
-              color={theme.colors.text}
-              strokeWidth={theme.icon.strokeWidth}
-            />
-
-            <SFProBody variant="listItem">{view.streakLabel}</SFProBody>
-          </View>
-        )
-      }
-      footer={<Button testID="day-complete-done-button" label="Done!" onPress={view.done} />}
+      subtitle={view.planTitle}
+      footer={<Button testID="day-complete-done-button" label="Done" onPress={view.done} />}
     >
-      <Card testID="day-complete-week" style={styles.week}>
-        <WeekDays days={view.week} today={view.today} testIDPrefix="day-complete-day" />
-      </Card>
+      <View testID="day-complete-week">
+        <WeekStrip
+          tiles={view.tiles}
+          selected={view.today}
+          onSelect={stay}
+          canGoBack={false}
+          canGoForward={false}
+          onPrevious={stay}
+          onNext={stay}
+        />
+      </View>
+
+      <DayGained
+        testID="day-complete-gained"
+        reference={view.passage.reference}
+        translation={view.passage.translation}
+        verse={view.passage.verse}
+        wrote={view.wrote}
+      />
+
+      {view.quickCheck && (
+        <View testID="day-complete-quick-check" style={{ gap: space[16] }}>
+          <SFProBody variant="reading">{view.quickCheck.remembered}</SFProBody>
+          <QuickCheckResults testID="day-complete-results" items={view.quickCheck.review} />
+        </View>
+      )}
 
       {view.upNext && (
         <NextDayCard
@@ -79,18 +88,3 @@ export function DayCompleteScreen() {
     </MilestoneScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  streak: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space[10],
-    paddingHorizontal: space[18],
-    paddingVertical: space[10],
-    borderRadius: radius.pill,
-  },
-
-  week: {
-    padding: space[20],
-  },
-});

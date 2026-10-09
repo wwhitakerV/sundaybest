@@ -10,7 +10,10 @@ import {
   useStartQuizAttemptMutation,
   useSubmitQuizAnswerMutation,
 } from "@/core/api/quiz-queries";
+import { useWeekQuery } from "@/core/api/reader-queries";
 import { useCompleteStudyDayMutation } from "@/core/api/study-queries";
+import { useToday } from "@/core/store";
+import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { successFeedback, tapFeedback, warningFeedback } from "@/core/haptics/haptics";
 import {
   getQuickCheckAction,
@@ -18,7 +21,7 @@ import {
   getResumeIndex,
   type QuickCheckAction,
 } from "../logic/quick-check";
-import { describeQuizReview } from "../logic/quick-check-review";
+import { describeQuizReview, toQuestionViews } from "../logic/quick-check-review";
 import type { QuestionResult, QuickCheckQuestionView, QuizStatus } from "../types";
 import { useStudyRoute } from "./use-study-route";
 
@@ -56,20 +59,13 @@ export function useQuickCheckSession() {
 
   const status: QuizStatus = apiSession?.attempt.status ?? standing?.status ?? "notStarted";
   const questionCount = apiSession?.quiz.questions.length ?? standing?.questionCount ?? 0;
-  const questions = useMemo<QuickCheckQuestionView[]>(() => {
-    if (!apiSession) return [];
-    const feedbackByQuestion = new Map(
-      apiSession.answers.map((answer) => [answer.questionId, answer] as const),
-    );
-    return apiSession.quiz.questions.map((question) => {
-      const feedback = feedbackByQuestion.get(question.id);
-      return {
-        ...question,
-        correctChoiceId: feedback?.correctChoiceId ?? null,
-        explanation: feedback?.explanation ?? null,
-      };
-    });
-  }, [apiSession]);
+  const questions = useMemo<QuickCheckQuestionView[]>(
+    () => toQuestionViews(apiSession),
+    [apiSession],
+  );
+  // The first Quick Check the reader meets says what it's for: none finished yet, anywhere.
+  const week = useWeekQuery(getWeekStartSunday(useToday())).data;
+  const firstTime = week ? week.summary.right + week.summary.missed === 0 : false;
   const current = questions.at(currentIndex);
   const currentAnswer = current
     ? (apiSession?.answers.find((answer) => answer.questionId === current.id) ?? null)
@@ -112,9 +108,13 @@ export function useQuickCheckSession() {
         return;
       }
 
+      // The last answer in: the Quick Check is scored and the day completed at once — so it counts
+      // even if the reader leaves — and the day's finish page shows both.
       if (nextAction.kind === "finish") {
         await completeAttempt.mutateAsync();
+        await completeDay.mutateAsync();
         successFeedback();
+        router.replace(dayCompleteHref(planId, dayNumber));
         return;
       }
 
@@ -157,6 +157,7 @@ export function useQuickCheckSession() {
     },
     dayNumber,
     questionCount,
+    firstTime,
     questions,
     attempt: apiSession?.attempt ?? null,
     status,

@@ -39,7 +39,11 @@ export function TextSizeScreen() {
   }
 
   return (
-    <SettingsSubpage testID="text-size" title="Text size">
+    <SettingsSubpage
+      testID="text-size"
+      title="Text size"
+      footnote="This changes text throughout SundayBest. Daily Study also keeps its separate reading-size control."
+    >
       <View
         testID="text-size-preview"
         style={[
@@ -55,9 +59,9 @@ export function TextSizeScreen() {
         <SFProBody variant="label" tone="textMuted">
           PREVIEW
         </SFProBody>
-        {/* As the Daily Study sets Scripture: its heading, then the verse on its card. */}
-        <PassageHeading reference={passage.reference} translation={passage.translation} />
-        <PassageCard testID="text-size-preview-verse">
+        {/* As the Daily Study sets Scripture — its heading, then the verse — set straight on the preview's grey. */}
+        <PassageHeading reference={passage.reference} translation={passage.translation} onSurface />
+        <PassageCard testID="text-size-preview-verse" bare>
           <Span>
             <MonoLabel variant="emphasis">{`${passage.verse} `}</MonoLabel>
             {passage.text}
@@ -71,10 +75,6 @@ export function TextSizeScreen() {
         onChange={select}
         disabled={settingsQuery.isPending}
       />
-      <SFProBody variant="detail" tone="textSupporting">
-        This changes text throughout SundayBest. Daily Study also keeps its separate reading-size
-        control.
-      </SFProBody>
     </SettingsSubpage>
   );
 }

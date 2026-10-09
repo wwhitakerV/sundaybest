@@ -1,51 +1,42 @@
+import { useContext } from "react";
 import { StyleSheet, View } from "react-native";
+import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
-import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
-import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
-import { ProgressSkeleton } from "../components/ProgressSkeleton";
-import { TitleHeader } from "@/ui/molecules/TitleHeader";
-import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
-import { StatCard } from "@/ui/molecules/StatCard";
-import { UpNextCard } from "../components/UpNextCard";
-import { WeekDays } from "@/entities/streak";
-import { WeekNavigator } from "../components/WeekNavigator";
-import { formatClockTime } from "@/utils/time/formatClockTime";
-import { useProgressWeek } from "../hooks/use-progress-week";
-import { describeDate } from "../logic/week";
 import { space } from "@/theme";
-import { SFProBody } from "@/ui/typography/SFProBody";
-import { Span } from "@/ui/typography/Span";
+import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
+import { getFootAboveTabBar } from "@/ui/organisms/frame-edges";
+import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
+import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
+import { DayPanel } from "../components/DayPanel";
+import { ProgressRows } from "../components/ProgressRows";
+import { WeekHeader } from "../components/WeekHeader";
+import { WeekSkeleton } from "../components/WeekSkeleton";
+import { WeekStrip } from "../components/WeekStrip";
+import { useWeekView } from "../hooks/use-week-view";
 
 /**
- * Progress, from the server's completion records and quiz attempts.
+ * Progress: a week of study. Its head — where its study came from, its title,
+ * and its dates — then its seven days, one picked; the picked day's passage,
+ * by where it stands (its verse and what was written, ready, still here, or
+ * opening); and under them, what the reader has gathered in all. The dates
+ * open a picker of every week a plan ran in. It fits the
+ * screen and never scrolls: the panel takes the room the rest leaves, and the
+ * rows end 24pt above the tab bar. Swiped, the days go to the week before or
+ * after with a plan in it.
  */
+/** Between the rows and the floating tab bar, as on every Settings page. */
+const TAB_BAR_GAP = space[24];
+
 export function ProgressScreen() {
-  const {
-    today,
-    week,
-    title,
-    previousWeek,
-    nextWeek,
-    streak,
-    totals,
-    quizScore,
-    upNext,
-    reminder,
-    openUpNext,
-    loading,
-    error,
-    retry,
-  } = useProgressWeek();
+  const view = useWeekView();
+  const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
 
-  const plansDone = totals.completedPlanCount;
-
-  if (error) {
+  if (view.error) {
     return (
       <ScreenLoadError
         testID="progress-load-error"
         title="Couldn't load Progress"
-        onRetry={retry}
+        onRetry={view.retry}
       />
     );
   }
@@ -53,88 +44,53 @@ export function ProgressScreen() {
   return (
     <ScrollScreen
       testID="progress-screen"
-      header={<TitleHeader title="Progress" />}
-      contentStyle={styles.content}
+      fixed
+      contentStyle={{ paddingBottom: getFootAboveTabBar(insetBottom, TAB_BAR_GAP) }}
     >
       <SkeletonHandoff
         testID="progress-handoff"
-        pending={loading}
-        skeleton={<ProgressSkeleton testID="progress-content-pending" />}
-        style={styles.week}
+        fill
+        pending={view.loading}
+        skeleton={<WeekSkeleton testID="progress-content-pending" />}
       >
-        <WeekNavigator
-          lead={title.lead}
-          range={title.range}
-          onPrevious={previousWeek}
-          onNext={nextWeek}
-        />
-
-        <WeekDays days={week} today={today} testIDPrefix="progress-day" />
-
-        {upNext && (
-          <>
-            <SFProBody style={styles.centred} testID="progress-up-next">
-              {"Up next "}
-              <Span tone="textMuted">{describeDate(upNext.date, today)}</Span>
-            </SFProBody>
-
-            <UpNextCard
-              title={upNext.plan.title}
-              dayNumber={upNext.day.dayNumber}
-              minutes={upNext.minutes}
-              percent={upNext.percent}
-              reminderTime={reminder?.enabled ? formatClockTime(reminder.time) : null}
-              onPress={openUpNext}
+        <View style={styles.page}>
+          {view.header && (
+            <WeekHeader
+              source={view.header.source}
+              title={view.header.title}
+              range={view.header.range}
+              picker={view.picker}
+              onPickWeek={view.pickWeek}
+              preview={view.pickerPreview}
             />
-          </>
-        )}
-
-        <View style={styles.stats}>
-          <StatCard
-            testID="progress-stat-streak"
-            value={String(streak.current)}
-            label="Day streak"
+          )}
+          <WeekStrip
+            tiles={view.tiles}
+            selected={view.selectedDate}
+            onSelect={view.selectDay}
+            canGoBack={view.canGoBack}
+            canGoForward={view.canGoForward}
+            onPrevious={view.previousWeek}
+            onNext={view.nextWeek}
           />
-
-          <StatCard
-            testID="progress-stat-days"
-            value={String(totals.completedDayCount)}
-            label="Days done"
+          <DayPanel
+            date={view.selectedDate}
+            label={view.dayLabel}
+            isToday={view.isToday}
+            translation={view.translation}
+            pages={view.pages}
+            index={view.passageIndex}
+            onShow={view.showPassage}
+            onOpen={view.open}
           />
-
-          <StatCard
-            testID="progress-stat-quiz"
-            value={quizScore ? `${quizScore.correct}/${quizScore.total}` : "–"}
-            label="Quiz score"
-          />
+          {view.rows && <ProgressRows {...view.rows} />}
         </View>
-
-        <SFProBody tone="textMuted" style={styles.centred} testID="progress-plans-done">
-          {`${plansDone} ${plansDone === 1 ? "plan" : "plans"} finished`}
-        </SFProBody>
       </SkeletonHandoff>
     </ScrollScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    gap: space[24],
-    paddingTop: space[8],
-    paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
-  },
-
-  // The week's parts, as far apart as the page keeps them.
-  week: {
-    gap: space[24],
-  },
-
-  centred: {
-    textAlign: "center",
-  },
-
-  stats: {
-    flexDirection: "row",
-    gap: space[12],
-  },
+  // The whole height between the ends: the day panel takes what the rest leaves.
+  page: { flex: 1, gap: space[24] },
 });

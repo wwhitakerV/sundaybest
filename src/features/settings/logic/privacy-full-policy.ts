@@ -8,7 +8,7 @@ import type { PrivacyTopic } from "./privacy-topic";
 export const FULL_PRIVACY_POLICY: PrivacyTopic = {
   id: "policy",
   title: "Complete policy",
-  eyebrow: "Privacy policy",
+  row: "The complete policy",
   statement: "Our complete privacy policy.",
   effective: "Effective October 7, 2026 · Privacy version 1.0",
   intro:

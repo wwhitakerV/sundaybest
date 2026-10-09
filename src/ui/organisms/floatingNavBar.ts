@@ -38,6 +38,11 @@ export function getFloatingNavBarBottom(insetBottom: number): number {
   return Math.max(insetBottom, FLOATING_NAV_BAR.bottomMargin) - BELOW_SAFE_AREA;
 }
 
+/** How far above the screen's bottom edge every floating bar's top edge is, given the safe area's bottom inset. */
+export function getFloatingNavBarTop(insetBottom: number): number {
+  return getFloatingNavBarBottom(insetBottom) + FLOATING_NAV_BAR.capsuleHeight;
+}
+
 /** How far above a bar's capsule the tint behind it reaches. */
 const TINT_ABOVE_CAPSULE = 16;
 

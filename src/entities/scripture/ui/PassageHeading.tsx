@@ -9,11 +9,18 @@ export type PassageHeadingProps = {
   reference: string;
   /** "NIV". */
   translation: string;
+  /** On the soft grey (Text size's preview): the pill's edge firmer, so it holds against it. */
+  onSurface?: boolean;
   testID?: string;
 };
 
 /** A passage's heading: its reference, and its translation in a pill on the right. */
-export function PassageHeading({ reference, translation, testID }: PassageHeadingProps) {
+export function PassageHeading({
+  reference,
+  translation,
+  onSurface = false,
+  testID,
+}: PassageHeadingProps) {
   const theme = useTheme();
 
   return (
@@ -21,7 +28,13 @@ export function PassageHeading({ reference, translation, testID }: PassageHeadin
       <SFProTitle style={styles.reference}>{reference}</SFProTitle>
       <View
         testID={testID && `${testID}-translation`}
-        style={[styles.pill, { borderColor: theme.colors.divider, borderRadius: radius.pill }]}
+        style={[
+          styles.pill,
+          {
+            borderColor: onSurface ? theme.colors.edgeOnSurface : theme.colors.divider,
+            borderRadius: radius.pill,
+          },
+        ]}
       >
         <SFProBody variant="label" tone="textInactive">
           {translation}

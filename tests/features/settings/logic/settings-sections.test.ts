@@ -35,6 +35,21 @@ describe("describeSettingsSections", () => {
     expect(routine?.rows.at(0)?.value).toBe("Off");
   });
 
+  it("opens About with Meet the creator, under a starred person", () => {
+    const [, about] = describeSettingsSections(PREFS);
+
+    expect(about?.rows.map(({ label }) => label)).toEqual([
+      "Meet the creator",
+      "How plans are made",
+      "Privacy policy",
+      "Contact support",
+    ]);
+    expect(about?.rows[0]).toMatchObject({
+      icon: "userStar",
+      href: "/(tabs)/settings/meet-the-creator",
+    });
+  });
+
   it("names a text size in words", () => {
     const [routine] = describeSettingsSections({ ...PREFS, textSize: "extraLarge" });
 

@@ -1,10 +1,10 @@
+import { ABOUT_CARD, ABOUT_READING, ABOUT_TITLE, boldOnPage } from "@tests/helpers/type-on-page";
 import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { privacyTopicHref } from "@/features/settings/logic/privacy-routes";
 import { PrivacyPolicyScreen } from "@/features/settings/screens/PrivacyPolicyScreen";
-import { lightTheme } from "@/theme/tokens";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -22,86 +22,73 @@ beforeEach(() => {
     .mockReturnValue({ back: mockBack, push: mockPush } as unknown as ReturnType<typeof useRouter>);
 });
 
-const SHORT_VERSION = [
-  { topic: "keep", label: "What we keep" },
-  { topic: "device", label: "What stays on your iPhone" },
-  { topic: "use", label: "How we use your data" },
-  { topic: "controls", label: "Your controls" },
-] as const;
-
 describe("PrivacyPolicyScreen", () => {
-  it("is addressable as privacy-policy-screen", () => {
-    render(<PrivacyPolicyScreen />);
-
-    expect(screen.getByTestId("privacy-policy-screen")).toBeVisible();
-  });
-
-  it("names the page in the bar beside Back, once", () => {
+  it("is named in the bar beside Back, like every Settings page", () => {
     render(<PrivacyPolicyScreen />);
 
     expect(within(screen.getByTestId("privacy-policy")).getByText("Privacy policy")).toBeVisible();
-    expect(screen.getAllByText("Privacy policy")).toHaveLength(1);
+    expect(screen.queryByTestId("privacy-policy-hero")).toBeNull();
   });
 
-  it("opens on its promise: a red eyebrow, a serif statement, and a line of plain words", () => {
+  it("opens on its promise as the page's title, and a line in the Study's reading type", () => {
     render(<PrivacyPolicyScreen />);
 
-    const hero = within(screen.getByTestId("privacy-policy-hero"));
-    expect(hero.getByText("Privacy at SundayBest")).toHaveStyle({
-      ...lightTheme.typography.kicker,
-      color: lightTheme.colors.accent,
-    });
-    expect(hero.getByRole("header", { name: "Your study belongs to you." })).toHaveStyle(
-      lightTheme.typography.statement,
+    expect(screen.getByRole("header", { name: "Your study belongs to you." })).toHaveStyle(
+      ABOUT_TITLE,
     );
     expect(
-      hero.getByText(
+      screen.getByText(
         "SundayBest keeps only what it needs to build your plans and remember your progress.",
       ),
-    ).toHaveStyle({ color: lightTheme.colors.text });
+    ).toHaveStyle(ABOUT_READING);
   });
 
-  it("puts its three strongest promises first, numbered", () => {
+  it("answers the big three at a glance, on a card, each with what it means", () => {
     render(<PrivacyPolicyScreen />);
 
-    const trust = within(screen.getByTestId("privacy-trust"));
-    ["No account required", "Reflections stay on your iPhone", "No ads or tracking"].forEach(
-      (promise, index) => {
-        expect(trust.getByText(promise)).toBeVisible();
-        expect(trust.getByText(`0${index + 1}`)).toBeVisible();
-      },
-    );
+    const glance = screen.getByTestId("privacy-policy-glance");
+    expect(glance).toHaveStyle(ABOUT_CARD);
+    const card = within(glance);
+    expect(card.getByText("No account required")).toBeVisible();
+    expect(card.getByText("No name, email, or password. Ever.")).toBeVisible();
+    expect(card.getByText("Your reflections stay on your iPhone")).toBeVisible();
+    expect(card.getByText("What you write is never sent to us.")).toBeVisible();
+    expect(card.getByText("No ads or tracking")).toBeVisible();
+    expect(card.getByText("Nothing follows you across other apps or websites.")).toBeVisible();
   });
 
-  it("gives the short version as four rows, in order", () => {
+  it("opens each page of the details from a row, the complete policy last", () => {
     render(<PrivacyPolicyScreen />);
 
-    expect(screen.getByRole("header", { name: "The short version" })).toBeVisible();
-    expect(
-      screen
-        .getAllByTestId(/^privacy-short-version-[a-z]+$/)
-        .map((row) => String(row.props.testID)),
-    ).toEqual(SHORT_VERSION.map(({ topic }) => `privacy-short-version-${topic}`));
-    for (const { topic, label } of SHORT_VERSION) {
-      expect(screen.getByTestId(`privacy-short-version-${topic}`)).toHaveAccessibleName(label);
+    expect(screen.getByRole("header", { name: "The details" })).toBeVisible();
+    expect(screen.getByTestId("privacy-policy-details")).toHaveStyle(ABOUT_CARD);
+    const rows: [string, Parameters<typeof privacyTopicHref>[0]][] = [
+      ["What we keep", "keep"],
+      ["What stays on your iPhone", "device"],
+      ["How we use your data", "use"],
+      ["Your controls", "controls"],
+      ["The complete policy", "policy"],
+    ];
+    for (const [label, id] of rows) {
+      fireEvent.press(screen.getByRole("button", { name: label }));
+      expect(mockPush).toHaveBeenLastCalledWith(privacyTopicHref(id));
     }
   });
 
-  it.each(SHORT_VERSION)("opens $label from its row", ({ topic }) => {
+  it("says when the policy took effect, at its foot", () => {
     render(<PrivacyPolicyScreen />);
 
-    fireEvent.press(screen.getByTestId(`privacy-short-version-${topic}`));
-
-    expect(mockPush).toHaveBeenCalledWith(privacyTopicHref(topic));
+    expect(
+      within(screen.getByTestId("privacy-policy-footnote")).getByText(
+        "Effective October 7, 2026 · Privacy version 1.0",
+      ),
+    ).toHaveStyle({ textAlign: "center" });
   });
 
-  it("offers the complete policy, and says when it took effect", () => {
+  it("sets nothing in bold", () => {
     render(<PrivacyPolicyScreen />);
 
-    expect(screen.getByText("Read the complete privacy policy")).toBeVisible();
-    fireEvent.press(screen.getByTestId("privacy-policy-complete"));
-    expect(mockPush).toHaveBeenCalledWith(privacyTopicHref("policy"));
-    expect(screen.getByText("Effective October 7, 2026 · Privacy version 1.0")).toBeVisible();
+    expect(boldOnPage("privacy-policy")).toEqual([]);
   });
 
   it("goes back to Settings when Back is pressed", () => {

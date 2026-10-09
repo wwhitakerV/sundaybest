@@ -23,6 +23,8 @@ export type PopoverProps = {
   accessibilityLabel: string;
   /** A menu of choices says so; anything else is a plain group. */
   accessibilityRole?: "menu";
+  /** Dims the page a little while it's open, so the popover stands out. Clear by default, as iOS leaves it. */
+  dim?: boolean;
   testID: string;
   children: ReactNode;
 };
@@ -40,11 +42,13 @@ export function Popover({
   width,
   accessibilityLabel,
   accessibilityRole,
+  dim = false,
   testID,
   children,
 }: PopoverProps) {
   const theme = useTheme();
   const { mounted, progress } = usePresence(visible);
+  const dimStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
   const popoverStyle = useAnimatedStyle(() => ({
     opacity: progress.get(),
     transform: [{ scale: START_SCALE + (1 - START_SCALE) * progress.get() }],
@@ -52,8 +56,21 @@ export function Popover({
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
-      {/* Clear, as iOS leaves the page under a popover; VoiceOver uses the escape gesture. */}
-      <Pressable testID={`${testID}-scrim`} onPress={onClose} style={StyleSheet.absoluteFill} />
+      {/* Clear, as iOS leaves the page under a popover — or a little dimmed, fading with it.
+          VoiceOver uses the escape gesture. */}
+      <Pressable testID={`${testID}-scrim`} onPress={onClose} style={StyleSheet.absoluteFill}>
+        {dim && (
+          <Animated.View
+            testID={`${testID}-dim`}
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: theme.colors.popoverDim },
+              dimStyle,
+            ]}
+          />
+        )}
+      </Pressable>
       <Animated.View
         testID={testID}
         {...(accessibilityRole && { accessibilityRole })}

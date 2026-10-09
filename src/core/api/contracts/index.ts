@@ -4,6 +4,8 @@ export * from "./errors";
 export * from "./generation";
 export * from "./plans";
 export * from "./progress";
+export * from "./week";
+export * from "./weeks";
 export * from "./quizzes";
 export * from "./sermons";
 export * from "./settings";

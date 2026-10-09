@@ -3,6 +3,7 @@ import {
   getFloatingNavBarBottom,
   getFloatingNavBarClearance,
   getFloatingNavBarTintHeight,
+  getFloatingNavBarTop,
 } from "@/ui/organisms/floatingNavBar";
 
 describe("getFloatingNavBarBottom", () => {
@@ -12,6 +13,16 @@ describe("getFloatingNavBarBottom", () => {
 
   it("keeps it clear of the edge on a phone with no bottom inset", () => {
     expect(getFloatingNavBarBottom(0)).toBe(16);
+  });
+});
+
+describe("getFloatingNavBarTop", () => {
+  it("puts a bar's top edge a capsule above its bottom: 90pt up on a phone with a home indicator", () => {
+    expect(getFloatingNavBarTop(34)).toBe(28 + 62);
+  });
+
+  it("and 78pt up on a phone with no bottom inset", () => {
+    expect(getFloatingNavBarTop(0)).toBe(16 + 62);
   });
 });
 

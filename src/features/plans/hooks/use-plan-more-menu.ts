@@ -3,8 +3,7 @@ import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 
 import { useResetPlanMutation } from "@/core/api/plan-reset";
-import { useSetPlanSavedMutation } from "@/core/api/plan-queries";
-import { errorFeedback, selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
+import { errorFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {
   DAILY_REMINDER_HREF,
   HOW_PLANS_ARE_MADE_HREF,
@@ -12,11 +11,10 @@ import {
   type MoreMenuKey,
 } from "../logic/more-menu";
 
-/** Plan Detail's More menu, backed by the real saved-plan API state, with a reset behind a confirmation. */
-export function usePlanMoreMenu(planId: string, saved: boolean) {
+/** Plan Detail's More menu, with a reset behind a confirmation. */
+export function usePlanMoreMenu(planId: string) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const savedMutation = useSetPlanSavedMutation();
   const resetMutation = useResetPlanMutation();
 
   const reset = () => {
@@ -33,10 +31,6 @@ export function usePlanMoreMenu(planId: string, saved: boolean) {
   };
 
   const actions: Record<MoreMenuKey, () => void> = {
-    save: () => {
-      selectionFeedback();
-      savedMutation.mutate({ planId, saved: !saved });
-    },
     reminder: () => router.push(DAILY_REMINDER_HREF),
     howMade: () => router.push(HOW_PLANS_ARE_MADE_HREF),
     // Asked first: it can't be undone.
@@ -53,9 +47,8 @@ export function usePlanMoreMenu(planId: string, saved: boolean) {
 
   return {
     open,
-    saved,
     show: () => setOpen(true),
     close: () => setOpen(false),
-    items: getMoreMenuItems(saved).map((item) => ({ ...item, select: actions[item.key] })),
+    items: getMoreMenuItems().map((item) => ({ ...item, select: actions[item.key] })),
   };
 }

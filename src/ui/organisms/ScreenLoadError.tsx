@@ -21,7 +21,7 @@ export type ScreenLoadErrorProps = {
 export function ScreenLoadError({
   testID,
   title = "Couldn't load this page",
-  message = "SundayBest couldn't reach your data. Check your connection and try again.",
+  message = "SundayBest couldn't reach your data.\nCheck your connection and try again.",
   onRetry,
   leave,
 }: ScreenLoadErrorProps) {

@@ -27,11 +27,6 @@ const dayPayloadSchema = z.object({
   dayNumber: z.number().int().min(1).max(7),
 });
 
-const savedPayloadSchema = z.object({
-  planId: z.string().min(1),
-  saved: z.boolean(),
-});
-
 const planPayloadSchema = z.object({ planId: z.string().min(1) });
 
 const settingsPayloadSchema = z.object({
@@ -114,12 +109,6 @@ async function replay(api: SundayBestApi, item: OutboxMutation): Promise<void> {
     case "study.completeDay": {
       const payload = dayPayloadSchema.parse(item.payload);
       await api.study.completeDay(payload.planId, payload.dayNumber, item.idempotencyKey);
-      return;
-    }
-    case "plan.setSaved": {
-      const payload = savedPayloadSchema.parse(item.payload);
-      if (payload.saved) await api.plans.save(payload.planId, item.idempotencyKey);
-      else await api.plans.removeSaved(payload.planId, item.idempotencyKey);
       return;
     }
     case "plan.archive": {

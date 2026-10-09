@@ -3,7 +3,7 @@ import { addDays } from "@/utils/dates/addDays";
 
 import type { AppAction } from "../actions";
 import type { AppState } from "../state";
-import { findById, listAll, withRecord, withRecords, withoutRecord } from "../table";
+import { findById, listAll, withRecord, withRecords } from "../table";
 import { canMovePlan } from "../transitions";
 
 type Action<Type extends AppAction["type"]> = Extract<AppAction, { type: Type }>;
@@ -150,38 +150,4 @@ export function archivePlan(state: AppState, action: Action<"plan/archive">): Ap
     archivedAt: action.at,
     updatedAt: action.at,
   });
-}
-
-function savedEntries(state: AppState, planId: string) {
-  return listAll(state.library).filter((item) => item.kind === "plan" && item.itemId === planId);
-}
-
-/** A built plan into the library — once. */
-export function savePlan(state: AppState, action: Action<"plan/save">): AppState {
-  const plan = findById(state.plans, action.planId);
-  const savable = plan && (isStudyable(plan) || plan.status === "completed");
-  if (!savable || savedEntries(state, plan.id).length > 0) return state;
-  if (findById(state.library, action.libraryItemId)) return state;
-  return {
-    ...state,
-    library: withRecord(state.library, {
-      id: action.libraryItemId,
-      createdAt: action.at,
-      updatedAt: action.at,
-      userId: state.user.id,
-      kind: "plan",
-      itemId: plan.id,
-      savedAt: action.at,
-      note: null,
-    }),
-  };
-}
-
-export function removeSavedPlan(state: AppState, action: Action<"plan/removeSaved">): AppState {
-  const saved = savedEntries(state, action.planId);
-  if (saved.length === 0) return state;
-  return {
-    ...state,
-    library: saved.reduce((library, item) => withoutRecord(library, item.id), state.library),
-  };
 }

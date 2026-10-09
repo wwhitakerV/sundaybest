@@ -2,7 +2,8 @@ import type { BibleTranslation, TextSize } from "@/types/domain";
 import { formatClockTime } from "@/utils/time/formatClockTime";
 
 /** Which mark a row's badge holds. */
-export type SettingsIcon = "bell" | "book" | "type" | "sparkles" | "shield" | "mail" | "flag";
+export type SettingsIcon =
+  "bell" | "book" | "type" | "sparkles" | "shield" | "userStar" | "mail" | "flag";
 
 export type SettingsRow = {
   testID: string;
@@ -15,6 +16,7 @@ export type SettingsRow = {
     | "/(tabs)/settings/daily-reminder"
     | "/(tabs)/settings/bible-translation"
     | "/(tabs)/settings/text-size"
+    | "/(tabs)/settings/meet-the-creator"
     | "/(tabs)/settings/how-plans-are-made"
     | "/(tabs)/settings/privacy-policy"
     | "/(tabs)/settings/contact-support"
@@ -81,6 +83,12 @@ export function describeSettingsSections({
     {
       title: "About",
       rows: [
+        {
+          testID: "settings-meet-the-creator-row",
+          label: "Meet the creator",
+          icon: "userStar",
+          href: "/(tabs)/settings/meet-the-creator",
+        },
         {
           testID: "settings-how-plans-are-made-row",
           label: "How plans are made",
