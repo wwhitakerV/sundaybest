@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { getAppDatabase } from "./database/app-database";
+import { deleteReflectionLines } from "./reflection-lines";
 
 const reflectionAnswerRowSchema = z.object({
   reflection_id: z.string().min(1),
@@ -98,8 +99,8 @@ export function saveReflectionAnswer(
 }
 
 /**
- * Clears this reader's answers to the given questions from the device — a
- * plan reset. Only these; every other answer stays.
+ * Clears this reader's answers to the given questions from the device — and
+ * the lines added to them — on a plan reset. Only these; every other stays.
  */
 export async function deleteReflectionAnswers(
   userId: string,
@@ -112,6 +113,8 @@ export async function deleteReflectionAnswers(
     `DELETE FROM reflection_answers WHERE user_id = ? AND reflection_id IN (${placeholders})`,
     [userId, ...reflectionIds],
   );
+  // And the lines added to them later: what was written goes with what it answered.
+  await deleteReflectionLines(userId, reflectionIds);
 }
 
 export async function countReflectionAnswers(
@@ -154,4 +157,29 @@ export async function getAllReflectionAnswers(userId: string): Promise<Record<st
     }
   }
   return result;
+}
+
+/** Every answer this user has written on this device, with when — Your words. Oldest first. */
+export async function getAllReflectionEntries(userId: string): Promise<LocalReflectionAnswer[]> {
+  const db = await getAppDatabase();
+  const rows = await db.query(
+    `SELECT reflection_id, answer, answered_at, updated_at
+       FROM reflection_answers
+      WHERE user_id = ? AND length(trim(answer)) > 0
+      ORDER BY answered_at ASC`,
+    [userId],
+  );
+  return rows.flatMap((row) => {
+    const parsed = reflectionAnswerRowSchema.safeParse(row);
+    return parsed.success
+      ? [
+          {
+            reflectionId: parsed.data.reflection_id,
+            answer: parsed.data.answer,
+            answeredAt: parsed.data.answered_at,
+            updatedAt: parsed.data.updated_at,
+          },
+        ]
+      : [];
+  });
 }

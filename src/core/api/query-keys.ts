@@ -11,6 +11,10 @@ export const apiQueryKeys = {
   week: (weekStart: string) => ["api", "progress", "week", weekStart] as const,
   /** Every week a plan ran in — under the progress root too. */
   weeks: ["api", "progress", "weeks"] as const,
+  /** Every passage finished — under the progress root, so finishing a study refreshes it. */
+  word: ["api", "progress", "word"] as const,
+  /** Every reflection question in the reader's plans — under the progress root too. */
+  reflections: ["api", "progress", "reflections"] as const,
   /** A search of the reader's plans, by its words — beside the plans, not under them. */
   planSearch: (query: string) => ["api", "plan-search", query] as const,
   sermonSearch: (query: string) => ["api", "sermons", "search", query] as const,

@@ -5,7 +5,7 @@ import { controlHeight, radius, space, useTheme } from "@/theme";
 import { TextField } from "@/ui/typography/TextField";
 
 /** As tall as New plan's sermon search. */
-const FIELD_HEIGHT = 52;
+export const SEARCH_FIELD_HEIGHT = 52;
 const ICON = 20;
 /** The clear: iOS's, small and filled. */
 const CLEAR = 19;
@@ -20,6 +20,8 @@ export type SearchFieldProps = {
   autoFocus?: boolean;
   /** On the keyboard's Search key. */
   onSubmit?: () => void;
+  /** The field let go — the keyboard put away. */
+  onBlur?: () => void;
   /** Floating over the keyboard: white, lifted by a soft shadow — beside a `raised` close. */
   raised?: boolean;
   /** The field's; its clear is `${testID}-clear`. */
@@ -38,6 +40,7 @@ export function SearchField({
   accessibilityLabel,
   autoFocus = false,
   onSubmit,
+  onBlur,
   raised = false,
   testID,
 }: SearchFieldProps) {
@@ -76,6 +79,7 @@ export function SearchField({
         autoCorrect={false}
         returnKeyType="search"
         {...(onSubmit && { onSubmitEditing: onSubmit })}
+        {...(onBlur && { onBlur })}
         style={styles.input}
       />
       {value.length > 0 && (
@@ -100,6 +104,11 @@ export function SearchField({
 }
 
 const styles = StyleSheet.create({
-  field: { height: FIELD_HEIGHT, borderWidth: 1, flexDirection: "row", alignItems: "center" },
+  field: {
+    height: SEARCH_FIELD_HEIGHT,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
   input: { flex: 1 },
 });

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
 
-import { motion, radius, space, useTheme } from "@/theme";
+import { motion, radius, space } from "@/theme";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { SFProBody } from "@/ui/typography/SFProBody";
@@ -40,8 +40,6 @@ export function PlanSearchRow({
   onPress,
   testID,
 }: PlanSearchRowProps) {
-  const theme = useTheme();
-
   return (
     <Animated.View layout={MOVE} entering={ENTER} exiting={EXIT}>
       <Pressable
@@ -49,10 +47,9 @@ export function PlanSearchRow({
         accessibilityRole="button"
         accessibilityLabel={title}
         onPress={onPress}
-        style={({ pressed }) => [
+        style={[
           styles.row,
           { gap: space[16], paddingVertical: space[10], paddingHorizontal: PAGE_INSET },
-          pressed && { backgroundColor: theme.colors.segmentBackground },
         ]}
       >
         <VideoThumbnail uri={thumbnailUrl} style={styles.thumbnail} />

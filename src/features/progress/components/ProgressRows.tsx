@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
 import { radius, space, useTheme } from "@/theme";
@@ -46,6 +46,10 @@ export type ProgressRowsProps = {
   words: string;
   /** Quick Check's line, as its results say it: "14 right · 4 missed" — or null before the first. */
   quickCheck: string | null;
+  /** Opens The Word, from its row. */
+  onOpenWord: () => void;
+  /** Opens Your words, from its row. */
+  onOpenWords: () => void;
 };
 
 /**
@@ -53,17 +57,30 @@ export type ProgressRowsProps = {
  * rows: each its name and one line — never two — and a small symbol of it in
  * a fixed slot: bars for the Word, lines of writing for their words, Quick
  * Check's right and missed as a grid of dots — and Settings' chevron. Your words is always there; the others once
- * there's something in them. Their pages aren't linked yet.
+ * there's something in them. The Word's and Your words' rows open their pages; Quick Check's isn't linked yet.
  */
-export function ProgressRows({ word, words, quickCheck }: ProgressRowsProps) {
+export function ProgressRows({
+  word,
+  words,
+  quickCheck,
+  onOpenWord,
+  onOpenWords,
+}: ProgressRowsProps) {
   const theme = useTheme();
-  const rows: { key: string; title: string; line: string; picture: ReactNode }[] = [];
+  const rows: {
+    key: string;
+    title: string;
+    line: string;
+    picture: ReactNode;
+    onPress?: () => void;
+  }[] = [];
 
   if (word) {
     rows.push({
       key: "word",
       title: "The Word",
       line: word,
+      onPress: onOpenWord,
       picture: (
         <View style={styles.bars}>
           {BARS.map((bar, index) => (
@@ -85,6 +102,7 @@ export function ProgressRows({ word, words, quickCheck }: ProgressRowsProps) {
     key: "words",
     title: "Your words",
     line: words,
+    onPress: onOpenWords,
     picture: (
       <View style={[styles.lines, { gap: space[4] }]}>
         {LINES.map((width, index) => (
@@ -149,8 +167,11 @@ export function ProgressRows({ word, words, quickCheck }: ProgressRowsProps) {
       {rows.map((row, index) => (
         <Fragment key={row.key}>
           {index > 0 && <Divider />}
-          <View
+          <Pressable
             testID={`progress-row-${row.key}`}
+            accessibilityRole={row.onPress ? "button" : undefined}
+            disabled={!row.onPress}
+            {...(row.onPress && { onPress: row.onPress })}
             style={[
               styles.row,
               { gap: space[16], paddingHorizontal: space[16], paddingVertical: space[14] },
@@ -165,10 +186,10 @@ export function ProgressRows({ word, words, quickCheck }: ProgressRowsProps) {
             <View style={styles.picture}>{row.picture}</View>
             <ChevronRight
               size={CHEVRON}
-              color={theme.colors.textMuted}
-              strokeWidth={theme.icon.strokeWidth}
+              color={theme.colors.textSupporting}
+              strokeWidth={theme.icon.strokeWidthStrong}
             />
-          </View>
+          </Pressable>
         </Fragment>
       ))}
     </View>

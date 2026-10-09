@@ -21,6 +21,8 @@ import {
   progressResponseSchema,
   weekResponseSchema,
   weeksResponseSchema,
+  wordResponseSchema,
+  reflectionsResponseSchema,
   retryPlanGenerationResponseSchema,
   startQuizAttemptResponseSchema,
   submitQuizAnswerRequestSchema,
@@ -136,6 +138,14 @@ export function createSundayBestApi(client: ApiClient) {
 
     weeks: {
       get: () => client.request({ path: "/v1/me/weeks", schema: weeksResponseSchema }),
+    },
+
+    word: {
+      get: () => client.request({ path: "/v1/me/word", schema: wordResponseSchema }),
+    },
+
+    reflections: {
+      get: () => client.request({ path: "/v1/me/reflections", schema: reflectionsResponseSchema }),
     },
 
     plans: createPlansApi(client),

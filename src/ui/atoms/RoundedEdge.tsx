@@ -8,6 +8,8 @@ export type RoundedEdgeProps = {
   radius: number;
   /** How far in from each side the corners sit: where the cards' sides are. */
   inset: number;
+  /** Placed by itself, this far down what it's laid over (a header's foot); else where its caller puts it. */
+  top?: number;
   testID?: string;
 };
 
@@ -17,7 +19,7 @@ export type RoundedEdgeProps = {
  * straight cut, and a card flows into it with its corners round to the last.
  * Never touched.
  */
-export function RoundedEdge({ radius, inset, testID }: RoundedEdgeProps) {
+export function RoundedEdge({ radius, inset, top, testID }: RoundedEdgeProps) {
   const theme = useTheme();
   const fill = theme.colors.background;
   // The square's outer corner, less the quarter circle round the window's corner.
@@ -28,7 +30,11 @@ export function RoundedEdge({ radius, inset, testID }: RoundedEdgeProps) {
     <View
       testID={testID}
       pointerEvents="none"
-      style={[styles.edge, { height: radius, paddingHorizontal: inset }]}
+      style={[
+        styles.edge,
+        { height: radius, paddingHorizontal: inset },
+        top !== undefined && [styles.placed, { top }],
+      ]}
     >
       <Svg width={radius} height={radius}>
         <Path d={left} fill={fill} />
@@ -42,4 +48,5 @@ export function RoundedEdge({ radius, inset, testID }: RoundedEdgeProps) {
 
 const styles = StyleSheet.create({
   edge: { flexDirection: "row", justifyContent: "space-between" },
+  placed: { position: "absolute", left: 0, right: 0 },
 });

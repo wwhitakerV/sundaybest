@@ -4,11 +4,13 @@ import { useCurrentUserQuery } from "@/core/api/reader-queries";
 import {
   countAllReflectionAnswers,
   getAllReflectionAnswers,
+  getAllReflectionEntries,
   countReflectionAnswers,
   getReflectionAnswers,
   saveReflectionAnswer,
   type LocalReflectionAnswer,
 } from "./reflection-answers";
+import { getAllReflectionLines, saveReflectionLine, type ReflectionLine } from "./reflection-lines";
 
 /**
  * The device-only reflection answers, read and written through TanStack
@@ -126,4 +128,56 @@ export function useAllReflectionAnswers() {
     staleTime: 0,
     refetchOnMount: "always",
   });
+}
+
+/**
+ * Every answer written on this phone, with when, oldest first — Your words.
+ * Under the answers' root, so a plan reset clears it; read afresh each time.
+ */
+export function useReflectionEntries() {
+  const me = useCurrentUserQuery();
+  const userId = me.data?.user.id ?? null;
+  return useQuery({
+    queryKey: [...LOCAL_ANSWERS, userId ?? "no-user", "entries"] as const,
+    queryFn: () => getAllReflectionEntries(userId!),
+    enabled: userId !== null,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+}
+
+function linesKey(userId: string | null) {
+  return [...LOCAL_ANSWERS, userId ?? "no-user", "lines"] as const;
+}
+
+/**
+ * The lines added later to what was written, by reflection, and the way to
+ * add or change today's. Device-only, written as typed: a line never enters
+ * an API mutation or the outbox.
+ */
+export function useReflectionLines() {
+  const queryClient = useQueryClient();
+  const me = useCurrentUserQuery();
+  const userId = me.data?.user.id ?? null;
+  const query = useQuery({
+    queryKey: linesKey(userId),
+    queryFn: () => getAllReflectionLines(userId!),
+    enabled: userId !== null,
+  });
+
+  const changeLine = (reflectionId: string, writtenOn: string, text: string) => {
+    if (!userId) return;
+    queryClient.setQueryData<Record<string, ReflectionLine[]>>(linesKey(userId), (current) => {
+      const others = (current?.[reflectionId] ?? []).filter((line) => line.writtenOn !== writtenOn);
+      const lines =
+        text.length === 0
+          ? others
+          : [...others, { writtenOn, text }].sort((a, b) => a.writtenOn.localeCompare(b.writtenOn));
+      return { ...(current ?? {}), [reflectionId]: lines };
+    });
+    // A failed write leaves the line on screen; the next keystroke tries again.
+    void saveReflectionLine(userId, reflectionId, writtenOn, text).catch(() => undefined);
+  };
+
+  return { lines: query.data ?? {}, changeLine } as const;
 }

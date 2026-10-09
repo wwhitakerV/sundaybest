@@ -28,6 +28,8 @@ import {
   resolveSermonRequestSchema,
   resolveSermonResponseSchema,
   searchPlansResponseSchema,
+  wordResponseSchema,
+  reflectionsResponseSchema,
   searchSermonsResponseSchema,
   progressResponseSchema,
   weekResponseSchema,
@@ -385,6 +387,8 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         ProgressResponse: jsonSchema(progressResponseSchema),
         WeekResponse: jsonSchema(weekResponseSchema),
         WeeksResponse: jsonSchema(weeksResponseSchema),
+        WordResponse: jsonSchema(wordResponseSchema),
+        ReflectionsResponse: jsonSchema(reflectionsResponseSchema),
 
         ListPlansResponse: jsonSchema(listPlansResponseSchema),
         SearchPlansResponse: jsonSchema(searchPlansResponseSchema),
@@ -755,6 +759,36 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           security: auth,
           responses: {
             "200": ok("Every week a plan ran in", "WeeksResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/me/reflections": {
+        get: {
+          tags: ["Progress"],
+          operationId: "getReflections",
+          summary: "Every reflection question in the current user's plans",
+          description:
+            "What was asked, its passage and its study. The user's answers are never sent: they stay on their device, under each question's id.",
+          security: auth,
+          responses: {
+            "200": ok("Reflection questions", "ReflectionsResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/me/word": {
+        get: {
+          tags: ["Progress"],
+          operationId: "getWord",
+          summary: "Every passage the current user has finished",
+          description:
+            "Each passage once, by its latest study, with its book, chapter and verse, its text in the user's translation, and the study to open it by.",
+          security: auth,
+          responses: {
+            "200": ok("The Word", "WordResponse"),
             ...commonErrors,
           },
         },

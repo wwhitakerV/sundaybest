@@ -53,11 +53,7 @@ export function SettingsChoiceList<T extends string>({
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
               onPress={() => onChange(choice.value)}
-              style={({ pressed }) => [
-                styles.row,
-                { paddingHorizontal: space[18], gap: space[16] },
-                pressed && !disabled && { backgroundColor: theme.colors.segmentBackground },
-              ]}
+              style={[styles.row, { paddingHorizontal: space[18], gap: space[16] }]}
             >
               <View style={[styles.copy, { gap: space[4] }]}>
                 <SFProBody>{choice.label}</SFProBody>

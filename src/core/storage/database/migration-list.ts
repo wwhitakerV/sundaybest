@@ -141,4 +141,24 @@ export const MIGRATIONS: readonly Migration[] = [
       );
     },
   },
+  {
+    version: 4,
+    name: "reflection-lines",
+    async up(db) {
+      // Lines a reader adds later to what they wrote — one a day for each
+      // reflection, the original never edited. Device-only, as the answers
+      // are: never in the outbox, never uploaded.
+      await db.execute(`
+        CREATE TABLE reflection_lines (
+          user_id TEXT NOT NULL,
+          reflection_id TEXT NOT NULL,
+          written_on TEXT NOT NULL,
+          text TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, reflection_id, written_on)
+        )
+      `);
+      await db.execute("CREATE INDEX reflection_lines_user_idx ON reflection_lines(user_id)");
+    },
+  },
 ];

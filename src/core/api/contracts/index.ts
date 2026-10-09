@@ -11,3 +11,5 @@ export * from "./sermons";
 export * from "./settings";
 export * from "./study";
 export * from "./user";
+export * from "./word";
+export * from "./reflections";

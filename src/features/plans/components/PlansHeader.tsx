@@ -101,7 +101,6 @@ export function PlansHeader({
         testID="plans-search-button"
         icon={Search}
         accessibilityLabel="Search your plans"
-        soft
         onPress={onSearch}
       />
     </View>

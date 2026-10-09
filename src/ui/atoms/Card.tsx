@@ -1,4 +1,6 @@
+import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, View, type ViewProps } from "react-native";
+import Animated from "react-native-reanimated";
 
 import { useTheme } from "@/theme";
 
@@ -14,6 +16,8 @@ export type CardProps = ViewProps & {
   onPress?: () => void;
   /** Its container edge — drawn unless asked for none, for a card that sits on its fill alone. */
   edge?: boolean;
+  /** How it grows and shrinks when what's in it changes size (a row opening): it springs, not jumps. */
+  layout?: ComponentProps<typeof Animated.View>["layout"];
 };
 
 /**
@@ -27,6 +31,7 @@ export function Card({
   edge = true,
   style,
   onPress,
+  layout,
   ...props
 }: CardProps) {
   const theme = useTheme();
@@ -43,6 +48,7 @@ export function Card({
   if (onPress) {
     return <Pressable {...props} accessibilityRole="button" onPress={onPress} style={shell} />;
   }
+  if (layout) return <Animated.View {...props} layout={layout} style={shell} />;
   return <View {...props} style={shell} />;
 }
 

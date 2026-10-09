@@ -54,10 +54,9 @@ export function WeekPlanRow({ plan, weekStart, onSeeWeek, onOpenPlan }: WeekPlan
         accessibilityRole="button"
         accessibilityLabel={[plan.title, plan.church].filter(Boolean).join(", ")}
         onPress={show}
-        style={({ pressed }) => [
+        style={[
           styles.row,
           { gap: space[14], paddingHorizontal: space[16], paddingVertical: space[14] },
-          pressed && { backgroundColor: theme.colors.segmentBackground },
         ]}
       >
         <WeekArtStack art={[plan.art]} />

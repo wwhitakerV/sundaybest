@@ -37,3 +37,20 @@ export function parseWeeksParams(params: unknown): string | null {
   const parsed = weeksParamsSchema.safeParse(params);
   return parsed.success ? (parsed.data.preview ?? null) : null;
 }
+
+/** Your words, opened on one reflection — picked from the list of them all. */
+export function wordsHref(reflectionId: string) {
+  return {
+    pathname: "/(tabs)/progress/words",
+    // `at` makes each pick a new one, so picking the one showing again still lands on it.
+    params: { show: reflectionId, at: String(Date.now()) },
+  } as const;
+}
+
+const wordsParamsSchema = z.object({ show: z.string().min(1), at: z.string().min(1) });
+
+/** The reflection Your words was sent to — untrusted, so parsed — or null when opened plainly. */
+export function parseWordsParams(params: unknown): { show: string; at: string } | null {
+  const parsed = wordsParamsSchema.safeParse(params);
+  return parsed.success ? parsed.data : null;
+}

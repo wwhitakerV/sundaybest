@@ -3,8 +3,6 @@ import {
   FlatList,
   StyleSheet,
   type LayoutChangeEvent,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
   View,
   type ListRenderItem,
   type StyleProp,
@@ -21,6 +19,7 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { space, useTheme } from "@/theme";
 import { RoundedEdge } from "../atoms/RoundedEdge";
 import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
+import { SCROLL_THROTTLE_MS, scrollProps } from "./list-scroll";
 import { PAGE_INSET, PAGE_TOP } from "./Screen";
 
 export type ListScreenProps<Item> = Omit<ScrollFrameProps, "children"> & {
@@ -48,20 +47,9 @@ export type ListScreenProps<Item> = Omit<ScrollFrameProps, "children"> & {
   };
   /** How far down it's scrolled, as it scrolls — for a header that changes with it (Plans'). */
   onScroll?: (y: number) => void;
+  /** Dragging the list puts the keyboard away (`on-drag`), for a list with a field on the keyboard. */
+  keyboardDismissMode?: "none" | "on-drag" | "interactive";
 };
-
-/** Scroll events often enough to follow a finger, about once a frame. */
-const SCROLL_THROTTLE_MS = 16;
-
-/** The list's scroll handler, when the page wants one. */
-const scrollProps = (onScroll?: (y: number) => void) =>
-  onScroll
-    ? {
-        scrollEventThrottle: SCROLL_THROTTLE_MS,
-        onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) =>
-          onScroll(event.nativeEvent.contentOffset.y),
-      }
-    : {};
 
 /**
  * `ScrollScreen` for a list of items, drawn as they scroll into view: the
@@ -76,9 +64,11 @@ export function ListScreen<Item>({
   contentStyle,
   pinned,
   onScroll,
+  keyboardDismissMode,
   ...frame
 }: ListScreenProps<Item>) {
   const list = {
+    ...(keyboardDismissMode && { keyboardDismissMode }),
     ...(onScroll && { onScroll }),
     testID: `${frame.testID}-list`,
     data,
@@ -104,7 +94,13 @@ export function ListScreen<Item>({
 
 type ListParts<Item> = Pick<
   ListScreenProps<Item>,
-  "data" | "renderItem" | "keyExtractor" | "empty" | "contentStyle" | "onScroll"
+  | "data"
+  | "renderItem"
+  | "keyExtractor"
+  | "empty"
+  | "contentStyle"
+  | "onScroll"
+  | "keyboardDismissMode"
 > & { testID: string };
 
 /** The list itself, its items resting clear of the frame's header, dock, and fades. */
@@ -116,6 +112,7 @@ function ClearedList<Item>({
   empty,
   contentStyle,
   onScroll,
+  keyboardDismissMode,
 }: ListParts<Item>) {
   const clearance = useFrameClearance();
 
@@ -123,6 +120,7 @@ function ClearedList<Item>({
     <FlatList
       testID={testID}
       {...scrollProps(onScroll)}
+      {...(keyboardDismissMode && { keyboardDismissMode })}
       style={styles.list}
       data={data}
       renderItem={renderItem}
@@ -157,6 +155,7 @@ function PinnedList<Item>({
   empty,
   contentStyle,
   onScroll,
+  keyboardDismissMode,
   pinned,
 }: ListParts<Item> & { pinned: NonNullable<ListScreenProps<Item>["pinned"]> }) {
   const theme = useTheme();
@@ -181,6 +180,7 @@ function PinnedList<Item>({
     <View style={[styles.list, { marginTop: insetTop }]}>
       <Animated.FlatList
         testID={testID}
+        {...(keyboardDismissMode && { keyboardDismissMode })}
         onScroll={scrollHandler}
         scrollEventThrottle={SCROLL_THROTTLE_MS}
         style={styles.list}

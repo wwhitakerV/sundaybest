@@ -21,9 +21,9 @@ export type NotFoundScreenProps = {
 
 /**
  * What a screen shows when what it's for isn't there, or couldn't be reached
- * — instead of nothing: what happened, and a way out. A screen that can be
- * retried offers the retry and a way out together, so the reader is never
- * held on it.
+ * — instead of nothing: what happened, and a way out, as black text buttons
+ * right under the words. A screen that can be retried offers the retry and a
+ * way out together, so the reader is never held on it.
  */
 export function NotFoundScreen({
   title,
@@ -43,22 +43,23 @@ export function NotFoundScreen({
         <SFProBody variant="bodyLoose" tone="textMuted" style={styles.centred}>
           {message}
         </SFProBody>
-      </View>
-      <View style={styles.actions}>
-        <Button
-          testID={`${testID}-action`}
-          label={actionLabel}
-          variant={secondary ? "primary" : "secondary"}
-          onPress={onAction}
-        />
-        {secondary && (
+        {/* Under the words, as Settings offers its retry: black text, no fill — clear of any tab bar. */}
+        <View style={styles.actions}>
           <Button
-            testID={`${testID}-secondary`}
-            label={secondary.label}
+            testID={`${testID}-action`}
+            label={actionLabel}
             variant="secondary"
-            onPress={secondary.onPress}
+            onPress={onAction}
           />
-        )}
+          {secondary && (
+            <Button
+              testID={`${testID}-secondary`}
+              label={secondary.label}
+              variant="secondary"
+              onPress={secondary.onPress}
+            />
+          )}
+        </View>
       </View>
     </Screen>
   );
@@ -67,5 +68,5 @@ export function NotFoundScreen({
 const styles = StyleSheet.create({
   centre: { flex: 1, justifyContent: "center", gap: space[12] },
   centred: { textAlign: "center" },
-  actions: { gap: space[8] },
+  actions: { gap: space[4], paddingTop: space[8] },
 });

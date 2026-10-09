@@ -143,6 +143,8 @@ export function useWeekView() {
             week.summary.right + week.summary.missed > 0
               ? describeQuickCheck(week.summary.right, week.summary.missed)
               : null,
+          onOpenWord: () => router.push("/progress/word"),
+          onOpenWords: () => router.push("/progress/words"),
         }
       : null,
     canGoBack: older !== null,

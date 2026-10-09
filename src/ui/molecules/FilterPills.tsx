@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, type LayoutChangeEvent } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import Animated, {
   ReduceMotion,
   useAnimatedStyle,
@@ -21,6 +21,9 @@ const SLIDE = { ...motion.slide, reduceMotion: ReduceMotion.System } as const;
 
 type Frame = { x: number; width: number };
 
+/** How often the row reports where it's scrolled: once a frame. */
+const SCROLL_THROTTLE_MS = 16;
+
 export type FilterPillsProps<Option extends FilterOption> = {
   options: readonly Option[];
   /** The one picked — or null, none, where a row lets its pick go (Plans). */
@@ -38,11 +41,12 @@ export type FilterPillsProps<Option extends FilterOption> = {
 };
 
 /**
- * A row of filters as pills, each its label and its count (if it has one), with no fill — as
+ * A row of filters as pills, each its label and its count (if it has one) set small above, with no fill — as
  * Plan Detail's days have none. The one picked is outlined in black: one
  * outline, drawn once its pill is measured, that slides to each pill picked
  * and lands without a bounce. It scrolls sideways when the pills outgrow the
- * row. For the borderless look, see `FilterTabs`.
+ * row, and brings the pill picked into view when it's picked from elsewhere.
+ * For the borderless look, see `FilterTabs`.
  */
 export function FilterPills<Option extends FilterOption>({
   options,
@@ -59,11 +63,31 @@ export function FilterPills<Option extends FilterOption>({
     setFrames((current) => new Map(current).set(label, { x: layout.x, width: layout.width }));
   }
 
+  // The pill picked is kept in view — picked from elsewhere (The Word's map), the row brings it in.
+  const scroll = useRef<ScrollView>(null);
+  const view = useRef({ offset: 0, width: 0 });
+  useEffect(() => {
+    if (!picked || view.current.width === 0) return;
+    const { offset, width } = view.current;
+    const start = picked.x - bleed;
+    const end = picked.x + picked.width + bleed;
+    if (start < offset) scroll.current?.scrollTo({ x: Math.max(start, 0), animated: true });
+    else if (end > offset + width) scroll.current?.scrollTo({ x: end - width, animated: true });
+  }, [picked, bleed]);
+
   return (
     <ScrollView
+      ref={scroll}
       testID={testID}
       horizontal
       showsHorizontalScrollIndicator={false}
+      scrollEventThrottle={SCROLL_THROTTLE_MS}
+      onScroll={(event) => {
+        view.current.offset = event.nativeEvent.contentOffset.x;
+      }}
+      onLayout={(event) => {
+        view.current.width = event.nativeEvent.layout.width;
+      }}
       style={[styles.row, { marginHorizontal: -bleed }]}
       contentContainerStyle={{ gap: tight ? space[4] : space[8], paddingHorizontal: bleed }}
     >
@@ -86,18 +110,20 @@ export function FilterPills<Option extends FilterOption>({
               {
                 borderRadius: radius.pill,
                 paddingHorizontal: tight ? space[12] : space[16],
-                gap: space[4],
               },
             ]}
           >
-            <SFProLabel variant="segment" tone="text">
-              {option.label}
-            </SFProLabel>
-            {option.count !== undefined && (
-              <SFProLabel variant="segment" tone="textInactive">
-                {option.count}
+            {/* The count rides small at the label's top, as `FilterTabs`' do: a superscript. */}
+            <View style={[styles.label, { gap: space[2] }]}>
+              <SFProLabel variant="segment" tone="text">
+                {option.label}
               </SFProLabel>
-            )}
+              {option.count !== undefined && (
+                <SFProLabel variant="filterCount" tone="textInactive">
+                  {option.count}
+                </SFProLabel>
+              )}
+            </View>
           </Pressable>
         );
       })}
@@ -134,6 +160,7 @@ const styles = StyleSheet.create({
   // below it, which cut the pills off at their foot.
   row: { flexGrow: 0, flexShrink: 0 },
   pill: { height: HEIGHT, flexDirection: "row", alignItems: "center" },
+  label: { flexDirection: "row", alignItems: "flex-start" },
   // Placed along the row by its slide (`translateX`), from the row's own edge.
   outline: { position: "absolute", top: 0, left: 0, height: HEIGHT, borderWidth: OUTLINE },
 });

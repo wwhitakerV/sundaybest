@@ -97,7 +97,7 @@ export function WeeksScreen() {
       renderItem={({ item }) =>
         item.kind === "month" ? (
           <View style={styles.month}>
-            <SFProBody variant="label" tone="textMuted" accessibilityRole="header">
+            <SFProBody variant="label" tone="textSupporting" accessibilityRole="header">
               {item.title}
             </SFProBody>
           </View>

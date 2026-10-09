@@ -1,7 +1,7 @@
 import { useTheme, type Theme } from "@/theme";
 import { ThemedText, type TypographyProps } from "./ThemedText";
 
-export type SerifBodyVariant = "scripture" | "standfirst";
+export type SerifBodyVariant = "scripture" | "standfirst" | "line";
 
 export type SerifBodyProps = TypographyProps & { variant?: SerifBodyVariant };
 
@@ -11,6 +11,8 @@ function typeFor(typography: Theme["typography"], variant: SerifBodyVariant) {
       return typography.scripture;
     case "standfirst":
       return typography.standfirst;
+    case "line":
+      return typography.scriptureLine;
   }
 }
 

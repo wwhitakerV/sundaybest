@@ -601,6 +601,17 @@ export const motion = {
    */
   panelEnter: { durationMs: 480, fromY: 8 },
   /**
+   * A row opening to show all of itself, and closing (The Word's passages):
+   * a spring with a little give, so it settles softly. Everything below
+   * moves with it.
+   */
+  expand: { damping: 18, stiffness: 180, mass: 1 },
+  /**
+   * A part of a page put away or brought back by a switch (The Word's chart):
+   * it rolls up quickly, fading, and what's below moves up into its room.
+   */
+  rollUpMs: 220,
+  /**
    * Search results as the words change: a row moves to its new place, a new
    * one fades in, one that no longer matches fades out (`exitMs`). Never
    * remounted. Under Reduce Motion, they settle without moving.
@@ -861,6 +872,13 @@ const typography = {
    * editorial face, a step below `scripture` (About this plan's overview).
    */
   standfirst: { fontFamily: fonts.editorialBody, fontSize: 20, fontWeight: "400", lineHeight: 30 },
+  /** One line from a passage, standing for it in a list (The Word): the Scripture face, small. */
+  scriptureLine: {
+    fontFamily: fonts.editorialBody,
+    fontSize: 17,
+    fontWeight: "400",
+    lineHeight: 24,
+  },
   /**
    * A question set as the page's centrepiece (a theology exam's): the
    * editorial face, a step over `editorialTitle`, leaded for several lines.
@@ -903,7 +921,11 @@ const elevation = {
  * Line icons (lucide) share one stroke weight across the chrome — header
  * buttons and tab bar alike — so they read as one family.
  */
-const icon = { strokeWidth: 2 } as const;
+const icon = {
+  strokeWidth: 2,
+  /** A row's chevron that should read clearly at a glance (Progress's rows, The Word's): firmer. */
+  strokeWidthStrong: 2.5,
+} as const;
 
 export const lightTheme = {
   name: "light",

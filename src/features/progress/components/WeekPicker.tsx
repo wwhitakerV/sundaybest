@@ -67,10 +67,9 @@ export function WeekPicker({
               .filter(Boolean)
               .join(", ")}
             onPress={() => pick(option.weekStart)}
-            style={({ pressed }) => [
+            style={[
               styles.row,
               { gap: space[12], paddingHorizontal: space[16], paddingVertical: space[12] },
-              pressed && { backgroundColor: theme.colors.segmentBackground },
             ]}
           >
             <View style={[styles.copy, { gap: space[2] }]}>

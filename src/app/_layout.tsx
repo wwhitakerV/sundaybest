@@ -18,6 +18,7 @@ const TAB_ROOTS = [
   "(tabs)/plans",
   "(tabs)/fun/index",
   "(tabs)/fun",
+  "(tabs)/progress/index",
   "(tabs)/progress",
   "(tabs)/settings/index",
   "(tabs)/settings",
@@ -49,6 +50,8 @@ export default function RootLayout() {
            */}
           {/* Progress's weeks: zooms out of the week's dates (iOS 18's zoom, set by the link). */}
           <Stack.Screen name="weeks" />
+          {/* Every reflection: zooms out of Your words' notebook (iOS 18's zoom, set by the link). */}
+          <Stack.Screen name="reflections" options={{ gestureEnabled: false }} />
           {/* Plans' search: dissolves in over Plans, full screen, the keyboard rising with it. */}
           <Stack.Screen
             name="plan-search"

@@ -38,6 +38,8 @@ import {
   progressResponseSchema,
   weekResponseSchema,
   weeksResponseSchema,
+  wordResponseSchema,
+  reflectionsResponseSchema,
   isoDateSchema,
   retryPlanGenerationResponseSchema,
   sessionCredentialsSchema,
@@ -79,6 +81,8 @@ import { createStudyService } from "../services/study-service.js";
 import { createWeekService } from "../services/week-service.js";
 import { createWeeksService } from "../services/weeks-service.js";
 import { createPlanSearchService } from "../services/plan-search-service.js";
+import { createWordService } from "../services/word-service.js";
+import { createReflectionsService } from "../services/reflections-service.js";
 import { createUserService } from "../services/user-service.js";
 
 const emptyObjectSchema = z.object({}).strict();
@@ -99,6 +103,8 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
   const progressService = createProgressService(db);
   const studyService = createStudyService(db, context.bible);
   const weekService = createWeekService(db, context.bible);
+  const wordService = createWordService(db, context.bible);
+  const reflectionsService = createReflectionsService(db);
   const weeksService = createWeeksService(db);
   const planSearchService = createPlanSearchService(db, planService);
   const quizService = createQuizService(db);
@@ -311,6 +317,18 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     return weekResponseSchema.parse(
       await weekService.get(auth.userId, auth.timezone, query.weekStart),
     );
+  });
+
+  app.get("/v1/me/reflections", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    return reflectionsResponseSchema.parse(
+      await reflectionsService.get(auth.userId, auth.timezone),
+    );
+  });
+
+  app.get("/v1/me/word", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    return wordResponseSchema.parse(await wordService.get(auth.userId, auth.timezone));
   });
 
   app.get("/v1/me/weeks", async (request) => {

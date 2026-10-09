@@ -113,11 +113,7 @@ function MenuRow({ item, onPress }: { item: PopoverMenuItem; onPress: () => void
       testID={item.testID}
       accessibilityRole="menuitem"
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.row,
-        { gap: space[12], paddingHorizontal: space[16] },
-        pressed && { backgroundColor: theme.colors.segmentBackground },
-      ]}
+      style={[styles.row, { gap: space[12], paddingHorizontal: space[16] }]}
     >
       <SFProBody style={styles.label} numberOfLines={1}>
         {item.label}

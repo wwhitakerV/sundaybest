@@ -11,3 +11,5 @@ export * from "./study.js";
 export * from "./user.js";
 export * from "./week.js";
 export * from "./weeks.js";
+export * from "./word.js";
+export * from "./reflections.js";

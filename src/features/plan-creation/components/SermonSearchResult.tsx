@@ -26,10 +26,10 @@ export function SermonSearchResult({ result, selected, onPress, testID }: Sermon
       accessibilityLabel={`${sermon.title}${sermon.church ? `, ${sermon.church}` : ""}`}
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.row,
         {
-          backgroundColor: pressed ? theme.colors.segmentBackground : theme.colors.surface,
+          backgroundColor: theme.colors.surface,
           borderColor: selected ? theme.colors.text : "transparent",
           borderWidth: 2,
         },

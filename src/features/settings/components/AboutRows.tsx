@@ -105,10 +105,7 @@ function AboutRowView({ row }: { row: AboutRow }) {
       accessibilityRole="button"
       accessibilityLabel={row.title ?? row.text}
       onPress={row.onPress}
-      style={({ pressed }) => [
-        layout,
-        pressed && { backgroundColor: theme.colors.segmentBackground },
-      ]}
+      style={[layout]}
     >
       {content}
     </Pressable>

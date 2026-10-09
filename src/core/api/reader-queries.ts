@@ -82,6 +82,18 @@ export function useWeeksQuery() {
   return useQuery({ queryKey: apiQueryKeys.weeks, queryFn: () => api.weeks.get() });
 }
 
+/** Every reflection question in the reader's plans, for Your words to match with what was written. */
+export function useReflectionPromptsQuery() {
+  const api = useSundayBestApi();
+  return useQuery({ queryKey: apiQueryKeys.reflections, queryFn: () => api.reflections.get() });
+}
+
+/** The Word: every passage the reader has finished, each with a line from it. */
+export function useWordQuery() {
+  const api = useSundayBestApi();
+  return useQuery({ queryKey: apiQueryKeys.word, queryFn: () => api.word.get() });
+}
+
 export function useCompleteOnboardingMutation() {
   const api = useSundayBestApi();
   const queryClient = useQueryClient();

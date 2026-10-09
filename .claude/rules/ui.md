@@ -72,7 +72,7 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
 - Plans pins its header (`ListScreen`'s `pinned`): the title; the filters —
   In progress and Done with their counts, as `FilterPills` (a second tap on
   the one picked lets it go) — centred in the room beside it; and the search
-  at the right (`HeaderIconButton` `soft`, the dates pill's grey). It stays
+  at the right (`HeaderIconButton`, white with its hairline edge). It stays
   under the status bar on solid white with no fade and no shadow — the list
   starts below the status bar, so nothing ever shows behind it. Once the list
   scrolls, the title is bumped left off the screen and the filters spring
@@ -84,6 +84,13 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
   the top only.
 
 ## Search
+
+Header icon buttons are white with their hairline edge, never a grey fill.
+Two side by side share one pill (`HeaderButtonPill`, iOS's grouped toolbar
+without the glass). A field on the keyboard sits in `KeyboardBar`: 8pt from
+the screen's edges and the keys, the page running on beneath it, behind it
+and the gap below the page's edge tint at `edgeFade.peak`, ending flush with
+the field's top — so what scrolls under shows faintly.
 
 A search is full screen and fades in with the keyboard up (Plans' search,
 `/plan-search`): the field (`SearchField`) sits on the keyboard with the close
@@ -145,6 +152,13 @@ is keyed (`key={pageIndex}`) to play it again; never trigger an entrance from
 an effect, a key comparison, or an animation callback. Reduce Motion keeps
 the fade and drops the movement.
 
+## Pressing a row
+
+A row in a list — Settings' and About's rows, Progress's rows, The Word's
+passages, search results, a popover's or menu's options, the week picker —
+never changes its background when pressed. No grey flash, no highlight: the
+row stays as it is and does what it does. (A button may still dim.)
+
 ## Controls are ours, never iOS's glass
 
 On or off is `Toggle` (`src/ui/atoms`), never react-native's `Switch`; a value
@@ -194,6 +208,10 @@ own:
 - **Forms**: `SettingsField` (New plan's field: soft fill, hairline edge, an
   icon), `Chip` for a choice, the app's `Button`.
 
+A group's title over its card — Settings' groups, Weeks' months, All
+reflections' plans — is one style: `SFProBody` `label` in the supporting grey
+(`textSupporting`), never the muted one, so a long list can be scanned by them.
+
 Row and option labels across Settings are regular, never medium — iOS
 Settings' weight. Medium is for titles and headings; semibold only on buttons.
 
@@ -221,7 +239,66 @@ Swiping the days moves between the same weeks. In development builds, a
 Preview button steps the picker through made-up histories. No streaks, counts
 in the strip, or guilt states. Copy states facts, never guesses.
 
-## Milestone pages
+The Word's row opens The Word (`/progress/word`, in Progress's own stack, the
+tab bar up): the Bible as 66 lines, Genesis to Revelation, each as tall as its
+book is long (by the square root of its chapters), dark where a passage was
+finished, the book picked in the accent with a mark beneath it. It opens
+zoomed all the way out; a pinch zooms in about the fingers, to about a dozen
+books across (`MAX_ZOOM`), and a drag then slides it along, gliding to a stop.
+At full width a sideways swipe does nothing, and while a finger is on it the
+page's back swipe is held. A finger on it names the book under it; a tap picks
+the nearest studied book. Under
+it, the studied books as `FilterPills` with their counts (the picked pill
+scrolls into view), then the book's passages — its reference in the tracked
+caps over one whole line from it in the Scripture face (`SerifBody` `line`) —
+fading in as they rise (`panelEnter`) when the book changes. It opens on the
+book studied last. Its passages sit on Settings' group card, each its
+reference over its Scripture cut to one line; a tap (with `selectionFeedback`)
+opens it whole on `motion.expand`'s spring, the rows below and the card
+following, and the chevron stays where it sat closed. Rows' chevrons there
+and on Progress are firmer (`textSupporting`, `icon.strokeWidthStrong`). The
+page fits the screen (`ScrollScreen` `fixed`): only the list scrolls, inside
+the page, its card rounding into the list's top edge (`RoundedEdge`), as
+Plans' cards do. A switch in its header (`Toggle` with `icon`,
+`ChartNoAxesColumn`, 6pt wider: on, the icon red in the knob; off, black in
+the track) puts the chart away for more room to read: only the chart rolls up
+(`Collapse`, `motion.rollUpMs`, on the UI thread) and the pills move up into
+its room. The page's line above it never moves: its words change in place
+(`Swap`), cross-fading as its height eases with the roll.
+
+Your words' row opens Your words (`/progress/words`): the reflections written
+on this phone — never uploaded, so no share or export — one at a time. The
+questions, passages and studies come from the server (`/v1/me/reflections`);
+what was written, and the lines added to it later (`reflection_lines`, one a
+day, the original never edited), only from the phone. Under the title, the
+count and "They never leave this phone." with a lock; a timeline of marks,
+one a reflection (one a week past 40), scrubbed, the one in view sliding in
+the accent; the reflection — how long ago and its date in the tracked caps,
+"You were asked" and the question, the answer whole in the serif italic, the
+lines added since, and the passage, which opens its study — scrolling on its
+own; and, pinned at the foot, "Another one" (`CompactButton` soft, `Shuffle`:
+leaning older, never repeating until all are met) and "Add a line today" (the
+Study's answer box, saved as typed). It opens on an older reflection, not the
+newest. Before anything's written: the lock line keeps only its promise, and
+the page's middle holds the milestone ring round `NotebookPen`, "Nothing
+written yet" (`SFProTitle` `message`) and how it fills (`bodyLoose`, muted) —
+no timeline, no buttons. With reflections, its header's right holds a notebook
+(`Notebook`, `HeaderIconButton`, white with its hairline edge) that zooms out
+the full-screen list of them all (`/reflections`, `Link.AppleZoom`): the
+title, then search and close side by side in one pill (`HeaderButtonPill`) —
+tapped, the search sinks into the page and the pill closes up round the close,
+which never moves, while Plans' own field rises on the keyboard, full width
+(`KeyboardBar`); the keyboard put away with nothing typed, the field goes and
+the pill springs back out, the search icon with it — then
+each plan's name in Weeks' quiet month label over Settings' group card of its
+reflections — question, date, chevron — the plan written in most lately
+first. A row sends Your words to it (`wordsHref`). Only its close closes it:
+no swipe down, the zoom's included, ever dismisses it
+(`gestureEnabled: false`, `usePreventZoomTransitionDismissal`); with the
+keyboard up, a drag only puts the keyboard away. The notebook taps
+(`tapFeedback`) as it opens the list.
+
+
 
 A page that marks a moment between steps — a day done, a plan complete, a
 Quick Check to start or its score — composes `MilestoneScreen`
@@ -249,7 +326,7 @@ feature component that owns the intent (never from `src/ui`, which can't reach
 `core`):
 
 - `selectionFeedback()` — a choice **changes** (a filter, a day, a size, an
-  answer picked). Silent when the same value is picked again.
+  answer picked, a passage opened or closed on The Word). Silent when the same value is picked again.
 - `tapFeedback()` — starting or moving through something (Continue, Start, Next,
   Create my plan, the tab bar).
 - `successFeedback()` — an accomplishment (a day finished, a right answer, a

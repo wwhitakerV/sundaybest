@@ -49,7 +49,12 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
 
   return (
     <View style={{ gap: space[8] }}>
-      <SFProBody variant="label" tone="textMuted" style={styles.title} accessibilityRole="header">
+      <SFProBody
+        variant="label"
+        tone="textSupporting"
+        style={styles.title}
+        accessibilityRole="header"
+      >
         {title}
       </SFProBody>
       <View
