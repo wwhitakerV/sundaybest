@@ -22,8 +22,8 @@ export type FeedbackPanelProps = {
 };
 
 /**
- * A verdict at the foot of a page, in its colour: an icon and a title, why,
- * and the way on. `ScrollFrame` pins it to the screen's bottom in the dock's
+ * A verdict at the foot of a page, in its colour: a solid mark (a tick, or an
+ * X) and a title, why, and the way on. `ScrollFrame` pins it to the screen's bottom in the dock's
  * place; it runs just past the screen's edges with rounded top corners, its
  * words at the page inset and its button exactly where the dock's sits. A
  * quiz answer checked, a link that won't work.
@@ -49,10 +49,12 @@ export function FeedbackPanel({ testID, tone, title, detail, children }: Feedbac
     >
       <View testID={`${testID}-words`} style={styles.words}>
         <View style={styles.verdict}>
+          {/* A solid disc in the verdict's colour, its mark cut out of it: the cue that reads first. */}
           <Icon
-            size={22}
-            color={toneColor(theme.colors, tone)}
-            strokeWidth={theme.icon.strokeWidth}
+            size={VERDICT_ICON}
+            fill={toneColor(theme.colors, tone)}
+            color={theme.colors.background}
+            strokeWidth={theme.icon.strokeWidthStrong}
           />
           <SFProTitle variant="headline" tone={tone}>
             {title}
@@ -66,6 +68,9 @@ export function FeedbackPanel({ testID, tone, title, detail, children }: Feedbac
     </View>
   );
 }
+
+/** The verdict's mark beside its title: a touch larger than an icon in a line, to be seen first. */
+const VERDICT_ICON = 26;
 
 /**
  * The panel's edge. It's drawn all the way round — a top edge alone fades out

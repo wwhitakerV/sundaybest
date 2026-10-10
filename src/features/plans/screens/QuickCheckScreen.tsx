@@ -1,6 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
-import { X } from "lucide-react-native";
+import { RotateCcw, X } from "lucide-react-native";
 
 import { MilestoneScreen } from "@/ui/organisms/MilestoneScreen";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
@@ -122,7 +122,22 @@ export function QuickCheckScreen() {
           }
           title={getScoreHeadline(score)}
           subtitle={`${score.percentage}% right`}
-          footer={actionButton}
+          // Taking it again on the left; done on the right.
+          footer={
+            <View style={[styles.finishedFoot, { gap: space[12] }]}>
+              <View style={styles.half}>
+                <Button
+                  testID="quick-check-again-button"
+                  label="Take it again"
+                  icon={RotateCcw}
+                  variant="soft"
+                  disabled={view.busy}
+                  onPress={view.takeAgain}
+                />
+              </View>
+              <View style={styles.half}>{actionButton}</View>
+            </View>
+          }
         >
           <QuickCheckResults testID="quick-check-results" items={view.review} />
         </MilestoneScreen>
@@ -183,6 +198,8 @@ const STEPS_WIDTH = 200;
 
 const styles = StyleSheet.create({
   steps: { width: STEPS_WIDTH },
+  finishedFoot: { flexDirection: "row" },
+  half: { flex: 1 },
   loadingContent: {
     paddingTop: space[24],
   },

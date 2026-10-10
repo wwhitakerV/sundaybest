@@ -40,6 +40,7 @@ import {
   weeksResponseSchema,
   wordResponseSchema,
   reflectionsResponseSchema,
+  quickChecksResponseSchema,
   isoDateSchema,
   retryPlanGenerationResponseSchema,
   sessionCredentialsSchema,
@@ -83,6 +84,7 @@ import { createWeeksService } from "../services/weeks-service.js";
 import { createPlanSearchService } from "../services/plan-search-service.js";
 import { createWordService } from "../services/word-service.js";
 import { createReflectionsService } from "../services/reflections-service.js";
+import { createQuickChecksService } from "../services/quick-checks-service.js";
 import { createUserService } from "../services/user-service.js";
 
 const emptyObjectSchema = z.object({}).strict();
@@ -108,6 +110,7 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
   const weeksService = createWeeksService(db);
   const planSearchService = createPlanSearchService(db, planService);
   const quizService = createQuizService(db);
+  const quickChecksService = createQuickChecksService(db, quizService);
 
   app.post("/v1/attest/challenge", async (request) => {
     const body = parseWithSchema(challengeRequestSchema, request.body ?? {});
@@ -317,6 +320,11 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
     return weekResponseSchema.parse(
       await weekService.get(auth.userId, auth.timezone, query.weekStart),
     );
+  });
+
+  app.get("/v1/me/quick-checks", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    return quickChecksResponseSchema.parse(await quickChecksService.get(auth.userId));
   });
 
   app.get("/v1/me/reflections", async (request) => {
@@ -584,6 +592,22 @@ export async function registerV1Routes(app: FastifyInstance, context: AppContext
       async () =>
         startQuizAttemptResponseSchema.parse(
           await quizService.startAttempt(auth.userId, quizId, auth.timezone),
+        ),
+    );
+  });
+
+  app.post("/v1/quizzes/:quizId/retakes", async (request) => {
+    const auth = await requireAuth(request, db, context.jwt);
+    const { quizId } = parseWithSchema(quizParamSchema, request.params);
+    return idempotent(
+      request,
+      context,
+      auth.userId,
+      `POST /v1/quizzes/${quizId}/retakes`,
+      {},
+      async () =>
+        startQuizAttemptResponseSchema.parse(
+          await quizService.retakeAttempt(auth.userId, quizId, auth.timezone),
         ),
     );
   });

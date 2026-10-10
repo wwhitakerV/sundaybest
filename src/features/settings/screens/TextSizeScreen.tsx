@@ -50,7 +50,6 @@ export function TextSizeScreen() {
           styles.preview,
           {
             backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.containerBorder,
             borderRadius: radius[24],
             gap: space[12],
           },
@@ -80,5 +79,5 @@ export function TextSizeScreen() {
 }
 
 const styles = StyleSheet.create({
-  preview: { borderWidth: 1, padding: space[20] },
+  preview: { padding: space[20] },
 });

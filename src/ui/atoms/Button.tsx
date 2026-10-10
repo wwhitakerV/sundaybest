@@ -23,7 +23,7 @@ export type ButtonProps = {
 
 /**
  * `primary`: filled pill, for the one main action on a screen.
- * `soft`: a quieter pill — a soft fill and a hairline edge — for a second
+ * `soft`: a quieter pill — white, with a card's edge — for a second
  * action beside a primary one.
  * `secondary`: text-only, no fill or border, for a lower-emphasis action
  * alongside a primary button.
@@ -55,8 +55,9 @@ export function Button({
         variant === "soft" && [
           styles.pill,
           styles.soft,
+          // White with a card's edge: it holds on the white dock behind it, beside a black button.
           {
-            backgroundColor: theme.colors.segmentBackground,
+            backgroundColor: theme.colors.background,
             borderColor: theme.colors.containerBorder,
           },
         ],

@@ -2,7 +2,8 @@ import { Fragment, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
@@ -26,30 +27,19 @@ export type AboutRow = {
  * An About page's list, as Settings sets its own: rows on one soft card with
  * hairlines between — each a quiet icon, its name in the regular weight, what
  * it means in grey beneath with room to read, and a chevron where it goes
- * somewhere. A row with no name says its words in full ink.
+ * somewhere. A row with no name says its words in full ink. The card is
+ * outlined only when a row goes somewhere: one that's only read is its fill alone.
  */
 export function AboutRows({ rows, testID }: { rows: readonly AboutRow[]; testID: string }) {
-  const theme = useTheme();
-
   return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.containerBorder,
-          borderRadius: radius[24],
-        },
-      ]}
-    >
+    <Card testID={testID} radius={24} edge={rows.some((row) => row.onPress)} style={styles.card}>
       {rows.map((row, index) => (
         <Fragment key={row.key}>
           {index > 0 && <Divider />}
           <AboutRowView row={row} />
         </Fragment>
       ))}
-    </View>
+    </Card>
   );
 }
 
@@ -113,7 +103,7 @@ function AboutRowView({ row }: { row: AboutRow }) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, overflow: "hidden" },
+  card: { overflow: "hidden" },
   row: { minHeight: MIN_ROW_HEIGHT, flexDirection: "row" },
   icon: { ...ICON_BOX, alignItems: "center", justifyContent: "center" },
   copy: { flex: 1 },

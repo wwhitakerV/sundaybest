@@ -11,7 +11,6 @@ import {
   WORDS_EMPTY,
   buildMarks,
   buildReflections,
-  chooseAnother,
   chooseOpening,
   describeAgo,
   describeFullDate,
@@ -24,8 +23,8 @@ import { parseWordsParams } from "../logic/progress-route";
  * Your words' view model: the reflections written on this phone, oldest
  * first, one in view — opened on an older one, to meet something forgotten —
  * the timeline's marks and the one in view, and the reflection's parts. Moves
- * between them by the timeline or "Another one" (never repeating one this
- * visit until all have been met); adds a line to the one in view, today's.
+ * between them by the timeline, or to one picked from the list of them all;
+ * adds a line to the one in view, today's.
  */
 export function useYourWords() {
   const router = useRouter();
@@ -38,7 +37,6 @@ export function useYourWords() {
   const marks = buildMarks(reflections);
 
   const [shownId, setShownId] = useState<string | null>(null);
-  const [seen, setSeen] = useState<ReadonlySet<string>>(new Set());
   const [writing, setWriting] = useState(false);
   // Sent here from the list of them all: show that one. Each pick is applied once.
   const sent = parseWordsParams(useLocalSearchParams());
@@ -50,14 +48,11 @@ export function useYourWords() {
   ) {
     setApplied(sent.at);
     setShownId(sent.show);
-    setSeen((current) => new Set(current).add(sent.show));
     setWriting(false);
   }
   // The first time there's something to show, an older one is chosen to open on.
   if (shownId === null && reflections.length > 0) {
-    const opening = chooseOpening(reflections, Math.random());
-    setShownId(opening);
-    if (opening) setSeen(new Set([opening]));
+    setShownId(chooseOpening(reflections, Math.random()));
   }
 
   const index = Math.max(
@@ -68,7 +63,6 @@ export function useYourWords() {
   const show = (id: string | null) => {
     if (id === null || id === shown?.id) return;
     setShownId(id);
-    setSeen((current) => new Set(current).add(id));
     setWriting(false);
   };
   const todayLine = shown?.lines.find((line) => line.writtenOn === today)?.text ?? "";
@@ -91,11 +85,18 @@ export function useYourWords() {
       id: shown.id,
       ago: describeAgo(shown.writtenOn, today),
       date: describeFullDate(shown.writtenOn, today),
+      planTitle: shown.planTitle,
+      thumbnailUrl: shown.thumbnailUrl,
       question: shown.question,
       answer: shown.answer,
-      reference: shown.reference,
-      lines: shown.lines
-        .filter((line) => line.writtenOn !== today || !writing)
+      studyLabel: `Open Day ${shown.dayNumber}`,
+      lines: shown.lines.map((line) => ({
+        ...line,
+        date: describeFullDate(line.writtenOn, today),
+      })),
+      /** In the sheet, over today's: the lines from days before. */
+      earlierLines: shown.lines
+        .filter((line) => line.writtenOn !== today)
         .map((line) => ({ ...line, date: describeFullDate(line.writtenOn, today) })),
     },
     /** A mark scrubbed to or tapped: the reflection it stands for (a week's newest). */
@@ -105,11 +106,6 @@ export function useYourWords() {
       if (id === null || id === shown?.id) return;
       selectionFeedback();
       show(id);
-    },
-    canShowAnother: reflections.length > 1,
-    showAnother: () => {
-      tapFeedback();
-      show(chooseAnother(reflections, shown?.id ?? null, seen, Math.random()));
     },
     /** Today's line to the one in view: being written, and its words. */
     writing,

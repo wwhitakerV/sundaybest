@@ -14,6 +14,8 @@ export const myReflectionPromptSchema = z.object({
   planId: apiIdSchema,
   /** The plan it's in, by title: the list of every reflection groups by it. */
   planTitle: z.string().min(1).max(300),
+  /** The plan's sermon's artwork, to know it by. */
+  thumbnailUrl: z.url().nullable(),
   dayNumber: z.number().int().min(1).max(7),
 });
 

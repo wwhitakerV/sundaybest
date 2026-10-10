@@ -36,7 +36,8 @@ export function NotFoundScreen({
   return (
     <Screen testID={testID} padded>
       <View style={styles.centre}>
-        <SFProTitle accessibilityRole="header" style={styles.centred}>
+        {/* A message's title, a step under a page's own: the words under it carry the page. */}
+        <SFProTitle variant="message" accessibilityRole="header" style={styles.centred}>
           {title}
         </SFProTitle>
         {/* Leaded, so a message on two lines reads as two easy lines. */}

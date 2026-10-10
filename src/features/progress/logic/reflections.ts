@@ -11,6 +11,8 @@ export type Reflection = {
   reference: string;
   planId: string;
   planTitle: string;
+  /** The plan's sermon's artwork, to know it by. */
+  thumbnailUrl: string | null;
   dayNumber: number;
   answer: string;
   /** The day it was written, on this phone's calendar. */
@@ -65,6 +67,7 @@ export function buildReflections(
               reference: prompt.reference,
               planId: prompt.planId,
               planTitle: prompt.planTitle,
+              thumbnailUrl: prompt.thumbnailUrl,
               dayNumber: prompt.dayNumber,
               answer: entry.answer,
               writtenOn: toLocalDate(entry.answeredAt),
@@ -150,12 +153,13 @@ export function describeTimelineEnds(
 }
 
 /**
- * Another reflection to meet: never the one showing, nor one already met
- * this visit until all have been; leaning toward older ones — the older, the
- * likelier. `random` is in [0, 1).
+ * Another one to meet — a reflection, a missed question — oldest first in
+ * the list given: never the one showing, nor one already met this visit
+ * until all have been; leaning toward older ones, the older the likelier.
+ * `random` is in [0, 1).
  */
 export function chooseAnother(
-  reflections: readonly Reflection[],
+  reflections: readonly { id: string }[],
   currentId: string | null,
   seen: ReadonlySet<string>,
   random: number,
@@ -209,15 +213,22 @@ export function searchReflections(reflections: readonly Reflection[], words: str
 }
 
 /** Reflections under their plans: the plan written in most lately first, its newest first. */
-export function groupByPlan(
-  reflections: readonly Reflection[],
-): { planId: string; title: string; reflections: Reflection[] }[] {
-  const plans = new Map<string, { planId: string; title: string; reflections: Reflection[] }>();
+export function groupByPlan(reflections: readonly Reflection[]): {
+  planId: string;
+  title: string;
+  thumbnailUrl: string | null;
+  reflections: Reflection[];
+}[] {
+  const plans = new Map<
+    string,
+    { planId: string; title: string; thumbnailUrl: string | null; reflections: Reflection[] }
+  >();
   // Newest first, so each plan's place and its rows both follow the latest writing.
   for (const reflection of [...reflections].reverse()) {
     const plan = plans.get(reflection.planId) ?? {
       planId: reflection.planId,
       title: reflection.planTitle,
+      thumbnailUrl: reflection.thumbnailUrl,
       reflections: [],
     };
     plan.reflections.push(reflection);

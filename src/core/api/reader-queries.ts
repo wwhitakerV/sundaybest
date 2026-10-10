@@ -82,6 +82,12 @@ export function useWeeksQuery() {
   return useQuery({ queryKey: apiQueryKeys.weeks, queryFn: () => api.weeks.get() });
 }
 
+/** Every Quick Check the reader has finished, as last taken: what was remembered, and the right answers. */
+export function useQuickChecksQuery() {
+  const api = useSundayBestApi();
+  return useQuery({ queryKey: apiQueryKeys.quickChecks, queryFn: () => api.quickChecks.get() });
+}
+
 /** Every reflection question in the reader's plans, for Your words to match with what was written. */
 export function useReflectionPromptsQuery() {
   const api = useSundayBestApi();

@@ -9,6 +9,8 @@ export { WeeksScreen } from "./screens/WeeksScreen";
 export { WordScreen } from "./screens/WordScreen";
 export { YourWordsScreen } from "./screens/YourWordsScreen";
 export { ReflectionsScreen } from "./screens/ReflectionsScreen";
+export { RecallScreen } from "./screens/RecallScreen";
+export { QuickChecksScreen } from "./screens/QuickChecksScreen";
 // The week's strip and its days' look, for a day's finish page to show the same week.
 export { WeekStrip } from "./components/WeekStrip";
 export { describeWeekTile } from "./logic/week-view";

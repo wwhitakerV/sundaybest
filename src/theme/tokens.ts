@@ -67,16 +67,20 @@ const palette = {
   /** A light dim behind a popover that wants the page to step back a little. */
   dimLight: "rgba(0, 0, 0, 0.12)",
   dimOnDark: "rgba(0, 0, 0, 0.4)",
-  // Quick Check's verdicts: a deep green for right and the brand red for
-  // wrong, each with a soft tint to fill and a lighter line to edge it.
+  // Quick Check's verdicts: a deep green for right and a deep amber for a
+  // miss — "not yet", never the brand red, which means only "this one" and
+  // "now" — each with a soft tint to fill and a lighter line to edge it. The
+  // amber is dark enough to read as text on white; on a dark page, lighter.
   correctInk: "#2E8A5E",
   correctMist: "#EEF6F1",
   correctLine: "#A9D3BC",
-  incorrectMist: "#FBEDED",
-  incorrectLine: "#EFB7B7",
+  amber: "#B45309",
+  amberOnDark: "#E5A04F",
+  incorrectMist: "#FCF3E8",
+  incorrectLine: "#EBC79A",
   correctMistOnDark: "#16261E",
   correctLineOnDark: "#2F5A44",
-  incorrectMistOnDark: "#2A1616",
+  incorrectMistOnDark: "#2A2014",
   // An exam subject's folio, a bound book: a near-black cloth cover with
   // warm paper-white ink on it, and the same paper for a cover not in view.
   folioCloth: "#171717",
@@ -97,7 +101,7 @@ const palette = {
   selectionMistOnDark: "#241415",
   selectionEdgeOnDark: "#5A2626",
   selectionBlushOnDark: "#3A1C1D",
-  incorrectLineOnDark: "#6B2A2A",
+  incorrectLineOnDark: "#6B4D24",
   // Type and marks on a colour of the content's own (a featured sermon's):
   // white on a dark one, black on a light one, each full, muted, and faint.
   whiteMuted: "rgba(255, 255, 255, 0.72)",
@@ -250,7 +254,7 @@ type ColorTokens = {
   correctSurface: string;
   /** The edge of a right answer. */
   correctBorder: string;
-  /** A wrong answer: its mark, and the words saying so. */
+  /** A wrong answer — a deep amber, "not yet", never the brand red: its mark, and the words saying so. */
   incorrect: string;
   /** Behind a wrong answer, and its verdict panel. */
   incorrectSurface: string;
@@ -377,7 +381,7 @@ const lightColors: ColorTokens = {
   correct: palette.correctInk,
   correctSurface: palette.correctMist,
   correctBorder: palette.correctLine,
-  incorrect: palette.red,
+  incorrect: palette.amber,
   incorrectSurface: palette.incorrectMist,
   folioCloth: palette.folioCloth,
   folioClothEdge: palette.folioClothEdge,
@@ -470,7 +474,7 @@ const darkColors: ColorTokens = {
   correct: palette.correctInk,
   correctSurface: palette.correctMistOnDark,
   correctBorder: palette.correctLineOnDark,
-  incorrect: palette.red,
+  incorrect: palette.amberOnDark,
   incorrectSurface: palette.incorrectMistOnDark,
   folioCloth: palette.folioCloth,
   folioClothEdge: palette.folioClothEdge,

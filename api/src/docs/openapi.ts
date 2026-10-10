@@ -30,6 +30,7 @@ import {
   searchPlansResponseSchema,
   wordResponseSchema,
   reflectionsResponseSchema,
+  quickChecksResponseSchema,
   searchSermonsResponseSchema,
   progressResponseSchema,
   weekResponseSchema,
@@ -389,6 +390,7 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         WeeksResponse: jsonSchema(weeksResponseSchema),
         WordResponse: jsonSchema(wordResponseSchema),
         ReflectionsResponse: jsonSchema(reflectionsResponseSchema),
+        QuickChecksResponse: jsonSchema(quickChecksResponseSchema),
 
         ListPlansResponse: jsonSchema(listPlansResponseSchema),
         SearchPlansResponse: jsonSchema(searchPlansResponseSchema),
@@ -764,6 +766,21 @@ export function buildOpenApiDocument(): Record<string, unknown> {
         },
       },
 
+      "/v1/me/quick-checks": {
+        get: {
+          tags: ["Progress"],
+          operationId: "getQuickChecks",
+          summary: "Every Quick Check the current user has finished",
+          description:
+            "Their latest finished attempt at each, newest first: each question as they were shown it, whether they got it right, the right answer, and the plan, day and passage it belongs to.",
+          security: auth,
+          responses: {
+            "200": ok("Finished Quick Checks", "QuickChecksResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
       "/v1/me/reflections": {
         get: {
           tags: ["Progress"],
@@ -1030,6 +1047,26 @@ export function buildOpenApiDocument(): Record<string, unknown> {
           tags: ["Quick Check"],
           operationId: "startQuizAttempt",
           summary: "Start or resume a Quick Check attempt",
+          security: auth,
+          parameters: [
+            parameterRef("QuizId"),
+            parameterRef("IdempotencyKey"),
+            parameterRef("ClientTimezone"),
+          ],
+          responses: {
+            "200": ok("Quiz and attempt state", "StartQuizAttemptResponse"),
+            ...commonErrors,
+          },
+        },
+      },
+
+      "/v1/quizzes/{quizId}/retakes": {
+        post: {
+          tags: ["Quick Check"],
+          operationId: "retakeQuizAttempt",
+          summary: "Take a finished Quick Check again",
+          description:
+            "Starts a fresh attempt from the first question, or returns the retake already in progress. The finished attempt counts until the new one is finished.",
           security: auth,
           parameters: [
             parameterRef("QuizId"),

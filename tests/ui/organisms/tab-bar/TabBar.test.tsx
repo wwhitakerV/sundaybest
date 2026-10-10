@@ -13,6 +13,7 @@ import type { TabBarProps } from "@/ui/organisms/tab-bar/TabBar";
 import {
   TabBarAccessoryProvider,
   useHideTabBarFab,
+  useHideTabBar,
   useTabBarAccessory,
 } from "@/ui/organisms/tab-bar/tab-bar-accessory";
 import { TabBarBannerProvider, useTabBarBanner } from "@/ui/organisms/tab-bar/tab-bar-banner";
@@ -467,6 +468,34 @@ describe("TabBar", () => {
       renderFabless(false);
 
       expect(screen.getByTestId("tab-home")).toBeOnTheScreen();
+    });
+  });
+
+  describe("on a page that runs to the screen's foot", () => {
+    function BarlessScreen() {
+      useHideTabBar(true);
+      return null;
+    }
+
+    it("takes touches while no screen asks it away", () => {
+      render(
+        <TabBarAccessoryProvider>
+          <TabBar {...makeProps(0)} />
+        </TabBarAccessoryProvider>,
+      );
+
+      expect(screen.getByTestId("tab-bar")).toHaveStyle({ pointerEvents: "box-none" });
+    });
+
+    it("steps away while a screen asks, as it does when the tabs are covered", () => {
+      render(
+        <TabBarAccessoryProvider>
+          <BarlessScreen />
+          <TabBar {...makeProps(0)} />
+        </TabBarAccessoryProvider>,
+      );
+
+      expect(screen.getByTestId("tab-bar")).toHaveStyle({ pointerEvents: "none" });
     });
   });
 });

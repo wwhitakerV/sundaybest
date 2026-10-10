@@ -11,6 +11,7 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { edgeFade, space, useTheme } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
+import { FadeAway } from "@/ui/atoms/FadeAway";
 import { TopFade } from "@/ui/atoms/TopFade";
 import { FloatingDock } from "./FloatingDock";
 import { HeaderBackdrop } from "./HeaderBackdrop";
@@ -60,6 +61,8 @@ export type ScrollFrameProps = {
    * has scrolled under the header.
    */
   headerBackdrop?: boolean;
+  /** The foot's fade faded away: the page's own colour has reached the screen's foot. */
+  bottomFadeHidden?: boolean;
 };
 
 /** The page inset, on a scroller's content: `ScrollScreen` and `ListScreen` set it. */
@@ -113,6 +116,7 @@ export function ScrollFrame({
   heroUnderHeader = false,
   headerBackdrop = true,
   topEdge = "fade",
+  bottomFadeHidden = false,
 }: ScrollFrameProps) {
   const theme = useTheme();
   const insets = useContext(SafeAreaInsetsContext);
@@ -178,14 +182,18 @@ export function ScrollFrame({
       ) : null}
 
       {foot.kind === "dock" ? null : (
-        <View pointerEvents="none" style={[styles.bottomEdge, { height: edges.bottom.height }]}>
+        <FadeAway
+          testID={`${testID}-bottom-edge`}
+          hidden={bottomFadeHidden}
+          style={[styles.bottomEdge, { height: edges.bottom.height }]}
+        >
           <BottomFade
             testID={`${testID}-bottom-fade`}
             height={edges.bottom.height}
             solidHeight={edges.bottom.solid}
             peak={edgeFade.peak}
           />
-        </View>
+        </FadeAway>
       )}
       {feedback ? (
         <View

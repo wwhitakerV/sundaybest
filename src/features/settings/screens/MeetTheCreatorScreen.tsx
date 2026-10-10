@@ -13,7 +13,7 @@ import { MEET_THE_CREATOR } from "../logic/meet-the-creator";
 
 /** Between the letter's parts: more than a page's usual gap, so each part reads as its own. */
 const LETTER_GAP = 48;
-/** Above the motto: the usual footnote room and a little more, so it closes the page on its own. */
+/** Above the motto's band: the usual footnote room and a little more, so it closes the page on its own. */
 const MOTTO_SPACE = space[40] + space[20];
 
 const FACT_ICONS: Record<(typeof MEET_THE_CREATOR.facts)[number]["icon"], LucideIcon> = {
@@ -26,8 +26,8 @@ const FACT_ICONS: Record<(typeof MEET_THE_CREATOR.facts)[number]["icon"], Lucide
  * Meet the creator: who Walter is — his photo on a card, as a plan's card
  * introduces a sermon, and his facts at a glance beneath — then a note from
  * him, set as About this plan is: its first line as a standfirst, the rest in
- * the Study's reading type, part by part. Signed in his name, his motto its
- * footnote.
+ * the Study's reading type, part by part. Signed in his name, his motto
+ * closing it on a band of the app's red.
  */
 export function MeetTheCreatorScreen() {
   const page = MEET_THE_CREATOR;
@@ -37,7 +37,7 @@ export function MeetTheCreatorScreen() {
       testID="meet-the-creator"
       title="Meet the creator"
       gap={LETTER_GAP}
-      footnote={page.signOff.motto}
+      band={page.signOff.motto}
       footnoteSpace={MOTTO_SPACE}
     >
       <View style={{ gap: space[12] }}>

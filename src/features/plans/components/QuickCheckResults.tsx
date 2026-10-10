@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
-import { SerifTitle } from "@/ui/typography/SerifTitle";
+import { SFProTitle } from "@/ui/typography/SFProTitle";
 import { tallyQuizReview, type QuizReviewItem } from "../logic/quick-check-review";
 import { QuickCheckReviewCard } from "./QuickCheckReviewCard";
 
@@ -22,7 +22,7 @@ export function QuickCheckResults({ items, testID }: QuickCheckResultsProps) {
 
   return (
     <View testID={testID} style={styles.results}>
-      <Card radius={24} style={styles.tally}>
+      <Card edge={false} radius={24} style={styles.tally}>
         <Tally count={right} label="Right" tone="correct" testID={`${testID}-right-count`} />
         <TallyDivider />
         <Tally count={missed} label="Missed" tone="incorrect" testID={`${testID}-missed-count`} />
@@ -38,7 +38,7 @@ export function QuickCheckResults({ items, testID }: QuickCheckResultsProps) {
   );
 }
 
-/** One side of the tally: a count in the serif, its word under it. */
+/** One side of the tally: a count in SF, its word under it. */
 function Tally({
   count,
   label,
@@ -52,9 +52,10 @@ function Tally({
 }) {
   return (
     <View style={styles.side}>
-      <SerifTitle variant="title" tone={tone} testID={testID}>
+      {/* A number, so the system face — the same size and weight the serif had. */}
+      <SFProTitle variant="message" tone={tone} testID={testID}>
         {String(count)}
-      </SerifTitle>
+      </SFProTitle>
       <MonoLabel variant="labelTracked" tone="textMuted" style={styles.label}>
         {label}
       </MonoLabel>

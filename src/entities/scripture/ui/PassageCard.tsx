@@ -21,6 +21,7 @@ export function PassageCard({ children, bare = false, testID }: PassageCardProps
   if (bare) return <SerifBody testID={testID}>{children}</SerifBody>;
   return (
     <Card
+      edge={false}
       testID={testID && `${testID}-card`}
       radius={PASSAGE_CARD_RADIUS}
       fill="page"

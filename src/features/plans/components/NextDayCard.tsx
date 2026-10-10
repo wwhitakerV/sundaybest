@@ -22,7 +22,7 @@ export function NextDayCard({ title, when, testID }: NextDayCardProps) {
   const theme = useTheme();
 
   return (
-    <Card testID={testID} style={styles.card}>
+    <Card edge={false} testID={testID} style={styles.card}>
       <View style={[styles.disc, { backgroundColor: theme.colors.segmentBackground }]}>
         <Clock
           size={ICON_SIZE}

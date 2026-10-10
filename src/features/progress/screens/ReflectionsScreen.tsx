@@ -11,7 +11,7 @@ import { KEYBOARD_BAR_ROOM, KeyboardBar } from "@/ui/organisms/KeyboardBar";
 import { ListScreen } from "@/ui/organisms/ListScreen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { SFProBody } from "@/ui/typography/SFProBody";
-import { ReflectionsPlanCard } from "../components/ReflectionsPlanCard";
+import { PlanGroupCard } from "../components/PlanGroupCard";
 import { useReflectionsList } from "../hooks/use-reflections-list";
 
 type Plan = ReturnType<typeof useReflectionsList>["plans"][number];
@@ -109,7 +109,13 @@ export function ReflectionsScreen() {
       ]}
       {...(empty && { empty })}
       renderItem={({ item }) => (
-        <ReflectionsPlanCard title={item.title} rows={item.rows} onOpen={view.open} />
+        <PlanGroupCard
+          testID="reflections-row"
+          title={item.title}
+          thumbnailUrl={item.thumbnailUrl}
+          rows={item.rows.map((row) => ({ id: row.id, title: row.question, detail: row.date }))}
+          onOpen={view.open}
+        />
       )}
     />
   );

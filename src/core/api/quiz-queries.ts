@@ -53,6 +53,31 @@ export function useStartQuizAttemptMutation(quizId: string) {
   });
 }
 
+/**
+ * Takes a finished Quick Check again: a fresh attempt from its first question
+ * becomes the session, so the Quick Check opens on question 1. The finished
+ * attempt still counts on Progress until this one is finished.
+ */
+export function useRetakeQuizMutation() {
+  const api = useSundayBestApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (quizId: string) =>
+      api.quizzes.retake(quizId, createIdempotencyKey(`quiz:${quizId}:retake`)),
+    onSuccess: (data, quizId) => {
+      queryClient.setQueryData<ApiQuizSession>(apiQueryKeys.quizSession(quizId), data);
+      void persistServerCache({
+        cacheKey: offlineCacheKeys.quizSession(quizId),
+        resourceType: "quizSession",
+        schema: getQuizAttemptResponseSchema,
+        value: data,
+      });
+      void queryClient.invalidateQueries({ queryKey: apiQueryKeys.planRoot });
+    },
+  });
+}
+
 export function useSubmitQuizAnswerMutation(quizId: string, attemptId: string) {
   const api = useSundayBestApi();
   const queryClient = useQueryClient();

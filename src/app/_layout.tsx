@@ -52,6 +52,8 @@ export default function RootLayout() {
           <Stack.Screen name="weeks" />
           {/* Every reflection: zooms out of Your words' notebook (iOS 18's zoom, set by the link). */}
           <Stack.Screen name="reflections" options={{ gestureEnabled: false }} />
+          {/* Every Quick Check: zooms out of the Quick Check page's button; only its close leaves. */}
+          <Stack.Screen name="quick-checks" options={{ gestureEnabled: false }} />
           {/* Plans' search: dissolves in over Plans, full screen, the keyboard rising with it. */}
           <Stack.Screen
             name="plan-search"

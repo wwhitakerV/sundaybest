@@ -21,6 +21,9 @@ type AccessoryChannel = {
   /** A screen with no use for the floating button: it's hidden while that screen's shown. */
   hideFab: (owner: object) => void;
   showFab: (owner: object) => void;
+  /** A page that runs to the screen's foot: the whole bar steps away while it's shown. */
+  hideBar: (owner: object) => void;
+  showBar: (owner: object) => void;
 };
 
 const AccessoryChannelContext = createContext<AccessoryChannel | null>(null);
@@ -28,6 +31,8 @@ const AccessoryChannelContext = createContext<AccessoryChannel | null>(null);
 const ShownAccessoryContext = createContext<Shown | null>(null);
 /** Whether a screen has asked the floating button away — for the tab bar. */
 const FabHiddenContext = createContext(false);
+/** Whether a screen has asked the whole bar away — for the tab bar. */
+const BarHiddenContext = createContext(false);
 
 /**
  * Lets a screen ask the tab bar to minimise beside a button of its own —
@@ -37,19 +42,24 @@ const FabHiddenContext = createContext(false);
 export function TabBarAccessoryProvider({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState<Shown | null>(null);
   const [fabHiddenBy, setFabHiddenBy] = useState<object | null>(null);
+  const [barHiddenBy, setBarHiddenBy] = useState<object | null>(null);
   const [channel] = useState<AccessoryChannel>(() => ({
     show: (next) => setShown(next),
     // Only the screen that asked can take it back.
     hide: (owner) => setShown((current) => (current?.owner === owner ? null : current)),
     hideFab: (owner) => setFabHiddenBy(owner),
     showFab: (owner) => setFabHiddenBy((current) => (current === owner ? null : current)),
+    hideBar: (owner) => setBarHiddenBy(owner),
+    showBar: (owner) => setBarHiddenBy((current) => (current === owner ? null : current)),
   }));
 
   return (
     <AccessoryChannelContext.Provider value={channel}>
       <ShownAccessoryContext.Provider value={shown}>
         <FabHiddenContext.Provider value={fabHiddenBy !== null}>
-          {children}
+          <BarHiddenContext.Provider value={barHiddenBy !== null}>
+            {children}
+          </BarHiddenContext.Provider>
         </FabHiddenContext.Provider>
       </ShownAccessoryContext.Provider>
     </AccessoryChannelContext.Provider>
@@ -76,6 +86,30 @@ export function useHideTabBarFab(hide: boolean) {
     if (!channel || !active) return;
     channel.hideFab(owner);
     return () => channel.showFab(owner);
+  }, [channel, active, owner]);
+}
+
+/** For the tab bar: whether the screen shown has asked it away. */
+export function useTabBarHidden(): boolean {
+  return useContext(BarHiddenContext);
+}
+
+/**
+ * For a page that runs to the screen's foot (Meet the creator): while `hide`
+ * is true and the page is the one shown, the tab bar steps away — dropping
+ * as the page arrives, as it does under a modal — and comes back with its
+ * usual reveal once the page goes.
+ */
+export function useHideTabBar(hide: boolean) {
+  const channel = useContext(AccessoryChannelContext);
+  const isFocused = useIsFocused();
+  const [owner] = useState(() => ({}));
+  const active = hide && isFocused;
+
+  useEffect(() => {
+    if (!channel || !active) return;
+    channel.hideBar(owner);
+    return () => channel.showBar(owner);
   }, [channel, active, owner]);
 }
 

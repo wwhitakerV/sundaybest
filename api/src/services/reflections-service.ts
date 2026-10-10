@@ -40,6 +40,7 @@ export function createReflectionsService(db: Database) {
                   reference: day.scripture.canonicalReference,
                   planId: day.planId,
                   planTitle: day.planTitle,
+                  thumbnailUrl: day.thumbnailUrl,
                   dayNumber: day.dayNumber,
                 },
               ]

@@ -15,6 +15,8 @@ export const apiQueryKeys = {
   word: ["api", "progress", "word"] as const,
   /** Every reflection question in the reader's plans — under the progress root too. */
   reflections: ["api", "progress", "reflections"] as const,
+  /** Every Quick Check finished, as last taken — under the progress root, so finishing one refreshes it. */
+  quickChecks: ["api", "progress", "quick-checks"] as const,
   /** A search of the reader's plans, by its words — beside the plans, not under them. */
   planSearch: (query: string) => ["api", "plan-search", query] as const,
   sermonSearch: (query: string) => ["api", "sermons", "search", query] as const,

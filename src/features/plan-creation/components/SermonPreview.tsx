@@ -31,7 +31,7 @@ export function SermonPreview({
 
   return (
     <View testID={testID} style={styles.wrap}>
-      <Card radius={32} style={styles.link}>
+      <Card edge={false} radius={32} style={styles.link}>
         <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
         <SFProBody style={styles.grow} numberOfLines={1}>
           {link}
@@ -41,7 +41,7 @@ export function SermonPreview({
         </View>
       </Card>
 
-      <Card style={styles.card}>
+      <Card edge={false} style={styles.card}>
         <VideoThumbnail
           uri={thumbnailUrl}
           {...(duration !== undefined ? { duration } : {})}

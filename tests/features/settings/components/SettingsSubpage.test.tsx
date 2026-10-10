@@ -8,11 +8,13 @@ import { space } from "@/theme";
 import { lightTheme } from "@/theme/tokens";
 import { getFloatingNavBarTop } from "@/ui/organisms/floatingNavBar";
 import { EDGE_FADE } from "@/ui/organisms/frame-edges";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useIsFocused: () => true,
 }));
 
 const mockBack = jest.fn<void, []>();
@@ -88,6 +90,95 @@ describe("SettingsSubpage", () => {
     expect(screen.getByTestId("a-page-footnote")).toHaveStyle({
       marginTop: "auto",
       paddingTop: space[40],
+    });
+  });
+
+  describe("closing on a band", () => {
+    function banded() {
+      render(
+        <SettingsSubpage testID="a-page" title="Meet the creator" band="A closing line.">
+          <SFProBody>Body</SFProBody>
+        </SettingsSubpage>,
+      );
+    }
+
+    function scrollPastTheBand() {
+      fireEvent(screen.getByTestId("a-page-band"), "layout", {
+        nativeEvent: { layout: { x: 0, y: 1000, width: 390, height: 200 } },
+      });
+      fireEvent.scroll(screen.getByTestId("a-page-screen-scroll"), {
+        nativeEvent: { contentOffset: { x: 0, y: 5000 } },
+      });
+    }
+
+    it("sets its line in white on the app's red, centred", () => {
+      banded();
+
+      expect(screen.getByText("A closing line.")).toHaveStyle({
+        color: lightTheme.colors.onAccent,
+        textAlign: "center",
+      });
+      expect(screen.getByTestId("a-page-band-fill")).toHaveStyle({
+        backgroundColor: lightTheme.colors.accent,
+      });
+    });
+
+    it("runs edge to edge, out past the page's inset", () => {
+      banded();
+
+      expect(screen.getByTestId("a-page-band-fill")).toHaveStyle({
+        marginHorizontal: -PAGE_INSET,
+      });
+    });
+
+    it("runs on in red below its foot, so pulling past the end never shows white", () => {
+      banded();
+
+      const runoff = screen.getByTestId("a-page-band-runoff");
+      const { height, bottom } = StyleSheet.flatten(runoff.props.style as StyleProp<ViewStyle>);
+      expect(runoff).toHaveStyle({
+        position: "absolute",
+        backgroundColor: lightTheme.colors.accent,
+      });
+      // Hung wholly below the band: as tall as its drop, never over the line.
+      expect(bottom).toBe(-Number(height));
+    });
+
+    it("draws its run-off under the line, never over it", () => {
+      banded();
+
+      const fill = screen.getByTestId("a-page-band-fill");
+      const order = fill.children.map((child) =>
+        typeof child === "string" ? child : (child.props as { testID?: string }).testID,
+      );
+      expect(order[0]).toBe("a-page-band-runoff");
+    });
+
+    it("leaves no room under itself, reaching the screen's foot", () => {
+      banded();
+
+      const content = StyleSheet.flatten(
+        screen.getByTestId("a-page-screen-scroll").props
+          .contentContainerStyle as StyleProp<ViewStyle>,
+      );
+      expect(content.paddingBottom).toBe(0);
+    });
+
+    it("keeps the bottom fade until what's above it has cleared the fade", () => {
+      banded();
+
+      expect(
+        screen.getByTestId("a-page-screen-bottom-edge", { includeHiddenElements: true }),
+      ).toHaveStyle({ opacity: 1 });
+    });
+
+    it("fades the bottom fade away once what's above it has cleared it", () => {
+      banded();
+      scrollPastTheBand();
+
+      expect(
+        screen.getByTestId("a-page-screen-bottom-edge", { includeHiddenElements: true }),
+      ).toHaveStyle({ opacity: 0 });
     });
   });
 

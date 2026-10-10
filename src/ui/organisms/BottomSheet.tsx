@@ -1,13 +1,15 @@
 import type { ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { X } from "lucide-react-native";
 
 import { usePresence } from "@/hooks/use-presence";
 import { motion, radius, space, useTheme } from "@/theme";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { SheetGrabber } from "@/ui/atoms/SheetGrabber";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
 
-/** The sheet's share of the screen's height. */
+/** The sheet's share of the screen's height, unless it asks for more. */
 const HEIGHT_RATIO = 0.5;
 
 export type BottomSheetProps = {
@@ -17,11 +19,16 @@ export type BottomSheetProps = {
   /** The sheet's title, shown at its top and announced as its heading. */
   accessibilityLabel: string;
   testID: string;
+  /** Its share of the screen's height: half by default; nearly all of it (0.95) for writing in. */
+  heightRatio?: number;
+  /** An X beside its title that leaves without keeping anything — for a sheet that writes. */
+  onDiscard?: () => void;
   children: ReactNode;
 };
 
 /**
- * A sheet over the bottom half of the screen, as iOS's own: it slides up
+ * A sheet over the bottom of the screen — half of it, or as much as it asks
+ * for — as iOS's own: it slides up
  * from the bottom edge as the page above it dims, and back down as it
  * closes. A tap on the dimmed page closes it. What's on the page beneath
  * stays live, so a change made in the sheet shows there at once.
@@ -31,11 +38,13 @@ export function BottomSheet({
   onClose,
   accessibilityLabel,
   testID,
+  heightRatio = HEIGHT_RATIO,
+  onDiscard,
   children,
 }: BottomSheetProps) {
   const theme = useTheme();
   const { height } = useWindowDimensions();
-  const sheetHeight = height * HEIGHT_RATIO;
+  const sheetHeight = height * heightRatio;
   const { mounted, progress } = usePresence(visible, motion.sheet);
   const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
   const sheetStyle = useAnimatedStyle(() => ({
@@ -64,7 +73,19 @@ export function BottomSheet({
           ]}
         >
           <SheetGrabber testID={`${testID}-grabber`} />
-          <SFProTitle accessibilityRole="header">{accessibilityLabel}</SFProTitle>
+          <View style={styles.titleRow}>
+            <SFProTitle accessibilityRole="header" style={styles.title}>
+              {accessibilityLabel}
+            </SFProTitle>
+            {onDiscard && (
+              <HeaderIconButton
+                testID={`${testID}-discard`}
+                icon={X}
+                accessibilityLabel="Close without saving"
+                onPress={onDiscard}
+              />
+            )}
+          </View>
           {children}
         </Animated.View>
       </View>
@@ -74,6 +95,9 @@ export function BottomSheet({
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: "flex-end" },
+  // Its title, and the X at its end when it has one.
+  titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  title: { flexShrink: 1 },
   scrim: { ...StyleSheet.absoluteFill },
   sheet: {
     borderTopLeftRadius: radius[36],

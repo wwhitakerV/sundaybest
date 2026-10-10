@@ -184,9 +184,9 @@ export function describeWords(count: number): string {
   return `${plural(count, "reflection", "reflections")}, kept on this phone`;
 }
 
-/** Quick Check's line, in its results' own words: "14 right · 4 missed". */
+/** Quick Check's line, as its page says it: "14 correct · 4 to revisit". */
 export function describeQuickCheck(right: number, missed: number): string {
-  return `${right} right · ${missed} missed`;
+  return `${right} correct · ${missed} to revisit`;
 }
 
 /**

@@ -40,6 +40,7 @@ export function useReflectionsList() {
     plans: groupByPlan(found).map((plan) => ({
       planId: plan.planId,
       title: plan.title,
+      thumbnailUrl: plan.thumbnailUrl,
       rows: plan.reflections.map((reflection) => ({
         id: reflection.id,
         question: reflection.question,

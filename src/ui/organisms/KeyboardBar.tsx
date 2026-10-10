@@ -2,7 +2,9 @@ import { useContext, useState, type ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
-import { useKeyboardOverlap } from "@/hooks/use-keyboard-overlap";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+
+import { useKeyboardLift } from "@/hooks/use-keyboard-lift";
 import { edgeFade, space } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
 import { SEARCH_FIELD_HEIGHT } from "@/ui/molecules/SearchField";
@@ -25,12 +27,16 @@ export type KeyboardBarProps = {
  */
 export function KeyboardBar({ children, testID }: KeyboardBarProps) {
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
-  // On the keyboard, a gap above its keys; with it away, clear of the home indicator.
-  const keyboard = useKeyboardOverlap();
+  // Clear of the home indicator at rest; on the keyboard, it rises with the keys — their
+  // duration and curve, frame by frame — to sit a gap above them.
+  const lift = useKeyboardLift();
   const [height, setHeight] = useState(0);
+  const rise = useAnimatedStyle(() => ({
+    transform: [{ translateY: -Math.max(lift.get() - insetBottom, 0) }],
+  }));
 
   return (
-    <View
+    <Animated.View
       {...(testID && { testID })}
       pointerEvents="box-none"
       onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
@@ -40,8 +46,9 @@ export function KeyboardBar({ children, testID }: KeyboardBarProps) {
           gap: space[10],
           paddingHorizontal: space[8],
           paddingTop: space[8],
-          paddingBottom: (keyboard > 0 ? keyboard : insetBottom) + space[8],
+          paddingBottom: insetBottom + space[8],
         },
+        rise,
       ]}
     >
       {height > 0 && (
@@ -56,7 +63,7 @@ export function KeyboardBar({ children, testID }: KeyboardBarProps) {
         </View>
       )}
       {children}
-    </View>
+    </Animated.View>
   );
 }
 

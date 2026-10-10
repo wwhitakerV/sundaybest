@@ -88,7 +88,9 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
 Header icon buttons are white with their hairline edge, never a grey fill.
 Two side by side share one pill (`HeaderButtonPill`, iOS's grouped toolbar
 without the glass). A field on the keyboard sits in `KeyboardBar`: 8pt from
-the screen's edges and the keys, the page running on beneath it, behind it
+the screen's edges and the keys, rising and falling with the keys on their own
+duration and curve (`useKeyboardLift`, on the UI thread — never
+`LayoutAnimation`, which a modal sheet doesn't honour), the page running on beneath it, behind it
 and the gap below the page's edge tint at `edgeFade.peak`, ending flush with
 the field's top — so what scrolls under shows faintly.
 
@@ -151,6 +153,16 @@ behind the part before (`motion.pageEnter`). It plays on mount, so the page
 is keyed (`key={pageIndex}`) to play it again; never trigger an entrance from
 an effect, a key comparison, or an animation callback. Reduce Motion keeps
 the fade and drops the movement.
+
+## An outline means it does something
+
+A card on the surface fill (`Card`) keeps its `containerBorder` outline only
+when it is there to be acted on: the card itself is tappable, it holds a
+control (a switch, a time, a button, a pencil), it is swiped, or pills hang
+from it on lines (`ModuleActions`). A card that is only read — a passage, a
+tally, a stat, a callout, a preview — is `Card edge={false}`: the fill alone.
+A card drawn by hand counts too; better, make it a `Card`. `AboutRows`
+works it out for itself: outlined only when one of its rows goes somewhere.
 
 ## Pressing a row
 
@@ -273,13 +285,25 @@ what was written, and the lines added to it later (`reflection_lines`, one a
 day, the original never edited), only from the phone. Under the title, the
 count and "They never leave this phone." with a lock; a timeline of marks,
 one a reflection (one a week past 40), scrubbed, the one in view sliding in
-the accent; the reflection — how long ago and its date in the tracked caps,
-"You were asked" and the question, the answer whole in the serif italic, the
-lines added since, and the passage, which opens its study — scrolling on its
-own; and, pinned at the foot, "Another one" (`CompactButton` soft, `Shuffle`:
-leaning older, never repeating until all are met) and "Add a line today" (the
-Study's answer box, saved as typed). It opens on an older reflection, not the
-newest. Before anything's written: the lock line keeps only its promise, and
+the accent; the reflection, one module on Settings' group card as Quick
+Check's missed questions are — over it "Six weeks ago · Thursday, August 27"
+as a group's title sits; in it, a line between each, the plan by its
+artwork and two-line title (`ModulePlanRow`), "You were asked" and the
+question, "You wrote" and the answer whole in the serif italic (a pencil at
+the row's end), and the lines added since; hung from it, an "Open Day 3"
+pill with its line down into it (`ModuleActions`) — scrolling on its
+own, a long card rounding into the scroll's top edge (`RoundedEdge`), as
+The Word's do. No buttons at the foot: it moves by the timeline, or the list of them
+all. It opens on an older reflection, not the newest. The pencil opens a
+sheet over
+95% of the screen (`BottomSheet` `heightRatio`): the reflection read back —
+asked, "You wrote · Thursday, August 27", the updates since — and under it
+the Study's answer box for today's update, the keyboard up, saved as typed.
+Done rides the keyboard (`KeyboardBar`) and keeps it; the X beside the title
+(`BottomSheet` `onDiscard`) puts back what was there when it opened. A page that opens a writing sheet sets
+`keyboardShouldPersistTaps="handled"` on its own scroll: a sheet's taps pass
+through the page beneath, and without it the first tap on the sheet's X or
+Done only puts the keyboard away. Before anything's written: the lock line keeps only its promise, and
 the page's middle holds the milestone ring round `NotebookPen`, "Nothing
 written yet" (`SFProTitle` `message`) and how it fills (`bodyLoose`, muted) —
 no timeline, no buttons. With reflections, its header's right holds a notebook
@@ -290,7 +314,7 @@ tapped, the search sinks into the page and the pill closes up round the close,
 which never moves, while Plans' own field rises on the keyboard, full width
 (`KeyboardBar`); the keyboard put away with nothing typed, the field goes and
 the pill springs back out, the search icon with it — then
-each plan's name in Weeks' quiet month label over Settings' group card of its
+each plan's artwork and name (Weeks' quiet month label) over Settings' group card of its
 reflections — question, date, chevron — the plan written in most lately
 first. A row sends Your words to it (`wordsHref`). Only its close closes it:
 no swipe down, the zoom's included, ever dismisses it
@@ -298,7 +322,36 @@ no swipe down, the zoom's included, ever dismisses it
 keyboard up, a drag only puts the keyboard away. The notebook taps
 (`tapFeedback`) as it opens the list.
 
+Quick Check's row opens Quick Check (`/progress/quick-check`), built as Your
+words is, and saying what everything is. Its key is its count: a green dot
+"36 correct", an amber dot "12 to revisit" (each Quick Check's latest
+finished attempt only, from `/v1/me/quick-checks`). The grid (`RecallGrid`):
+each day's Quick Check a capsule (`QuickCheckCapsule`), a segment a question
+in order — green correct, amber missed, grey never answered — newest on the
+left, a hairline between days, a caret's room and its date (black) under
+each; dragged left to go further back (the back swipe held), both its edges
+fading (`SideFade`). A small solid red caret (`Play`, filled, turned down; "this one", 10pt) over the question
+in view; any segment tapped shows its question (one got right: "Correct" over the card, "You answered correctly" under a green mark, no "Correct answer" row); the row brings the one
+in view's capsule into sight; the question's card scrolls up into a rounded edge (`RoundedEdge`), as Your words' does, its title inset clear of it. The key: "36 correct", "19 to revisit", and the
+caret "Selected". (The dot blocks, `QuickCheckBlock`, are kept to bring
+back.) The question missed is one module on Settings'
+group card, a line between its parts: the plan by its artwork and two-line
+title; "You were asked"; "You answered" — an amber dot and amber label
+(`incorrect`) over their choice in black — and only what was wrong ("You didn't answer this one." in
+grey if they didn't); "Correct answer" — a green dot and green label; both answers in the
+Scripture face when they're Scripture's words (a verse to finish), else both
+in the reading face; and "Open Day 3's study" with
+a chevron. Over the card, in black, "To revisit · 1 of 12" — counted as the grid is read, newest first. Hung from the card (`ModuleActions`): a 12pt, 2pt-wide line (`borderStrong`) from its foot into the middle of each pill — an "Open Day 3" pill (`BookOpen`), "Retake" (`RotateCcw`, straight into its Quick Check at question 1) beside it — pills in the card's fill and edge. It moves between misses by its dots. A list button
+(`ListChecks`) zooms out every Quick Check (`/quick-checks`), by plan (its artwork beside its name),
+each row its passage, "Day 3 · 2 to revisit" (or "All correct") and the
+day's capsule, small (`QuickCheckCapsule`), before its chevron — whether it's
+worth taking again, at a glance — opening its results; only its close
+leaves. Progress's Quick Check row draws them the same: green and amber dots.
+Nothing missed says so plainly; before any, the empty state's ring round
+`ListChecks`. It opens on the most recent miss — the newest
+Quick Check's first missed question — its dot marked.
 
+## Milestone pages
 
 A page that marks a moment between steps — a day done, a plan complete, a
 Quick Check to start or its score — composes `MilestoneScreen`
@@ -318,6 +371,22 @@ strip, what it gave (passage heading, key verse in quotes, what was written),
 its Quick Check (what was remembered, every answer, missed first, numbers
 kept), and what's next as facts. Done goes back to the plan. One success
 haptic, when the day completes.
+
+A finished Quick Check, opened again, shows its results with two buttons on
+one row: "Take it again" (`RotateCcw`, soft) on the left, "Done" on the right.
+Taking it again starts a fresh attempt (`POST /v1/quizzes/:id/retakes`) at
+question 1 — the finished one counts until the new one is done, and the day
+stays done. A retake, finished, shows its results there, never the day's
+finish page; Done goes back to the plan.
+
+## Right and wrong
+
+A right answer is green (`correct`); a missed one is a deep amber
+(`incorrect`) — "not yet", never the brand red, which means only "this one"
+and "now" (`accent`). So red never says "wrong" anywhere, and amber says
+nothing else. A missed question is an amber dot, as a remembered one is green;
+a question never answered, a grey dash. A verdict panel leads with a solid mark in its colour —
+a tick, or an X — beside "That's the one" or "Not quite".
 
 ## Haptics
 

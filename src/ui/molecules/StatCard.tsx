@@ -14,7 +14,7 @@ export type StatCardProps = {
 /** One total on Progress: the number, large, over what it counts. */
 export function StatCard({ value, label, testID }: StatCardProps) {
   return (
-    <Card testID={testID} style={styles.card}>
+    <Card edge={false} testID={testID} style={styles.card}>
       <DisplayTitle>{value}</DisplayTitle>
       <SFProBody tone="textMuted" numberOfLines={1}>
         {label}

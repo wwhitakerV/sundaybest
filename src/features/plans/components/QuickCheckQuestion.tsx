@@ -57,7 +57,7 @@ export function QuickCheckQuestion({
       {verse ? (
         <>
           <SerifTitle variant="quiz">{question.scriptureReference ?? ""}</SerifTitle>
-          <Card radius={36} style={styles.verseCard}>
+          <Card edge={false} radius={36} style={styles.verseCard}>
             <SerifBody testID="quick-check-verse">
               {verse.before}
               <Span

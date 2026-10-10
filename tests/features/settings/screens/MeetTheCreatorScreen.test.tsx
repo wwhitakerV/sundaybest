@@ -10,6 +10,7 @@ import { lightTheme } from "@/theme/tokens";
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
+  useIsFocused: () => true,
 }));
 
 const mockBack = jest.fn<void, []>();
@@ -97,14 +98,14 @@ describe("MeetTheCreatorScreen", () => {
     expect(signOff.queryByText("Built with conviction. For a life of conviction.")).toBeNull();
   });
 
-  it("ends on its motto as the page's footnote", () => {
+  it("ends on its motto, on the closing band", () => {
     render(<MeetTheCreatorScreen />);
 
     expect(
-      within(screen.getByTestId("meet-the-creator-footnote")).getByText(
+      within(screen.getByTestId("meet-the-creator-band")).getByText(
         "Built with conviction. For a life of conviction.",
       ),
-    ).toHaveStyle({ textAlign: "center" });
+    ).toBeVisible();
   });
 
   it("sets nothing in bold", () => {

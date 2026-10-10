@@ -30,6 +30,7 @@ import {
 import {
   useShownTabBarAccessory,
   useTabBarFabHidden,
+  useTabBarHidden,
   type TabBarAccessory,
 } from "./tab-bar-accessory";
 import { useShownTabBarBanner } from "./tab-bar-banner";
@@ -86,7 +87,10 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
   // Rendered by the tab navigator itself, outside any tab's screen, so this is
   // whether the whole `(tabs)` route is focused in the root stack.
   const isFocused = useIsFocused();
-  const revealStyle = useTabBarReveal(isFocused);
+  // Shown while the tabs are focused, unless the page on top has asked it away.
+  const askedAway = useTabBarHidden();
+  const shown = isFocused && !askedAway;
+  const revealStyle = useTabBarReveal(shown);
 
   // Minimised beside a screen's button — or, once the gathered tabs are
   // tapped, open again with the button raised above them, until the screen
@@ -144,7 +148,7 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
         {
           // The capsule's bottom where every floating bar's goes; the FAB's a little lower.
           paddingBottom: capsuleBottom - CAPSULE_INSET_IN_ROW,
-          pointerEvents: isFocused ? "box-none" : "none",
+          pointerEvents: shown ? "box-none" : "none",
         },
         revealStyle,
       ]}

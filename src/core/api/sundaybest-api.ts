@@ -23,6 +23,7 @@ import {
   weeksResponseSchema,
   wordResponseSchema,
   reflectionsResponseSchema,
+  quickChecksResponseSchema,
   retryPlanGenerationResponseSchema,
   startQuizAttemptResponseSchema,
   submitQuizAnswerRequestSchema,
@@ -144,6 +145,10 @@ export function createSundayBestApi(client: ApiClient) {
       get: () => client.request({ path: "/v1/me/word", schema: wordResponseSchema }),
     },
 
+    quickChecks: {
+      get: () => client.request({ path: "/v1/me/quick-checks", schema: quickChecksResponseSchema }),
+    },
+
     reflections: {
       get: () => client.request({ path: "/v1/me/reflections", schema: reflectionsResponseSchema }),
     },
@@ -218,6 +223,15 @@ export function createSundayBestApi(client: ApiClient) {
       startAttempt: (quizId: string, idempotencyKey: string) =>
         client.request({
           path: `/v1/quizzes/${encodeURIComponent(quizId)}/attempts`,
+          method: "POST",
+          schema: startQuizAttemptResponseSchema,
+          idempotencyKey,
+          idempotent: true,
+        }),
+      /** A finished Quick Check taken again: a fresh attempt from its first question. */
+      retake: (quizId: string, idempotencyKey: string) =>
+        client.request({
+          path: `/v1/quizzes/${encodeURIComponent(quizId)}/retakes`,
           method: "POST",
           schema: startQuizAttemptResponseSchema,
           idempotencyKey,

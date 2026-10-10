@@ -145,6 +145,7 @@ export function useWeekView() {
               : null,
           onOpenWord: () => router.push("/progress/word"),
           onOpenWords: () => router.push("/progress/words"),
+          onOpenQuickCheck: () => router.push("/progress/quick-check"),
         }
       : null,
     canGoBack: older !== null,

@@ -50,6 +50,8 @@ export type ProgressRowsProps = {
   onOpenWord: () => void;
   /** Opens Your words, from its row. */
   onOpenWords: () => void;
+  /** Opens Quick Check, from its row. */
+  onOpenQuickCheck: () => void;
 };
 
 /**
@@ -57,7 +59,7 @@ export type ProgressRowsProps = {
  * rows: each its name and one line — never two — and a small symbol of it in
  * a fixed slot: bars for the Word, lines of writing for their words, Quick
  * Check's right and missed as a grid of dots — and Settings' chevron. Your words is always there; the others once
- * there's something in them. The Word's and Your words' rows open their pages; Quick Check's isn't linked yet.
+ * there's something in them. Each row opens its page.
  */
 export function ProgressRows({
   word,
@@ -65,6 +67,7 @@ export function ProgressRows({
   quickCheck,
   onOpenWord,
   onOpenWords,
+  onOpenQuickCheck,
 }: ProgressRowsProps) {
   const theme = useTheme();
   const rows: {
@@ -125,6 +128,7 @@ export function ProgressRows({
       key: "quickCheck",
       title: "Quick Check",
       line: quickCheck,
+      onPress: onOpenQuickCheck,
       picture: (
         <View style={{ gap: space[2] }}>
           {ANSWERS.map((line, row) => (
@@ -140,6 +144,7 @@ export function ProgressRows({
                     styles.dot,
                     {
                       borderRadius: radius.pill,
+                      // Remembered green, missed amber, as the Quick Check page draws them.
                       backgroundColor: right ? theme.colors.correct : theme.colors.incorrect,
                     },
                   ]}

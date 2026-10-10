@@ -24,7 +24,6 @@ export function useHomeView() {
   const today = useToday();
   const plansQuery = usePlansQuery();
   const allPlans = plansQuery.data?.plans ?? [];
-  const plans = getApiUserPlans(allPlans);
   const plan = getApiActivePlan(allPlans);
   const sample = getApiSamplePlan(allPlans);
   const currentDay = plan?.currentDay ?? null;
@@ -83,14 +82,12 @@ export function useHomeView() {
   return {
     date: formatDotDate(today),
     active,
-    plans,
-    hasPlans: plans.length > 0,
+    hasPlans: getApiUserPlans(allPlans).length > 0,
     sample: sample ? { id: sample.id, title: sample.title, detail: describeApiPlan(sample) } : null,
     flight: plan ? { thumbnailUrl: plan.sermon.thumbnailUrl } : null,
     loading: plansQuery.isPending,
     error: plansQuery.data === undefined ? plansQuery.error : null,
     retry: () => void plansQuery.refetch(),
-    openPlan: (planId: string) => router.push(planOverviewHref(planId)),
     openSample: () => {
       if (sample) router.push(planOverviewHref(sample.id));
     },

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import { NotebookPen } from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
 
 import { space } from "@/theme";
 import { IconRing } from "@/ui/atoms/IconRing";
@@ -9,22 +9,25 @@ import { SFProTitle } from "@/ui/typography/SFProTitle";
 /** Lifted a little above the middle of the room it has, where the eye lands. */
 const LIFT = 2 * space[24];
 
-export type WordsEmptyProps = {
+export type ProgressEmptyProps = {
+  /** What the page gathers, in the ring: a notebook, a check. */
+  icon: LucideIcon;
   title: string;
   message: string;
+  testID: string;
 };
 
 /**
- * Your words before anything's written: the milestone pages' ring round a
- * notebook and pen, what this place is for, and how it fills — in the middle
- * of the page, lifted a little.
+ * A Progress page before there's anything in it (Your words, Quick Check):
+ * the milestone pages' ring round what it gathers, what this place is for,
+ * and how it fills — in the middle of the page, lifted a little.
  */
-export function WordsEmpty({ title, message }: WordsEmptyProps) {
+export function ProgressEmpty({ icon, title, message, testID }: ProgressEmptyProps) {
   return (
-    <View testID="your-words-empty" style={[styles.middle, { paddingBottom: LIFT }]}>
+    <View testID={testID} style={[styles.middle, { paddingBottom: LIFT }]}>
       <View style={[styles.block, { gap: space[12] }]}>
         <View style={{ marginBottom: space[8] }}>
-          <IconRing testID="your-words-empty-ring" icon={NotebookPen} />
+          <IconRing testID={`${testID}-ring`} icon={icon} />
         </View>
         <SFProTitle variant="message" accessibilityRole="header" style={styles.centred}>
           {title}

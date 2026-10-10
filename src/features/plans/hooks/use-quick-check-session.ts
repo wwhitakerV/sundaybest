@@ -7,6 +7,7 @@ import { useModalSession } from "@/hooks/use-modal-session";
 import {
   useCompleteQuizAttemptMutation,
   useQuizSessionQuery,
+  useRetakeQuizMutation,
   useStartQuizAttemptMutation,
   useSubmitQuizAnswerMutation,
 } from "@/core/api/quiz-queries";
@@ -42,6 +43,9 @@ export function useQuickCheckSession() {
   const submitAnswer = useSubmitQuizAnswerMutation(quizId, attemptId);
   const completeAttempt = useCompleteQuizAttemptMutation(quizId, attemptId, planId);
   const completeDay = useCompleteStudyDayMutation(planId, dayNumber);
+  const retake = useRetakeQuizMutation();
+  // A Quick Check taken again after its day was done: finishing it shows its results, not the day's finish.
+  const dayDone = summaryDay?.progress.status === "completed";
   const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({});
   // Where the reader is, in this attempt. Until they act, it's where the
   // attempt opens (`getResumeIndex`); from then on it's theirs, so a refetch
@@ -83,7 +87,8 @@ export function useQuickCheckSession() {
     startAttempt.isPending ||
     submitAnswer.isPending ||
     completeAttempt.isPending ||
-    completeDay.isPending;
+    completeDay.isPending ||
+    retake.isPending;
   const action = getQuickCheckAction({
     status,
     result: currentResult,
@@ -112,12 +117,22 @@ export function useQuickCheckSession() {
       // even if the reader leaves — and the day's finish page shows both.
       if (nextAction.kind === "finish") {
         await completeAttempt.mutateAsync();
+        if (dayDone) {
+          // Taken again: its results show here, the day already done.
+          successFeedback();
+          return;
+        }
         await completeDay.mutateAsync();
         successFeedback();
         router.replace(dayCompleteHref(planId, dayNumber));
         return;
       }
 
+      // Done, looking back at a finished Quick Check: back to the plan.
+      if (dayDone) {
+        sessionModal.exit();
+        return;
+      }
       await completeDay.mutateAsync();
       successFeedback();
       router.replace(dayCompleteHref(planId, dayNumber));
@@ -125,6 +140,22 @@ export function useQuickCheckSession() {
       Alert.alert(
         "Couldn't update Quick Check",
         "SundayBest couldn't save that answer. Check your connection and try again.",
+      );
+    }
+  }
+
+  /** Takes it again: a fresh attempt, opening on question 1. */
+  async function takeAgain() {
+    if (busy || !quizId) return;
+    tapFeedback();
+    try {
+      const session = await retake.mutateAsync(quizId);
+      setSelectedChoices({});
+      setPosition({ attemptId: session.attempt.id, index: 0 });
+    } catch {
+      Alert.alert(
+        "Couldn't start it again",
+        "SundayBest couldn't reach your data. Check your connection and try again.",
       );
     }
   }
@@ -172,6 +203,8 @@ export function useQuickCheckSession() {
     score,
     busy,
     act,
+    /** On a finished Quick Check: take it again. */
+    takeAgain: () => void takeAgain(),
     pick: (choiceId: string) => void answer(choiceId),
     selectedFor: (questionId: string) => selectedChoices[questionId] ?? null,
     close: () => sessionModal.exit(),

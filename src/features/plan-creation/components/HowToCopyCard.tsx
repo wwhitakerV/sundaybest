@@ -19,7 +19,7 @@ export function HowToCopyCard() {
       <SFProBody tone="textMuted" style={styles.heading}>
         How to copy a link
       </SFProBody>
-      <Card style={styles.card}>
+      <Card edge={false} style={styles.card}>
         {STEPS.map((label, index) => (
           <View
             key={label}

@@ -18,7 +18,7 @@ export type CreatorPortraitProps = { name: string; role: string; testID: string 
  */
 export function CreatorPortrait({ name, role, testID }: CreatorPortraitProps) {
   return (
-    <Card testID={testID} style={styles.card}>
+    <Card edge={false} testID={testID} style={styles.card}>
       <Image
         source={headshot}
         style={styles.photo}

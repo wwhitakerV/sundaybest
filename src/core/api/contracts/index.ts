@@ -13,3 +13,4 @@ export * from "./study";
 export * from "./user";
 export * from "./word";
 export * from "./reflections";
+export * from "./quick-checks";

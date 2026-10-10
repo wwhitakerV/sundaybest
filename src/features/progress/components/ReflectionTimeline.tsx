@@ -126,10 +126,10 @@ export function ReflectionTimeline({
         </View>
       </GestureDetector>
       <View style={[styles.ends, { marginTop: space[8] }]}>
-        <MonoLabel variant="label" tone="textMuted">
+        <MonoLabel variant="label" tone="text">
           {ends.start}
         </MonoLabel>
-        <MonoLabel variant="label" tone="textMuted">
+        <MonoLabel variant="label" tone="text">
           {ends.end}
         </MonoLabel>
       </View>

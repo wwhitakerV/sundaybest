@@ -7,6 +7,8 @@ import { space } from "@/theme";
 import { EDGE_FADE, getFootAboveTabBar } from "@/ui/organisms/frame-edges";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
 import { SFProBody } from "@/ui/typography/SFProBody";
+import { useBandFade } from "../hooks/use-band-fade";
+import { SettingsBand } from "./SettingsBand";
 import { SettingsFootnote } from "./SettingsFootnote";
 import { SettingsSubpageHeader } from "./SettingsSubpageHeader";
 
@@ -28,8 +30,14 @@ export type SettingsSubpageProps = {
    * `SettingsFootnote` in a wrapper of its own (one that reveals it).
    */
   footnote?: ReactNode;
-  /** How far the footnote sits from what's above it, at least. */
+  /** How far the footnote — or the band — sits from what's above it, at least. */
   footnoteSpace?: number;
+  /**
+   * The page's closing line on a band of the app's red, in place of a
+   * footnote (Meet the creator): edge to edge and down to the screen's foot,
+   * the fades there stepping aside once what's above it clears them.
+   */
+  band?: string;
 };
 
 /**
@@ -47,8 +55,10 @@ export function SettingsSubpage({
   gap = space[24],
   footnote,
   footnoteSpace = FOOTNOTE_GAP,
+  band,
 }: SettingsSubpageProps) {
   const router = useRouter();
+  const bandFade = useBandFade();
   const insetBottom = useContext(SafeAreaInsetsContext)?.bottom ?? 0;
   // The last line ends TAB_BAR_GAP above the floating tab bar, which stays up over every Settings page.
   const foot = getFootAboveTabBar(insetBottom, TAB_BAR_GAP);
@@ -59,15 +69,23 @@ export function SettingsSubpage({
       header={
         <SettingsSubpageHeader testID={testID} title={title ?? ""} onBack={() => router.back()} />
       }
-      contentStyle={[styles.close, styles.fill, { paddingBottom: foot }]}
+      contentStyle={[styles.close, styles.fill, { paddingBottom: band ? 0 : foot }]}
       keyboardShouldPersistTaps="handled"
+      {...(band && { onScroll: bandFade.onScroll, bottomFadeHidden: bandFade.cleared })}
     >
       {/* The gap lives on the body, so it never adds room under the last block. Above the first
           it keeps the same room it always had. */}
       <View testID={`${testID}-body`} style={{ gap, paddingTop: gap }}>
         {children ?? <SFProBody>...</SFProBody>}
       </View>
-      {footnote ? (
+      {band ? (
+        <SettingsBand
+          testID={`${testID}-band`}
+          text={band}
+          spaceAbove={footnoteSpace}
+          onLayout={bandFade.onBandLayout}
+        />
+      ) : footnote ? (
         <View
           testID={`${testID}-footnote`}
           style={[styles.footnote, { paddingTop: footnoteSpace }]}

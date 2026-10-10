@@ -11,7 +11,6 @@ import { ActivePlanHero } from "../components/ActivePlanHero";
 import { ArtworkFlight } from "../components/ArtworkFlight";
 import { useHomeView } from "../hooks/use-home-view";
 import { CONTENT_TOP, useHeroCollapse } from "../hooks/use-hero-collapse";
-import { PlanList } from "../components/PlanList";
 import { PlanRow } from "../components/PlanRow";
 import { StartHereCard } from "../components/StartHereCard";
 import { controlHeight, space } from "@/theme";
@@ -27,11 +26,11 @@ const HEADER_HEIGHT = controlHeight.hitTarget;
  * Home, from the API plan cache. With a plan under way: that plan featured up top,
  * full width in its sermon's colour (`ActivePlanHero`) — where it stands,
  * Continue straight into today's study, and its artwork zooming open into
- * Plan Detail — then all the user's server-backed plans. Scrolling up, the header fades
+ * Plan Detail. Scrolling up, the header fades
  * and the featured plan collapses into a plan bar pinned at the top
  * (`useHeroCollapse`), reversing on the way back. With
- * none: a card to add a sermon, and the sample to try (or their other plans,
- * if they have some waiting). The tab bar's + also starts a new plan.
+ * none: a card to add a sermon, and the sample to try if they've no plans
+ * yet. The tab bar's + also starts a new plan.
  */
 export function HomeScreen() {
   const view = useHomeView();
@@ -107,24 +106,20 @@ export function HomeScreen() {
               <StartHereCard onAddSermon={view.addSermon} />
             )}
 
-            {view.hasPlans ? (
-              <PlanList plans={view.plans} onOpenPlan={view.openPlan} />
-            ) : (
-              view.sample && (
-                <View style={styles.sample}>
-                  <SFProBody tone="textMuted" style={styles.label}>
-                    Try a sample
-                  </SFProBody>
+            {!view.hasPlans && view.sample && (
+              <View style={styles.sample}>
+                <SFProBody tone="textMuted" style={styles.label}>
+                  Try a sample
+                </SFProBody>
 
-                  <PlanRow
-                    testID="home-tab-sample-plan"
-                    title={view.sample.title}
-                    detail={view.sample.detail}
-                    done={false}
-                    onPress={view.openSample}
-                  />
-                </View>
-              )
+                <PlanRow
+                  testID="home-tab-sample-plan"
+                  title={view.sample.title}
+                  detail={view.sample.detail}
+                  done={false}
+                  onPress={view.openSample}
+                />
+              </View>
             )}
           </SkeletonHandoff>
         </Animated.ScrollView>
