@@ -1,13 +1,16 @@
 import { StyleSheet, View } from "react-native";
 
 import type { StudyReflection } from "../types";
-import { radius, space, useTheme } from "@/theme";
+import { space } from "@/theme";
 import { ReflectionCard } from "@/entities/study";
 import { StudyFollow } from "./StudyFollow";
 import { StudyKicker } from "./StudyKicker";
 import { StudyEnter } from "./StudyEnter";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
-import { TextField } from "@/ui/typography/TextField";
+import { TextBox } from "@/ui/molecules/TextBox";
+
+/** The answer box's least height: room for a few lines before it grows. */
+const ANSWER_LEAST = 124;
 
 export type ReflectStepProps = {
   dayNumber: number;
@@ -33,8 +36,6 @@ export function ReflectStep({
   answer,
   onAnswerChange,
 }: ReflectStepProps) {
-  const theme = useTheme();
-
   return (
     <View testID="study-reflect-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label={`Question ${reflection.order} of ${total}`} />
@@ -43,17 +44,13 @@ export function ReflectStep({
       </StudyEnter>
       <StudyFollow>
         <ReflectionCard question={reflection.question}>
-          <TextField
+          <TextBox
             testID={`study-reflect-answer-${reflection.order}`}
             accessibilityLabel={reflection.question}
-            multiline
             value={answer}
             onChangeText={onAnswerChange}
             placeholder="Write what comes to mind"
-            style={[
-              styles.answer,
-              { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-            ]}
+            minHeight={ANSWER_LEAST}
           />
         </ReflectionCard>
       </StudyFollow>
@@ -63,11 +60,4 @@ export function ReflectStep({
 
 const styles = StyleSheet.create({
   body: { gap: space[16] },
-  answer: {
-    borderWidth: 1,
-    borderRadius: radius[20],
-    padding: space[18],
-    minHeight: 124,
-    textAlignVertical: "top",
-  },
 });

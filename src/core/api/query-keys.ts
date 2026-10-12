@@ -29,9 +29,59 @@ export const apiQueryKeys = {
   quizAttempt: (attemptId: string) => ["api", "quiz-attempts", attemptId] as const,
 } as const;
 
-/** True for a Daily Study day's key: `["api", "plans", planId, "days", dayNumber]`. */
-export function isStudyDayQueryKey(queryKey: readonly unknown[]): boolean {
-  return queryKey[0] === "api" && queryKey[1] === "plans" && queryKey[3] === "days";
+/** Stands for any value in a key that's built from one (a week, a plan's id). */
+const ANY = Symbol("any");
+
+/** A key's shape: its fixed parts, `ANY` where a value goes. */
+type KeyShape = readonly unknown[];
+
+/**
+ * Whether each kind of server data carries Scripture in the reader's Bible
+ * translation — so changing the translation must fetch it again. Each one that
+ * does gives its key's shape, written out; each one that doesn't is `false`.
+ * Typed over every key: a new one won't compile until it's decided here, so no
+ * screen can be left showing the old translation. A plan's Scripture (its Quick
+ * Checks' verses included) is set when the plan is made, so it's not.
+ */
+const IN_READER_TRANSLATION: Record<keyof typeof apiQueryKeys, KeyShape | false> = {
+  me: false,
+  settings: false,
+  reminders: false,
+  planRoot: false,
+  plans: false,
+  progressRoot: false,
+  progress: false,
+  /** Its key verses, and the translation they're in. */
+  week: ["api", "progress", "week", ANY],
+  weeks: false,
+  /** Every passage's text, and the translation it's in. */
+  word: ["api", "progress", "word"],
+  reflections: false,
+  quickChecks: false,
+  planSearch: false,
+  sermonSearch: false,
+  plan: false,
+  currentGenerations: false,
+  /** The day's passage, verse by verse. */
+  studyDay: ["api", "plans", ANY, "days", ANY],
+  quizSession: false,
+  quizAttempt: false,
+};
+
+const TRANSLATION_SHAPES = Object.values(IN_READER_TRANSLATION).filter(
+  (shape): shape is KeyShape => shape !== false,
+);
+
+/**
+ * True for a query whose data is in the reader's Bible translation: the whole
+ * key matches one of those shapes, part for part — never a root by its prefix.
+ */
+export function isInReaderTranslation(queryKey: readonly unknown[]): boolean {
+  return TRANSLATION_SHAPES.some(
+    (shape) =>
+      shape.length === queryKey.length &&
+      shape.every((part, index) => part === ANY || part === queryKey[index]),
+  );
 }
 
 /** Keys for mutations other code watches after the screen that started them is gone. */

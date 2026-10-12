@@ -13,8 +13,9 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 
+import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
-import { radius, space, useTheme } from "@/theme";
+import { controlHeight, iconSize, space, useTheme } from "@/theme";
 import type { SettingsIcon, SettingsRow } from "../logic/settings-sections";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
@@ -29,9 +30,6 @@ const ICONS: Record<SettingsIcon, LucideIcon> = {
   flag: Flag,
 };
 const BADGE = 40;
-const ICON_SIZE = 18;
-const CHEVRON = 18;
-const MIN_ROW_HEIGHT = 64;
 
 export type SettingsGroupProps = {
   title: string;
@@ -57,16 +55,10 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
       >
         {title}
       </SFProBody>
-      <View
+      <Card
         testID={`settings-group-${title.toLowerCase().replace(/\s+/g, "-")}`}
-        style={[
-          styles.card,
-          {
-            backgroundColor: theme.colors.surface,
-            borderColor: theme.colors.containerBorder,
-            borderRadius: radius[24],
-          },
-        ]}
+        kind="list"
+        style={styles.card}
       >
         {rows.map((row, index) => {
           const Icon = ICONS[row.icon];
@@ -88,7 +80,7 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
                   style={styles.badge}
                 >
                   <Icon
-                    size={ICON_SIZE}
+                    size={iconSize.row}
                     color={theme.colors.text}
                     strokeWidth={theme.icon.strokeWidth}
                   />
@@ -98,7 +90,7 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
                 </SFProBody>
                 {row.value && <SFProBody tone="textMuted">{row.value}</SFProBody>}
                 <ChevronRight
-                  size={CHEVRON}
+                  size={iconSize.chevron}
                   color={theme.colors.textMuted}
                   strokeWidth={theme.icon.strokeWidth}
                 />
@@ -106,15 +98,15 @@ export function SettingsGroup({ title, rows, onOpen }: SettingsGroupProps) {
             </Fragment>
           );
         })}
-      </View>
+      </Card>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   title: { paddingHorizontal: space[4] },
-  card: { borderWidth: 1, overflow: "hidden" },
-  row: { minHeight: MIN_ROW_HEIGHT, flexDirection: "row", alignItems: "center" },
+  card: { overflow: "hidden" },
+  row: { minHeight: controlHeight.row, flexDirection: "row", alignItems: "center" },
   badge: { width: BADGE, height: BADGE, alignItems: "center", justifyContent: "center" },
   label: { flex: 1 },
 });

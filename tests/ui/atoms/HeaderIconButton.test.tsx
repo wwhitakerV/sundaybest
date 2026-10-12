@@ -82,22 +82,6 @@ describe("HeaderIconButton", () => {
     });
   });
 
-  it("hides the border when bordered is false", () => {
-    render(
-      <HeaderIconButton
-        testID="a-header-icon-button"
-        icon={X}
-        accessibilityLabel="Close"
-        bordered={false}
-        onPress={() => undefined}
-      />,
-    );
-
-    expect(screen.getByTestId("a-header-icon-button")).toHaveStyle({
-      borderColor: "transparent",
-    });
-  });
-
   it("arrives with its entrance by default", () => {
     render(
       <HeaderIconButton

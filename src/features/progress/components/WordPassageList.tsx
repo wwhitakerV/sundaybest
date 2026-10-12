@@ -5,16 +5,11 @@ import { ChevronDown, ChevronUp } from "lucide-react-native";
 
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
 import { selectionFeedback } from "@/core/haptics/haptics";
-import { motion, space, useTheme } from "@/theme";
+import { controlHeight, iconSize, motion, space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { panelEnter } from "./panel-enter";
-
-/** Settings' chevron size, as its rows end. */
-const CHEVRON = 18;
-/** A row's least height: Settings' rows'. */
-const MIN_ROW_HEIGHT = 64;
 
 /** A row opening and closing, and everything below moving with it: one soft spring. */
 const SPRING = LinearTransition.springify()
@@ -48,7 +43,7 @@ export function WordPassageList({ rows }: WordPassageListProps) {
 
   return (
     <Animated.View testID="word-passages" entering={panelEnter(reduceMotion)}>
-      <Card radius={24} layout={SPRING} style={styles.card}>
+      <Card kind="list" layout={SPRING} style={styles.card}>
         {rows.map((row, index) => (
           <Animated.View key={row.key} layout={SPRING}>
             {index > 0 && <Divider />}
@@ -118,7 +113,7 @@ function PassageRow({
         // As tall as the row's words when it's closed, the chevron in its middle: open, it stays there.
         <View style={[styles.chevron, closedHeight > 0 && { height: closedHeight }]}>
           <Chevron
-            size={CHEVRON}
+            size={iconSize.chevron}
             color={theme.colors.textSupporting}
             strokeWidth={theme.icon.strokeWidthStrong}
           />
@@ -132,11 +127,11 @@ const styles = StyleSheet.create({
   // Settings' group card: rows on it with hairlines between, nothing spilling past its corners.
   card: { overflow: "hidden" },
   row: {
-    minHeight: MIN_ROW_HEIGHT,
+    minHeight: controlHeight.row,
     flexDirection: "row",
     alignItems: "flex-start",
     overflow: "hidden",
   },
-  copy: { flex: 1, minHeight: MIN_ROW_HEIGHT - 2 * space[14], justifyContent: "center" },
+  copy: { flex: 1, minHeight: controlHeight.row - 2 * space[14], justifyContent: "center" },
   chevron: { justifyContent: "center" },
 });

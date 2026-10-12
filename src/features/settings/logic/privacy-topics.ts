@@ -153,8 +153,8 @@ const CONTROLS: PrivacyTopic = {
       heading: "Preferences",
       paragraphs: ["Change your Bible translation, reading size, or reminders whenever you want."],
       actions: [
-        { label: "Bible translation", href: "/(tabs)/settings/bible-translation" },
-        { label: "Text size", href: "/(tabs)/settings/text-size" },
+        { label: "Bible translation", page: "bible-translation" },
+        { label: "Text size", page: "text-size" },
       ],
     },
     {
@@ -168,7 +168,7 @@ const CONTROLS: PrivacyTopic = {
       paragraphs: [
         "Turn SundayBest's reminders off in the app, or stop its notifications in your iPhone's Settings.",
       ],
-      actions: [{ label: "Daily reminder", href: "/(tabs)/settings/daily-reminder" }],
+      actions: [{ label: "Daily reminder", page: "daily-reminder" }],
     },
   ],
 };

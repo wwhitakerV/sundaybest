@@ -115,6 +115,9 @@ module.exports = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@tests/(.*)$": "<rootDir>/tests/$1",
+    // An .svg import is a component in the app (react-native-svg-transformer, metro.config.js);
+    // under Jest it's a stand-in that draws nothing.
+    "\\.svg$": "<rootDir>/tests/mocks/svg.tsx",
     // expo-router/testing-library's own mocks.js (required unconditionally by
     // expo-router/testing-library, which tests/helpers/render.tsx imports) sets up
     // react-native-reanimated's *own* mock.js for Jest. That mock is correct

@@ -72,7 +72,7 @@ export function PaperPicker({ selected, onSelect, testID }: PaperPickerProps) {
             onPress={() => onSelect(paper.id)}
             style={[
               styles.swatch,
-              { backgroundColor: paper.background, borderColor: theme.colors.divider },
+              { backgroundColor: paper.background, borderColor: theme.colors.containerBorder },
             ]}
           >
             {LINES.map((share, line) => (

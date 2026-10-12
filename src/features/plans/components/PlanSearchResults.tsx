@@ -62,7 +62,7 @@ export function PlanSearchResults({
     return (
       <View testID="plan-search-error" style={[styles.note, { gap: space[16] }]}>
         <SFProBody variant="reading" tone="textInactive">
-          Couldn’t search your plans.
+          Couldn&apos;t search your plans.
         </SFProBody>
         <CompactButton
           testID="plan-search-retry"

@@ -13,13 +13,14 @@ import {
   successFeedback,
   tapFeedback,
 } from "@/core/haptics/haptics";
-import { FIELD_ICON_CENTRE } from "@/features/plan-creation/components/field-geometry";
+import { FIELD_ICON_CENTRE } from "@/ui/atoms/FieldFrame";
 import { lightTheme } from "@/theme/tokens";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 import { NewPlanScreen } from "@/features/plan-creation/screens/NewPlanScreen";
 import { API_URL, aGeneration, aSermon } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
+import { lookWhenPressed } from "@tests/helpers/pressed";
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -150,19 +151,19 @@ describe("NewPlanScreen", () => {
       expect(screen.queryByTestId("paste-sermon-link-input-error")).toBeNull();
     });
 
-    it("keeps the field's edge red while the error stands", () => {
+    it("keeps the field's edge amber while the error stands — never the brand red", () => {
       pressContinueOnBadLink();
 
       expect(screen.getByTestId("paste-sermon-link-input-field")).toHaveStyle({
-        borderColor: lightTheme.colors.accent,
+        borderColor: lightTheme.colors.incorrect,
       });
     });
 
-    it("draws the field's edge as a divider when there is no error", () => {
+    it("draws the field with a card's edge when there is no error", () => {
       render(<NewPlanScreen />);
 
       expect(screen.getByTestId("paste-sermon-link-input-field")).toHaveStyle({
-        borderColor: lightTheme.colors.divider,
+        borderColor: lightTheme.colors.containerBorder,
       });
     });
 
@@ -308,6 +309,17 @@ describe("NewPlanScreen", () => {
     );
   });
 
+  it("searches in the app's own search bar, as tall as the link field it swaps with", () => {
+    render(<NewPlanScreen />);
+
+    fireEvent.press(screen.getByTestId("new-plan-search-instead"));
+
+    expect(screen.getByTestId("search-sermons-input-field")).toHaveStyle({
+      minHeight: 52,
+      borderColor: lightTheme.colors.containerBorder,
+    });
+  });
+
   describe.each([
     ["paste", "new-plan-search-instead", "search-sermons-input"],
     ["search", "new-plan-paste-instead", "paste-sermon-link-input"],
@@ -345,6 +357,12 @@ describe("NewPlanScreen", () => {
       const { style } = renderInMode();
 
       expect(style).toMatchObject({ paddingLeft: FIELD_ICON_CENTRE - 18 / 2 });
+    });
+
+    it("doesn't change when pressed: no control in the app does", () => {
+      renderInMode();
+
+      expect(lookWhenPressed(testID)).toEqual(lookWhenPressed(testID, false));
     });
 
     it("leaves 16pt of room beneath it", () => {

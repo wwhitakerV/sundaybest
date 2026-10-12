@@ -22,7 +22,7 @@ export function QuickCheckResults({ items, testID }: QuickCheckResultsProps) {
 
   return (
     <View testID={testID} style={styles.results}>
-      <Card edge={false} radius={24} style={styles.tally}>
+      <Card edge={false} kind="list" style={styles.tally}>
         <Tally count={right} label="Right" tone="correct" testID={`${testID}-right-count`} />
         <TallyDivider />
         <Tally count={missed} label="Missed" tone="incorrect" testID={`${testID}-missed-count`} />

@@ -3,7 +3,7 @@ import { Keyboard, ScrollView, StyleSheet, View } from "react-native";
 
 import { useKeyboardOverlap } from "@/hooks/use-keyboard-overlap";
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end";
-import { controlHeight, radius, space, useTheme } from "@/theme";
+import { controlHeight, space } from "@/theme";
 import { Button } from "@/ui/atoms/Button";
 import { BottomSheet } from "@/ui/organisms/BottomSheet";
 import { KeyboardBar } from "@/ui/organisms/KeyboardBar";
@@ -11,7 +11,7 @@ import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SerifBody } from "@/ui/typography/SerifBody";
 import { Span } from "@/ui/typography/Span";
-import { TextField } from "@/ui/typography/TextField";
+import { TextBox } from "@/ui/molecules/TextBox";
 import { PartLabel } from "./PartLabel";
 
 /** Nearly the whole screen: room to read it back and write beneath it. */
@@ -53,7 +53,6 @@ export function ReflectionSheet({
   onChange,
   onClose,
 }: ReflectionSheetProps) {
-  const theme = useTheme();
   // What's typed lives here, so the box answers each key at once; every change is saved as it's
   // made. Taken afresh from what's saved each time the sheet opens.
   const [draft, setDraft] = useState(text);
@@ -125,19 +124,15 @@ export function ReflectionSheet({
         ))}
         <View style={{ gap: space[6] }}>
           <PartLabel>Today</PartLabel>
-          <TextField
+          {/* The app's text box, as the Study's answer is. */}
+          <TextBox
             testID="your-words-line"
             accessibilityLabel="An update today"
             value={draft}
             onChangeText={type}
             placeholder="What would you add now?"
-            multiline
+            minHeight={FIELD_LEAST}
             autoFocus
-            // The Study's own answer box.
-            style={[
-              styles.field,
-              { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
-            ]}
           />
         </View>
       </ScrollView>
@@ -154,11 +149,4 @@ export function ReflectionSheet({
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   caps: { textTransform: "uppercase" },
-  field: {
-    borderWidth: 1,
-    borderRadius: radius[20],
-    padding: space[18],
-    minHeight: FIELD_LEAST,
-    textAlignVertical: "top",
-  },
 });

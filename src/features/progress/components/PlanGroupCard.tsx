@@ -2,14 +2,12 @@ import { Fragment, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { iconSize, radius, space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
-/** Settings' chevron size, as its rows end. */
-const CHEVRON = 18;
 /** The plan's artwork beside its name: small, enough to know the sermon by. */
 const THUMBNAIL_WIDTH = 56;
 
@@ -53,7 +51,7 @@ export function PlanGroupCard({ title, thumbnailUrl, rows, onOpen, testID }: Pla
           {title}
         </SFProBody>
       </View>
-      <Card radius={24} style={styles.card}>
+      <Card kind="list" style={styles.card}>
         {rows.map((row, index) => (
           <Fragment key={row.id}>
             {index > 0 && <Divider />}
@@ -76,7 +74,7 @@ export function PlanGroupCard({ title, thumbnailUrl, rows, onOpen, testID }: Pla
               {/* A row's picture, in a fixed place before its chevron, as Progress's rows hold theirs. */}
               {row.picture}
               <ChevronRight
-                size={CHEVRON}
+                size={iconSize.chevron}
                 color={theme.colors.textSupporting}
                 strokeWidth={theme.icon.strokeWidthStrong}
               />

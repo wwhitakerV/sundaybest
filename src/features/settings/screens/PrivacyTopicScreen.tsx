@@ -18,7 +18,7 @@ export function PrivacyTopicScreen() {
     return (
       <NotFoundScreen
         testID="privacy-topic-not-found"
-        title="This page isn’t here"
+        title="This page isn't here"
         message="It may have moved. Privacy policy has everything it covered."
         actionLabel="Back"
         onAction={back}

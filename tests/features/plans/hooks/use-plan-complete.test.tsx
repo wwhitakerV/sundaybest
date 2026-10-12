@@ -6,8 +6,13 @@ import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import * as haptics from "@/core/haptics/haptics";
 import { countReflectionAnswers } from "@/core/storage/reflection-answers";
-import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
+import { NEW_PLAN_HREF } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { usePlanComplete } from "@/features/plans/hooks/use-plan-complete";
+
+// The tab the reader is in, under the study they're finishing.
+const mockTab: string | null = "progress";
+jest.mock("@/hooks/use-focused-tab", () => ({ useFocusedTab: () => () => mockTab }));
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),
@@ -97,13 +102,13 @@ describe("usePlanComplete", () => {
     );
   });
 
-  it("leaves the session for the plan's overview on close", async () => {
+  it("leaves the session for the plan's overview, in the tab the study was opened from, on close", async () => {
     const { result } = await renderPlanComplete();
 
     act(() => result.current.close());
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(FINISHED.id));
+    expect(mockNavigate).toHaveBeenCalledWith(tabPlanHref("progress", FINISHED.id));
   });
 
   it("leaves the session for New Plan on addSermon", async () => {

@@ -1,6 +1,7 @@
 import { Alert } from "react-native";
 
 import { useRemindersQuery, useUpdateReminderMutation } from "@/core/api/reader-queries";
+import { selectionFeedback } from "@/core/haptics/haptics";
 import { requestNotificationPermission } from "@/core/notifications/request-notification-permission";
 import type { Weekday } from "@/types/domain";
 import { toggleReminderDay, WEEK } from "../logic/reminder-days";
@@ -43,7 +44,8 @@ export function useDailyReminder() {
       }
     }
 
-    save({ enabled }, "Couldn’t update reminder");
+    selectionFeedback();
+    save({ enabled }, "Couldn't update reminder");
   }
 
   return {
@@ -51,11 +53,17 @@ export function useDailyReminder() {
     time: reminder?.time ?? "08:00",
     days,
     setEnabled: (enabled: boolean) => void setEnabled(enabled),
-    setTime: (time: string) => save({ time }, "Couldn’t update reminder time"),
+    setTime: (time: string) => {
+      if (time === reminder?.time) return;
+      selectionFeedback();
+      save({ time }, "Couldn't update reminder time");
+    },
     toggleDay: (day: Weekday) => {
       if (update.isPending) return;
       const next = toggleReminderDay(days, day);
-      if (next !== days) save({ days: [...next] }, "Couldn’t update reminder days");
+      if (next === days) return;
+      selectionFeedback();
+      save({ days: [...next] }, "Couldn't update reminder days");
     },
   } as const;
 }

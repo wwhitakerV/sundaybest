@@ -90,7 +90,7 @@ export function PlanOverviewScreen() {
           testID="plan-overview-load-error"
           title="Couldn't load this plan"
           onRetry={view.retry}
-          leave={{ label: "Back to Plans", onPress: view.goBack }}
+          leave={{ label: "Back", onPress: view.goBack }}
         />
       );
     }
@@ -101,7 +101,7 @@ export function PlanOverviewScreen() {
           testID="plan-overview-not-found"
           title="This plan isn't here"
           message="It may have been removed, or the link is out of date."
-          actionLabel="Back to Plans"
+          actionLabel="Back"
           onAction={view.goBack}
         />
       );

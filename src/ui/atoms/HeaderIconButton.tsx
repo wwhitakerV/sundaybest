@@ -17,9 +17,6 @@ export type HeaderIconButtonProps = {
   onPress: () => void;
   /** Overrides the default 23pt icon size — used by the smaller `Type` icon. */
   size?: number;
-  /** Draws the hairline border. Defaults to true; the top-level screens'
-   * right-side icons (account, search) turn it off. */
-  bordered?: boolean;
   /**
    * Floating over a colour of the content's own rather than the page: `dark`
    * over a dark colour (a dark fill, a light icon), `light` over a light one.
@@ -33,9 +30,9 @@ export type HeaderIconButtonProps = {
 
 /**
  * The circular icon button every header uses: back, close, more, text
- * controls, search. White fill, centered icon — one place
- * for that chrome so every header stays visually consistent. Bordered by
- * default; borderless for the top-level screens' right-side icons.
+ * controls, search. White fill, a hairline edge, centered icon — one place
+ * for that chrome so every header stays visually consistent. Two side by side
+ * share one pill instead (`HeaderButtonPill`).
  *
  * Arrives with its screen: a quick fade, a few points' slide in from its own
  * side of the header, and a small spring up to full size
@@ -47,7 +44,6 @@ export function HeaderIconButton({
   accessibilityLabel,
   onPress,
   size = DEFAULT_ICON_SIZE,
-  bordered = true,
   overlay,
   raised = false,
   testID,
@@ -79,7 +75,7 @@ export function HeaderIconButton({
                   : theme.colors.background,
             borderColor: raised
               ? theme.colors.containerBorder
-              : bordered && !overlay
+              : !overlay
                 ? theme.colors.hairline
                 : "transparent",
           },

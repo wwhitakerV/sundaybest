@@ -71,7 +71,7 @@ export function MissedQuestionView({
       </SFProBody>
       {/* The card and what hangs from it, together: the line leaves the card's very edge. */}
       <View>
-        <Card radius={24} style={styles.card}>
+        <Card kind="list" style={styles.card}>
           <ModulePlanRow title={planTitle} thumbnailUrl={thumbnailUrl} />
           <Divider />
           <View style={row}>

@@ -5,7 +5,7 @@ import { ListScreen } from "@/ui/organisms/ListScreen";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { PlansSkeleton } from "../components/PlansSkeleton";
-import { radius, space } from "@/theme";
+import { cardStyle, space } from "@/theme";
 import { LibraryPlanCard } from "../components/LibraryPlanCard";
 import { PlansEmpty } from "../components/PlansEmpty";
 import { PlansHeader } from "../components/PlansHeader";
@@ -45,7 +45,7 @@ export function PlansScreen() {
       testID="plans-screen"
       // The header stays pinned on solid white, nothing behind it; the cards round into its foot.
       pinned={{
-        rounded: radius[28],
+        rounded: cardStyle.content.radius,
         bar: (
           <PlansHeader
             collapsed={collapsed}

@@ -22,7 +22,7 @@ export default function IndexScreen() {
     return (
       <ScreenLoadError
         testID="launch-error"
-        title="Couldn’t reach SundayBest"
+        title="Couldn't reach SundayBest"
         onRetry={() => void me.refetch()}
       />
     );

@@ -1,6 +1,5 @@
 import { useState, type ReactNode } from "react";
 import { StyleSheet, type LayoutChangeEvent } from "react-native";
-import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 // Not re-exported from the top-level `expo-router` module, but this is the
 // same internal path expo-router's own `TabsClient.d.ts` imports
@@ -30,10 +29,11 @@ import {
 import {
   useShownTabBarAccessory,
   useTabBarFabHidden,
-  useTabBarHidden,
   type TabBarAccessory,
 } from "./tab-bar-accessory";
 import { useShownTabBarBanner } from "./tab-bar-banner";
+import { useTabBarShown } from "./use-tab-bar-shown";
+import { stackRootReset } from "./stack-root-reset";
 import { useTabBarMinimize } from "./use-tab-bar-minimize";
 import { useTabBarBannerReveal, useTabBarRaise } from "./use-tab-bar-raise";
 import { useTabBarReveal } from "./use-tab-bar-reveal";
@@ -43,6 +43,8 @@ export type TabBarProps = BottomTabBarProps & {
   onPress?: () => void;
   /** The floating button beside the tabs: what it's called, and what it does. */
   fab: { label: string; onPress: () => void };
+  /** Routes over the tabs that are half sheets: the bar stays put beneath them, as iOS's does. */
+  staysUnder?: readonly string[];
 };
 
 /**
@@ -82,14 +84,10 @@ export type TabBarProps = BottomTabBarProps & {
  * component has no side-effect SDK access of its own (`ui` never imports
  * `core`), so haptic feedback is the caller's job.
  */
-export function TabBar({ state, descriptors, navigation, insets, onPress, fab }: TabBarProps) {
+export function TabBar({ staysUnder = [], ...props }: TabBarProps) {
+  const { state, descriptors, navigation, insets, onPress, fab } = props;
   const theme = useTheme();
-  // Rendered by the tab navigator itself, outside any tab's screen, so this is
-  // whether the whole `(tabs)` route is focused in the root stack.
-  const isFocused = useIsFocused();
-  // Shown while the tabs are focused, unless the page on top has asked it away.
-  const askedAway = useTabBarHidden();
-  const shown = isFocused && !askedAway;
+  const shown = useTabBarShown(navigation, staysUnder);
   const revealStyle = useTabBarReveal(shown);
 
   // Minimised beside a screen's button — or, once the gathered tabs are
@@ -136,7 +134,13 @@ export function TabBar({ state, descriptors, navigation, insets, onPress, fab }:
   function pressTab(routeKey: string, routeName: string, isActive: boolean) {
     onPress?.();
     const event = navigation.emit({ type: "tabPress", target: routeKey, canPreventDefault: true });
-    if (!isActive && !event.defaultPrevented) navigation.navigate(routeName);
+    if (event.defaultPrevented) return;
+    if (!isActive) navigation.navigate(routeName);
+    else {
+      // Tapped again, a tab goes to its first page — even one a link left without it.
+      const reset = stackRootReset(navigation.getState(), routeKey);
+      if (reset) navigation.dispatch(reset);
+    }
   }
 
   return (

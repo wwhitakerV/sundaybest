@@ -1,16 +1,4 @@
-import {
-  parsePrivacyTopicParams,
-  privacyTopicHref,
-} from "@/features/settings/logic/privacy-routes";
-
-describe("privacyTopicHref", () => {
-  it("leads to a privacy page", () => {
-    expect(privacyTopicHref("keep")).toEqual({
-      pathname: "/(tabs)/settings/privacy/[topic]",
-      params: { topic: "keep" },
-    });
-  });
-});
+import { parsePrivacyTopicParams } from "@/features/settings/logic/privacy-routes";
 
 describe("parsePrivacyTopicParams", () => {
   it.each(["keep", "device", "use", "controls", "policy"])("reads the %s page", (topic) => {

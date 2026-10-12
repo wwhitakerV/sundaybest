@@ -8,7 +8,7 @@ import { Span } from "@/ui/typography/Span";
 const WORDS = SCRIPTURE_WORDS.map((text, position) => ({ key: `${position}-${text}`, text }));
 
 /**
- * The verse, on the real passage card. As its scene plays, the words light up
+ * The verse, set as the real passage is: a quote. As its scene plays, the words light up
  * one after another, as if someone were reading along; unread words sit quiet.
  */
 export function VerseCard({ elapsedMs }: LiftPieceProps) {

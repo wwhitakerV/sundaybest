@@ -16,7 +16,8 @@ import { StartHereCard } from "../components/StartHereCard";
 import { controlHeight, space } from "@/theme";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
-import { Wordmark } from "@/ui/typography/Wordmark";
+import { Arrive } from "@/ui/arrival/Arrive";
+import { Wordmark } from "@/ui/atoms/Wordmark";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 
 /** A header action's 44pt tap target — the masthead row keeps it. */
@@ -58,23 +59,26 @@ export function HomeScreen() {
   return (
     <View style={styles.root}>
       <Screen testID="home-tab-screen" padded="vertical">
-        <Animated.View
-          testID="home-tab-header"
-          onLayout={onHeaderLayout}
-          pointerEvents={phase.headerTouchable ? "auto" : "none"}
-          style={[styles.header, headerStyle]}
-        >
-          <Wordmark />
-          <MonoLabel
-            variant="headerDate"
-            tone="textMuted"
-            testID="home-tab-date"
-            numberOfLines={1}
-            style={styles.date}
+        {/* After the launch, the header comes down into place and the hero rises in. */}
+        <Arrive from="above" order={0}>
+          <Animated.View
+            testID="home-tab-header"
+            onLayout={onHeaderLayout}
+            pointerEvents={phase.headerTouchable ? "auto" : "none"}
+            style={[styles.header, headerStyle]}
           >
-            {view.date}
-          </MonoLabel>
-        </Animated.View>
+            <Wordmark />
+            <MonoLabel
+              variant="headerDate"
+              tone="textMuted"
+              testID="home-tab-date"
+              numberOfLines={1}
+              style={styles.date}
+            >
+              {view.date}
+            </MonoLabel>
+          </Animated.View>
+        </Arrive>
 
         <Animated.ScrollView
           testID="home-tab-scroll"
@@ -89,39 +93,41 @@ export function HomeScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <SkeletonHandoff
-            testID="home-handoff"
-            pending={view.loading}
-            skeleton={<HomeSkeleton testID="home-content-pending" />}
-            style={styles.home}
-          >
-            {view.active ? (
-              <ActivePlanHero
-                plan={view.active.hero}
-                href={view.active.href}
-                onContinue={view.continueToday}
-                motion={heroMotion}
-              />
-            ) : (
-              <StartHereCard onAddSermon={view.addSermon} />
-            )}
-
-            {!view.hasPlans && view.sample && (
-              <View style={styles.sample}>
-                <SFProBody tone="textMuted" style={styles.label}>
-                  Try a sample
-                </SFProBody>
-
-                <PlanRow
-                  testID="home-tab-sample-plan"
-                  title={view.sample.title}
-                  detail={view.sample.detail}
-                  done={false}
-                  onPress={view.openSample}
+          <Arrive from="below" order={1}>
+            <SkeletonHandoff
+              testID="home-handoff"
+              pending={view.loading}
+              skeleton={<HomeSkeleton testID="home-content-pending" />}
+              style={styles.home}
+            >
+              {view.active ? (
+                <ActivePlanHero
+                  plan={view.active.hero}
+                  href={view.active.href}
+                  onContinue={view.continueToday}
+                  motion={heroMotion}
                 />
-              </View>
-            )}
-          </SkeletonHandoff>
+              ) : (
+                <StartHereCard onAddSermon={view.addSermon} />
+              )}
+
+              {!view.hasPlans && view.sample && (
+                <View style={styles.sample}>
+                  <SFProBody tone="textMuted" style={styles.label}>
+                    Try a sample
+                  </SFProBody>
+
+                  <PlanRow
+                    testID="home-tab-sample-plan"
+                    title={view.sample.title}
+                    detail={view.sample.detail}
+                    done={false}
+                    onPress={view.openSample}
+                  />
+                </View>
+              )}
+            </SkeletonHandoff>
+          </Arrive>
         </Animated.ScrollView>
       </Screen>
 
@@ -157,7 +163,7 @@ const styles = StyleSheet.create({
   },
 
   // When the row is tight, the date gives way; the wordmark never does.
-  date: { flexShrink: 1 },
+  date: { flexShrink: 1, paddingBottom: space[2] },
 
   scroll: {
     flex: 1,

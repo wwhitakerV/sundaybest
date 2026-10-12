@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { cardStyle, radius, space, useTheme } from "@/theme";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: space[12],
     padding: space[8],
-    borderRadius: radius[16],
+    borderRadius: cardStyle.list.radius,
     borderWidth: 1,
     overflow: "hidden",
   },

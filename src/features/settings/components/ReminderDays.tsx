@@ -15,9 +15,6 @@ const DAYS: readonly { value: Weekday; letter: string; name: string }[] = [
   { value: "sat", letter: "S", name: "Saturday" },
 ];
 
-/** A day's round mark: the same weight picked or not, so nothing shifts as it changes. */
-const DAY_RING = 1.5;
-
 export type ReminderDaysProps = {
   selected: readonly Weekday[];
   onToggle: (day: Weekday) => void;
@@ -25,14 +22,15 @@ export type ReminderDaysProps = {
 };
 
 /**
- * The week in one row, a letter a day, each in a quiet ring. A picked day's
- * letter is red, the app's colour for what's chosen; a day left out stays quiet grey.
+ * The week in one row, a letter a day. A picked day is a filled black circle,
+ * its letter white — as the Health app sets a sleep schedule's days, and black
+ * as everything picked is; a day left out is its grey letter alone.
  */
 export function ReminderDays({ selected, onToggle, testID }: ReminderDaysProps) {
   const theme = useTheme();
 
   return (
-    <Card testID={testID} style={[styles.row, { padding: space[12] }]}>
+    <Card testID={testID} kind="list" style={[styles.row, { padding: space[12] }]}>
       {DAYS.map((day) => {
         const picked = selected.includes(day.value);
         return (
@@ -47,13 +45,12 @@ export function ReminderDays({ selected, onToggle, testID }: ReminderDaysProps) 
               styles.day,
               {
                 width: controlHeight.hitTarget,
-                borderWidth: DAY_RING,
                 borderRadius: radius.pill,
-                borderColor: theme.colors.containerBorder,
+                backgroundColor: picked ? theme.colors.controlPrimary : "transparent",
               },
             ]}
           >
-            <SFProBody variant="letter" tone={picked ? "accent" : "textMuted"}>
+            <SFProBody variant="letter" tone={picked ? "onControlPrimary" : "textMuted"}>
               {day.letter}
             </SFProBody>
           </Pressable>

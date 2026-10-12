@@ -8,13 +8,11 @@ import { Button } from "@/ui/atoms/Button";
 import { useStepTransition } from "@/hooks/use-step-transition";
 import { useNewPlanFlow } from "../hooks/use-new-plan-flow";
 import { DayCountPicker } from "../components/DayCountPicker";
-import { FIELD_ICON_CENTRE } from "../components/field-geometry";
 import { HowToCopyCard } from "../components/HowToCopyCard";
 import { PlanCreationHeader } from "../components/PlanCreationHeader";
 import { QuickCheckToggle } from "../components/QuickCheckToggle";
 import { SermonLinkField } from "../components/SermonLinkField";
 import { SermonPreview } from "../components/SermonPreview";
-import { SermonSearchField } from "../components/SermonSearchField";
 import { SermonSearchResults } from "../components/SermonSearchResults";
 import { formatDuration } from "@/utils/time/formatDuration";
 import { NEW_PLAN_STEPS } from "../logic/new-plan-steps";
@@ -22,6 +20,8 @@ import { shortenLink } from "../logic/sermon-link";
 import { space, useTheme } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { FIELD_ICON_CENTRE } from "@/ui/atoms/FieldFrame";
+import { SearchField } from "@/ui/molecules/SearchField";
 
 /**
  * New Plan: choose a sermon by pasting its link or searching the temporary
@@ -84,12 +84,15 @@ export function NewPlanScreen() {
               <SFProBody tone="textMuted">
                 Search by pastor, church, topic, or sermon title.
               </SFProBody>
-              <SermonSearchField
+              <SearchField
                 testID="search-sermons-input"
                 value={state.searchQuery}
-                onChangeText={flow.changeSearchQuery}
+                onChange={flow.changeSearchQuery}
                 onSubmit={flow.submitSearch}
                 onClear={flow.clearSearch}
+                placeholder="Pastor, church, or sermon"
+                accessibilityLabel="Search sermons"
+                autoFocus
               />
               <InputModeAction
                 testID="new-plan-paste-instead"
@@ -188,7 +191,7 @@ function InputModeAction({
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [styles.modeAction, { opacity: pressed ? 0.55 : 1 }]}
+      style={styles.modeAction}
     >
       <Icon size={MODE_ICON} color={color} strokeWidth={strokeWidth} />
       <SFProBody variant="detail" tone="textInactive">

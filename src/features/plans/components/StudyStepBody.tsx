@@ -13,6 +13,8 @@ export type StudyStepBodyProps = {
   content: StudyDayContent;
   answerFor: (reflectionId: Id) => string;
   onAnswerChange: (reflectionId: Id, answer: string) => void;
+  /** Opens Bible translation from the Scripture step's pill. */
+  onChangeTranslation: () => void;
 };
 
 /** One Daily Study step's body, with the day's content for it. */
@@ -22,6 +24,7 @@ export function StudyStepBody({
   content,
   answerFor,
   onAnswerChange,
+  onChangeTranslation,
 }: StudyStepBodyProps) {
   const { day, scripture, reflections, prayer } = content;
   const reflection = reflections.at(page);
@@ -36,7 +39,15 @@ export function StudyStepBody({
         />
       );
     case "scripture":
-      return scripture && <ScriptureStep dayNumber={day.dayNumber} passage={scripture} />;
+      return (
+        scripture && (
+          <ScriptureStep
+            dayNumber={day.dayNumber}
+            passage={scripture}
+            onChangeTranslation={onChangeTranslation}
+          />
+        )
+      );
     case "reflect":
       return (
         reflection && (

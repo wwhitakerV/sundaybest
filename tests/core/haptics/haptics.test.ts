@@ -1,8 +1,10 @@
 import * as Haptics from "expo-haptics";
 
 import {
+  dropFeedback,
   errorFeedback,
   selectionFeedback,
+  splashFeedback,
   successFeedback,
   tapFeedback,
   warningFeedback,
@@ -12,7 +14,7 @@ jest.mock("expo-haptics", () => ({
   selectionAsync: jest.fn(),
   impactAsync: jest.fn(),
   notificationAsync: jest.fn(),
-  ImpactFeedbackStyle: { Light: "light" },
+  ImpactFeedbackStyle: { Light: "light", Medium: "medium", Heavy: "heavy" },
   NotificationFeedbackType: { Success: "success", Warning: "warning", Error: "error" },
 }));
 
@@ -53,6 +55,18 @@ describe("haptics vocabulary", () => {
 
     expect(Haptics.notificationAsync).toHaveBeenCalledWith("error");
   });
+
+  it("dropFeedback makes a medium impact", () => {
+    dropFeedback();
+
+    expect(Haptics.impactAsync).toHaveBeenCalledWith("medium");
+  });
+
+  it("splashFeedback makes a heavy impact", () => {
+    splashFeedback();
+
+    expect(Haptics.impactAsync).toHaveBeenCalledWith("heavy");
+  });
 });
 
 /** Node's process events, typed narrowly: this test environment has no Node types. */
@@ -71,6 +85,8 @@ describe("a haptic that the device refuses", () => {
     ["successFeedback", successFeedback, Haptics.notificationAsync],
     ["warningFeedback", warningFeedback, Haptics.notificationAsync],
     ["errorFeedback", errorFeedback, Haptics.notificationAsync],
+    ["dropFeedback", dropFeedback, Haptics.impactAsync],
+    ["splashFeedback", splashFeedback, Haptics.impactAsync],
   ];
 
   it.each(cases)("%s swallows a rejected promise", async (_name, feedback, native) => {

@@ -82,6 +82,7 @@ export function ProgressScreen() {
             index={view.passageIndex}
             onShow={view.showPassage}
             onOpen={view.open}
+            onChangeTranslation={view.changeTranslation}
           />
           {view.rows && <ProgressRows {...view.rows} />}
         </View>

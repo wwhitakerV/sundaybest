@@ -67,7 +67,7 @@ describe("DayCompleteScreen", () => {
     render(<DayCompleteScreen />);
 
     expect(
-      await screen.findByRole("header", { name: "This day isn’t here" }, { timeout: 10000 }),
+      await screen.findByRole("header", { name: "This day isn't here" }, { timeout: 10000 }),
     ).toBeVisible();
     expect(screen.queryByTestId("day-complete-done-button")).toBeNull();
     fireEvent.press(screen.getByTestId("day-complete-not-found-action"));

@@ -111,7 +111,6 @@ const styles = StyleSheet.create({
   },
 
   next: {
-    padding: space[24],
     gap: space[16],
   },
 

@@ -12,9 +12,9 @@ export type StudyNotFoundProps = {
 
 /**
  * What a Daily Study screen shows when it has nothing to show — never a dead
- * end. A day not open yet says so and goes back to the plan; a missing day
- * closes; and only a failure to reach the server offers to try again, always
- * with a way out beside it.
+ * end. A day not open yet says so, and a missing day says that; both close,
+ * back to where the study was opened. Only a failure to reach the server
+ * offers to try again, always with Close beside it.
  */
 export function StudyNotFound({ testID, error, onRetry }: StudyNotFoundProps) {
   const session = useModalSession();
@@ -24,9 +24,9 @@ export function StudyNotFound({ testID, error, onRetry }: StudyNotFoundProps) {
     return (
       <NotFoundScreen
         testID={testID}
-        title="This day isn’t open yet"
+        title="This day isn't open yet"
         message="Days open one at a time: finish the day before it, and come back on its day."
-        actionLabel="Back to plan"
+        actionLabel="Close"
         onAction={session.exit}
       />
     );
@@ -36,8 +36,8 @@ export function StudyNotFound({ testID, error, onRetry }: StudyNotFoundProps) {
     return (
       <NotFoundScreen
         testID={testID}
-        title="Couldn’t load this study"
-        message="SundayBest couldn’t reach your study. Check your connection and try again."
+        title="Couldn't load this study"
+        message="SundayBest couldn't reach your study. Check your connection and try again."
         actionLabel="Try again"
         onAction={() => void onRetry()}
         secondary={{ label: "Close", onPress: session.exit }}
@@ -48,7 +48,7 @@ export function StudyNotFound({ testID, error, onRetry }: StudyNotFoundProps) {
   return (
     <NotFoundScreen
       testID={testID}
-      title="This day isn’t here"
+      title="This day isn't here"
       message="Its plan may have been removed, or the link is out of date."
       actionLabel="Close"
       onAction={session.exit}

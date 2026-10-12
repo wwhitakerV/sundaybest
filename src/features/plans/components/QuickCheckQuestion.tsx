@@ -57,7 +57,7 @@ export function QuickCheckQuestion({
       {verse ? (
         <>
           <SerifTitle variant="quiz">{question.scriptureReference ?? ""}</SerifTitle>
-          <Card edge={false} radius={36} style={styles.verseCard}>
+          <Card testID="quick-check-verse-card" edge={false} kind="feature">
             <SerifBody testID="quick-check-verse">
               {verse.before}
               <Span
@@ -116,7 +116,6 @@ export function QuickCheckQuestion({
 const styles = StyleSheet.create({
   body: { gap: space[16] },
   choices: { gap: space[12], marginTop: space[8] },
-  verseCard: { paddingHorizontal: space[28], paddingVertical: space[24] },
   filled: { textDecorationLine: "underline" },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space[12], marginTop: space[8] },
 });

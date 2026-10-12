@@ -19,7 +19,7 @@ file, built on one private base (`ThemedText`):
 
 | Component      | Face                      | `variant` → theme role                                                                                                                                          |
 | -------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Wordmark`     | Libre Baskerville         | `masthead`, "SUNDAYBEST" inside it                                                                                                                              |
+| `Wordmark`     | Libre Baskerville         | `masthead`, "SUNDAYBEST" inside it (since 2026-10-10 a drawing, `src/ui/atoms/Wordmark`)                                                                        |
 | `SerifTitle`   | Libre Baskerville Medium  | `heading` editorialHeading · `title` editorialTitle · `question` editorialQuestion                                                                              |
 | `SerifBody`    | Libre Baskerville Regular | `scripture` · `standfirst`                                                                                                                                      |
 | `DisplayTitle` | SF Pro                    | `display`                                                                                                                                                       |

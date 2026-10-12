@@ -3,7 +3,8 @@ import { render, screen, fireEvent, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { privacyTopicHref } from "@/features/settings/logic/privacy-routes";
+import { tabPrivacyTopicHref } from "@/entities/tabs";
+import type { PrivacyTopicId } from "@/features/settings/logic/privacy-routes";
 import { PrivacyPolicyScreen } from "@/features/settings/screens/PrivacyPolicyScreen";
 
 jest.mock("expo-router", () => ({
@@ -62,7 +63,7 @@ describe("PrivacyPolicyScreen", () => {
 
     expect(screen.getByRole("header", { name: "The details" })).toBeVisible();
     expect(screen.getByTestId("privacy-policy-details")).toHaveStyle(ABOUT_CARD);
-    const rows: [string, Parameters<typeof privacyTopicHref>[0]][] = [
+    const rows: [string, PrivacyTopicId][] = [
       ["What we keep", "keep"],
       ["What stays on your iPhone", "device"],
       ["How we use your data", "use"],
@@ -71,7 +72,8 @@ describe("PrivacyPolicyScreen", () => {
     ];
     for (const [label, id] of rows) {
       fireEvent.press(screen.getByRole("button", { name: label }));
-      expect(mockPush).toHaveBeenLastCalledWith(privacyTopicHref(id));
+      // In Settings' own tab, where the page is when it isn't opened from a plan.
+      expect(mockPush).toHaveBeenLastCalledWith(tabPrivacyTopicHref("settings", id));
     }
   });
 

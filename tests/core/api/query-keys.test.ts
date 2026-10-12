@@ -1,15 +1,27 @@
-import { apiQueryKeys, isStudyDayQueryKey } from "@/core/api/query-keys";
+import { apiQueryKeys, isInReaderTranslation } from "@/core/api/query-keys";
 
-describe("isStudyDayQueryKey", () => {
-  it("matches a study day's key", () => {
-    expect(isStudyDayQueryKey(apiQueryKeys.studyDay("plan-1", 2))).toBe(true);
+describe("isInReaderTranslation", () => {
+  it.each([
+    ["a study day's Scripture", apiQueryKeys.studyDay("plan-1", 2)],
+    ["Progress's week, its key verses", apiQueryKeys.week("2026-10-04")],
+    ["The Word's passages", apiQueryKeys.word],
+  ])("is true for %s", (_, key) => {
+    expect(isInReaderTranslation(key)).toBe(true);
   });
 
-  it("does not match the plan the day belongs to", () => {
-    expect(isStudyDayQueryKey(apiQueryKeys.plan("plan-1"))).toBe(false);
+  it.each([
+    ["the plans list", apiQueryKeys.plans],
+    ["a plan", apiQueryKeys.plan("plan-1")],
+    ["the settings themselves", apiQueryKeys.settings],
+    ["the reader", apiQueryKeys.me],
+    ["every week a plan ran in", apiQueryKeys.weeks],
+    ["the reflections", apiQueryKeys.reflections],
+    ["a Quick Check", apiQueryKeys.quizSession("quiz-1")],
+  ])("is false for %s", (_, key) => {
+    expect(isInReaderTranslation(key)).toBe(false);
   });
 
-  it("does not match the plans list", () => {
-    expect(isStudyDayQueryKey(apiQueryKeys.plans)).toBe(false);
+  it("never matches a whole root by its prefix alone (Progress's root holds data in no translation)", () => {
+    expect(isInReaderTranslation(apiQueryKeys.progressRoot)).toBe(false);
   });
 });

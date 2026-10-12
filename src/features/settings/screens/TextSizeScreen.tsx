@@ -1,7 +1,8 @@
 import { Alert, StyleSheet, View } from "react-native";
 
 import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/reader-queries";
-import { radius, space, useTheme } from "@/theme";
+import { selectionFeedback } from "@/core/haptics/haptics";
+import { cardStyle, space, useTheme } from "@/theme";
 import type { TextSize } from "@/types/domain";
 import { PassageCard, PassageHeading } from "@/entities/scripture";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
@@ -9,6 +10,7 @@ import { SFProBody } from "@/ui/typography/SFProBody";
 import { Span } from "@/ui/typography/Span";
 import { SettingsChoiceList, type SettingsChoice } from "../components/SettingsChoiceList";
 import { SettingsSubpage } from "../components/SettingsSubpage";
+import { useOpenHere } from "../hooks/use-open-here";
 import { DEFAULT_BIBLE_TRANSLATION } from "../logic/bible-translations";
 import { previewPassage } from "../logic/text-size-preview";
 
@@ -23,6 +25,7 @@ export function TextSizeScreen() {
   const theme = useTheme();
   const settingsQuery = useUserSettingsQuery();
   const update = useUpdateSettingsMutation();
+  const openHere = useOpenHere();
   const value = settingsQuery.data?.settings.textSize ?? "default";
   const passage = previewPassage(
     settingsQuery.data?.settings.bibleTranslation ?? DEFAULT_BIBLE_TRANSLATION,
@@ -30,10 +33,11 @@ export function TextSizeScreen() {
 
   function select(next: TextSize) {
     if (next === value || update.isPending) return;
+    selectionFeedback();
     update.mutate(
       { textSize: next },
       {
-        onError: () => Alert.alert("Couldn’t update text size", "Try again in a moment."),
+        onError: () => Alert.alert("Couldn't update text size", "Try again in a moment."),
       },
     );
   }
@@ -50,7 +54,7 @@ export function TextSizeScreen() {
           styles.preview,
           {
             backgroundColor: theme.colors.surface,
-            borderRadius: radius[24],
+            borderRadius: cardStyle.list.radius,
             gap: space[12],
           },
         ]}
@@ -59,7 +63,12 @@ export function TextSizeScreen() {
           PREVIEW
         </SFProBody>
         {/* As the Daily Study sets Scripture — its heading, then the verse — set straight on the preview's grey. */}
-        <PassageHeading reference={passage.reference} translation={passage.translation} onSurface />
+        <PassageHeading
+          reference={passage.reference}
+          translation={passage.translation}
+          onSurface
+          onChangeTranslation={() => openHere.page("bible-translation")}
+        />
         <PassageCard testID="text-size-preview-verse" bare>
           <Span>
             <MonoLabel variant="emphasis">{`${passage.verse} `}</MonoLabel>

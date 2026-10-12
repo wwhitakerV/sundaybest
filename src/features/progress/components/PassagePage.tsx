@@ -30,6 +30,8 @@ export type PassagePageProps = {
   /** The reader's Bible translation, in the pill beside the reference: "BSB". */
   translation: string;
   onOpen: (planId: string, dayNumber: number) => void;
+  /** Opens Bible translation from the pill. */
+  onChangeTranslation: () => void;
 };
 
 /**
@@ -44,6 +46,7 @@ export function PassagePage({
   isToday,
   translation,
   onOpen,
+  onChangeTranslation,
 }: PassagePageProps) {
   const reduceMotion = useReduceMotion();
   const done = passage?.status === "done";
@@ -62,7 +65,13 @@ export function PassagePage({
         </SFProBody>
       )}
       {/* As the Study heads a passage: its reference, and its translation in a pill. */}
-      {passage && <PassageHeading reference={passage.reference} translation={translation} />}
+      {passage && (
+        <PassageHeading
+          reference={passage.reference}
+          translation={translation}
+          onChangeTranslation={onChangeTranslation}
+        />
+      )}
       {panel.kind === "verse" ? (
         <>
           <Pressable

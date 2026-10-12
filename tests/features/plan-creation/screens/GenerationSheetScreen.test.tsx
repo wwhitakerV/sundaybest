@@ -148,7 +148,7 @@ describe("GenerationSheetScreen", () => {
     ]);
     render(<GenerationSheetScreen />);
 
-    expect(await screen.findByText("Couldn’t create your plan")).toBeVisible();
+    expect(await screen.findByText("Couldn't create your plan")).toBeVisible();
     expect(screen.getByTestId("generation-sheet-failed")).toHaveStyle({ alignItems: "center" });
     expect(screen.getByTestId("generation-sheet-failed-mark")).toBeOnTheScreen();
     expect(screen.getByTestId("generation-sheet-retry")).toBeVisible();

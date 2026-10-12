@@ -44,7 +44,7 @@ function Option({
     <Animated.View
       style={[
         styles.option,
-        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
+        { backgroundColor: theme.colors.background, borderColor: theme.colors.containerBorder },
         fadeStyle,
       ]}
     >

@@ -7,10 +7,14 @@ import { API_URL, aGeneration } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
 import { errorFeedback, successFeedback } from "@/core/haptics/haptics";
 import { useCreatePlanMutation } from "@/core/api/plan-queries";
-import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
+import { NEW_PLAN_HREF } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { useGenerationBar } from "@/features/plan-creation/hooks/use-generation-bar";
 import { useSettledFeedback } from "@/features/plan-creation/hooks/use-settled-feedback";
 import type { ApiPlanGeneration } from "@/core/api/contracts";
+
+// The tab the bar is showing over.
+jest.mock("@/hooks/use-focused-tab", () => ({ useFocusedTab: () => () => "settings" }));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -72,14 +76,14 @@ describe("useGenerationBar", () => {
     );
   });
 
-  it("opens a ready plan, and takes it off the bar", async () => {
+  it("opens a ready plan in the tab it's showing over, and takes it off the bar", async () => {
     current = [aGeneration({ status: "completed", progress: 100 })];
     const { result } = renderHook(useGenerationBar);
     await waitFor(() => expect(result.current.view?.kind).toBe("ready"));
 
     act(() => result.current.open());
 
-    expect(push).toHaveBeenCalledWith(planOverviewHref(aGeneration().planId));
+    expect(push).toHaveBeenCalledWith(tabPlanHref("settings", aGeneration().planId));
     await waitFor(() => expect(dismissed).toEqual([aGeneration().id]));
   });
 

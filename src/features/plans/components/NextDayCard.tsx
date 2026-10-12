@@ -39,7 +39,7 @@ export function NextDayCard({ title, when, testID }: NextDayCardProps) {
 }
 
 const styles = StyleSheet.create({
-  card: { flexDirection: "row", alignItems: "center", gap: space[16], padding: space[20] },
+  card: { flexDirection: "row", alignItems: "center", gap: space[16] },
   disc: {
     width: DISC,
     height: DISC,

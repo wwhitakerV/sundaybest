@@ -42,6 +42,9 @@ export function planCompleteHref(planId: string) {
   } as const;
 }
 
+/** Bible translation, inside the Study: changed mid-study, Back returns to the passage. */
+export const STUDY_TRANSLATION_HREF = "/study/bible-translation";
+
 export const HOME_HREF = "/(tabs)/home";
 export const PLANS_HREF = "/(tabs)/plans";
 export const NEW_PLAN_HREF = "/(plan-creation)/paste-sermon";

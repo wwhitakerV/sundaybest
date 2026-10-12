@@ -2,12 +2,12 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { Pause, Play } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { cardStyle, space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
 /** Its corners. */
-export const SERMON_CLIP_RADIUS = radius[36];
+export const SERMON_CLIP_RADIUS = cardStyle.feature.radius;
 const PLAY_SIZE = 48;
 const ICON_SIZE = 20;
 
@@ -32,7 +32,7 @@ export function SermonClipCard({ playing, clock, discStyle, testID }: SermonClip
   const Icon = playing ? Pause : Play;
 
   return (
-    <Card testID={testID} radius={SERMON_CLIP_RADIUS} fill="page" style={styles.card}>
+    <Card testID={testID} kind="feature" inset={false} fill="page" style={styles.card}>
       <Animated.View
         testID={testID && `${testID}-disc`}
         style={[styles.play, { backgroundColor: theme.colors.controlPrimary }, discStyle]}

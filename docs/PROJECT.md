@@ -679,6 +679,21 @@ mirrors `_template`; delete the ignores when the slice puts them to work.
 installed package when the dev server runs with `EXPO_UNSTABLE_MCP_SERVER=1`
 (`npm run dev:mcp`). It is a real dependency with no import site.
 
+## Launch
+
+- **Native launch screen.** It's plain white (no image), because iOS can't animate it.
+- **Splash.** `LaunchSplashCoordinator` lifts it two frames after the app first draws. It reports through `useLaunchReady()` when the first page (Welcome or Home) is ready: the reader is known, plans and settings are in (or 2.5s has passed), and the reader has landed: Welcome for a new reader, or wherever a returning one has moved on to (Home, or a plan from a link). After 8s it reports ready regardless, so the app is never stuck behind the intro.
+- **The intro.** The launch intro (`src/features/launch-intro`, ADR 0026) is mounted once at the root over everything. It starts on the launch's page colour, plays the pen and the pool, and holds at full colour for 200ms, longer if the page isn't ready yet. Then it disappears, and the page's pieces arrive with the reveal motion (`src/ui/arrival`): Home's header comes down into place and its hero rises in, and Welcome's wordmark comes down and the rest rises in. It plays on every cold launch, about 6.5s, with no skip. Coming back from the background shows nothing.
+- **Reduce Motion on.** The white just fades to the page.
+- **Colours.** They live in `src/theme/launch-colors.json`, separate from the app's own colours. `page` is what the intro writes on, and `app.config.ts` reads it for the native launch screen too, so the hand-off can't drift. `ink` is the writing, the pool and the eruption that fills the screen. A change to `page` reaches the launch screen only with a new build.
+- **Status bar.** It's hidden while the intro plays.
+
+## Navigation
+
+- **As iOS does.** Back returns to the page the reader was just on and never changes tab; a tab tapped again goes to its first page; what's opened appears in the tab the reader is in. The rules are in `.claude/rules/ui.md`, and the routes they need in `src/app/README.md`.
+- **Every tab can show a plan,** and the Settings pages a plan's More menu leads to, so none of them sends the reader to another tab. Links are built by `@/entities/tabs` with the tab in focus (`useFocusedTab`).
+- **No tab can be stranded.** Each tab's stack is anchored to its first page (`unstable_settings.anchor`), and the tab bar puts that page back when a tab is tapped again (`stackRootReset`).
+
 ## Layout
 
 - `src/app/` — expo-router routes only (screens and layouts).

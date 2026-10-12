@@ -4,7 +4,10 @@ import { servePlans } from "@tests/mocks/plans-api";
 
 // Same reason navigation.test.tsx holds Reduce Motion on: Welcome's intro
 // story would otherwise keep ticking through renderApp()'s forced fake timers.
-jest.mock("@/core/accessibility/use-reduce-motion", () => ({ useReduceMotion: () => true }));
+jest.mock("@/core/accessibility/use-reduce-motion", () => ({
+  useReduceMotion: () => true,
+  useReduceMotionSetting: () => true,
+}));
 
 /** Measures the exams page's shelf as an iPhone would, so its books have room to be drawn. */
 function measureShelf() {

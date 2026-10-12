@@ -7,17 +7,22 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-import { motion, radius, space, useTheme } from "@/theme";
-import type { FilterOption } from "./FilterTabs";
+import { controlHeight, motion, pillHitSlop, radius, space, useTheme } from "@/theme";
 import { SFProLabel } from "@/ui/typography/SFProLabel";
 
 /** A pill's height, and so the row's: what a header fading across it reaches over. */
-export const FILTER_PILLS_HEIGHT = 36;
+export const FILTER_PILLS_HEIGHT = controlHeight.pill;
 const HEIGHT = FILTER_PILLS_HEIGHT;
 /** The outline round the pill picked — as heavy as Plan Detail's day outline. */
 const OUTLINE = 2;
 /** Plan Detail's day outline's spring — every selection outline moves alike. */
 const SLIDE = { ...motion.slide, reduceMotion: ReduceMotion.System } as const;
+
+/** A filter: its label, and how many it holds, if that's worth saying. */
+export type FilterOption = {
+  label: string;
+  count?: number;
+};
 
 type Frame = { x: number; width: number };
 
@@ -46,7 +51,6 @@ export type FilterPillsProps<Option extends FilterOption> = {
  * outline, drawn once its pill is measured, that slides to each pill picked
  * and lands without a bounce. It scrolls sideways when the pills outgrow the
  * row, and brings the pill picked into view when it's picked from elsewhere.
- * For the borderless look, see `FilterTabs`.
  */
 export function FilterPills<Option extends FilterOption>({
   options,
@@ -102,7 +106,7 @@ export function FilterPills<Option extends FilterOption>({
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
             // Up to a 44pt target, meeting the next pill halfway across the gap.
-            hitSlop={space[4]}
+            hitSlop={pillHitSlop}
             onLayout={(event) => measure(option.label, event)}
             onPress={() => onSelect(option.label)}
             style={[
@@ -113,7 +117,7 @@ export function FilterPills<Option extends FilterOption>({
               },
             ]}
           >
-            {/* The count rides small at the label's top, as `FilterTabs`' do: a superscript. */}
+            {/* The count rides small at the label's top: a superscript. */}
             <View style={[styles.label, { gap: space[2] }]}>
               <SFProLabel variant="segment" tone="text">
                 {option.label}

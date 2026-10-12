@@ -19,7 +19,7 @@ export function HowToCopyCard() {
       <SFProBody tone="textMuted" style={styles.heading}>
         How to copy a link
       </SFProBody>
-      <Card edge={false} style={styles.card}>
+      <Card testID="how-to-copy-card" edge={false} kind="list" style={styles.card}>
         {STEPS.map((label, index) => (
           <View
             key={label}
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
   wrap: { gap: space[12], marginTop: space[8] },
   heading: { marginLeft: space[6] },
   card: { overflow: "hidden" },
-  row: { flexDirection: "row", alignItems: "center", gap: space[18], padding: space[18] },
+  row: { flexDirection: "row", alignItems: "center", gap: space[16], padding: space[16] },
   badge: {
     width: 44,
     height: 44,

@@ -4,6 +4,7 @@ import Animated, {
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withSpring,
   type SharedValue,
 } from "react-native-reanimated";
@@ -29,6 +30,8 @@ const ICON = 23;
 const SLOP = (controlHeight.hitTarget - SLOT) / 2;
 /** How small an icon gets as it sinks into the page, pushed straight back out of sight. */
 const SUNK_SCALE = 0.4;
+/** The whole pill goes this long after it's asked to: a sunk button well on its way out first. */
+const GONE_AFTER_MS = 150;
 /** The app's one spring, both ways — sinking, closing up, coming back. */
 const SPRING = { ...motion.slide, reduceMotion: ReduceMotion.System } as const;
 
@@ -44,6 +47,12 @@ export type HeaderPillButton = {
 
 export type HeaderButtonPillProps = {
   buttons: readonly HeaderPillButton[];
+  /**
+   * The whole pill gone into the page — just after any button sunk with it —
+   * while something else stands in for it (a search on the keyboard, with its
+   * own close); back, it springs up again with its buttons.
+   */
+  gone?: boolean;
   testID?: string;
 };
 
@@ -54,7 +63,7 @@ export type HeaderButtonPillProps = {
  * and the pill closes up from that side round the rest, which never move;
  * brought back, it springs up again. Arrives with its screen, as a header button does.
  */
-export function HeaderButtonPill({ buttons, testID }: HeaderButtonPillProps) {
+export function HeaderButtonPill({ buttons, gone = false, testID }: HeaderButtonPillProps) {
   const theme = useTheme();
   const side = useHeaderSide();
   const { arrivals, animate } = useHeaderEntrance();
@@ -64,25 +73,41 @@ export function HeaderButtonPill({ buttons, testID }: HeaderButtonPillProps) {
   useEffect(() => {
     closed.set(withSpring(anySunk ? 1 : 0, SPRING));
   }, [anySunk, closed]);
+  // The pill itself going and coming: as a button sinks — shrinking, fading — just after the rest.
+  const away = useSharedValue(gone ? 1 : 0);
+  useEffect(() => {
+    away.set(gone ? withDelay(GONE_AFTER_MS, withSpring(1, SPRING)) : withSpring(0, SPRING));
+  }, [gone, away]);
+  const goneStyle = useAnimatedStyle(() => ({
+    opacity: 1 - Math.min(Math.max(away.get(), 0), 1),
+    transform: [{ scale: 1 - (1 - SUNK_SCALE) * away.get() }],
+  }));
 
   return (
     // A new key is a new view: it comes in afresh, with its entrance or without.
     <Animated.View key={arrivals} {...(animate && { entering: headerButtonEntrance(side) })}>
-      <View
-        {...(testID && { testID })}
-        style={[
-          styles.pill,
-          {
-            backgroundColor: theme.colors.background,
-            borderColor: theme.colors.hairline,
-            borderRadius: radius.pill,
-          },
-        ]}
+      <Animated.View
+        {...(testID && { testID: `${testID}-shell` })}
+        pointerEvents={gone ? "none" : "auto"}
+        accessibilityElementsHidden={gone}
+        style={goneStyle}
       >
-        {buttons.map(({ key, ...button }) => (
-          <PillButton key={key} {...button} closed={closed} />
-        ))}
-      </View>
+        <View
+          {...(testID && { testID })}
+          style={[
+            styles.pill,
+            {
+              backgroundColor: theme.colors.background,
+              borderColor: theme.colors.hairline,
+              borderRadius: radius.pill,
+            },
+          ]}
+        >
+          {buttons.map(({ key, ...button }) => (
+            <PillButton key={key} {...button} closed={closed} />
+          ))}
+        </View>
+      </Animated.View>
     </Animated.View>
   );
 }

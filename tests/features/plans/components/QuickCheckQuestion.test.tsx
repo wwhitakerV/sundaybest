@@ -38,6 +38,22 @@ describe("QuickCheckQuestion", () => {
     expect(screen.getByText("Ephesians 2:8")).toHaveStyle(typography.quizQuestion);
   });
 
+  it("sets a verse to finish on the page's feature card: 32 corners, 24 inside", () => {
+    renderQuestion(
+      quizQuestion({
+        kind: "finishTheVerse",
+        source: "scripture",
+        prompt: "For by ___ you have been saved.",
+        scriptureReference: "Ephesians 2:8",
+      }),
+    );
+
+    expect(screen.getByTestId("quick-check-verse-card")).toHaveStyle({
+      borderRadius: 32,
+      padding: 24,
+    });
+  });
+
   it("keeps the answers in the system face, loosely leaded", () => {
     renderQuestion();
 

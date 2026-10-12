@@ -2,17 +2,13 @@ import { Fragment, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 
-import { space, useTheme } from "@/theme";
+import { controlHeight, iconSize, space, useTheme } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
-const ICON_SIZE = 20;
 /** The icon's box: as tall as a row's name, so the icon sits level with it. */
 const ICON_BOX = { width: 24, height: 22 } as const;
-const CHEVRON = 18;
-/** A row's least height: a comfortable tap, as Settings' rows are. */
-const MIN_ROW_HEIGHT = 56;
 
 /** One row: what it's called, what it means, or both — and where it goes, if it goes anywhere. */
 export type AboutRow = {
@@ -32,18 +28,18 @@ export type AboutRow = {
  */
 export function AboutRows({ rows, testID }: { rows: readonly AboutRow[]; testID: string }) {
   return (
-    <Card testID={testID} radius={24} edge={rows.some((row) => row.onPress)} style={styles.card}>
+    <Card testID={testID} kind="list" edge={rows.some((row) => row.onPress)} style={styles.card}>
       {rows.map((row, index) => (
         <Fragment key={row.key}>
           {index > 0 && <Divider />}
-          <AboutRowView row={row} />
+          <AboutRowView row={row} testID={`${testID}-${row.key}`} />
         </Fragment>
       ))}
     </Card>
   );
 }
 
-function AboutRowView({ row }: { row: AboutRow }) {
+function AboutRowView({ row, testID }: { row: AboutRow; testID: string }) {
   const theme = useTheme();
   const Icon = row.icon;
   const layout = [
@@ -64,7 +60,11 @@ function AboutRowView({ row }: { row: AboutRow }) {
           importantForAccessibility="no-hide-descendants"
           style={styles.icon}
         >
-          <Icon size={ICON_SIZE} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
+          <Icon
+            size={iconSize.row}
+            color={theme.colors.text}
+            strokeWidth={theme.icon.strokeWidth}
+          />
         </View>
       )}
       <View style={[styles.copy, { gap: space[4] }]}>
@@ -80,7 +80,7 @@ function AboutRowView({ row }: { row: AboutRow }) {
       </View>
       {row.onPress && (
         <ChevronRight
-          size={CHEVRON}
+          size={iconSize.chevron}
           color={theme.colors.textMuted}
           strokeWidth={theme.icon.strokeWidth}
           style={styles.chevron}
@@ -92,6 +92,7 @@ function AboutRowView({ row }: { row: AboutRow }) {
   if (!row.onPress) return <View style={layout}>{content}</View>;
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={row.title ?? row.text}
       onPress={row.onPress}
@@ -104,7 +105,7 @@ function AboutRowView({ row }: { row: AboutRow }) {
 
 const styles = StyleSheet.create({
   card: { overflow: "hidden" },
-  row: { minHeight: MIN_ROW_HEIGHT, flexDirection: "row" },
+  row: { minHeight: controlHeight.row, flexDirection: "row" },
   icon: { ...ICON_BOX, alignItems: "center", justifyContent: "center" },
   copy: { flex: 1 },
   chevron: { alignSelf: "center" },

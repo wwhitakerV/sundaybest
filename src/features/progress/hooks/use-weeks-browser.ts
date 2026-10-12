@@ -5,7 +5,8 @@ import { useWeeksQuery } from "@/core/api/reader-queries";
 import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { useAllReflectionAnswers } from "@/core/storage/reflection-answer-queries";
 import { useToday } from "@/core/store";
-import { planOverviewHref } from "@/entities/plan";
+import { tabPlanHref, toAppTab } from "@/entities/tabs";
+import { useFocusedTab } from "@/hooks/use-focused-tab";
 import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { parseWeeksParams, progressWeekHref } from "../logic/progress-route";
 import { buildWeekCards, groupByMonth, searchWeekCards, yearsOf } from "../logic/week-history";
@@ -20,6 +21,7 @@ import { previewHistory, toPreview } from "../logic/week-picker-preview";
  */
 export function useWeeksBrowser() {
   const router = useRouter();
+  const focusedTab = useFocusedTab();
   const currentWeek = getWeekStartSunday(useToday());
   const preview = toPreview(parseWeeksParams(useLocalSearchParams()));
   const query = useWeeksQuery();
@@ -70,7 +72,11 @@ export function useWeeksBrowser() {
       tapFeedback();
       // A made-up week's plan isn't anywhere to go.
       if (made) router.back();
-      else router.push(planOverviewHref(planId));
+      else {
+        // Weeks closes, and the plan opens in the tab under it (Progress), as iOS does.
+        router.back();
+        router.push(tabPlanHref(toAppTab(focusedTab(), "progress"), planId));
+      }
     },
   } as const;
 }

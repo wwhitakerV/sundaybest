@@ -6,6 +6,8 @@ import secureStorePlugin from "expo-secure-store/plugin";
 import splashScreenPlugin from "expo-splash-screen/plugin";
 import sqlitePlugin from "expo-sqlite/plugin";
 
+import LAUNCH_COLORS from "./src/theme/launch-colors.json";
+
 /**
  * Expo app config. Replaces app.json so the three build variants can share one
  * definition instead of drifting apart.
@@ -287,14 +289,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
     plugins: [
       expoRouterPlugin(),
-      // The launch screen: the SUNDAYBEST wordmark on white, and nothing else.
-      // The image is the masthead face (Libre Baskerville Medium) in the brand black,
-      // rendered by scripts/render-splash-wordmark.swift; a native
-      // change, so it ships with a new build, not an OTA update.
+      // The launch screen: plain white, nothing else. iOS can't animate it, so the
+      // launch intro (src/features/launch-intro) starts on the same white and
+      // plays over the app from the first frame — see ADR 0026. A native change,
+      // so it ships with a new build, not an OTA update.
       splashScreenPlugin({
-        backgroundColor: "#FFFFFF",
-        image: "./assets/splash-wordmark.png",
-        imageWidth: 180,
+        // The same colour as the page the launch intro writes on, from one place.
+        backgroundColor: LAUNCH_COLORS.page,
         resizeMode: "contain",
       }),
 

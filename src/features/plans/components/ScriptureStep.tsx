@@ -12,15 +12,21 @@ import { Span } from "@/ui/typography/Span";
 export type ScriptureStepProps = {
   dayNumber: number;
   passage: StudyScripture;
+  /** Opens Bible translation from the passage's pill. */
+  onChangeTranslation: () => void;
 };
 
 /** Daily Study's Scripture step: the day's passage, in its translation, verse by verse. */
-export function ScriptureStep({ dayNumber, passage }: ScriptureStepProps) {
+export function ScriptureStep({ dayNumber, passage, onChangeTranslation }: ScriptureStepProps) {
   return (
     <View testID="study-scripture-body" style={styles.body}>
       <StudyKicker dayNumber={dayNumber} label="Scripture" />
       <StudyEnter order={1}>
-        <PassageHeading reference={passage.reference} translation={passage.translation} />
+        <PassageHeading
+          reference={passage.reference}
+          translation={passage.translation}
+          onChangeTranslation={onChangeTranslation}
+        />
       </StudyEnter>
       <StudyFollow>
         <PassageCard testID="study-scripture-verses">

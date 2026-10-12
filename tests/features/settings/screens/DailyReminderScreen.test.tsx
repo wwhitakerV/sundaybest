@@ -9,6 +9,15 @@ import { API_URL, aReminder } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
 import { lightTheme } from "@/theme/tokens";
 import { DailyReminderScreen } from "@/features/settings/screens/DailyReminderScreen";
+import { selectionFeedback } from "@/core/haptics/haptics";
+
+jest.mock("@/core/haptics/haptics", () => ({
+  tapFeedback: jest.fn(),
+  selectionFeedback: jest.fn(),
+  successFeedback: jest.fn(),
+  warningFeedback: jest.fn(),
+  errorFeedback: jest.fn(),
+}));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -109,6 +118,27 @@ describe("DailyReminderScreen", () => {
       expect(within(screen.getByTestId("daily-reminder-time")).getByText("6:30 AM")).toBeVisible();
     });
 
+    it("sits on a list card, as a row: 24 corners, as Settings' groups have", async () => {
+      await showReminder();
+
+      expect(screen.getByTestId("daily-reminder-card")).toHaveStyle({ borderRadius: 24 });
+    });
+
+    it("gives the time a row's height, 64", async () => {
+      await showReminder();
+
+      expect(screen.getByTestId("daily-reminder-time-row")).toHaveStyle({ minHeight: 64 });
+    });
+
+    it("ticks as it's switched", async () => {
+      await showReminder();
+      jest.mocked(selectionFeedback).mockClear();
+
+      fireEvent.press(screen.getByTestId("daily-reminder-enabled"));
+
+      expect(selectionFeedback).toHaveBeenCalledTimes(1);
+    });
+
     it("turns the reminder off", async () => {
       const sent = await showReminder();
 
@@ -164,21 +194,31 @@ describe("DailyReminderScreen", () => {
       });
     });
 
-    it("ring every day quietly, a picked day's letter red, a day left out grey", async () => {
+    it("fill a picked day's circle in black, its letter white; a day left out is a grey letter alone", async () => {
       await showReminder(aReminder({ days: ["mon"] }));
 
-      for (const day of ["mon", "sun"]) {
-        expect(screen.getByTestId(`daily-reminder-days-${day}`)).toHaveStyle({
-          borderColor: lightTheme.colors.containerBorder,
-        });
-      }
+      expect(screen.getByTestId("daily-reminder-days-mon")).toHaveStyle({
+        backgroundColor: lightTheme.colors.controlPrimary,
+      });
       expect(within(screen.getByTestId("daily-reminder-days-mon")).getByText("M")).toHaveStyle({
         ...lightTheme.typography.dayLetter,
-        color: lightTheme.colors.accent,
+        color: lightTheme.colors.onControlPrimary,
+      });
+      expect(screen.getByTestId("daily-reminder-days-sun")).not.toHaveStyle({
+        backgroundColor: lightTheme.colors.controlPrimary,
       });
       expect(within(screen.getByTestId("daily-reminder-days-sun")).getByText("S")).toHaveStyle({
         color: lightTheme.colors.textMuted,
       });
+    });
+
+    it("tick as a day changes", async () => {
+      await showReminder();
+      jest.mocked(selectionFeedback).mockClear();
+
+      fireEvent.press(screen.getByTestId("daily-reminder-days-sat"));
+
+      expect(selectionFeedback).toHaveBeenCalledTimes(1);
     });
 
     it("take a day out of the reminder's days", async () => {

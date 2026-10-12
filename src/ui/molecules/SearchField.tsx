@@ -1,12 +1,10 @@
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { CircleX, Search } from "lucide-react-native";
 
-import { controlHeight, radius, space, useTheme } from "@/theme";
+import { controlHeight, space, useTheme } from "@/theme";
+import { FieldFrame } from "@/ui/atoms/FieldFrame";
 import { TextField } from "@/ui/typography/TextField";
 
-/** As tall as New plan's sermon search. */
-export const SEARCH_FIELD_HEIGHT = 52;
-const ICON = 20;
 /** The clear: iOS's, small and filled. */
 const CLEAR = 19;
 
@@ -22,16 +20,18 @@ export type SearchFieldProps = {
   onSubmit?: () => void;
   /** The field let go — the keyboard put away. */
   onBlur?: () => void;
+  /** Its clear, where clearing does more than empty the field (New Plan drops its results too). */
+  onClear?: () => void;
   /** Floating over the keyboard: white, lifted by a soft shadow — beside a `raised` close. */
   raised?: boolean;
-  /** The field's; its clear is `${testID}-clear`. */
+  /** The input's; its frame is `${testID}-field`, its clear `${testID}-clear`. */
   testID: string;
 };
 
 /**
- * A search field, as New plan's sermon search: soft fill, a card's edge, a
- * magnifier and placeholder in the supporting grey, a small grey-filled clear. `raised`, it
- * floats white on a soft shadow.
+ * A search field: the shared field frame with a magnifier, its placeholder in
+ * the supporting grey, and a small grey-filled clear once something's typed.
+ * `raised`, it floats white on a soft shadow.
  */
 export function SearchField({
   value,
@@ -41,33 +41,20 @@ export function SearchField({
   autoFocus = false,
   onSubmit,
   onBlur,
+  onClear,
   raised = false,
   testID,
 }: SearchFieldProps) {
   const theme = useTheme();
 
   return (
-    <View
-      style={[
-        styles.field,
-        {
-          backgroundColor: raised ? theme.colors.background : theme.colors.surface,
-          // A card's edge, so the field holds against the page and the keyboard alike.
-          borderColor: theme.colors.containerBorder,
-          borderRadius: radius.pill,
-          gap: space[10],
-          paddingLeft: space[16],
-          // Raised (the search on the keyboard), the clear sits closer to the end.
-          paddingRight: raised ? space[14] : space[16],
-        },
-        raised && { shadowColor: theme.colors.shadow, ...theme.elevation.floating },
-      ]}
+    <FieldFrame
+      testID={`${testID}-field`}
+      icon={Search}
+      raised={raised}
+      // Raised (the search on the keyboard), the clear sits closer to the end.
+      endInset={raised ? space[14] : space[16]}
     >
-      <Search
-        size={ICON}
-        color={theme.colors.textSupporting}
-        strokeWidth={theme.icon.strokeWidth}
-      />
       <TextField
         testID={testID}
         accessibilityLabel={accessibilityLabel}
@@ -88,7 +75,7 @@ export function SearchField({
           accessibilityRole="button"
           accessibilityLabel="Clear search"
           hitSlop={(controlHeight.hitTarget - CLEAR) / 2}
-          onPress={() => onChange("")}
+          onPress={onClear ?? (() => onChange(""))}
         >
           {/* A grey disc with the X cut out of it in the field's own colour. */}
           <CircleX
@@ -99,16 +86,11 @@ export function SearchField({
           />
         </Pressable>
       )}
-    </View>
+    </FieldFrame>
   );
 }
 
 const styles = StyleSheet.create({
-  field: {
-    height: SEARCH_FIELD_HEIGHT,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  input: { flex: 1 },
+  // Room above and below its words, so a field grown by large text keeps its breathing room.
+  input: { flex: 1, paddingVertical: space[12] },
 });

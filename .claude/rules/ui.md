@@ -83,6 +83,52 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
   `RoundedEdge`), so a card scrolls up into a rounded window. Plans only, and
   the top only.
 
+## Navigation behaves as iOS's does
+
+Three rules, the ones Apple's own apps keep:
+
+- **Back returns to the page the reader was just on.** It never changes tab,
+  and no Back is "deterministic" (a fixed destination in place of
+  `router.back()`).
+- **A tab tapped again goes to its first page,** always (the tab bar's
+  `stackRootReset` puts it back even if a link left the stack without it).
+- **What's opened appears where the reader is.** A plan opened from Home,
+  Progress, Weeks or the generation bar opens in that tab; a setting opened
+  from a plan opens over the plan; leaving a study or New Plan returns to the
+  tab it was opened from. Never send someone to another tab's stack. Build the
+  link with `@/entities/tabs` (`tabPlanHref`, `tabPageHref`,
+  `tabPrivacyTopicHref`) and the tab from `useFocusedTab` — see
+  `src/app/README.md` for the routes this needs.
+- **A Bible translation pill opens Bible translation where the reader is:**
+  inside the Study's own stack during a study (`STUDY_TRANSLATION_HREF`),
+  otherwise in the tab they're in — Back returns to the passage. Every
+  `PassageHeading` that's read in the app takes `onChangeTranslation`; only
+  Welcome's tour leaves it a label.
+- **A page's title says how it opened.** Pushed in a stack (The Word, Your
+  words, the Quick Check page, Settings' pages): `ScreenHeader` — Back, and the
+  title small beside it. Zoomed or slid up over everything (All reflections,
+  All Quick Checks, Weeks): a large title (`TitleHeader`, or none where a
+  search runs the width) and Close.
+- **The tab bar stays under a half sheet,** as iOS's does — it's there the
+  moment the sheet slides away. It steps away only for a full-screen page or
+  modal. A new half sheet over the tabs goes in `AppTabBar`'s `staysUnder`.
+
+## Fields
+
+Every one-line field is the same pill (`FieldFrame`): at least
+`controlHeight.field` (52) tall, so large text grows it rather than clipping
+it; a 1pt `containerBorder` edge; a 20pt leading icon and the placeholder both
+in `textSupporting`. On the page it takes the soft fill (`surface`); floating
+over the keyboard it's white on a soft shadow (`raised`). A search is
+`SearchField`, any other line `InputField` (a button at its end, as New Plan's
+Paste, sits inside, drawn smaller but tapped at 44). A value that can't be used
+turns its edge amber (`incorrect`), never red. Never hand-build a field.
+
+Every box you write in, several lines tall — the Study's answer, Your words'
+update, Settings' messages — is `TextBox`: the same soft fill and card edge,
+24pt corners, 16pt inside, its words from the top, the placeholder in
+`textSupporting`. Its place sets only its least height.
+
 ## Search
 
 Header icon buttons are white with their hairline edge, never a grey fill.
@@ -154,6 +200,55 @@ is keyed (`key={pageIndex}`) to play it again; never trigger an entrance from
 an effect, a key comparison, or an animation callback. Reduce Motion keeps
 the fade and drops the movement.
 
+## A page that fits the screen
+
+A page that fits the screen and never scrolls (`ScrollScreen fixed`) is a
+plain view between the header and the tab bar, not a scroller: a part that
+takes what's left (`flex: 1`) — The Word's passages, Your words' reflection,
+Quick Check's question — is held to that room, and scrolls on its own.
+
+## Rows
+
+A tappable row in a list card — Settings' groups and choice lists, About's
+lists, Daily reminder's time, Progress's rows, The Word's passages, Study's
+step rows — is at least `controlHeight.row` (64) tall, leads with its icon at
+`iconSize.row` (20) and ends in a chevron at `iconSize.chevron` (18). A
+popover's options are a menu's (48), not rows. A chevron inside a pill (the
+week's dates) is `iconSize.pillChevron` (14).
+
+## Showing what's picked
+
+What the reader has picked is shown in black, everywhere: a chip or tile
+(filters, the paper swatches, the day count, the week's days, sermon results)
+gets the black outline (2pt, `text`), sliding to each new pick; a row in a
+grouped list (Bible translation, Text size) ends in a black check, as iOS
+Settings does; several picked at once (Daily reminder's days) are filled black
+circles with white letters; a scale's marker is black. Red never means
+picked: it's "this one, in view" (The Word's chart, Your words' timeline, Quick
+Check's caret) and a switch that's on. Every change of choice gives a
+selection haptic, Settings' included.
+
+## Cards
+
+Every card is a `Card`, and its `kind` sets its corners and the room inside it
+(`cardStyle`), so every card of a kind matches:
+
+- **`list`** — rows (Settings' groups, About's lists, choice lists, a row with a
+  switch or a time, Progress's rows, week cards, module cards, Quick Check
+  results): 24 corners, nothing inside the card; each row brings its own 16.
+- **`content`** (the default) — a block to read or act on (callouts, the next
+  day, Plan complete, takeaways, Plans' cards): 28 corners, 20 inside.
+- **`feature`** — a page's one big card (Start here, the Quick Check question,
+  the sermon clip): 32 corners, 24 inside.
+
+A picture running to the card's edges turns the inset off (`inset={false}`)
+and pads only its words. A shell `Card` can't draw — art-led (Plans' cards) or
+showing its selection (a sermon result) — takes its corners from `cardStyle`.
+Never a corner or inset of a card's own. Edges: `containerBorder` round
+anything on the page; `hairline` only on chrome floating over content (the tab
+bar, header buttons, Study's nav); `divider` only between rows; `text` is the
+selection outline.
+
 ## An outline means it does something
 
 A card on the surface fill (`Card`) keeps its `containerBorder` outline only
@@ -164,12 +259,22 @@ tally, a stat, a callout, a preview — is `Card edge={false}`: the fill alone.
 A card drawn by hand counts too; better, make it a `Card`. `AboutRows`
 works it out for itself: outlined only when one of its rows goes somewhere.
 
-## Pressing a row
+## Pressing anything
 
-A row in a list — Settings' and About's rows, Progress's rows, The Word's
-passages, search results, a popover's or menu's options, the week picker —
-never changes its background when pressed. No grey flash, no highlight: the
-row stays as it is and does what it does. (A button may still dim.)
+Nothing changes when pressed — no row, no button, no pill. No grey flash, no
+highlight, no dimming: it stays as it is and does what it does, the haptic and
+what happens next being the feedback. Never give a `Pressable` a style that
+depends on `pressed`.
+
+## Buttons and pills
+
+Every tap is at least 44×44pt (Apple's minimum), however small the control is
+drawn. A standalone button is drawn at 44 (`CompactButton`, `PillButton`,
+`IconSquareButton`, a card's hung pills). An inline pill — a chip, a value, a
+label that opens something (`FilterPills`, Daily reminder's time, the week's
+dates, the Bible translation pill) — is drawn at `controlHeight.pill` (36) and
+tapped at 44 through `pillHitSlop`. The app's one chip is `FilterPills`; Fun
+keeps its own (`CategoryChip`).
 
 ## Controls are ours, never iOS's glass
 
@@ -217,8 +322,8 @@ own:
   `rowDetail` (15 on a 22 line), a chevron where it goes somewhere.
 - **One strong line** (`AboutCallout`): serif standfirst on a soft card, as the
   Study sets Scripture.
-- **Forms**: `SettingsField` (New plan's field: soft fill, hairline edge, an
-  icon), `Chip` for a choice, the app's `Button`.
+- **Forms**: `SettingsField` (a line is the app's `InputField`; a message, a
+  taller box with its count), `FilterPills` for a choice, the app's `Button`.
 
 A group's title over its card — Settings' groups, Weeks' months, All
 reflections' plans — is one style: `SFProBody` `label` in the supporting grey
@@ -310,10 +415,12 @@ no timeline, no buttons. With reflections, its header's right holds a notebook
 (`Notebook`, `HeaderIconButton`, white with its hairline edge) that zooms out
 the full-screen list of them all (`/reflections`, `Link.AppleZoom`): the
 title, then search and close side by side in one pill (`HeaderButtonPill`) —
-tapped, the search sinks into the page and the pill closes up round the close,
-which never moves, while Plans' own field rises on the keyboard, full width
-(`KeyboardBar`); the keyboard put away with nothing typed, the field goes and
-the pill springs back out, the search icon with it — then
+tapped, the search sinks into the page and, just after, the whole pill goes
+(`HeaderButtonPill` `gone`), while Plans' own field rises on the keyboard with
+its own close springing in beside it, as Plans' search has (`KeyboardBar`). That
+close — or the keyboard put away with nothing typed — clears the search and both
+header buttons spring back up; put away with words typed, the field and its
+close stay at the foot, the list still filtered — then
 each plan's artwork and name (Weeks' quiet month label) over Settings' group card of its
 reflections — question, date, chevron — the plan written in most lately
 first. A row sends Your words to it (`wordsHref`). Only its close closes it:
@@ -402,6 +509,8 @@ feature component that owns the intent (never from `src/ui`, which can't reach
   Quick Check done, a plan built).
 - `warningFeedback()` — a wrong answer checked. `errorFeedback()` — something
   failed (a link that isn't one, a build that broke).
+- `dropFeedback()` and `splashFeedback()` — the launch intro only: the letters
+  reaching the pool (medium), and the pool erupting (heavy).
 
 Navigation — back, close, rows, settings — gets none, as in iOS. One press, one
 haptic: if an outcome buzzes, the press that caused it doesn't also tap.

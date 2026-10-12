@@ -1,7 +1,8 @@
 import { Fragment } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { space } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
@@ -20,20 +21,8 @@ export type WeekCardRowProps = {
  * its own — artwork, full title, church — so any one can be opened exactly.
  */
 export function WeekCardRow({ card, onSeeWeek, onOpenPlan }: WeekCardRowProps) {
-  const theme = useTheme();
-
   return (
-    <View
-      testID={`weeks-card-${card.weekStart}`}
-      style={[
-        styles.card,
-        {
-          borderRadius: radius[24],
-          borderColor: theme.colors.containerBorder,
-          backgroundColor: theme.colors.surface,
-        },
-      ]}
-    >
+    <Card testID={`weeks-card-${card.weekStart}`} kind="list" style={styles.card}>
       <View
         style={{
           gap: space[6],
@@ -73,12 +62,12 @@ export function WeekCardRow({ card, onSeeWeek, onOpenPlan }: WeekCardRowProps) {
           />
         </Fragment>
       ))}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, overflow: "hidden" },
+  card: { overflow: "hidden" },
   row: { flexDirection: "row", alignItems: "center" },
   grow: { flex: 1 },
   caps: { textTransform: "uppercase" },

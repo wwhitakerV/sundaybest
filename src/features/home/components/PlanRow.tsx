@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { Check, ChevronRight } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { cardStyle, iconSize, radius, space, useTheme } from "@/theme";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
 const ART_SIZE = 64;
@@ -28,7 +28,7 @@ export function PlanRow({ title, detail, done, onPress, testID }: PlanRowProps) 
       onPress={onPress}
       style={[
         styles.row,
-        { backgroundColor: theme.colors.surface, borderColor: theme.colors.divider },
+        { backgroundColor: theme.colors.surface, borderColor: theme.colors.containerBorder },
       ]}
     >
       <View style={[styles.art, { backgroundColor: theme.colors.segmentBackground }]} />
@@ -48,7 +48,7 @@ export function PlanRow({ title, detail, done, onPress, testID }: PlanRowProps) 
         </View>
       ) : (
         <ChevronRight
-          size={22}
+          size={iconSize.chevron}
           color={theme.colors.textMuted}
           strokeWidth={theme.icon.strokeWidth}
         />
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: space[16],
     borderWidth: 1,
-    borderRadius: radius[28],
+    borderRadius: cardStyle.content.radius,
     padding: space[16],
     paddingRight: space[20],
   },

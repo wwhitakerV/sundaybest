@@ -1,4 +1,4 @@
-import { controlHeight, radius, space } from "@/theme";
+import { controlHeight, iconSize, radius, space } from "@/theme";
 import { lightTheme } from "@/theme/tokens";
 
 describe("space", () => {
@@ -43,9 +43,23 @@ describe("radius", () => {
   });
 });
 
+describe("iconSize", () => {
+  it("names the sizes a row's icons are drawn at", () => {
+    expect(iconSize).toEqual({ row: 20, chevron: 18, pillChevron: 14 });
+  });
+});
+
 describe("controlHeight", () => {
   it("names the heights a control is built to", () => {
-    expect(controlHeight).toEqual({ hitTarget: 44, headerButton: 49, header: 54, button: 61 });
+    expect(controlHeight).toEqual({
+      hitTarget: 44,
+      field: 52,
+      pill: 36,
+      row: 64,
+      headerButton: 49,
+      header: 54,
+      button: 61,
+    });
   });
 });
 

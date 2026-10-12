@@ -27,7 +27,7 @@ export function QuickCheckReviewCard({ item, testID }: QuickCheckReviewCardProps
   const missed = item.result === "incorrect";
 
   return (
-    <Card testID={testID} radius={24} style={styles.card}>
+    <Card testID={testID} kind="list" style={styles.card}>
       <View style={styles.head}>
         <MonoLabel variant="labelTracked" tone="textMuted">
           {item.number}
@@ -135,7 +135,8 @@ function AnswerLine({
 }
 
 const styles = StyleSheet.create({
-  card: { padding: space[20], gap: space[16] },
+  // A list card, its one block inset as a row is.
+  card: { padding: space[16], gap: space[16] },
   head: { flexDirection: "row", alignItems: "center", gap: space[12] },
   kicker: { flex: 1, textTransform: "uppercase" },
   verdict: {

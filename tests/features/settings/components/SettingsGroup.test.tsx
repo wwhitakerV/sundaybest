@@ -1,4 +1,5 @@
-import { render, screen } from "@tests/helpers/render";
+import Svg from "react-native-svg";
+import { render, screen, within } from "@tests/helpers/render";
 
 import { SettingsGroup } from "@/features/settings/components/SettingsGroup";
 import type { SettingsRow } from "@/features/settings/logic/settings-sections";
@@ -24,5 +25,15 @@ describe("SettingsGroup", () => {
     expect(screen.getByTestId("row-one-icon", { includeHiddenElements: true })).not.toHaveStyle({
       backgroundColor: lightTheme.colors.segmentBackground,
     });
+  });
+
+  it("draws each row's icon at a row icon's size, 20", () => {
+    render(<SettingsGroup title="General" rows={ROWS} onOpen={() => undefined} />);
+
+    expect(
+      within(screen.getByTestId("row-one-icon", { includeHiddenElements: true })).UNSAFE_getByType(
+        Svg,
+      ).props.width,
+    ).toBe(20);
   });
 });

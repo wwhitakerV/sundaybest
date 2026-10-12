@@ -46,7 +46,7 @@ export function SettingsScreen() {
       </SkeletonHandoff>
       {failed && !sections ? (
         <View style={styles.error}>
-          <SFProBody tone="textMuted">Couldn’t load your preferences.</SFProBody>
+          <SFProBody tone="textMuted">Couldn&apos;t load your preferences.</SFProBody>
           <Button testID="settings-retry" label="Try again" variant="secondary" onPress={retry} />
         </View>
       ) : null}

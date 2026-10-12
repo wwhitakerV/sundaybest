@@ -11,13 +11,28 @@ import { AccessibilityInfo } from "react-native";
  * this is for motion that isn't a single animation, like a scripted intro.
  */
 export function useReduceMotion(): boolean {
-  const [enabled, setEnabled] = useState(false);
+  return useReduceMotionSetting() ?? false;
+}
+
+/**
+ * The Reduce Motion setting, or `null` until the OS answers: for choreography
+ * that has to choose its path before it starts, like the launch intro, and
+ * must never start the wrong one.
+ */
+export function useReduceMotionSetting(): boolean | null {
+  const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
     let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((value) => {
-      if (mounted) setEnabled(value);
-    });
+    // If the OS can't answer, motion is fine: nothing should wait on it for good.
+    AccessibilityInfo.isReduceMotionEnabled().then(
+      (value) => {
+        if (mounted) setEnabled(value);
+      },
+      () => {
+        if (mounted) setEnabled(false);
+      },
+    );
     const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setEnabled);
     return () => {
       mounted = false;

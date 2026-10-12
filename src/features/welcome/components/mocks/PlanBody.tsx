@@ -32,7 +32,7 @@ export function PlanBody({ elapsedMs }: MockBodyProps) {
   return (
     <View style={MOCK_PAGE.body}>
       <FadeUp order={0} still={still}>
-        <Card radius={32} fill="page" style={styles.link}>
+        <Card kind="feature" inset={false} fill="page" style={styles.link}>
           <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
           <SFProBody style={styles.grow} numberOfLines={1}>
             …/{PASTE_LINK.split("/").at(-1)}

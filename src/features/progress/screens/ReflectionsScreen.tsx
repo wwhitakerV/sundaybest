@@ -2,6 +2,7 @@ import { StyleSheet, View } from "react-native";
 import { Search, X } from "lucide-react-native";
 
 import { space } from "@/theme";
+import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { HeaderButtonPill } from "@/ui/molecules/HeaderButtonPill";
 import { SearchField } from "@/ui/molecules/SearchField";
 import { Skeleton } from "@/ui/molecules/Skeleton";
@@ -60,6 +61,8 @@ export function ReflectionsScreen() {
             // Two buttons side by side share one pill; the search sinks into the page when it opens.
             <HeaderButtonPill
               testID="reflections-header-buttons"
+              // Searching, the search sinks, then the whole pill goes: the search has its own close.
+              gone={view.searching}
               buttons={[
                 {
                   key: "search",
@@ -97,6 +100,14 @@ export function ReflectionsScreen() {
                 raised
               />
             </View>
+            {/* Its own close, as Plans' search has: springing in beside the field. */}
+            <HeaderIconButton
+              testID="reflections-search-close"
+              icon={X}
+              accessibilityLabel="Close search"
+              raised
+              onPress={view.closeSearch}
+            />
           </KeyboardBar>
         ),
       })}

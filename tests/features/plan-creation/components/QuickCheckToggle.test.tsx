@@ -14,6 +14,12 @@ describe("QuickCheckToggle", () => {
     });
   });
 
+  it("sits on a list card, as a row: 24 corners", () => {
+    render(<QuickCheckToggle testID="a-toggle" value onChange={() => undefined} />);
+
+    expect(screen.getByTestId("a-toggle-card")).toHaveStyle({ borderRadius: 24 });
+  });
+
   it("turns the Quick Check off when pressed while on", () => {
     const onChange = jest.fn<void, [boolean]>();
     render(<QuickCheckToggle testID="a-toggle" value onChange={onChange} />);

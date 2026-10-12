@@ -8,7 +8,7 @@ import { API_URL, aUser } from "@tests/factories/api";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { server } from "@tests/mocks/server";
-import { planOverviewHref } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { STORY_BEATS } from "@/features/welcome/logic/story";
 import { WelcomeScreen } from "@/features/welcome/screens/WelcomeScreen";
@@ -80,15 +80,7 @@ describe("WelcomeScreen", () => {
   it("shows the app name", () => {
     render(<WelcomeScreen />);
 
-    expect(screen.getByText("SUNDAYBEST")).toBeVisible();
-  });
-
-  it("renders the app name in the masthead font", () => {
-    render(<WelcomeScreen />);
-
-    expect(screen.getByText("SUNDAYBEST")).toHaveStyle({
-      fontFamily: "LibreBaskerville-Medium",
-    });
+    expect(screen.getByLabelText("SundayBest")).toBeVisible();
   });
 
   it("shows the tagline", () => {
@@ -212,7 +204,9 @@ describe("WelcomeScreen", () => {
 
     fireEvent.press(screen.getByTestId("welcome-sample-plan-button"));
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith(planOverviewHref(SAMPLE.id)));
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith(tabPlanHref("home", SAMPLE.id), { withAnchor: true }),
+    );
   });
 
   it("keeps the intro on screen while it's being left", () => {

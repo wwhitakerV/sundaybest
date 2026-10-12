@@ -9,7 +9,10 @@ import type { ApiPlanDetail } from "@/core/api/contracts";
 // Welcome stays mounted under every other screen, and its intro story would
 // keep ticking through the fake timers these flows advance. Reduce Motion
 // holds it still, as it does for people who turn it on.
-jest.mock("@/core/accessibility/use-reduce-motion", () => ({ useReduceMotion: () => true }));
+jest.mock("@/core/accessibility/use-reduce-motion", () => ({
+  useReduceMotion: () => true,
+  useReduceMotionSetting: () => true,
+}));
 
 // Reflection answers live on the device only; the Daily Study reads them there.
 jest.mock("@/core/storage/reflection-answers", () =>
@@ -87,7 +90,7 @@ const LONG_FLOW_TIMEOUT_MS = 60_000;
 
 describe("navigation", () => {
   it(
-    "opens Plan Detail from Home's plan card within Home's own stack; its back goes to Plans",
+    "opens Plan Detail from Home's plan card within Home's own stack; its back returns to Home",
     async () => {
       const view = await openApp();
 
@@ -97,9 +100,9 @@ describe("navigation", () => {
       expect(view.getPathname()).toBe(`/home/${ACTIVE.id}`);
       expect(await screen.findByTestId("plan-overview-title")).toHaveTextContent(ACTIVE.title);
 
-      // Not a history back: Plan Detail's back always lands on the Plans tab.
+      // Back to where it was opened from, as iOS's Back does.
       fireEvent.press(screen.getByTestId("plan-overview-back-button"));
-      expect(view.getPathname()).toBe("/plans");
+      expect(view.getPathname()).toBe("/home");
     },
     LONG_FLOW_TIMEOUT_MS,
   );
@@ -214,7 +217,7 @@ describe("navigation", () => {
       fireEvent.press(await screen.findByTestId("settings-privacy-policy-row"));
       expect(view.getPathname()).toBe("/settings/privacy-policy");
 
-      fireEvent.press(await screen.findByTestId("privacy-short-version-keep"));
+      fireEvent.press(await screen.findByTestId("privacy-policy-details-keep"));
       expect(view.getPathname()).toBe("/settings/privacy/keep");
       expect(await screen.findByTestId("privacy-topic-quote")).toBeVisible();
 

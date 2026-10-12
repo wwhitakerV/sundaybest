@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
-import { space } from "@/theme";
+import { controlHeight, space } from "@/theme";
 import { Card } from "@/ui/atoms/Card";
 import { Reveal } from "@/ui/atoms/Reveal";
 import { Toggle } from "@/ui/atoms/Toggle";
@@ -11,9 +11,6 @@ import { ReminderTime } from "../components/ReminderTime";
 import { SettingsFootnote } from "../components/SettingsFootnote";
 import { SettingsSubpage } from "../components/SettingsSubpage";
 import { useDailyReminder } from "../hooks/use-daily-reminder";
-
-/** As tall as the switch's card, so the two rows match. */
-const TIME_ROW = 68;
 
 export function DailyReminderScreen() {
   const view = useDailyReminder();
@@ -30,7 +27,11 @@ export function DailyReminderScreen() {
         )
       }
     >
-      <Card style={[styles.row, { gap: space[16], padding: space[18] }]}>
+      <Card
+        testID="daily-reminder-card"
+        kind="list"
+        style={[styles.row, { gap: space[16], padding: space[16] }]}
+      >
         <View style={[styles.copy, { gap: space[4] }]}>
           <SFProBody>Daily study reminder</SFProBody>
           <SFProBody variant="rowDetail" tone="textSupporting">
@@ -50,7 +51,11 @@ export function DailyReminderScreen() {
         <>
           <Reveal order={0}>
             <Section label="TIME">
-              <Card style={[styles.row, { paddingHorizontal: space[18], minHeight: TIME_ROW }]}>
+              <Card
+                testID="daily-reminder-time-row"
+                kind="list"
+                style={[styles.row, { paddingHorizontal: space[16], minHeight: controlHeight.row }]}
+              >
                 <SFProBody style={styles.copy}>Remind me at</SFProBody>
                 <ReminderTime
                   testID="daily-reminder-time"

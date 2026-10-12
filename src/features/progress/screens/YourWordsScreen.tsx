@@ -4,7 +4,7 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { ArrowLeft, Lock, Notebook, NotebookPen } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { cardStyle, space, useTheme } from "@/theme";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { RoundedEdge } from "@/ui/atoms/RoundedEdge";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
@@ -23,7 +23,7 @@ import { useYourWords } from "../hooks/use-your-words";
 /** The page ends this far above the tab bar. */
 const TAB_BAR_GAP = space[24];
 /** The reflection's card's corner, which the scroll rounds into at its top. */
-const CARD_RADIUS = radius[24];
+const CARD_RADIUS = cardStyle.list.radius;
 /** The privacy line's lock: as small as its words. */
 const LOCK = 14;
 

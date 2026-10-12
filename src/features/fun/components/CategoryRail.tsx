@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react-native";
 
-import { Chip } from "@/ui/Chip";
+import { CategoryChip } from "./CategoryChip";
 import { useTheme } from "@/theme";
 import { FUN_CATEGORIES, type FunCategory } from "../logic/categories";
 
@@ -53,7 +53,7 @@ export function CategoryRail({ selected, onSelect, onLayout, testID }: CategoryR
       contentContainerStyle={{ paddingHorizontal: theme.spacing.md, gap: theme.spacing.sm }}
     >
       {FUN_CATEGORIES.map((category) => (
-        <Chip
+        <CategoryChip
           key={category}
           testID={`${testID}-option-${category}`}
           label={category}

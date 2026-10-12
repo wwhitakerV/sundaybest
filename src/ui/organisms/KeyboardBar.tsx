@@ -5,12 +5,11 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { useKeyboardLift } from "@/hooks/use-keyboard-lift";
-import { edgeFade, space } from "@/theme";
+import { controlHeight, edgeFade, space } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
-import { SEARCH_FIELD_HEIGHT } from "@/ui/molecules/SearchField";
 
 /** From the bar's foot: the room a page leaves under its content so nothing ends behind the bar. */
-export const KEYBOARD_BAR_ROOM = SEARCH_FIELD_HEIGHT + space[8] * 2;
+export const KEYBOARD_BAR_ROOM = controlHeight.field + space[8] * 2;
 
 export type KeyboardBarProps = {
   /** What sits on the keyboard: a search field, and a close beside it if the page has one. */
@@ -57,7 +56,7 @@ export function KeyboardBar({ children, testID }: KeyboardBarProps) {
         <View pointerEvents="none" style={[styles.tint, { height: height - space[8] }]}>
           <BottomFade
             height={height - space[8]}
-            solidHeight={height - space[8] - SEARCH_FIELD_HEIGHT}
+            solidHeight={height - space[8] - controlHeight.field}
             peak={edgeFade.peak}
           />
         </View>

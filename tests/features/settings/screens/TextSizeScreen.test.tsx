@@ -2,12 +2,21 @@ import { http, HttpResponse } from "msw";
 import { StyleSheet, type StyleProp, type TextStyle } from "react-native";
 import { render, screen, fireEvent, waitFor, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
+import { selectionFeedback } from "@/core/haptics/haptics";
 import type * as ExpoRouter from "expo-router";
 
 import { API_URL, someSettings } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
 import { TextSizeScreen } from "@/features/settings/screens/TextSizeScreen";
 import { lightTheme } from "@/theme/tokens";
+
+jest.mock("@/core/haptics/haptics", () => ({
+  tapFeedback: jest.fn(),
+  selectionFeedback: jest.fn(),
+  successFeedback: jest.fn(),
+  warningFeedback: jest.fn(),
+  errorFeedback: jest.fn(),
+}));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -16,14 +25,25 @@ jest.mock("expo-router", () => ({
 
 const mockBack = jest.fn<void, []>();
 
+const mockPush = jest.fn();
+
 beforeEach(() => {
   mockBack.mockClear();
+  mockPush.mockClear();
   jest
     .mocked(useRouter)
-    .mockReturnValue({ back: mockBack } as unknown as ReturnType<typeof useRouter>);
+    .mockReturnValue({ back: mockBack, push: mockPush } as unknown as ReturnType<typeof useRouter>);
 });
 
 describe("TextSizeScreen", () => {
+  it("opens Bible translation from the preview's translation pill, in Settings' own stack", () => {
+    render(<TextSizeScreen />);
+
+    fireEvent.press(screen.getByRole("button", { name: /^Bible translation:/ }));
+
+    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/bible-translation");
+  });
+
   it("is addressable as text-size-screen", () => {
     render(<TextSizeScreen />);
 
@@ -138,5 +158,22 @@ describe("TextSizeScreen", () => {
     fireEvent.press(screen.getByTestId("text-size-back-button"));
 
     expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("ticks as the choice changes, and not for the one already chosen", async () => {
+    render(<TextSizeScreen />);
+    await waitFor(() =>
+      expect(screen.getByTestId("text-size-options-large")).toHaveProp("accessibilityState", {
+        checked: false,
+        disabled: false,
+      }),
+    );
+    jest.mocked(selectionFeedback).mockClear();
+
+    fireEvent.press(screen.getByTestId("text-size-options-default"));
+    expect(selectionFeedback).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByTestId("text-size-options-large"));
+    expect(selectionFeedback).toHaveBeenCalledTimes(1);
   });
 });

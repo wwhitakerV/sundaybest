@@ -69,6 +69,7 @@ export function DayCompleteScreen() {
         translation={view.passage.translation}
         verse={view.passage.verse}
         wrote={view.wrote}
+        onChangeTranslation={view.changeTranslation}
       />
 
       {view.quickCheck && (

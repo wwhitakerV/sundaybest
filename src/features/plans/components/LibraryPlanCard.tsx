@@ -5,7 +5,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { getHeroPalette } from "@/entities/plan";
 import { ProgressDial } from "@/ui/atoms/ProgressDial";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
-import { radius, space, useTheme } from "@/theme";
+import { cardStyle, space, useTheme } from "@/theme";
 import type { ApiLibraryPlanLook } from "../logic/api-plan-wording";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
@@ -169,7 +169,7 @@ function ArtFade({ colour }: { colour: string }) {
 }
 
 const styles = StyleSheet.create({
-  card: { width: "100%", borderRadius: radius[28], overflow: "hidden" },
+  card: { width: "100%", borderRadius: cardStyle.content.radius, overflow: "hidden" },
   // Edge to edge across the card's top; the card's corners round it.
   art: { borderRadius: 0 },
   fade: {

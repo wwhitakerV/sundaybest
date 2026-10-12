@@ -30,4 +30,10 @@ describe("AboutRows", () => {
 
     expect(screen.getByTestId("rows")).toHaveStyle({ borderWidth: 1 });
   });
+
+  it("gives a row that goes somewhere a row's height: 64 at least, as every list row has", () => {
+    render(<AboutRows testID="rows" rows={[{ key: "a", title: "Privacy", onPress: jest.fn() }]} />);
+
+    expect(screen.getByTestId("rows-a")).toHaveStyle({ minHeight: 64 });
+  });
 });

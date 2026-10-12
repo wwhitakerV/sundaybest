@@ -2,7 +2,8 @@ import { Fragment, type ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { controlHeight, iconSize, radius, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
@@ -34,10 +35,6 @@ const DOT = 5;
 /** Your words' symbol: a few lines of writing, of uneven lengths, the last one short. */
 const LINES = [28, 22, 14] as const;
 const LINE_HEIGHT = 2;
-/** Settings' chevron, as its rows end. */
-const CHEVRON = 18;
-/** A row's least height: Settings' rows'. */
-const MIN_ROW_HEIGHT = 64;
 
 export type ProgressRowsProps = {
   /** "23 passages across 9 books" — or null before the first. */
@@ -158,17 +155,7 @@ export function ProgressRows({
   }
 
   return (
-    <View
-      testID="progress-rows"
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.containerBorder,
-          borderRadius: radius[24],
-        },
-      ]}
-    >
+    <Card testID="progress-rows" kind="list" style={styles.card}>
       {rows.map((row, index) => (
         <Fragment key={row.key}>
           {index > 0 && <Divider />}
@@ -190,21 +177,21 @@ export function ProgressRows({
             </View>
             <View style={styles.picture}>{row.picture}</View>
             <ChevronRight
-              size={CHEVRON}
+              size={iconSize.chevron}
               color={theme.colors.textSupporting}
               strokeWidth={theme.icon.strokeWidthStrong}
             />
           </Pressable>
         </Fragment>
       ))}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   // Settings' group card: the soft fill, its edge, rows on it with hairlines between.
-  card: { borderWidth: 1, overflow: "hidden" },
-  row: { minHeight: MIN_ROW_HEIGHT, flexDirection: "row", alignItems: "center" },
+  card: { overflow: "hidden" },
+  row: { minHeight: controlHeight.row, flexDirection: "row", alignItems: "center" },
   copy: { flex: 1 },
   // Every symbol fills the slot's width, so their edges line up row to row.
   picture: { ...PICTURE, justifyContent: "center" },

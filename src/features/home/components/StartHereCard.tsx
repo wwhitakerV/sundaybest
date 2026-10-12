@@ -15,7 +15,7 @@ export function StartHereCard({ onAddSermon }: StartHereCardProps) {
   const theme = useTheme();
 
   return (
-    <Card testID="home-tab-start-here" radius={32} style={styles.card}>
+    <Card testID="home-tab-start-here" kind="feature" style={styles.card}>
       <View
         style={[
           styles.pill,
@@ -34,7 +34,7 @@ export function StartHereCard({ onAddSermon }: StartHereCardProps) {
 }
 
 const styles = StyleSheet.create({
-  card: { padding: space[24], gap: space[24] },
+  card: { gap: space[24] },
   pill: { alignSelf: "flex-start", paddingHorizontal: space[14], paddingVertical: space[8] },
   text: { gap: space[10], marginTop: space[20] },
 });

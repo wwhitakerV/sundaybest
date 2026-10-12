@@ -2,6 +2,8 @@ import { timeoutManager } from "@tanstack/react-query";
 
 import { server } from "../mocks/server";
 import type * as SlotModule from "expo-router/build/ui/Slot";
+import type * as ReactModule from "react";
+import type * as ReactNativeModule from "react-native";
 
 // ---------------------------------------------------------------------------
 // TanStack Query's timers
@@ -150,6 +152,41 @@ jest.mock("expo-web-browser", () => ({
   WebBrowserPresentationStyle: { PAGE_SHEET: "pageSheet" },
   WebBrowserResultType: { CANCEL: "cancel", DISMISS: "dismiss", LOCKED: "locked" },
 }));
+
+// Skia draws on the GPU, natively, so under Jest there's nothing to draw on.
+// Its own Jest setup needs a WebAssembly test environment, so this stands in
+// instead: the canvas is a plain View (so it can be found and its props
+// asserted), pictures render nothing, and every drawing call is a no-op that
+// returns another no-op. What's drawn is covered by the launch intro's pure
+// frame tests, not here.
+jest.mock("@shopify/react-native-skia", () => {
+  const { createElement } = jest.requireActual<typeof ReactModule>("react");
+  const { View } = jest.requireActual<typeof ReactNativeModule>("react-native");
+  const noop: unknown = new Proxy(() => undefined, {
+    get: (_target, key) => (key === "then" ? undefined : noop),
+    apply: () => noop,
+  });
+  return {
+    Canvas: (props: object) => createElement(View, props),
+    Picture: () => null,
+    createPicture: () => noop,
+    Skia: noop,
+    TileMode: noop,
+    BlendMode: noop,
+    ClipOp: noop,
+    PaintStyle: noop,
+    StrokeCap: noop,
+    StrokeJoin: noop,
+  };
+});
+
+// Reanimated's own Jest mock (which expo-router's testing library installs)
+// has no `useFrameCallback`. It's added to that mock module itself, which
+// every test's Reanimated resolves to. The stand-in never calls back: under
+// Jest no frames are drawn, so a frame-driven animation stays on its first
+// frame.
+jest.requireActual<Record<string, unknown>>("react-native-reanimated/mock").useFrameCallback =
+  () => ({ setActive: () => undefined, isActive: false, callbackId: -1 });
 
 // ---------------------------------------------------------------------------
 // Timer policy

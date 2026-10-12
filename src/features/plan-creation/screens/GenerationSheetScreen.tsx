@@ -36,7 +36,7 @@ export function GenerationSheetScreen() {
     return (
       <NotFoundScreen
         testID="generation-sheet-empty"
-        title="Nothing’s being created"
+        title="Nothing's being created"
         message="Your plans are waiting in Plans."
         actionLabel="Close"
         onAction={sheet.close}
@@ -101,7 +101,7 @@ function FailedView({
       testID="generation-sheet-failed"
       mark={CircleAlert}
       markTestID="generation-sheet-failed-mark"
-      title="Couldn’t create your plan"
+      title="Couldn't create your plan"
       message={view.reason}
     >
       {view.action === "retry" ? (

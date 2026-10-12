@@ -1,7 +1,7 @@
 import { AccessibilityInfo } from "react-native";
 import { act, renderHook, waitFor } from "@testing-library/react-native";
 
-import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
+import { useReduceMotion, useReduceMotionSetting } from "@/core/accessibility/use-reduce-motion";
 
 type ReduceMotionListener = (enabled: boolean) => void;
 
@@ -56,5 +56,33 @@ describe("useReduceMotion", () => {
     unmount();
 
     expect(remove).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("useReduceMotionSetting", () => {
+  it("is unknown until the OS answers", () => {
+    jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockReturnValue(new Promise(() => {}));
+
+    const { result } = renderHook(() => useReduceMotionSetting());
+
+    expect(result.current).toBeNull();
+  });
+
+  it("reports the setting once the OS answers", async () => {
+    jest.spyOn(AccessibilityInfo, "isReduceMotionEnabled").mockResolvedValue(true);
+
+    const { result } = renderHook(() => useReduceMotionSetting());
+
+    await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it("settles on motion being fine if the OS can't answer, never waiting for good", async () => {
+    jest
+      .spyOn(AccessibilityInfo, "isReduceMotionEnabled")
+      .mockRejectedValue(new Error("no answer"));
+
+    const { result } = renderHook(() => useReduceMotionSetting());
+
+    await waitFor(() => expect(result.current).toBe(false));
   });
 });

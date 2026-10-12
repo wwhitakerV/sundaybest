@@ -9,8 +9,13 @@ import { PROGRESS_NOW, serveProgress } from "@tests/factories/api-progress";
 import { servePlans } from "@tests/mocks/plans-api";
 import { server } from "@tests/mocks/server";
 import * as haptics from "@/core/haptics/haptics";
-import { planCompleteHref, planOverviewHref } from "@/entities/plan";
+import { planCompleteHref } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { useDayComplete } from "@/features/plans/hooks/use-day-complete";
+
+// The tab the reader is in, under the study they're finishing.
+let mockTab: string | null = "home";
+jest.mock("@/hooks/use-focused-tab", () => ({ useFocusedTab: () => () => mockTab }));
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),
@@ -156,7 +161,8 @@ describe("useDayComplete", () => {
     }
   });
 
-  it("leaves the session for the plan's overview on done", async () => {
+  it("leaves the session for the plan's overview, in the tab the study was opened from, on done", async () => {
+    mockTab = "home";
     const { result } = await renderDayComplete();
 
     act(() => {
@@ -164,7 +170,18 @@ describe("useDayComplete", () => {
     });
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(STILL_PRAYING.id));
+    expect(mockNavigate).toHaveBeenCalledWith(tabPlanHref("home", STILL_PRAYING.id));
+  });
+
+  it("lands on the plan in Plans on done when there's no tab under the study", async () => {
+    mockTab = null;
+    const { result } = await renderDayComplete();
+
+    act(() => {
+      if (result.current.found) result.current.done();
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith(tabPlanHref("plans", STILL_PRAYING.id));
   });
 
   it("goes on to Plan Complete on done, when that day finished the plan", async () => {

@@ -3,7 +3,7 @@ import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 
 import type { Id, ReadingPaper } from "@/types/domain";
-import { dayCompleteHref, quickCheckHref } from "@/entities/plan";
+import { STUDY_TRANSLATION_HREF, dayCompleteHref, quickCheckHref } from "@/entities/plan";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { selectionFeedback, successFeedback, tapFeedback } from "@/core/haptics/haptics";
 import {
@@ -194,6 +194,8 @@ export function useStudySession() {
     answerFor: (reflectionId: Id) => reflections.answerFor(reflectionId),
     changeAnswer: (reflectionId: Id, answer: string) =>
       reflections.changeAnswer(reflectionId, answer),
+    /** Bible translation, inside the Study: Back returns to the passage. */
+    changeTranslation: () => router.push(STUDY_TRANSLATION_HREF),
     previous: () => void apply(getPreviousStudyAction(effectivePosition, pages)),
     next: () => void apply(getNextStudyAction(effectivePosition, pages)),
     close: () => void apply({ type: "exit" }),

@@ -1,9 +1,11 @@
 import { Fragment } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { Check } from "lucide-react-native";
+
+import { controlHeight, iconSize, space, useTheme } from "@/theme";
+import { Card } from "@/ui/atoms/Card";
 import { Divider } from "@/ui/atoms/Divider";
-import { RadioMark } from "@/ui/RadioMark";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
 export type SettingsChoice<T extends string> = {
@@ -28,17 +30,7 @@ export function SettingsChoiceList<T extends string>({
   const theme = useTheme();
 
   return (
-    <View
-      testID={testID}
-      style={[
-        styles.card,
-        {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.containerBorder,
-          borderRadius: radius[24],
-        },
-      ]}
-    >
+    <Card testID={testID} kind="list" style={styles.card}>
       {choices.map((choice, index) => {
         const selected = choice.value === value;
         return (
@@ -53,7 +45,7 @@ export function SettingsChoiceList<T extends string>({
               accessibilityState={{ checked: selected, disabled }}
               disabled={disabled}
               onPress={() => onChange(choice.value)}
-              style={[styles.row, { paddingHorizontal: space[18], gap: space[16] }]}
+              style={[styles.row, { paddingHorizontal: space[16], gap: space[16] }]}
             >
               <View style={[styles.copy, { gap: space[4] }]}>
                 <SFProBody>{choice.label}</SFProBody>
@@ -63,17 +55,31 @@ export function SettingsChoiceList<T extends string>({
                   </SFProBody>
                 ) : null}
               </View>
-              <RadioMark selected={selected} testID={`${testID}-${choice.value}-radio`} />
+              {/* The one chosen ends in a check, as iOS Settings marks it; the rest in nothing. */}
+              {selected && (
+                <View testID={`${testID}-${choice.value}-check`}>
+                  <Check
+                    size={iconSize.row}
+                    color={theme.colors.text}
+                    strokeWidth={theme.icon.strokeWidthStrong}
+                  />
+                </View>
+              )}
             </Pressable>
           </Fragment>
         );
       })}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderWidth: 1, overflow: "hidden" },
-  row: { minHeight: 68, flexDirection: "row", alignItems: "center", paddingVertical: space[14] },
+  card: { overflow: "hidden" },
+  row: {
+    minHeight: controlHeight.row,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: space[14],
+  },
   copy: { flex: 1 },
 });

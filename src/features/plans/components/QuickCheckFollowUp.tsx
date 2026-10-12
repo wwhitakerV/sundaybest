@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { Check, ChevronRight, ListChecks, Lock } from "lucide-react-native";
 
-import { space, useTheme } from "@/theme";
+import { iconSize, space, useTheme } from "@/theme";
 import type { QuickCheckLook } from "../logic/day-rail";
 import {
   STEP_CHECK_STROKE,
@@ -14,7 +14,6 @@ import { toneColor, type Tone } from "@/ui/typography/tone";
 
 const ICON_SIZE = 20;
 const LOCK_SIZE = 16;
-const MARK_SIZE = 18;
 const ROW_PADDING = space[14];
 /** How it answers a press: a soft dim. */
 const PRESSED = { opacity: 0.7 };
@@ -72,7 +71,7 @@ export function QuickCheckFollowUp({ look, onPress, testID }: QuickCheckFollowUp
         {done && (
           <View testID={`${testID}-done`}>
             <Check
-              size={MARK_SIZE}
+              size={iconSize.chevron}
               color={theme.colors.textMuted}
               strokeWidth={STEP_CHECK_STROKE}
             />
@@ -81,7 +80,7 @@ export function QuickCheckFollowUp({ look, onPress, testID }: QuickCheckFollowUp
         {opens && !done && (
           <View testID={`${testID}-chevron`}>
             <ChevronRight
-              size={MARK_SIZE}
+              size={iconSize.chevron}
               color={theme.colors.textMuted}
               strokeWidth={theme.icon.strokeWidth}
             />

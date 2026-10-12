@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { ChevronRight, type LucideIcon } from "lucide-react-native";
 
-import { radius, space, useTheme } from "@/theme";
+import { iconSize, radius, space, useTheme } from "@/theme";
 import type { StudyStepLook } from "../logic/day-rail";
 import { STEP_MARK_GAP, STEP_NODE_SIZE, STEP_ROW_INSET } from "../logic/step-sequence";
 import { StudyStepNode } from "./StudyStepNode";
@@ -13,7 +13,6 @@ const ROW_PADDING = space[16];
 const LINE_WIDTH = 1.5;
 /** Between the line and the mark it runs into. */
 const LINE_GAP = space[4];
-const CHEVRON_SIZE = 18;
 /** How a step answers a press: a soft dim — no give, so the line it's on stays unbroken. */
 const PRESSED = { opacity: 0.7 };
 
@@ -101,7 +100,7 @@ export function StudyStepRow({
         // Lucide keeps its own testID from React Native, so this carries it.
         <View testID={`${testID}-chevron`}>
           <ChevronRight
-            size={CHEVRON_SIZE}
+            size={iconSize.chevron}
             color={theme.colors.text}
             strokeWidth={theme.icon.strokeWidth}
           />

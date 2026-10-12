@@ -9,7 +9,7 @@ import { servePlans } from "@tests/mocks/plans-api";
 import { server } from "@tests/mocks/server";
 import { usePlansQuery } from "@/core/api/plan-queries";
 import { tapFeedback } from "@/core/haptics/haptics";
-import { planOverviewHref } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { useWelcomeStart } from "@/features/welcome/hooks/use-welcome-start";
 
 jest.mock("@/core/haptics/haptics", () => ({ tapFeedback: jest.fn() }));
@@ -123,12 +123,14 @@ describe("useWelcomeStart", () => {
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it("opens the sample plan's overview on seeSample()", async () => {
+  it("opens the sample plan's overview on Home, Home's first page under it, on seeSample()", async () => {
     const { result } = await renderStart();
 
     act(() => result.current.start.seeSample());
 
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith(planOverviewHref(SAMPLE.id)));
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith(tabPlanHref("home", SAMPLE.id), { withAnchor: true }),
+    );
   });
 });
 

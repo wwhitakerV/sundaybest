@@ -3,13 +3,14 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { ArrowLeft, ChartNoAxesColumn } from "lucide-react-native";
 
-import { radius, space } from "@/theme";
+import { cardStyle, radius, space } from "@/theme";
 import { Collapse } from "@/ui/atoms/Collapse";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { RoundedEdge } from "@/ui/atoms/RoundedEdge";
 import { Swap } from "@/ui/atoms/Swap";
 import { Toggle } from "@/ui/atoms/Toggle";
-import { FilterPills } from "@/ui/molecules/FilterPills";
+import { Bone } from "@/ui/atoms/Bone";
+import { FILTER_PILLS_HEIGHT, FilterPills } from "@/ui/molecules/FilterPills";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { Skeleton } from "@/ui/molecules/Skeleton";
 import { SkeletonLines } from "@/ui/molecules/SkeletonLines";
@@ -24,8 +25,10 @@ import { useWordView } from "../hooks/use-word-view";
 
 /** The last passage ends this far above the tab bar. */
 const TAB_BAR_GAP = space[24];
+/** Pills standing in for the books while The Word loads: about as wide as real ones. */
+const PENDING_BOOK_WIDTHS = [72, 96, 64];
 /** The passages' card's corner, which the list rounds into at its top. */
-const CARD_RADIUS = radius[24];
+const CARD_RADIUS = cardStyle.list.radius;
 
 /**
  * The Word, from Progress: the whole Bible as lines, dark where the reader
@@ -109,15 +112,25 @@ export function WordScreen() {
           />
         </View>
       </Collapse>
-      {view.chips.length > 0 && (
-        <FilterPills
-          testID="word-books"
-          tight
-          options={view.chips}
-          selected={view.selected}
-          onSelect={view.select}
-          bleed={PAGE_INSET}
-        />
+      {view.loading ? (
+        // The books' row keeps its place while The Word loads, so the passages below never
+        // move down when it arrives.
+        <Skeleton testID="word-books-pending" style={[styles.pendingBooks, { gap: space[4] }]}>
+          {PENDING_BOOK_WIDTHS.map((width) => (
+            <Bone key={width} width={width} height={FILTER_PILLS_HEIGHT} radius={radius.pill} />
+          ))}
+        </Skeleton>
+      ) : (
+        view.chips.length > 0 && (
+          <FilterPills
+            testID="word-books"
+            tight
+            options={view.chips}
+            selected={view.selected}
+            onSelect={view.select}
+            bleed={PAGE_INSET}
+          />
+        )
       )}
 
       <View style={styles.list}>
@@ -154,6 +167,7 @@ export function WordScreen() {
 const styles = StyleSheet.create({
   alone: { paddingBottom: space[22] },
   map: { paddingTop: space[28], paddingBottom: space[22] },
+  pendingBooks: { height: FILTER_PILLS_HEIGHT, flexDirection: "row" },
   // The rest of the page, under the pills: the list scrolls within it.
   list: { flex: 1, marginTop: space[16] },
   scroll: { flex: 1 },

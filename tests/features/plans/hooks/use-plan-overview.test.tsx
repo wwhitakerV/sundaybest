@@ -6,7 +6,7 @@ import type * as ExpoRouter from "expo-router";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import * as haptics from "@/core/haptics/haptics";
-import { PLANS_HREF, quickCheckHref, studyHref } from "@/entities/plan";
+import { quickCheckHref, studyHref } from "@/entities/plan";
 import { usePlanOverview } from "@/features/plans/hooks/use-plan-overview";
 
 jest.mock("@/core/haptics/haptics", () => ({
@@ -25,6 +25,7 @@ jest.mock("expo-router", () => ({
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
+const mockBack = jest.fn<void, []>();
 
 /** Six days, day 1 done, day 2 today. */
 const ACTIVE = aPlan({ seed: 1, lengthDays: 6, completedDays: 1 });
@@ -53,9 +54,11 @@ function found(result: { current: Overview }): Found {
 beforeEach(() => {
   mockPush.mockClear();
   mockReplace.mockClear();
+  mockBack.mockClear();
   jest.mocked(useRouter).mockReturnValue({
     push: mockPush,
     replace: mockReplace,
+    back: mockBack,
   } as unknown as ReturnType<typeof useRouter>);
 });
 
@@ -200,12 +203,13 @@ describe("usePlanOverview", () => {
     );
   });
 
-  it("goes back to Plans with goBack, wherever it was opened from", async () => {
+  it("goes back to the page it was opened from with goBack, as iOS's Back does", async () => {
     const { result } = await renderOverview();
 
     act(() => found(result).goBack());
 
-    expect(mockReplace).toHaveBeenCalledWith(PLANS_HREF);
+    expect(mockBack).toHaveBeenCalledTimes(1);
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });
 
@@ -298,22 +302,22 @@ describe("usePlanOverview's More menu", () => {
     expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("opens the daily reminder, with no haptic", async () => {
+  it("opens the daily reminder over the plan, in its own tab, with no haptic", async () => {
     const { result } = await renderOverview();
 
-    act(() => more(result).items[1]?.select());
+    act(() => more(result).items[0]?.select());
 
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/daily-reminder");
+    expect(mockPush).toHaveBeenCalledWith("/(tabs)/plans/daily-reminder");
     expect(haptics.selectionFeedback).not.toHaveBeenCalled();
     expect(haptics.tapFeedback).not.toHaveBeenCalled();
   });
 
-  it("opens how plans are made, with no haptic", async () => {
+  it("opens how plans are made over the plan, in its own tab, with no haptic", async () => {
     const { result } = await renderOverview();
 
-    act(() => more(result).items[2]?.select());
+    act(() => more(result).items[1]?.select());
 
-    expect(mockPush).toHaveBeenCalledWith("/(tabs)/settings/how-plans-are-made");
+    expect(mockPush).toHaveBeenCalledWith("/(tabs)/plans/how-plans-are-made");
     expect(haptics.selectionFeedback).not.toHaveBeenCalled();
     expect(haptics.tapFeedback).not.toHaveBeenCalled();
   });

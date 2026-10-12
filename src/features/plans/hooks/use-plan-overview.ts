@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import type { ApiPlanDetail } from "@/core/api/contracts";
 import { usePlanQuery, useStartPlanMutation } from "@/core/api/plan-queries";
 import {
-  PLANS_HREF,
   describePlanHero,
   getHeroPalette,
   parsePlanParams,
@@ -94,9 +93,9 @@ export function usePlanOverview() {
     openCurrentStudy(router, plan);
   };
 
-  // Plan Detail's back affordance is intentionally deterministic. It is not a
-  // history back button: it always returns to the main Plans tab.
-  const goBack = () => router.replace(PLANS_HREF);
+  // Back to the page it was opened from, in its own tab (Plans, Home, Progress),
+  // as iOS's Back does. Every tab's first page sits under it (its `anchor`).
+  const goBack = () => router.back();
 
   if (!plan) {
     return {

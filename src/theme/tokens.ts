@@ -2,6 +2,7 @@
 import type { ReadingPaper } from "@/types/domain";
 
 import { fonts } from "./fonts";
+import { LAUNCH_COLORS } from "./launch-colors";
 
 const palette = {
   white: "#FFFFFF",
@@ -15,6 +16,8 @@ const palette = {
   ink600: "#4A5160",
   ink300: "#9AA1B1",
   paper: "#F6F7FA",
+  /** A step darker than paper, with only a hint of its blue: what's picked (the active tab). */
+  paperShade: "#ECEDF0",
   slate900: "#0B0D12",
   slate700: "#171A21",
   accent: "#D62626",
@@ -144,6 +147,10 @@ const palette = {
  */
 type ColorTokens = {
   background: string;
+  /** The launch intro's page: what it writes on, and the native launch screen (launch-colors.ts). */
+  launchPage: string;
+  /** The launch intro's ink: the writing, drips, pool and eruption (launch-colors.ts). */
+  launchInk: string;
   surface: string;
   text: string;
   lightIcon: string;
@@ -332,6 +339,8 @@ type ColorTokens = {
 
 const lightColors: ColorTokens = {
   background: palette.white,
+  launchPage: LAUNCH_COLORS.page,
+  launchInk: LAUNCH_COLORS.ink,
   surface: palette.paper,
   text: palette.black,
   textMuted: palette.grey,
@@ -370,7 +379,8 @@ const lightColors: ColorTokens = {
   waitingFill: palette.greyLight,
   waitingInk: palette.waitingInk,
   segmentActiveBackground: palette.overlayMedium,
-  tabActiveBackground: palette.overlayLight,
+  // A step darker than the app's soft fill, with a hint of its blue — not a flat grey of its own.
+  tabActiveBackground: palette.paperShade,
   stepLabelActive: palette.pureBlack,
   stepLabelInactive: palette.stepLabelInactive,
   deviceFrame: palette.ink,
@@ -423,6 +433,8 @@ const lightColors: ColorTokens = {
 
 const darkColors: ColorTokens = {
   background: palette.slate900,
+  launchPage: LAUNCH_COLORS.page,
+  launchInk: LAUNCH_COLORS.ink,
   surface: palette.slate700,
   text: palette.white,
   textMuted: palette.grey,
@@ -600,6 +612,13 @@ export const motion = {
    */
   reveal: { durationMs: 320, staggerMs: 70, fromY: 8, exitMs: 140 },
   /**
+   * A page's pieces arriving once the launch intro has gone (`Arrive`): the same
+   * fade-and-drift as `reveal`, held `delayMs` so the intro is fully off the
+   * screen first, travelling further and a little slower so the small header
+   * reads as clearly as the hero, `staggerMs` behind the one before.
+   */
+  arrival: { delayMs: 120, durationMs: 400, staggerMs: 70, fromY: 16 },
+  /**
    * Progress's day panel arriving with a new day or passage: it fades in as it
    * rises `fromY` into place, easing out. Under Reduce Motion, the fade alone.
    */
@@ -635,6 +654,15 @@ export const edgeFade = { peak: 0.85 } as const;
 export const controlHeight = {
   /** The smallest a tap target gets: a compact button, an icon button, a header row. */
   hitTarget: 44,
+  /** A one-line field or search bar (`FieldFrame`): its least height — large text grows it. */
+  field: 52,
+  /**
+   * An inline pill — a chip, a value, a label that opens something: drawn this
+   * tall, tapped at `hitTarget` (`pillHitSlop`). A standalone button is drawn at 44.
+   */
+  pill: 36,
+  /** A tappable row in a list card: its least height. */
+  row: 64,
   /** A header's round icon button. */
   headerButton: 49,
   /** A screen header's row. */
@@ -642,6 +670,25 @@ export const controlHeight = {
   /** The full-width primary `Button`. */
   button: 61,
 } as const;
+
+/**
+ * A card's corners and the room inside it, by what it holds. `list`: rows, each
+ * bringing its own 16 in, so nothing inside the card itself. `content`: a block
+ * to read or act on. `feature`: a page's one big card.
+ */
+export const cardStyle = {
+  list: { radius: radius[24], inset: 0 },
+  content: { radius: radius[28], inset: space[20] },
+  feature: { radius: radius[32], inset: space[24] },
+} as const;
+
+export type CardRole = keyof typeof cardStyle;
+
+/** The sizes a row's icons are drawn at: its quiet leading icon, the chevron it ends in, and a pill's small chevron. */
+export const iconSize = { row: 20, chevron: 18, pillChevron: 14 } as const;
+
+/** The margin round an inline pill that makes its tap 44pt, as Apple's guidelines ask. */
+export const pillHitSlop = (controlHeight.hitTarget - controlHeight.pill) / 2;
 
 /**
  * The older named scales, read through the theme (`theme.spacing.md`) by Fun

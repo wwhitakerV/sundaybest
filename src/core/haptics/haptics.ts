@@ -34,3 +34,13 @@ export function warningFeedback(): void {
 export function errorFeedback(): void {
   quietly(Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error));
 }
+
+/** Something heavy landing: the launch intro's letters reaching the pool. */
+export function dropFeedback(): void {
+  quietly(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium));
+}
+
+/** The biggest moment there is: the launch intro's pool erupting to fill the screen. */
+export function splashFeedback(): void {
+  quietly(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy));
+}

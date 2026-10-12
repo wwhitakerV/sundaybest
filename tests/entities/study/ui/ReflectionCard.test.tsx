@@ -31,4 +31,11 @@ describe("ReflectionCard", () => {
 
     expect(screen.getByText("Only you ever see this.")).toBeVisible();
   });
+
+  it("sits on the page with no edge and no side padding, lined up with the page's words", () => {
+    renderCard();
+
+    const card = screen.getByTestId("reflection");
+    expect(card).toHaveStyle({ borderWidth: 0, paddingHorizontal: 0 });
+  });
 });

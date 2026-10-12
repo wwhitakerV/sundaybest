@@ -52,12 +52,17 @@ export function Collapse({ open, children, testID }: CollapseProps) {
     );
   }, [open, progress]);
 
-  // The box is only ever as tall as the roll makes it — its content laid out apart from it, so
-  // the box can't squeeze it, and measured at its true height whatever the box is doing.
-  const style = useAnimatedStyle(() => ({
-    height: height.get() * progress.get(),
-    opacity: progress.get(),
-  }));
+  // Until it has measured itself, its content sits in the box and the box is as tall as it —
+  // so on its first frame it's already the right size and nothing below it jumps. Once
+  // measured, the content is laid out apart from the box, so the box can't squeeze it, and the
+  // box is only ever as tall as the roll makes it.
+  const [measured, setMeasured] = useState(false);
+  const style = useAnimatedStyle(() => {
+    const full = height.get();
+    const shown = progress.get();
+    if (full === 0) return shown >= 1 ? { opacity: shown } : { height: 0, opacity: shown };
+    return { height: full * shown, opacity: shown };
+  });
 
   return (
     <Animated.View
@@ -67,8 +72,12 @@ export function Collapse({ open, children, testID }: CollapseProps) {
       style={[(rolling || !open) && styles.clip, style]}
     >
       <View
-        style={styles.content}
-        onLayout={(event) => height.set(event.nativeEvent.layout.height)}
+        {...(testID && { testID: `${testID}-content` })}
+        style={measured && styles.content}
+        onLayout={(event) => {
+          height.set(event.nativeEvent.layout.height);
+          setMeasured(true);
+        }}
       >
         {children}
       </View>

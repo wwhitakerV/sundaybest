@@ -16,12 +16,16 @@ export type ReflectionCardProps = {
   testID?: string;
 };
 
-/** A reflection question on its card, room to answer under it, and a word that it's private. */
+/**
+ * A reflection question, room to answer under it, and a word that it's
+ * private — on the page itself: no edge, and no padding at its sides, so it
+ * lines up with the page's words and the answer box is the one thing outlined.
+ */
 export function ReflectionCard({ question, children, testID }: ReflectionCardProps) {
   const theme = useTheme();
 
   return (
-    <Card testID={testID} fill="page" style={styles.card}>
+    <Card testID={testID} fill="page" edge={false} inset={false} style={styles.card}>
       <SerifTitle variant="question">{question}</SerifTitle>
       {children}
       <View style={styles.privacy}>
@@ -39,6 +43,6 @@ export function ReflectionCard({ question, children, testID }: ReflectionCardPro
 }
 
 const styles = StyleSheet.create({
-  card: { padding: space[22], gap: space[16] },
+  card: { paddingVertical: space[22], paddingHorizontal: 0, gap: space[16] },
   privacy: { flexDirection: "row", alignItems: "center", gap: space[8] },
 });

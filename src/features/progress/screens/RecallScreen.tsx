@@ -4,7 +4,7 @@ import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { Link } from "expo-router";
 import { ArrowLeft, ListChecks } from "lucide-react-native";
 
-import { radius, space } from "@/theme";
+import { cardStyle, space } from "@/theme";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { RoundedEdge } from "@/ui/atoms/RoundedEdge";
 import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
@@ -24,7 +24,7 @@ import { useRecall } from "../hooks/use-recall";
 /** The buttons end this far above the tab bar. */
 const TAB_BAR_GAP = space[24];
 /** The question's card's corner, which the scroll rounds into at its top. */
-const CARD_RADIUS = radius[24];
+const CARD_RADIUS = cardStyle.list.radius;
 
 /**
  * Quick Check, from Progress: what the reader remembers. How much, across
@@ -41,8 +41,9 @@ export function RecallScreen() {
     return (
       <ScreenLoadError
         testID="recall-load-error"
-        title="Couldn't load Quick Checks"
+        title="Couldn't load your Quick Checks"
         onRetry={view.retry}
+        leave={{ label: "Back", onPress: view.back }}
       />
     );
   }

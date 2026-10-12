@@ -42,7 +42,7 @@ export function GenerationBarContent({
         tone={ready ? "onSuccessBright" : "onControlPrimary"}
         numberOfLines={1}
       >
-        {ready ? "Your plan is ready" : "Couldn’t create your plan"}
+        {ready ? "Your plan is ready" : "Couldn't create your plan"}
       </SFProBody>
       <SFProBody
         variant="detail"

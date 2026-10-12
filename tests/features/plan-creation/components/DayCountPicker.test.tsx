@@ -32,13 +32,13 @@ describe("DayCountPicker", () => {
     expect(onChange).toHaveBeenCalledWith(5);
   });
 
-  it("gives every chip the same thin edge, picked or not", () => {
+  it("gives every chip the same thin card edge, picked or not", () => {
     renderPicker(3);
 
     for (const days of [1, 3, 7]) {
       expect(screen.getByTestId(`days-${days}`)).toHaveStyle({
         borderWidth: 1,
-        borderColor: lightTheme.colors.divider,
+        borderColor: lightTheme.colors.containerBorder,
       });
     }
   });

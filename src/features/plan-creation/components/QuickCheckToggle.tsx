@@ -17,7 +17,7 @@ export function QuickCheckToggle({ value, onChange, testID }: QuickCheckTogglePr
   const theme = useTheme();
 
   return (
-    <Card style={styles.row}>
+    <Card testID={`${testID}-card`} kind="list" style={styles.row}>
       <ListChecks size={22} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
       <SFProBody variant="listItem" style={styles.label}>
         Add a quick check quiz
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: space[14],
-    paddingHorizontal: space[20],
+    paddingHorizontal: space[16],
     paddingVertical: space[14],
   },
   label: { flex: 1 },

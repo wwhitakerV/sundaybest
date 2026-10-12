@@ -1,6 +1,7 @@
 import { Alert } from "react-native";
 
 import { useUpdateSettingsMutation, useUserSettingsQuery } from "@/core/api/reader-queries";
+import { selectionFeedback } from "@/core/haptics/haptics";
 import type { BibleTranslation } from "@/types/domain";
 import { SettingsChoiceList } from "../components/SettingsChoiceList";
 import { SettingsSubpage } from "../components/SettingsSubpage";
@@ -13,11 +14,12 @@ export function BibleTranslationScreen() {
 
   function select(next: BibleTranslation) {
     if (next === value || update.isPending) return;
+    selectionFeedback();
     update.mutate(
       { bibleTranslation: next },
       {
         onError: () => {
-          Alert.alert("Couldn’t update translation", "Try again in a moment.");
+          Alert.alert("Couldn't update translation", "Try again in a moment.");
         },
       },
     );

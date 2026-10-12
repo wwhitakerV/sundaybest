@@ -2,14 +2,17 @@ import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, View, type ViewProps } from "react-native";
 import Animated from "react-native-reanimated";
 
-import { useTheme } from "@/theme";
-
-/** The corner-scale steps a card takes (`radius` in `@/theme`). */
-type CardRadius = 24 | 28 | 32 | 36;
+import { cardStyle, useTheme, type CardRole } from "@/theme";
 
 export type CardProps = ViewProps & {
-  /** Its corners: 28 for most cards, 24 for a tighter one, 32 or 36 for a larger one. */
-  radius?: CardRadius;
+  /**
+   * What it holds, which sets its corners and the room inside it (`cardStyle`):
+   * `list` (rows), `content` (the default: a block to read or act on), or
+   * `feature` (a page's one big card).
+   */
+  kind?: CardRole;
+  /** The room inside, from its kind — off for a picture to its edges, or rows laid out their own way. */
+  inset?: boolean;
   /** `surface`, the soft fill (the default); or `page`, the page's own background colour. */
   fill?: "surface" | "page";
   /** Makes the whole card one button; name it with `accessibilityLabel`. */
@@ -21,12 +24,14 @@ export type CardProps = ViewProps & {
 };
 
 /**
- * The app's card: the container edge (`containerBorder`) round a soft fill.
- * Padding and gap come in through `style`, from the spacing scale. With
- * `onPress` the whole of it is a button.
+ * The app's card: the container edge (`containerBorder`) round a soft fill,
+ * its corners and the room inside it set by its kind, so every card of a kind
+ * matches. Its gap and layout come in through `style`. With `onPress` the
+ * whole of it is a button.
  */
 export function Card({
-  radius = 28,
+  kind = "content",
+  inset = true,
   fill = "surface",
   edge = true,
   style,
@@ -38,7 +43,8 @@ export function Card({
   const shell = [
     edge ? styles.edge : styles.edgeless,
     {
-      borderRadius: radius,
+      borderRadius: cardStyle[kind].radius,
+      ...(inset && { padding: cardStyle[kind].inset }),
       backgroundColor: fill === "page" ? theme.colors.background : theme.colors.surface,
       borderColor: theme.colors.containerBorder,
     },

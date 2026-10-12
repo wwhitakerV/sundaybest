@@ -17,7 +17,7 @@ export function SermonCard() {
     <View
       style={[
         styles.card,
-        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
+        { backgroundColor: theme.colors.background, borderColor: theme.colors.containerBorder },
       ]}
     >
       {/* The frame sets the size — full card width, 16:9 — and the photo

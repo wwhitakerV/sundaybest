@@ -11,7 +11,8 @@ import { useVisit } from "../hooks/use-visit";
 import { space } from "@/theme";
 import { DisplayTitle } from "@/ui/typography/DisplayTitle";
 import { MonoBody } from "@/ui/typography/MonoBody";
-import { Wordmark } from "@/ui/typography/Wordmark";
+import { Arrive } from "@/ui/arrival/Arrive";
+import { Wordmark } from "@/ui/atoms/Wordmark";
 import { Span } from "@/ui/typography/Span";
 
 export function WelcomeScreen() {
@@ -40,52 +41,61 @@ export function WelcomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Wordmark />
-        </View>
-
-        <View style={styles.weekRow}>
-          <DayStrip testID="welcome-day-strip" active="Sun" />
-        </View>
-
-        <MonoBody variant="supporting" tone="textMuted" style={styles.supporting}>
-          We keep you in God&apos;s word. All week.
-        </MonoBody>
-
-        <DisplayTitle style={reduceMotion ? styles.stillHero : styles.hero}>
-          {"A new way to "}
-          <Span tone="textMuted">study the sermons you love.</Span>
-        </DisplayTitle>
-
-        <IntroStory
-          key={visit.count}
-          testID="welcome-screen-fan"
-          paused={reduceMotion}
-          frozen={!visit.playing}
-          style={reduceMotion ? styles.stillFan : styles.stage}
-        />
-
-        {reduceMotion && <WelcomeSteps />}
-
-        <View style={reduceMotion ? styles.stillActions : styles.actions}>
-          <Button
-            testID="welcome-get-a-plan-now-button"
-            label="Get a plan now"
-            loading={starting}
-            onPress={start}
-          />
-          <View style={styles.secondaryAction}>
-            <Button
-              testID="welcome-sample-plan-button"
-              label="See a sample plan"
-              variant="secondary"
-              onPress={seeSample}
-            />
+        {/* After the launch, the wordmark comes down into place and the rest rises in, in turn. */}
+        <Arrive from="above" order={0}>
+          <View style={styles.header}>
+            <Wordmark />
           </View>
-          <MonoBody variant="supporting" tone="textMuted" style={styles.footnote}>
-            Free. No account needed.
+        </Arrive>
+
+        <Arrive from="below" order={1}>
+          <View style={styles.weekRow}>
+            <DayStrip testID="welcome-day-strip" active="Sun" />
+          </View>
+
+          <MonoBody variant="supporting" tone="textMuted" style={styles.supporting}>
+            We keep you in God&apos;s word. All week.
           </MonoBody>
-        </View>
+
+          <DisplayTitle style={reduceMotion ? styles.stillHero : styles.hero}>
+            {"A new way to "}
+            <Span tone="textMuted">study the sermons you love.</Span>
+          </DisplayTitle>
+        </Arrive>
+
+        <Arrive from="below" order={2} style={!reduceMotion && styles.grow}>
+          <IntroStory
+            key={visit.count}
+            testID="welcome-screen-fan"
+            paused={reduceMotion}
+            frozen={!visit.playing}
+            style={reduceMotion ? styles.stillFan : styles.stage}
+          />
+
+          {reduceMotion && <WelcomeSteps />}
+        </Arrive>
+
+        <Arrive from="below" order={3}>
+          <View style={reduceMotion ? styles.stillActions : styles.actions}>
+            <Button
+              testID="welcome-get-a-plan-now-button"
+              label="Get a plan now"
+              loading={starting}
+              onPress={start}
+            />
+            <View style={styles.secondaryAction}>
+              <Button
+                testID="welcome-sample-plan-button"
+                label="See a sample plan"
+                variant="secondary"
+                onPress={seeSample}
+              />
+            </View>
+            <MonoBody variant="supporting" tone="textMuted" style={styles.footnote}>
+              Free. No account needed.
+            </MonoBody>
+          </View>
+        </Arrive>
       </ScrollView>
     </Screen>
   );
@@ -102,6 +112,8 @@ const FOOTNOTE_TOP = 17;
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
+  // The story's turn to arrive takes the height it fills.
+  grow: { flex: 1 },
   content: { flexGrow: 1, paddingHorizontal: space[24] },
   // 20px above the wordmark and 12px below. The week row's own 29 (the spec's
   // 24 from the brand-mark area) is measured from this bar's edge, so it

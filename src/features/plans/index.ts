@@ -13,9 +13,5 @@ export { PlanCompleteScreen } from "./screens/PlanCompleteScreen";
 export { QuickCheckScreen } from "./screens/QuickCheckScreen";
 
 // Plan lists and their wording, shared with Home and Welcome.
-export {
-  getApiActivePlan,
-  getApiSamplePlan,
-  getApiUserPlans,
-} from "./logic/api-plan-collections";
+export { getApiActivePlan, getApiSamplePlan, getApiUserPlans } from "./logic/api-plan-collections";
 export { describeApiPlan } from "./logic/api-plan-wording";

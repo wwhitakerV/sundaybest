@@ -89,14 +89,26 @@ function ClearedScroll({
   const scroll = useRef<ScrollView>(null);
   useScrollToEnd(scroll, clearance.verdict ? clearance.bottom : null);
 
+  if (fixed) {
+    // A page that never scrolls is no scroller: a scroll view's content has no height limit,
+    // so a part meant to take what's left (a list that scrolls on its own) would grow past the
+    // screen with everything in it, and never scroll. A plain view holds it to the screen.
+    return (
+      <View testID={`${testID}-scroll`} style={[styles.scroll, SCROLL_INSET, contentStyle]}>
+        <View testID={`${testID}-top-clearance`} style={{ height: clearance.top }} />
+        {children}
+        <View testID={`${testID}-bottom-clearance`} style={{ height: clearance.bottom }} />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       ref={scroll}
       testID={`${testID}-scroll`}
       style={styles.scroll}
-      contentContainerStyle={[SCROLL_INSET, fixed && styles.fill, contentStyle]}
+      contentContainerStyle={[SCROLL_INSET, contentStyle]}
       showsVerticalScrollIndicator={false}
-      scrollEnabled={!fixed}
       {...(keyboardShouldPersistTaps && { keyboardShouldPersistTaps })}
       {...(automaticallyAdjustKeyboardInsets && { automaticallyAdjustKeyboardInsets })}
       {...(onScroll && {
@@ -114,6 +126,4 @@ function ClearedScroll({
 
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
-  // A fixed page's content runs the full height between the ends.
-  fill: { flexGrow: 1 },
 });

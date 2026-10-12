@@ -8,7 +8,7 @@ import {
   getSettingsResponseSchema,
 } from "./contracts";
 import { createIdempotencyKey } from "./idempotency";
-import { apiQueryKeys, isStudyDayQueryKey } from "./query-keys";
+import { apiQueryKeys, isInReaderTranslation } from "./query-keys";
 import { useSundayBestApi } from "./ApiProvider";
 import {
   cachedCurrentUserQuery,
@@ -163,10 +163,10 @@ export function useUpdateSettingsMutation() {
     },
     onSuccess: (data, input) => {
       queryClient.setQueryData<SettingsEnvelope>(apiQueryKeys.settings, data);
-      // A study day carries its Scripture in the reader's translation.
+      // Everything that carries Scripture in the reader's translation, wherever it's shown.
       if (input.bibleTranslation) {
         void queryClient.invalidateQueries({
-          predicate: (query) => isStudyDayQueryKey(query.queryKey),
+          predicate: (query) => isInReaderTranslation(query.queryKey),
         });
       }
       void persistServerCache({

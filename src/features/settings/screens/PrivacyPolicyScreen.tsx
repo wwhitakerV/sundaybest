@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import {
   Archive,
   EyeOff,
@@ -16,7 +15,8 @@ import { AboutLead } from "../components/AboutLead";
 import { AboutRows } from "../components/AboutRows";
 import { AboutSection } from "../components/AboutSection";
 import { SettingsSubpage } from "../components/SettingsSubpage";
-import { privacyTopicHref, type PrivacyTopicId } from "../logic/privacy-routes";
+import { useOpenHere } from "../hooks/use-open-here";
+import type { PrivacyTopicId } from "../logic/privacy-routes";
 import { PRIVACY_LANDING, PRIVACY_TOPICS } from "../logic/privacy-topics";
 import { FULL_PRIVACY_POLICY } from "../logic/privacy-full-policy";
 
@@ -40,7 +40,7 @@ const TOPIC_ICONS: Record<PrivacyTopicId, LucideIcon> = {
  * when it took effect as its footnote.
  */
 export function PrivacyPolicyScreen() {
-  const router = useRouter();
+  const openHere = useOpenHere();
 
   return (
     <SettingsSubpage
@@ -68,7 +68,7 @@ export function PrivacyPolicyScreen() {
             key: topic.id,
             title: topic.row,
             icon: TOPIC_ICONS[topic.id],
-            onPress: () => router.push(privacyTopicHref(topic.id)),
+            onPress: () => openHere.privacyTopic(topic.id),
           }))}
         />
       </AboutSection>

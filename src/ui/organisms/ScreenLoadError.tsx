@@ -6,7 +6,8 @@ export type ScreenLoadErrorProps = {
   message?: string;
   onRetry: () => void;
   /**
-   * The way out beside the retry ("Back to Plans"). A tab's own screen can
+   * The way out beside the retry: "Back" on a pushed page, "Close" on one that
+   * slid up over the app, as iOS names them. A tab's own screen can
    * leave it out — its tabs are the way out — but a pushed or modal screen
    * never does.
    */

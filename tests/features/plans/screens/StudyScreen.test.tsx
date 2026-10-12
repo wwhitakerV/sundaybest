@@ -138,7 +138,7 @@ describe("StudyScreen", () => {
     render(<StudyScreen />);
 
     expect(
-      await screen.findByRole("header", { name: "This day isn’t here" }, { timeout: 10000 }),
+      await screen.findByRole("header", { name: "This day isn't here" }, { timeout: 10000 }),
     ).toBeVisible();
     press("study-not-found-action");
     expect(mockExitSession).toHaveBeenCalledTimes(1);

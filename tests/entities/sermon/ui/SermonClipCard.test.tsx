@@ -21,10 +21,10 @@ describe("SermonClipCard", () => {
     expect(screen.getByText("Hear this part of the sermon")).toBeVisible();
   });
 
-  it("rounds its corners at 36", () => {
+  it("rounds its corners at 32, as a page's feature card", () => {
     render(<SermonClipCard playing={false} clock="12:34" testID="clip" />);
 
-    expect(SERMON_CLIP_RADIUS).toBe(36);
+    expect(SERMON_CLIP_RADIUS).toBe(32);
     expect(screen.getByTestId("clip")).toHaveStyle({ borderRadius: SERMON_CLIP_RADIUS });
   });
 

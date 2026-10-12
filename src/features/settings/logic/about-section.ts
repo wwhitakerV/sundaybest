@@ -1,8 +1,5 @@
-/** A setting an About page can take the reader straight to. */
-export type AboutSettingHref =
-  | "/(tabs)/settings/daily-reminder"
-  | "/(tabs)/settings/bible-translation"
-  | "/(tabs)/settings/text-size";
+/** A setting an About page can take the reader straight to, in whichever tab it's read in. */
+export type AboutSettingPage = "daily-reminder" | "bible-translation" | "text-size";
 
 /** One thing a section sets out: what it is, then what it means. A plain line has no name. */
 type AboutItem = { label?: string; text: string };
@@ -13,5 +10,5 @@ export type AboutSectionContent = {
   paragraphs?: readonly string[];
   items?: readonly AboutItem[];
   /** Rows to the setting the section talks about, where there's a real one, named as Settings names it. */
-  actions?: readonly { label: string; href: AboutSettingHref }[];
+  actions?: readonly { label: string; page: AboutSettingPage }[];
 };

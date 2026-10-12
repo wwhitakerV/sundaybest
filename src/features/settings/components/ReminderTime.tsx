@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, useWindowDimensions, type View } from "react-nat
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import { usesTwentyFourHourClock } from "@/core/localization/clock";
-import { controlHeight, radius, space, useTheme } from "@/theme";
+import { controlHeight, pillHitSlop, radius, space, useTheme } from "@/theme";
 import { Popover, type PopoverAnchor } from "@/ui/organisms/Popover";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { SFProBody } from "@/ui/typography/SFProBody";
@@ -13,8 +13,6 @@ import { dateForTime, toLocalTime } from "../logic/reminder-time";
 /** Between the pill and the popover hanging under it. */
 const POPOVER_GAP = 8;
 /** iOS's own time pill height; its slop makes up the full tap target. */
-const PILL_HEIGHT = 36;
-const PILL_SLOP = (controlHeight.hitTarget - PILL_HEIGHT) / 2;
 
 export type ReminderTimeProps = {
   /** "06:30". */
@@ -65,7 +63,7 @@ export function ReminderTime({ time, onChange, testID }: ReminderTimeProps) {
         accessibilityRole="button"
         accessibilityLabel={`Reminder time, ${label}`}
         onPress={show}
-        hitSlop={PILL_SLOP}
+        hitSlop={pillHitSlop}
         style={({ pressed }) => [
           styles.pill,
           {
@@ -107,5 +105,5 @@ export function ReminderTime({ time, onChange, testID }: ReminderTimeProps) {
 }
 
 const styles = StyleSheet.create({
-  pill: { height: PILL_HEIGHT, justifyContent: "center" },
+  pill: { height: controlHeight.pill, justifyContent: "center" },
 });

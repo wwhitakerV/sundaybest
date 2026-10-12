@@ -128,6 +128,7 @@ function StudyPage({ view }: { view: FoundStudy }) {
                   content={view.content}
                   answerFor={view.answerFor}
                   onAnswerChange={view.changeAnswer}
+                  onChangeTranslation={view.changeTranslation}
                 />
               </View>
             </StudyEnterProvider>

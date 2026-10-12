@@ -281,3 +281,26 @@ describe("ScrollScreen with a hero under its header", () => {
     expect(onScroll).toHaveBeenCalledWith(120);
   });
 });
+
+describe("ScrollScreen, fixed", () => {
+  function renderFixed() {
+    render(
+      <ScrollScreen testID="page" fixed>
+        <SFProBody>A page that fits the screen</SFProBody>
+      </ScrollScreen>,
+    );
+    return screen.getByTestId("page-scroll");
+  }
+
+  it("is no scroller at all, so it can never grow past the screen with what's in it", () => {
+    expect(renderFixed().type).not.toBe("RCTScrollView");
+  });
+
+  it("fills the room between its ends, for a part of it to take what's left", () => {
+    expect(renderFixed()).toHaveStyle({ flex: 1 });
+  });
+
+  it("keeps the page inset at its sides", () => {
+    expect(renderFixed()).toHaveStyle({ paddingHorizontal: PAGE_INSET });
+  });
+});

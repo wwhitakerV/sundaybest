@@ -28,4 +28,13 @@ config.transformer.minifierConfig = {
   },
 };
 
+/**
+ * `.svg` files import as components (react-native-svg-transformer), so artwork
+ * like the wordmark is drawn straight from its file in assets/ — replace the
+ * file and the app draws the new one.
+ */
+config.transformer.babelTransformerPath = require.resolve("react-native-svg-transformer/expo");
+config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== "svg");
+config.resolver.sourceExts = [...config.resolver.sourceExts, "svg"];
+
 module.exports = config;

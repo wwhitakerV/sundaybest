@@ -9,6 +9,7 @@ export { describePlanHero } from "./logic/plan-hero";
 export {
   HOME_HREF,
   PLANS_HREF,
+  STUDY_TRANSLATION_HREF,
   NEW_PLAN_HREF,
   dayCompleteHref,
   parsePlanParams,

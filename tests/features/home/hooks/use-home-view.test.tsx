@@ -6,6 +6,7 @@ import { aPlan, summaryOf } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import * as haptics from "@/core/haptics/haptics";
 import { planOverviewHref, studyHref } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { useHomeView } from "@/features/home/hooks/use-home-view";
 import { describeApiPlan } from "@/features/plans";
 
@@ -152,12 +153,12 @@ describe("useHomeView", () => {
     });
   });
 
-  it("opens the sample plan's overview with openSample", async () => {
+  it("opens the sample plan's overview in Home with openSample", async () => {
     const { result } = await renderHomeView([SAMPLE]);
 
     act(() => result.current.openSample());
 
-    expect(mockPush).toHaveBeenCalledWith(planOverviewHref(SAMPLE.id));
+    expect(mockPush).toHaveBeenCalledWith(tabPlanHref("home", SAMPLE.id));
   });
 
   it("does nothing on openSample when there is no sample", async () => {

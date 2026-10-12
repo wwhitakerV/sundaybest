@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
 
-import { PASSAGE_CARD_RADIUS } from "@/entities/scripture";
 import { SERMON_CLIP_RADIUS } from "@/entities/sermon";
 import type { LiftBacking } from "../logic/lift";
 import type { LiftPieceProps } from "../logic/lift-piece";
@@ -67,7 +66,7 @@ export function getLiftParts(key: StoryCardKey): readonly LiftPart[] {
       // Rests a little higher than the rest.
       return [{ ...lift(ListenCard, SERMON_CLIP_RADIUS), raise: 24 }];
     case "scripture":
-      return [lift(VerseCard, PASSAGE_CARD_RADIUS)];
+      return [liftOntoCard(VerseCard, 20, 24)];
     case "reflect":
       return [lift(AnswerBox, ANSWER_BOX_RADIUS)];
     case "pray":

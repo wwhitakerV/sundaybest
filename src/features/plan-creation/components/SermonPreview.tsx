@@ -31,7 +31,7 @@ export function SermonPreview({
 
   return (
     <View testID={testID} style={styles.wrap}>
-      <Card edge={false} radius={32} style={styles.link}>
+      <Card edge={false} kind="feature" inset={false} style={styles.link}>
         <Link2 size={22} color={theme.colors.textMuted} strokeWidth={theme.icon.strokeWidth} />
         <SFProBody style={styles.grow} numberOfLines={1}>
           {link}

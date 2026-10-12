@@ -15,3 +15,15 @@ declare module "*.jpg" {
   // eslint-disable-next-line import/no-default-export -- an asset-module shim has no named export to offer; `import x from "*.jpg"` is the only shape Metro's own resolution supports.
   export default assetId;
 }
+
+/**
+ * `import X from "*.svg"` is a component drawing that file (react-native-svg-transformer,
+ * set up in metro.config.js), sized by the file's own width and height unless given others.
+ */
+declare module "*.svg" {
+  import type { FC } from "react";
+  import type { SvgProps } from "react-native-svg";
+  const Artwork: FC<SvgProps>;
+  // eslint-disable-next-line import/no-default-export -- an asset-module shim has no named export to offer; `import X from "*.svg"` is the only shape the transformer produces.
+  export default Artwork;
+}

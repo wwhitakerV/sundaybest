@@ -26,17 +26,18 @@ Promote code when its **second** consumer exists; Welcome's mock screens count.
 
 ## What's here
 
-| Entity      | Piece                                                                                              | What it's for                                                  |
-| ----------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `plan`      | `describePlanHero`                                                                                 | A plan hero's words: status, action, today                     |
-|             | `formatDay`, `formatDayOfTotal`, `formatPlanLength`, `getPlanEndsLine`                             | "Day 2", "Day 2 of 6", "3 days", "Ends Sunday…"                |
-|             | `getHeroPalette`                                                                                   | A hero's colour, gradient, and ink from its sermon's colours   |
-|             | `HeroBackdrop`, `HeroContent`, `HeroContentFade`                                                   | A plan hero's backdrop, words, and the colour behind them      |
-|             | `planOverviewHref`, `studyHref`, `quickCheckHref`, `dayCompleteHref`, `HOME_HREF`, `NEW_PLAN_HREF` | Routes, built in one place                                     |
-|             | `parsePlanParams`, `parseStudyParams`                                                              | Route params, checked (Zod)                                    |
-| `scripture` | `PassageHeading`, `PassageCard`                                                                    | A passage's reference and translation; the passage on its card |
-| `study`     | `StepKicker`, `ReflectionCard`, `PrayerHeading`                                                    | Daily Study step parts                                         |
-| `sermon`    | `SermonClipCard`                                                                                   | "Hear this part of the sermon", playing or not                 |
+| Entity      | Piece                                                                                              | What it's for                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `plan`      | `describePlanHero`                                                                                 | A plan hero's words: status, action, today                        |
+|             | `formatDay`, `formatDayOfTotal`, `formatPlanLength`, `getPlanEndsLine`                             | "Day 2", "Day 2 of 6", "3 days", "Ends Sunday…"                   |
+|             | `getHeroPalette`                                                                                   | A hero's colour, gradient, and ink from its sermon's colours      |
+|             | `HeroBackdrop`, `HeroContent`, `HeroContentFade`                                                   | A plan hero's backdrop, words, and the colour behind them         |
+|             | `planOverviewHref`, `studyHref`, `quickCheckHref`, `dayCompleteHref`, `HOME_HREF`, `NEW_PLAN_HREF` | Routes, built in one place                                        |
+|             | `parsePlanParams`, `parseStudyParams`                                                              | Route params, checked (Zod)                                       |
+| `scripture` | `PassageHeading`, `PassageCard`                                                                    | A passage's reference and translation; the passage set as a quote |
+| `study`     | `StepKicker`, `ReflectionCard`, `PrayerHeading`                                                    | Daily Study step parts                                            |
+| `sermon`    | `SermonClipCard`                                                                                   | "Hear this part of the sermon", playing or not                    |
+| `tabs`      | `tabPlanHref`, `tabPageHref`, `tabPrivacyTopicHref`, `toAppTab`                                    | A plan or a shared Settings page, opened in the tab you're in     |
 
 ## Welcome copies that stay separate
 

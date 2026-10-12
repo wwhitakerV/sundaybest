@@ -46,7 +46,7 @@ export function PasteBody({ elapsedMs }: MockBodyProps) {
         </SFProBody>
       </FadeUp>
       <FadeUp order={4} still={still}>
-        <Card fill="page" style={styles.howTo}>
+        <Card fill="page" kind="list" style={styles.howTo}>
           {HOW_TO_STEPS.map((label, index) => (
             <View
               key={label}
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   field: { marginTop: space[12] },
   hint: { marginTop: space[18], marginLeft: space[6] },
   howTo: { overflow: "hidden" },
-  howToRow: { flexDirection: "row", alignItems: "center", gap: space[18], padding: space[18] },
+  howToRow: { flexDirection: "row", alignItems: "center", gap: space[16], padding: space[16] },
   badge: {
     width: BADGE_SIZE,
     height: BADGE_SIZE,

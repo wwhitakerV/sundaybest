@@ -16,6 +16,8 @@ export type DayGainedProps = {
   verse: string | null;
   /** The first thing written in the day's reflection, from this phone — or null. */
   wrote: string | null;
+  /** Opens Bible translation from the passage's pill. */
+  onChangeTranslation: () => void;
   testID: string;
 };
 
@@ -23,10 +25,21 @@ export type DayGainedProps = {
  * What a finished day gave, as Progress's day panel shows a day: the
  * passage's heading, its key verse in quotes, and what the reader wrote.
  */
-export function DayGained({ reference, translation, verse, wrote, testID }: DayGainedProps) {
+export function DayGained({
+  reference,
+  translation,
+  verse,
+  wrote,
+  onChangeTranslation,
+  testID,
+}: DayGainedProps) {
   return (
     <View testID={testID} style={{ gap: space[16] }}>
-      <PassageHeading reference={reference} translation={translation} />
+      <PassageHeading
+        reference={reference}
+        translation={translation}
+        onChangeTranslation={onChangeTranslation}
+      />
       {verse && (
         <SerifBody variant="scripture" numberOfLines={VERSE_LINES}>
           {`“${verse}”`}

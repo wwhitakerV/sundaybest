@@ -16,7 +16,7 @@ export function AnswerBox({ elapsedMs }: LiftPieceProps) {
     <View
       style={[
         styles.box,
-        { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
+        { backgroundColor: theme.colors.background, borderColor: theme.colors.containerBorder },
       ]}
     >
       <SFProBody>

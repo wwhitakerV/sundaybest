@@ -26,6 +26,8 @@ export type DayPanelProps = {
   index: number;
   onShow: (index: number) => void;
   onOpen: (planId: string, dayNumber: number) => void;
+  /** Opens Bible translation from a passage's pill. */
+  onChangeTranslation: () => void;
 };
 
 /**
@@ -44,6 +46,7 @@ export function DayPanel({
   index,
   onShow,
   onOpen,
+  onChangeTranslation,
 }: DayPanelProps) {
   const { width } = useWindowDimensions();
   const pageWidth = width - PAGE_INSET * 2;
@@ -108,6 +111,7 @@ export function DayPanel({
               isToday={isToday}
               translation={translation}
               onOpen={onOpen}
+              onChangeTranslation={onChangeTranslation}
             />
           </View>
         ))}

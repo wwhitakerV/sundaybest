@@ -143,7 +143,7 @@ describe("SettingsScreen", () => {
     );
     render(<SettingsScreen />);
 
-    expect(await screen.findByText("Couldn’t load your preferences.")).toBeVisible();
+    expect(await screen.findByText("Couldn't load your preferences.")).toBeVisible();
     expect(screen.getByTestId("settings-retry")).toBeVisible();
   });
 });

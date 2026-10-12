@@ -132,7 +132,7 @@ function ScaleDot({ x, testID }: { x: number; testID: string }) {
   return (
     <Animated.View
       testID={testID}
-      style={[styles.dot, { backgroundColor: theme.colors.accent }, style]}
+      style={[styles.dot, { backgroundColor: theme.colors.text }, style]}
     />
   );
 }

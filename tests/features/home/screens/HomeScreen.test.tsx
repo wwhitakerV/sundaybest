@@ -4,7 +4,8 @@ import type * as ExpoRouter from "expo-router";
 
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
-import { planOverviewHref, studyHref } from "@/entities/plan";
+import { studyHref } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { HomeScreen } from "@/features/home/screens/HomeScreen";
 import { lightTheme } from "@/theme/tokens";
 
@@ -69,7 +70,7 @@ describe("HomeScreen", () => {
     servePlans([ACTIVE]);
     render(<HomeScreen />);
 
-    expect(screen.getByText("SUNDAYBEST")).toBeVisible();
+    expect(screen.getByLabelText("SundayBest")).toBeVisible();
   });
 
   it("shows its plans' shape while they're on their way", () => {
@@ -119,7 +120,7 @@ describe("HomeScreen", () => {
       expect(screen.getByText("The Church Must Not Partner with the World")).toBeVisible();
       expect(screen.getByText("Sample plan, 5 days")).toBeVisible();
       fireEvent.press(screen.getByTestId("home-tab-sample-plan"));
-      expect(mockPush).toHaveBeenCalledWith(planOverviewHref(SAMPLE.id));
+      expect(mockPush).toHaveBeenCalledWith(tabPlanHref("home", SAMPLE.id));
     });
   });
 

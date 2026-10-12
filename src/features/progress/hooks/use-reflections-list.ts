@@ -64,6 +64,11 @@ export function useReflectionsList() {
         setSearch("");
       }
     },
+    /** The search's own X: its words cleared, the field gone, the header's buttons back. */
+    closeSearch: () => {
+      setSearching(false);
+      setSearch("");
+    },
     open: (reflectionId: string) => router.navigate(wordsHref(reflectionId)),
     close: () => router.back(),
   } as const;

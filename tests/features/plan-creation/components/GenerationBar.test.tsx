@@ -138,7 +138,7 @@ describe("GenerationBar", () => {
     it("says so, with the reason", () => {
       renderBar(failed);
 
-      expect(screen.getByText("Couldn’t create your plan")).toBeVisible();
+      expect(screen.getByText("Couldn't create your plan")).toBeVisible();
       expect(screen.getByText(failed.kind === "failed" ? failed.reason : "")).toBeVisible();
     });
 

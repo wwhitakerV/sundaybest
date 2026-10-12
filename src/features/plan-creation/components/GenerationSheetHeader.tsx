@@ -14,7 +14,7 @@ const SPARKLE_SIZE = 24;
 const TITLES = {
   building: "Creating your plan",
   ready: "Your plan is ready",
-  failed: "Couldn’t create your plan",
+  failed: "Couldn't create your plan",
 } as const;
 
 export type GenerationSheetHeaderProps = {

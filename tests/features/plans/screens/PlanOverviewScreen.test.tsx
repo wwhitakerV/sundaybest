@@ -5,7 +5,7 @@ import type * as ExpoRouter from "expo-router";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { selectionFeedback } from "@/core/haptics/haptics";
-import { PLANS_HREF, quickCheckHref, studyHref } from "@/entities/plan";
+import { quickCheckHref, studyHref } from "@/entities/plan";
 import { PlanOverviewScreen } from "@/features/plans/screens/PlanOverviewScreen";
 
 jest.mock("@/core/haptics/haptics", () => ({
@@ -26,6 +26,7 @@ jest.mock("expo-router", () => ({
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
+const mockBack = jest.fn<void, []>();
 
 /**
  * Under way: six days from Thu 1 Oct, day 1 done, day 2 today with Read and
@@ -68,9 +69,11 @@ async function openOverview(plan: typeof ACTIVE = ACTIVE, plans = [ACTIVE, READY
 beforeEach(() => {
   mockPush.mockClear();
   mockReplace.mockClear();
+  mockBack.mockClear();
   jest.mocked(useRouter).mockReturnValue({
     push: mockPush,
     replace: mockReplace,
+    back: mockBack,
   } as unknown as ReturnType<typeof useRouter>);
 });
 
@@ -90,7 +93,7 @@ describe("PlanOverviewScreen", () => {
     expect(screen.getByTestId("plan-overview-back-button-loading")).toBeOnTheScreen();
   });
 
-  it("says so, with the way back to Plans, for a plan it can't load", async () => {
+  it("says so, with the way back, for a plan it can't load", async () => {
     servePlans([ACTIVE]);
     jest
       .mocked(useLocalSearchParams)
@@ -100,8 +103,8 @@ describe("PlanOverviewScreen", () => {
     expect(
       await screen.findByRole("header", { name: "Couldn't load this plan" }, { timeout: 10000 }),
     ).toBeVisible();
-    fireEvent.press(screen.getByTestId("plan-overview-load-error-secondary"));
-    expect(mockReplace).toHaveBeenCalledWith(PLANS_HREF);
+    fireEvent.press(screen.getByRole("button", { name: "Back" }));
+    expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
   it("puts the plan in context: where it stands, its title, and its church", async () => {
@@ -451,12 +454,12 @@ describe("PlanOverviewScreen", () => {
     ).toBeVisible();
   });
 
-  it("goes back to Plans when the back action is pressed", async () => {
+  it("goes back to the page it was opened from when the back action is pressed", async () => {
     await openOverview();
 
     fireEvent.press(screen.getByTestId("plan-overview-back-button"));
 
-    expect(mockReplace).toHaveBeenCalledWith(PLANS_HREF);
+    expect(mockBack).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -1,0 +1,68 @@
+import { Pressable, StyleSheet, Text } from "react-native";
+import type { LucideIcon } from "lucide-react-native";
+
+import { useTheme } from "@/theme";
+
+const HEIGHT = 44;
+const ICON_SIZE = 16;
+
+export type CategoryChipProps = {
+  label: string;
+  /** An icon before the label. */
+  icon?: LucideIcon;
+  selected: boolean;
+  onPress: () => void;
+  testID?: string;
+};
+
+/**
+ * One of Fun's categories in its rail, as a 44 pt pill with
+ * an icon and a label. Unselected, it's white, outlined in a hairline, and
+ * its words are quieter; selected, it fills with the segmented control's
+ * active grey and its words firm up to full ink. Quiet either way, so a row
+ * of them doesn't shout.
+ */
+export function CategoryChip({ label, icon: Icon, selected, onPress, testID }: CategoryChipProps) {
+  const theme = useTheme();
+  const ink = selected ? theme.colors.text : theme.colors.textInactive;
+
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      style={[
+        styles.chip,
+        {
+          backgroundColor: selected
+            ? theme.colors.segmentActiveBackground
+            : theme.colors.background,
+          borderColor: selected ? "transparent" : theme.colors.hairline,
+          borderRadius: theme.radii.pill,
+          paddingHorizontal: theme.spacing.md,
+          gap: theme.spacing.sm,
+        },
+      ]}
+    >
+      {Icon && <Icon size={ICON_SIZE} color={ink} strokeWidth={theme.icon.strokeWidth} />}
+      <Text
+        style={[
+          selected ? theme.typography.segmentLabelActive : theme.typography.segmentLabel,
+          { color: ink },
+        ]}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  chip: {
+    height: HEIGHT,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+  },
+});

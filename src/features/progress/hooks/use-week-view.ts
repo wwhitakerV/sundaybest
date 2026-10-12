@@ -7,6 +7,8 @@ import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { useReflectionTotal } from "@/core/storage/reflection-answer-queries";
 import { useToday } from "@/core/store";
 import { studyHref } from "@/entities/plan";
+import { tabPageHref, toAppTab } from "@/entities/tabs";
+import { useFocusedTab } from "@/hooks/use-focused-tab";
 import { addDays } from "@/utils/dates/addDays";
 import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import {
@@ -46,6 +48,7 @@ type Focus = { weekStart: string; planId: string };
  */
 export function useWeekView() {
   const router = useRouter();
+  const focusedTab = useFocusedTab();
   const today = useToday();
   const currentWeek = getWeekStartSunday(today);
   const [weekStart, setWeekStart] = useState(currentWeek);
@@ -186,5 +189,8 @@ export function useWeekView() {
         }
       : null,
     open,
+    /** Bible translation, in Progress's own stack: Back returns here. */
+    changeTranslation: () =>
+      router.push(tabPageHref(toAppTab(focusedTab(), "progress"), "bible-translation")),
   } as const;
 }

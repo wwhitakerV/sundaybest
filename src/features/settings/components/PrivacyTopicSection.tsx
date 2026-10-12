@@ -1,14 +1,14 @@
 import { Bell, BookOpen, Type, type LucideIcon } from "lucide-react-native";
 
-import type { AboutSectionContent, AboutSettingHref } from "../logic/about-section";
+import type { AboutSectionContent, AboutSettingPage } from "../logic/about-section";
 import { AboutRows } from "./AboutRows";
 import { AboutSection } from "./AboutSection";
 
 /** A setting's icon, as Settings itself shows it. */
-const SETTING_ICONS: Record<AboutSettingHref, LucideIcon> = {
-  "/(tabs)/settings/daily-reminder": Bell,
-  "/(tabs)/settings/bible-translation": BookOpen,
-  "/(tabs)/settings/text-size": Type,
+const SETTING_ICONS: Record<AboutSettingPage, LucideIcon> = {
+  "daily-reminder": Bell,
+  "bible-translation": BookOpen,
+  "text-size": Type,
 };
 
 export type PrivacyTopicSectionProps = {
@@ -17,7 +17,7 @@ export type PrivacyTopicSectionProps = {
   index: number;
   /** In a document whose sections are numbered, its number, before its heading. */
   number?: number;
-  onOpen: (href: AboutSettingHref) => void;
+  onOpen: (page: AboutSettingPage) => void;
 };
 
 /**
@@ -44,10 +44,10 @@ export function PrivacyTopicSection({ section, index, number, onOpen }: PrivacyT
         <AboutRows
           testID={`privacy-topic-section-${index}-actions`}
           rows={section.actions.map((action) => ({
-            key: action.href,
+            key: action.page,
             title: action.label,
-            icon: SETTING_ICONS[action.href],
-            onPress: () => onOpen(action.href),
+            icon: SETTING_ICONS[action.page],
+            onPress: () => onOpen(action.page),
           }))}
         />
       )}

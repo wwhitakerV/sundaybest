@@ -75,6 +75,6 @@ const styles = StyleSheet.create({
   // Out to the screen's edges, the cards inset within.
   deck: { marginHorizontal: -PAGE_INSET, flexGrow: 0 },
   cards: { paddingHorizontal: PAGE_INSET, gap: CARD_GAP },
-  card: { padding: space[24], gap: space[16] },
+  card: { gap: space[16] },
   position: { flexDirection: "row", alignItems: "baseline", gap: space[6] },
 });

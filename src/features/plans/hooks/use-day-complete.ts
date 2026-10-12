@@ -1,10 +1,12 @@
-import { planCompleteHref, planOverviewHref } from "@/entities/plan";
+import { STUDY_TRANSLATION_HREF, planCompleteHref } from "@/entities/plan";
+import { tabPlanHref, toAppTab } from "@/entities/tabs";
 import { useRemindersQuery, useWeekQuery } from "@/core/api/reader-queries";
 import { useQuizSessionQuery } from "@/core/api/quiz-queries";
 import { usesTwentyFourHourClock } from "@/core/localization/clock";
 import { useReflectionAnswers } from "@/core/storage/reflection-answer-queries";
 import { useToday } from "@/core/store";
 import { describeWeekTile } from "@/features/progress";
+import { useFocusedTab } from "@/hooks/use-focused-tab";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { useRouter } from "expo-router";
@@ -21,6 +23,7 @@ import { useStudyRoute } from "./use-study-route";
 export function useDayComplete() {
   const router = useRouter();
   const session = useModalSession();
+  const focusedTab = useFocusedTab();
   const today = useToday();
   const route = useStudyRoute();
   const { planId, dayNumber, plan, day } = route;
@@ -89,12 +92,15 @@ export function useDayComplete() {
           ),
         }
       : null,
+    /** Bible translation, inside the Study: Back returns here. */
+    changeTranslation: () => router.push(STUDY_TRANSLATION_HREF),
     done: () => {
       if (plan.status === "completed") {
         router.replace(planCompleteHref(planId));
         return;
       }
-      session.exitTo(planOverviewHref(planId));
+      // Back to the plan in the tab the study was opened from, as iOS returns from a modal.
+      session.exitTo(tabPlanHref(toAppTab(focusedTab(), "plans"), planId));
     },
   } as const;
 }

@@ -1,20 +1,19 @@
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
 
-import {
-  NEW_PLAN_HREF,
-  describePlanHero,
-  formatDay,
-  planOverviewHref,
-  studyHref,
-} from "@/entities/plan";
+import { NEW_PLAN_HREF, describePlanHero, formatDay, studyHref } from "@/entities/plan";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { usePlansQuery } from "@/core/api/plan-queries";
 import { useToday } from "@/core/store";
 import { formatDotDate } from "@/utils/dates/formatDotDate";
-import { getApiActivePlan, getApiSamplePlan, getApiUserPlans } from "@/features/plans";
-import { describeApiPlan } from "@/features/plans";
+import {
+  getApiActivePlan,
+  getApiSamplePlan,
+  getApiUserPlans,
+  describeApiPlan,
+} from "@/features/plans";
 import { homePlanOverviewHref } from "../logic/routes";
+import { tabPlanHref } from "@/entities/tabs";
 import { usePrefetch } from "@/core/api/prefetch";
 import { prefetchImages } from "@/core/images/prefetch-images";
 
@@ -89,7 +88,8 @@ export function useHomeView() {
     error: plansQuery.data === undefined ? plansQuery.error : null,
     retry: () => void plansQuery.refetch(),
     openSample: () => {
-      if (sample) router.push(planOverviewHref(sample.id));
+      // In Home, where it was opened: Back returns to Home.
+      if (sample) router.push(tabPlanHref("home", sample.id));
     },
     addSermon: () => {
       tapFeedback();

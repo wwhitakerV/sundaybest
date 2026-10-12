@@ -46,17 +46,13 @@ describe("PRIVACY_TOPICS", () => {
   });
 
   it("only points to real settings", () => {
-    const hrefs = PRIVACY_TOPICS.flatMap(({ sections }) =>
-      sections.flatMap(({ actions }) => actions?.map(({ href }) => href) ?? []),
+    const pages = PRIVACY_TOPICS.flatMap(({ sections }) =>
+      sections.flatMap(({ actions }) => actions?.map(({ page }) => page) ?? []),
     );
 
-    expect(hrefs.length).toBeGreaterThan(0);
-    for (const href of hrefs) {
-      expect([
-        "/(tabs)/settings/daily-reminder",
-        "/(tabs)/settings/bible-translation",
-        "/(tabs)/settings/text-size",
-      ]).toContain(href);
+    expect(pages.length).toBeGreaterThan(0);
+    for (const page of pages) {
+      expect(["daily-reminder", "bible-translation", "text-size"]).toContain(page);
     }
   });
 

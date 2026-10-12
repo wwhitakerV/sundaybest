@@ -58,7 +58,10 @@ export function DayCountPicker({ value, onChange, testID }: DayCountPickerProps)
             onPress={() => onChange(days)}
             style={[
               styles.chip,
-              { backgroundColor: theme.colors.background, borderColor: theme.colors.divider },
+              {
+                backgroundColor: theme.colors.background,
+                borderColor: theme.colors.containerBorder,
+              },
             ]}
           >
             <SFProTitle variant="headlineRegular">{days}</SFProTitle>

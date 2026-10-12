@@ -24,7 +24,7 @@ function DayChip({ day, selected }: { day: number; selected: boolean }) {
         styles.chip,
         selected
           ? { borderColor: theme.colors.text, borderWidth: SELECTED_BORDER }
-          : { borderColor: theme.colors.divider, borderWidth: 1 },
+          : { borderColor: theme.colors.containerBorder, borderWidth: 1 },
         popStyle,
       ]}
     >

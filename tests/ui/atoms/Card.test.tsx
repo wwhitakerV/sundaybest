@@ -23,27 +23,41 @@ describe("Card", () => {
     expect(screen.getByTestId("card")).toBeVisible();
   });
 
-  it("is a surface with a hairline edge and 28 corners by default", () => {
+  it("is a content card by default: the soft fill, a card's edge, 28 corners and 20 inside", () => {
     render(<Card testID="card" />);
 
     expect(screen.getByTestId("card")).toHaveStyle({
       borderWidth: 1,
       borderRadius: 28,
+      padding: 20,
       backgroundColor: colors.surface,
       borderColor: colors.containerBorder,
     });
+  });
+
+  it("is a list card of rows: 24 corners, nothing inside, its rows bringing their own", () => {
+    render(<Card testID="card" kind="list" />);
+
+    expect(screen.getByTestId("card")).toHaveStyle({ borderRadius: 24, padding: 0 });
+  });
+
+  it("is a page's feature card: 32 corners and 24 inside", () => {
+    render(<Card testID="card" kind="feature" />);
+
+    expect(screen.getByTestId("card")).toHaveStyle({ borderRadius: 32, padding: 24 });
+  });
+
+  it("leaves the room inside to what's in it when it's not inset (a picture to its edges)", () => {
+    render(<Card testID="card" kind="feature" inset={false} />);
+
+    expect(screen.getByTestId("card")).toHaveStyle({ borderRadius: 32 });
+    expect(screen.getByTestId("card")).not.toHaveStyle({ padding: 24 });
   });
 
   it("keeps the container border when filled with the page colour", () => {
     render(<Card testID="card" fill="page" />);
 
     expect(screen.getByTestId("card")).toHaveStyle({ borderColor: colors.containerBorder });
-  });
-
-  it("takes the corner radius it is given", () => {
-    render(<Card testID="card" radius={36} />);
-
-    expect(screen.getByTestId("card")).toHaveStyle({ borderRadius: 36 });
   });
 
   it("fills with the page colour when asked", () => {
@@ -53,11 +67,11 @@ describe("Card", () => {
   });
 
   it("applies the layout it is given alongside its own look", () => {
-    render(<Card testID="card" style={{ padding: 22, gap: 16 }} />);
+    render(<Card testID="card" style={{ gap: 16, flexDirection: "row" }} />);
 
     expect(screen.getByTestId("card")).toHaveStyle({
-      padding: 22,
       gap: 16,
+      flexDirection: "row",
       borderWidth: 1,
     });
   });

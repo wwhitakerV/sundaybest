@@ -8,7 +8,9 @@ import {
   useRetryGenerationMutation,
 } from "@/core/api/generation-queries";
 import { useCreatePlanMutation } from "@/core/api/plan-queries";
-import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
+import { NEW_PLAN_HREF } from "@/entities/plan";
+import { tabPlanHref, toAppTab } from "@/entities/tabs";
+import { useFocusedTab } from "@/hooks/use-focused-tab";
 import type { PlanGenerationStatus } from "@/types/domain";
 import { toBuild } from "../data/current-builds";
 import { getGenerationBar } from "../logic/generation-bar";
@@ -29,6 +31,7 @@ type BuildSubject = {
  */
 export function useGenerationBar() {
   const router = useRouter();
+  const focusedTab = useFocusedTab();
   const current = useCurrentGenerationsQuery();
   const { starts, landed, forget } = usePlanStarts();
   const { mutate: create } = useCreatePlanMutation();
@@ -69,7 +72,8 @@ export function useGenerationBar() {
 
   function open() {
     if (view?.kind !== "ready") return;
-    router.push(planOverviewHref(view.planId));
+    // In the tab the bar is showing over: Back returns there, as iOS does.
+    router.push(tabPlanHref(toAppTab(focusedTab(), "plans"), view.planId));
     dismissBuild(view.id);
   }
 

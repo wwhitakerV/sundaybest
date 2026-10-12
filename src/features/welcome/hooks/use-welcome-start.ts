@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCompleteOnboardingMutation } from "@/core/api/reader-queries";
 import { usePlansQuery } from "@/core/api/plan-queries";
 import { tapFeedback } from "@/core/haptics/haptics";
-import { planOverviewHref } from "@/entities/plan";
+import { tabPlanHref } from "@/entities/tabs";
 import { getApiSamplePlan, getApiUserPlans } from "@/features/plans";
 import { getStartRoutes } from "../logic/start";
 
@@ -38,7 +38,7 @@ export function useWelcomeStart() {
       await onboarding.mutateAsync();
       return true;
     } catch {
-      Alert.alert("Couldn’t get started", "Make sure SundayBest can reach the API and try again.");
+      Alert.alert("Couldn't get started", "Make sure SundayBest can reach the API and try again.");
       return false;
     }
   }
@@ -71,7 +71,8 @@ export function useWelcomeStart() {
           startingNow.current = false;
           return;
         }
-        router.push(planOverviewHref(sample.id));
+        // On Home, with Home underneath: the reader lands in the app, and Back leads home.
+        router.push(tabPlanHref("home", sample.id), { withAnchor: true });
       })();
     },
   };

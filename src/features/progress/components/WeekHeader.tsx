@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { Link } from "expo-router";
 import { ChevronDown } from "lucide-react-native";
 
-import { controlHeight, radius, space, useTheme } from "@/theme";
+import { controlHeight, iconSize, pillHitSlop, radius, space, useTheme } from "@/theme";
 import { CompactButton } from "@/ui/atoms/CompactButton";
 import type { PopoverAnchor } from "@/ui/organisms/Popover";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
@@ -15,10 +15,6 @@ import { WeekPicker } from "./WeekPicker";
 
 /** Between the dates and the popover hanging under them. */
 const PICKER_GAP = space[8];
-/** The dates' pill: Daily reminder's time pill's height; its slop makes up the full tap target. */
-const PILL_HEIGHT = 36;
-const PILL_SLOP = (controlHeight.hitTarget - PILL_HEIGHT) / 2;
-const CHEVRON = 14;
 
 /** What the dates open: a few weeks in a popover, or — past four — the full-screen weeks. */
 export type WeekHeaderPicker =
@@ -77,7 +73,11 @@ export function WeekHeader({ source, title, range, picker, onPickWeek, preview }
       <MonoLabel variant="labelTrackedStrong" style={styles.caps}>
         {range}
       </MonoLabel>
-      <ChevronDown size={CHEVRON} color={theme.colors.text} strokeWidth={theme.icon.strokeWidth} />
+      <ChevronDown
+        size={iconSize.pillChevron}
+        color={theme.colors.text}
+        strokeWidth={theme.icon.strokeWidth}
+      />
     </View>
   );
 
@@ -109,7 +109,7 @@ export function WeekHeader({ source, title, range, picker, onPickWeek, preview }
                 testID="progress-week-range"
                 accessibilityRole="button"
                 accessibilityLabel={`${range}. Find a week`}
-                hitSlop={PILL_SLOP}
+                hitSlop={pillHitSlop}
               >
                 {pill(false)}
               </Pressable>
@@ -121,7 +121,7 @@ export function WeekHeader({ source, title, range, picker, onPickWeek, preview }
             testID="progress-week-range"
             accessibilityRole="button"
             accessibilityLabel={`${range}. Choose a week`}
-            hitSlop={PILL_SLOP}
+            hitSlop={pillHitSlop}
             onPress={show}
           >
             {({ pressed }) => pill(pressed)}
@@ -149,6 +149,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center" },
   source: { flex: 1 },
   start: { alignSelf: "flex-start" },
-  pill: { height: PILL_HEIGHT },
+  pill: { height: controlHeight.pill },
   caps: { textTransform: "uppercase" },
 });

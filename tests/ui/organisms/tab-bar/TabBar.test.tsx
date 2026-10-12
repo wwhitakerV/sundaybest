@@ -193,6 +193,33 @@ describe("TabBar", () => {
     });
   });
 
+  describe("with something over the tabs", () => {
+    /** The tabs out of focus, under `top` in the stack that holds them. */
+    function renderUnder(top: string) {
+      jest.mocked(useIsFocused).mockReturnValue(false);
+      const props = makeProps(0);
+      const navigation = {
+        ...props.navigation,
+        getParent: () => ({
+          getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: top }] }),
+        }),
+      } as unknown as TabBarProps["navigation"];
+      render(<TabBar {...props} navigation={navigation} staysUnder={["generation"]} />);
+    }
+
+    it("stays where it is under a half sheet, so it's there the moment the sheet slides away", () => {
+      renderUnder("generation");
+
+      expect(screen.getByTestId("tab-bar")).toHaveStyle({ pointerEvents: "box-none" });
+    });
+
+    it("steps away for a full-screen page or modal", () => {
+      renderUnder("study");
+
+      expect(screen.getByTestId("tab-bar")).toHaveStyle({ pointerEvents: "none" });
+    });
+  });
+
   it("lets touches through everywhere but its own controls", () => {
     render(<TabBar {...makeProps(0)} />);
 
@@ -260,6 +287,10 @@ describe("TabBar", () => {
       renderMinimised();
 
       expect(screen.getByTestId("tab-bar-fab")).toBeOnTheScreen();
+    });
+
+    it("fills the active tab's highlight a step darker than the app's soft fill, only a hint of its blue", () => {
+      expect(lightTheme.colors.tabActiveBackground).toBe("#ECEDF0");
     });
 
     it("highlights the gathered tab in a circle, as tall as the open bar's highlight", () => {

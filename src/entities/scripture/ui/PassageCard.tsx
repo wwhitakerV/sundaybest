@@ -1,37 +1,41 @@
 import type { ReactNode } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
-import { radius, space } from "@/theme";
-import { Card } from "@/ui/atoms/Card";
+import { space, useTheme } from "@/theme";
 import { SerifBody } from "@/ui/typography/SerifBody";
 
-/** Its corners. */
-export const PASSAGE_CARD_RADIUS = radius[24];
+/** The quote line down a passage's left: as heavy as the lines that hang a card's pills. */
+const QUOTE_LINE = 2;
 
 export type PassageCardProps = {
   /** The verses, as runs of text (their numbers in `MonoLabel variant="emphasis"`). */
   children: ReactNode;
-  /** No card: the verses alone, set on whatever they're on (Text size's preview, on its grey). */
+  /** No line: the verses alone, set on whatever they're on (Text size's preview, on its grey). */
   bare?: boolean;
+  /** The verses'; the quote around them is `${testID}-quote`. */
   testID?: string;
 };
 
-/** A passage of scripture on its card, in the serif reading face. */
+/**
+ * A passage of scripture, in the serif reading face, set as a quote: a line
+ * down its left in the strong grey, its words in from it, straight on the
+ * page. Scripture is the one thing in the Study that's quoted, not written by
+ * SundayBest — the line says so, and gives the indent its reason.
+ */
 export function PassageCard({ children, bare = false, testID }: PassageCardProps) {
+  const theme = useTheme();
+
   if (bare) return <SerifBody testID={testID}>{children}</SerifBody>;
   return (
-    <Card
-      edge={false}
-      testID={testID && `${testID}-card`}
-      radius={PASSAGE_CARD_RADIUS}
-      fill="page"
-      style={styles.card}
+    <View
+      testID={testID && `${testID}-quote`}
+      style={[styles.quote, { borderLeftColor: theme.colors.borderStrong, paddingLeft: space[16] }]}
     >
       <SerifBody testID={testID}>{children}</SerifBody>
-    </Card>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { paddingHorizontal: space[22], paddingVertical: space[18] },
+  quote: { borderLeftWidth: QUOTE_LINE },
 });

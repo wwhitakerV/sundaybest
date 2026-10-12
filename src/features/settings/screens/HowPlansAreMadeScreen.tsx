@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import {
   BookOpenCheck,
   CalendarDays,
@@ -15,6 +14,7 @@ import { AboutLead } from "../components/AboutLead";
 import { AboutRows } from "../components/AboutRows";
 import { AboutSection } from "../components/AboutSection";
 import { SettingsSubpage } from "../components/SettingsSubpage";
+import { useOpenHere } from "../hooks/use-open-here";
 import { HOW_PLANS_ARE_MADE } from "../logic/how-plans-are-made";
 
 const STEP_ICONS: Record<(typeof HOW_PLANS_ARE_MADE.steps)[number]["icon"], LucideIcon> = {
@@ -32,7 +32,7 @@ const STEP_ICONS: Record<(typeof HOW_PLANS_ARE_MADE.steps)[number]["icon"], Luci
  * handles your data.
  */
 export function HowPlansAreMadeScreen() {
-  const router = useRouter();
+  const openHere = useOpenHere();
   const page = HOW_PLANS_ARE_MADE;
 
   return (
@@ -69,7 +69,7 @@ export function HowPlansAreMadeScreen() {
             key: "privacy",
             title: page.privacyLink,
             icon: ShieldCheck,
-            onPress: () => router.push("/(tabs)/settings/privacy-policy"),
+            onPress: () => openHere.page("privacy-policy"),
           },
         ]}
       />

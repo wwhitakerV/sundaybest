@@ -1,3 +1,4 @@
+import { lightTheme } from "@/theme/tokens";
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { READING_PAPERS } from "@/theme";
@@ -18,6 +19,16 @@ describe("PaperPicker", () => {
 
     for (const label of ["White", "Ivory", "Cream", "Sepia", "Dusk", "Night"]) {
       expect(screen.getByRole("radio", { name: label })).toBeVisible();
+    }
+  });
+
+  it("edges each swatch as every card is", () => {
+    render(<PaperPicker testID="paper" selected="white" onSelect={() => undefined} />);
+
+    for (const paper of READING_PAPERS) {
+      expect(screen.getByTestId(`paper-${paper.id}`)).toHaveStyle({
+        borderColor: lightTheme.colors.containerBorder,
+      });
     }
   });
 

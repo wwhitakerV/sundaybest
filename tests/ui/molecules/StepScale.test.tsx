@@ -141,6 +141,14 @@ describe("StepScale", () => {
       });
     });
 
+    it("is drawn in black, as everything picked is", () => {
+      render(scale({ value: 2 }));
+
+      expect(screen.getByTestId("a-scale-dot")).toHaveStyle({
+        backgroundColor: lightTheme.colors.text,
+      });
+    });
+
     it("sits at the far end for the largest value", () => {
       render(scale({ value: 8 }));
 
