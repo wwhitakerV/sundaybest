@@ -10,8 +10,7 @@ import { getFocusedTab } from "@/utils/navigation/getFocusedTab";
 export function useFocusedTab(tabsRoute = "(tabs)"): () => string | null {
   // Undefined outside the router (a screen drawn on its own): then there's no tab to read.
   const navigation = useNavigationContainerRef() as
-    | ReturnType<typeof useNavigationContainerRef>
-    | undefined;
+    ReturnType<typeof useNavigationContainerRef> | undefined;
   return () =>
     getFocusedTab(navigation?.isReady() ? navigation.getRootState() : undefined, tabsRoute);
 }

@@ -40,7 +40,9 @@ jest.mock("@/core/haptics/haptics", () => ({
 jest.mock("expo-clipboard", () => ({ getStringAsync: jest.fn() }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitModal = jest.fn<void, []>();
+const mockExitModal = jest.fn<void, [unknown]>();
+/** The app's own stack under New Plan: by default, the tabs it was opened over. */
+const mockUnder = ["(tabs)"];
 const LINK = aSermon().canonicalUrl;
 
 beforeEach(() => {
@@ -54,7 +56,13 @@ beforeEach(() => {
     ),
   );
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitModal }),
+    getParent: () => ({
+      getState: () => ({
+        index: mockUnder.length,
+        routes: [...mockUnder, "(plan-creation)"].map((name) => ({ name })),
+      }),
+      dispatch: mockExitModal,
+    }),
   });
   jest
     .mocked(useRouter)

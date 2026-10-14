@@ -18,7 +18,12 @@ export type Reflection = {
   /** The day it was written, on this phone's calendar. */
   writtenOn: string;
   lines: AddedLine[];
+  /** Everything a search looks through — its question, what was written and added, its passage and plan — lower-cased once. */
+  search: string;
 };
+
+/** From this many reflections, the list of them all offers search: with one, there's nothing to find. */
+export const REFLECTIONS_SEARCH_AT = 2;
 
 /** As many marks as the timeline shows one by one; past this, each mark is a week. */
 export const MOST_MARKS = 40;
@@ -72,6 +77,16 @@ export function buildReflections(
               answer: entry.answer,
               writtenOn: toLocalDate(entry.answeredAt),
               lines: [...(lines[prompt.id] ?? [])],
+              // Each part on a line of its own, so a search never matches across two.
+              search: [
+                prompt.question,
+                entry.answer,
+                prompt.reference,
+                prompt.planTitle,
+                ...(lines[prompt.id] ?? []).map((line) => line.text),
+              ]
+                .join("\n")
+                .toLowerCase(),
             },
           ]
         : [];
@@ -201,15 +216,7 @@ export function describeListDate(writtenOn: string, today: string): string {
 export function searchReflections(reflections: readonly Reflection[], words: string): Reflection[] {
   const needle = words.trim().toLowerCase();
   if (needle.length === 0) return [...reflections];
-  return reflections.filter((reflection) =>
-    [
-      reflection.question,
-      reflection.answer,
-      reflection.reference,
-      reflection.planTitle,
-      ...reflection.lines.map((line) => line.text),
-    ].some((text) => text.toLowerCase().includes(needle)),
-  );
+  return reflections.filter((reflection) => reflection.search.includes(needle));
 }
 
 /** Reflections under their plans: the plan written in most lately first, its newest first. */

@@ -10,12 +10,9 @@ import { servePlans } from "@tests/mocks/plans-api";
 import { server } from "@tests/mocks/server";
 import * as haptics from "@/core/haptics/haptics";
 import { planCompleteHref } from "@/entities/plan";
-import { tabPlanHref } from "@/entities/tabs";
 import { useDayComplete } from "@/features/plans/hooks/use-day-complete";
 
 // The tab the reader is in, under the study they're finishing.
-let mockTab: string | null = "home";
-jest.mock("@/hooks/use-focused-tab", () => ({ useFocusedTab: () => () => mockTab }));
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),
@@ -34,7 +31,7 @@ jest.mock("expo-router", () => ({
 
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitSession = jest.fn<void, []>();
+const mockExitSession = jest.fn<void, [unknown]>();
 
 /** Three days, day 1 just finished. */
 const STILL_PRAYING = aPlan({ seed: 2, title: "Still Praying", lengthDays: 3, completedDays: 1 });
@@ -60,7 +57,11 @@ async function renderDayComplete(plan = STILL_PRAYING, day = "1") {
 beforeEach(() => {
   jest.useFakeTimers({ now: PROGRESS_NOW, advanceTimers: true });
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitSession }),
+    // The study, over the tab it was opened from.
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
   });
   jest.mocked(useRouter).mockReturnValue({
     navigate: mockNavigate,
@@ -161,27 +162,15 @@ describe("useDayComplete", () => {
     }
   });
 
-  it("leaves the session for the plan's overview, in the tab the study was opened from, on done", async () => {
-    mockTab = "home";
+  it("slides the study down on done, back to where it was started", async () => {
     const { result } = await renderDayComplete();
 
     act(() => {
       if (result.current.found) result.current.done();
     });
 
-    expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(tabPlanHref("home", STILL_PRAYING.id));
-  });
-
-  it("lands on the plan in Plans on done when there's no tab under the study", async () => {
-    mockTab = null;
-    const { result } = await renderDayComplete();
-
-    act(() => {
-      if (result.current.found) result.current.done();
-    });
-
-    expect(mockNavigate).toHaveBeenCalledWith(tabPlanHref("plans", STILL_PRAYING.id));
+    expect(mockExitSession).toHaveBeenCalledWith({ type: "POP", payload: { count: 1 } });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("goes on to Plan Complete on done, when that day finished the plan", async () => {

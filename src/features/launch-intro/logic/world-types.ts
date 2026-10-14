@@ -14,16 +14,16 @@ export type Drip = {
 };
 
 /** A letter falling into the pool: it reaches the water at `hit` and is all water by `gone`. */
-type Fall = { start: number; hit: number; gone: number; rot: number; cx: number; x: number };
+export type Fall = { start: number; hit: number; gone: number; rot: number; cx: number; x: number };
 
 /** Something landing in the pool, and the ripples it sends out. */
-type Impact = { t: number; x: number; amp: number; w: number };
+export type Impact = { t: number; x: number; amp: number; w: number };
 
 /** The water heaving up where a letter pours in. */
-type Heave = { t: number; x: number; A: number; w: number };
+export type Heave = { t: number; x: number; A: number; w: number };
 
 /** A drop thrown up by a letter landing. */
-type Spray = { t0: number; y0: number; x: number; vx: number; vy: number; r: number };
+export type Spray = { t0: number; y0: number; x: number; vx: number; vy: number; r: number };
 
 type EdgeDrop = { x: number; at: number; up: number; vx: number; r: number };
 type Strand = {

@@ -36,6 +36,8 @@ export const GRAVITY = {
   letter: 0.0018,
   spray: 0.0024,
   kick: 0.004,
+  /** A drop the water intro's drained water pops up as it leaves the bottom. */
+  pop: 0.0026,
 } as const;
 
 /** How much a letter adds to the pool's height as it pours in, in points. */

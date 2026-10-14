@@ -28,12 +28,14 @@ export type PlansHeaderProps = {
   filters: readonly { label: PlanFilter; count: number }[];
   filter: PlanFilter | null;
   onPickFilter: (label: PlanFilter) => void;
+  /** Enough plans to need a search: without it, there's no search button. */
+  searchable: boolean;
   onSearch: () => void;
 };
 
 /**
  * Plans' header: the title; the filters centred in the room beside it; the
- * search at the right. Once the list scrolls, the title is bumped left off
+ * search at the right, once there are enough plans to need it. Once the list scrolls, the title is bumped left off
  * the screen and the filters spring left into its place; back at the top,
  * both return.
  */
@@ -42,6 +44,7 @@ export function PlansHeader({
   filters,
   filter,
   onPickFilter,
+  searchable,
   onSearch,
 }: PlansHeaderProps) {
   const [room, setRoom] = useState(0);
@@ -97,12 +100,14 @@ export function PlansHeader({
           />
         </Animated.View>
       </View>
-      <HeaderIconButton
-        testID="plans-search-button"
-        icon={Search}
-        accessibilityLabel="Search your plans"
-        onPress={onSearch}
-      />
+      {searchable && (
+        <HeaderIconButton
+          testID="plans-search-button"
+          icon={Search}
+          accessibilityLabel="Search your plans"
+          onPress={onSearch}
+        />
+      )}
     </View>
   );
 }

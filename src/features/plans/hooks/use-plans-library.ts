@@ -14,6 +14,8 @@ import { describeApiLibraryPlan } from "../logic/api-plan-wording";
 import { describeEmptyLibrary, getPlanFilterOptions, type PlanFilter } from "../logic/plan-filters";
 import { usePrefetch } from "@/core/api/prefetch";
 import { prefetchImages } from "@/core/images/prefetch-images";
+import { useEarnedSearch } from "@/core/storage/search-shown-queries";
+import { PLANS_SEARCH_AT } from "../logic/plan-search";
 
 /** How many plans, from the top, are loaded before they're tapped. */
 const PREFETCHED_PLANS = 6;
@@ -27,7 +29,8 @@ type CardAction = { label: "Continue" | "Start"; onPress: () => void };
 
 /**
  * Plans tab backed directly by the API/TanStack cache: every plan, or those
- * in progress or done, each filter with its count; the search opens from it.
+ * in progress or done, each filter with its count; from ten plans, the
+ * search opens from it.
  */
 export function usePlansLibrary() {
   const router = useRouter();
@@ -37,12 +40,10 @@ export function usePlansLibrary() {
   const allPlans = plansQuery.data?.plans ?? [];
   const inProgress = getApiInProgressPlans(allPlans);
   const completed = getApiCompletedPlans(allPlans);
+  const userPlans = getApiUserPlans(allPlans);
+  const searchable = useEarnedSearch("plans", userPlans.length, PLANS_SEARCH_AT);
   const filtered =
-    filter === "In progress"
-      ? inProgress
-      : filter === "Done"
-        ? completed
-        : getApiUserPlans(allPlans);
+    filter === "In progress" ? inProgress : filter === "Done" ? completed : userPlans;
 
   const cards: LibraryCard[] = filtered.map((plan) => ({
     plan,
@@ -110,6 +111,8 @@ export function usePlansLibrary() {
       selectionFeedback();
       setFilter((current) => (current === label ? null : label));
     },
+    /** Enough plans to need a search: from ten, and from then on. */
+    searchable,
     openSearch: () => router.push("/plan-search"),
     cards: displayCards,
     empty: describeEmptyLibrary(filter),

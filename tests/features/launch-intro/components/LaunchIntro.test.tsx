@@ -67,12 +67,20 @@ describe("LaunchStage", () => {
     expect(await screen.findByTestId("launch-intro-canvas")).toBeOnTheScreen();
   });
 
-  it("keeps the app covered in white under the intro until the screen is full red", async () => {
+  it("plays the pool intro's movie, as launch-colors names it", async () => {
     reduceMotion(false);
 
     launch();
 
-    expect(await screen.findByTestId("launch-intro-white")).toHaveStyle({
+    expect(await screen.findByTestId("launch-intro-pool-movie")).toBeOnTheScreen();
+  });
+
+  it("keeps the app covered in the page's colour under the intro until the screen is full of water", async () => {
+    reduceMotion(false);
+
+    launch();
+
+    expect(await screen.findByTestId("launch-intro-page-colour")).toHaveStyle({
       backgroundColor: lightTheme.colors.launchPage,
       opacity: 1,
     });

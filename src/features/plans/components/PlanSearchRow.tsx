@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View } from "react-native";
-import Animated, { FadeIn, FadeOut, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 import { motion, radius, space } from "@/theme";
 import { VideoThumbnail } from "@/ui/atoms/VideoThumbnail";
@@ -11,7 +11,6 @@ import type { MatchPart } from "../logic/plan-search";
 /** The artwork, small: enough to know the sermon by, leaving the title room. */
 const THUMBNAIL_WIDTH = 96;
 
-const MOVE = LinearTransition.duration(motion.results.moveMs);
 const ENTER = FadeIn.duration(motion.results.enterMs);
 const EXIT = FadeOut.duration(motion.exitMs);
 
@@ -22,6 +21,8 @@ export type PlanSearchRowProps = {
   /** Why it matched and where it stands, the words marked: "VOUS Church · Day 2 of 7". */
   detail: readonly MatchPart[];
   thumbnailUrl: string | null;
+  /** It fades in as it arrives: a row found later, within the first screenful (`PlanSearchResults`). */
+  fades: boolean;
   onPress: () => void;
   testID: string;
 };
@@ -29,19 +30,20 @@ export type PlanSearchRowProps = {
 /**
  * One plan found: its artwork, small; its title — regular, up to two lines,
  * the words searched in black and medium, the rest grey; and under it why it
- * matched and where it stands. The whole row opens it. It keeps its
- * place in the tree as the results change, moving to where it now ranks.
+ * matched and where it stands. The whole row opens it. It fades out as it
+ * goes; its list glides it to where it now ranks.
  */
 export function PlanSearchRow({
   title,
   parts,
   detail,
   thumbnailUrl,
+  fades,
   onPress,
   testID,
 }: PlanSearchRowProps) {
   return (
-    <Animated.View layout={MOVE} entering={ENTER} exiting={EXIT}>
+    <Animated.View {...(fades && { entering: ENTER })} exiting={EXIT}>
       <Pressable
         testID={testID}
         accessibilityRole="button"

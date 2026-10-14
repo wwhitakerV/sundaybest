@@ -1,13 +1,14 @@
 import { StyleSheet } from "react-native";
-import { X } from "lucide-react-native";
 
 import { space } from "@/theme";
-import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { Skeleton } from "@/ui/molecules/Skeleton";
 import { SkeletonLines } from "@/ui/molecules/SkeletonLines";
-import { TitleHeader } from "@/ui/molecules/TitleHeader";
+import { KEYBOARD_BAR_ROOM } from "@/ui/organisms/KeyboardBar";
 import { ListScreen } from "@/ui/organisms/ListScreen";
+import { ListSearchBar } from "@/ui/organisms/ListSearchBar";
+import { ListSearchHeader } from "@/ui/organisms/ListSearchHeader";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
+import { SFProBody } from "@/ui/typography/SFProBody";
 import { PlanGroupCard } from "../components/PlanGroupCard";
 // The dots, kept to bring back: import { QuickCheckBlock } from "../components/QuickCheckBlock";
 import { QuickCheckCapsule } from "../components/QuickCheckCapsule";
@@ -18,7 +19,9 @@ type Plan = ReturnType<typeof useQuickChecksList>["plans"][number];
 /**
  * Every Quick Check finished, full screen — zoomed out of the Quick Check
  * page's button: under each plan, its Quick Checks, each its passage, day
- * and how many it held. A row opens its results; only the close leaves.
+ * and how many it held. From ten, a search springs in beside the close
+ * (`ListSearchHeader`), its field on the keyboard. A row opens its results;
+ * only the close leaves.
  */
 export function QuickChecksScreen() {
   const view = useQuickChecksList();
@@ -34,33 +37,54 @@ export function QuickChecksScreen() {
     );
   }
 
+  const empty = view.loading ? (
+    <Skeleton testID="quick-checks-pending" style={{ gap: space[16] }}>
+      <SkeletonLines count={3} />
+      <SkeletonLines count={3} />
+    </Skeleton>
+  ) : view.noMatch ? (
+    <SFProBody variant="reading" tone="textInactive" testID="quick-checks-no-match">
+      {`Nothing matches “${view.noMatch}”.`}
+    </SFProBody>
+  ) : null;
+
   return (
     <ListScreen<Plan>
       testID="quick-checks-screen"
+      // A swipe down with the keyboard up only puts the keyboard away.
+      keyboardDismissMode="on-drag"
       header={
-        <TitleHeader
+        <ListSearchHeader
+          testID="quick-checks"
           title="All Quick Checks"
-          actions={
-            <HeaderIconButton
-              testID="quick-checks-close-button"
-              icon={X}
-              accessibilityLabel="Close"
-              onPress={view.close}
-            />
-          }
+          searchable={view.searchable}
+          searching={view.searching}
+          searchLabel="Search your Quick Checks"
+          onSearch={view.openSearch}
+          onClose={view.close}
         />
       }
-      data={view.loading ? [] : view.plans}
-      keyExtractor={(plan) => plan.planId}
-      contentStyle={styles.list}
-      {...(view.loading && {
-        empty: (
-          <Skeleton testID="quick-checks-pending" style={{ gap: space[16] }}>
-            <SkeletonLines count={3} />
-            <SkeletonLines count={3} />
-          </Skeleton>
+      {...(view.searching && {
+        overlay: (
+          <ListSearchBar
+            testID="quick-checks"
+            label="Search your Quick Checks"
+            words={view.search}
+            onChange={view.setSearch}
+            onLeave={view.leaveSearch}
+            onClose={view.closeSearch}
+          />
         ),
       })}
+      data={view.loading ? [] : view.plans}
+      keyExtractor={(plan) => plan.planId}
+      gap={space[12]}
+      // With the search open, the last plan ends clear of its bar.
+      contentStyle={[
+        styles.list,
+        view.searching && { paddingBottom: space[40] + KEYBOARD_BAR_ROOM },
+      ]}
+      {...(empty && { empty })}
       renderItem={({ item }) => (
         <PlanGroupCard
           testID="quick-checks-row"
@@ -85,5 +109,5 @@ export function QuickChecksScreen() {
 }
 
 const styles = StyleSheet.create({
-  list: { gap: space[12], paddingBottom: space[40] },
+  list: { paddingBottom: space[40] },
 });

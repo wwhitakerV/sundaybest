@@ -111,6 +111,16 @@ jest.mock("expo-font", () => ({
   useFonts: () => [true, null],
 }));
 
+// FlashList measures its window and rows natively, and Jest has no layout: a
+// 400×900 window and 100pt rows stand in, so a list draws the rows that would
+// fit, as on the phone. (FlashList's own `jestSetup` does this too, but in 2.0.2
+// it also swaps `FlashList` for an export that's gone, leaving it undefined.)
+jest.mock("@shopify/flash-list/dist/recyclerview/utils/measureLayout", () => ({
+  ...jest.requireActual<object>("@shopify/flash-list/dist/recyclerview/utils/measureLayout"),
+  measureParentSize: () => ({ x: 0, y: 0, width: 400, height: 900 }),
+  measureFirstChildLayout: () => ({ x: 0, y: 0, width: 400, height: 900 }),
+  measureItemLayout: () => ({ x: 0, y: 0, width: 100, height: 100 }),
+}));
 // AppProviders calls expo-splash-screen at both module scope
 // (preventAutoHideAsync) and inside the component (hideAsync once fonts are
 // ready), and it is imported by nearly every test via test/render.tsx.
@@ -162,8 +172,11 @@ jest.mock("expo-web-browser", () => ({
 jest.mock("@shopify/react-native-skia", () => {
   const { createElement } = jest.requireActual<typeof ReactModule>("react");
   const { View } = jest.requireActual<typeof ReactNativeModule>("react-native");
+  // In arithmetic it counts as 0 (a path's bounds, a colour's channels), so maths on what
+  // Skia hands back still runs.
   const noop: unknown = new Proxy(() => undefined, {
-    get: (_target, key) => (key === "then" ? undefined : noop),
+    get: (_target, key) =>
+      key === "then" ? undefined : key === Symbol.toPrimitive ? () => 0 : noop,
     apply: () => noop,
   });
   return {
@@ -177,6 +190,19 @@ jest.mock("@shopify/react-native-skia", () => {
     PaintStyle: noop,
     StrokeCap: noop,
     StrokeJoin: noop,
+    ColorChannel: noop,
+    FilterMode: noop,
+    MipmapMode: noop,
+    // A video that never loads: no frame, still at its start, as a phone sees it
+    // before the movie has opened.
+    useVideo: () => ({
+      currentFrame: { value: null, get: () => null },
+      currentTime: { value: 0, get: () => 0 },
+      duration: 0,
+      framerate: 0,
+      rotation: 0,
+      size: { width: 0, height: 0 },
+    }),
   };
 });
 
@@ -187,6 +213,24 @@ jest.mock("@shopify/react-native-skia", () => {
 // frame.
 jest.requireActual<Record<string, unknown>>("react-native-reanimated/mock").useFrameCallback =
   () => ({ setActive: () => undefined, isActive: false, callbackId: -1 });
+
+// Nor `LayoutAnimationConfig` ("ADD ME IF NEEDED", it says). Under Jest no
+// layout animation plays, so skipping one changes nothing: it only passes its
+// children through.
+jest.requireActual<Record<string, unknown>>("react-native-reanimated/mock").LayoutAnimationConfig =
+  ({ children }: { children: ReactModule.ReactNode }) => children;
+
+// Its `useAnimatedScrollHandler` hands back a handler that does nothing, so a
+// page that follows its scroll on the UI thread (Plans' title) could never be
+// tested. This one runs the handler with the scroll event, as the UI thread
+// would — given a function, or `{ onScroll }`.
+type ScrollWorklet = (event: { contentOffset: { x: number; y: number } }) => void;
+jest.requireActual<Record<string, unknown>>(
+  "react-native-reanimated/mock",
+).useAnimatedScrollHandler =
+  (handler: ScrollWorklet | { onScroll?: ScrollWorklet }) =>
+  (event: { nativeEvent: Parameters<ScrollWorklet>[0] }) =>
+    (typeof handler === "function" ? handler : handler.onScroll)?.(event.nativeEvent);
 
 // ---------------------------------------------------------------------------
 // Timer policy

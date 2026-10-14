@@ -19,13 +19,18 @@ import { checkSermonLink } from "../logic/sermon-link";
 import { getLinkFeedback } from "../logic/link-feedback";
 import { useSermonSearch } from "./use-sermon-search";
 
+/** The app's own screens New Plan opens straight over, in one movement — and leaves with. */
+const OPENED_OVER = ["study", "generation"] as const;
+
 /**
  * New Plan backed by the real SundayBest API: live sermon search/resolve,
  * then one server-side generation job. Asking for the plan closes New Plan at
  * once; the generation bar above the tabs follows the build from there.
  */
 export function useNewPlanFlow() {
-  const session = useModalSession();
+  // Opened over a finished study (Plan complete's Add a sermon) or the generation sheet
+  // (Choose another), leaving takes that with it, in the one slide down.
+  const session = useModalSession({ alsoLeaving: OPENED_OVER });
   const settingsQuery = useUserSettingsQuery();
   const resolveSermon = useResolveSermonMutation();
   const createPlan = useCreatePlanMutation();

@@ -1,15 +1,12 @@
-import { StyleSheet, View } from "react-native";
-import { Search, X } from "lucide-react-native";
+import { StyleSheet } from "react-native";
 
 import { space } from "@/theme";
-import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
-import { HeaderButtonPill } from "@/ui/molecules/HeaderButtonPill";
-import { SearchField } from "@/ui/molecules/SearchField";
 import { Skeleton } from "@/ui/molecules/Skeleton";
 import { SkeletonLines } from "@/ui/molecules/SkeletonLines";
-import { TitleHeader } from "@/ui/molecules/TitleHeader";
-import { KEYBOARD_BAR_ROOM, KeyboardBar } from "@/ui/organisms/KeyboardBar";
+import { KEYBOARD_BAR_ROOM } from "@/ui/organisms/KeyboardBar";
 import { ListScreen } from "@/ui/organisms/ListScreen";
+import { ListSearchBar } from "@/ui/organisms/ListSearchBar";
+import { ListSearchHeader } from "@/ui/organisms/ListSearchHeader";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { PlanGroupCard } from "../components/PlanGroupCard";
@@ -19,10 +16,10 @@ type Plan = ReturnType<typeof useReflectionsList>["plans"][number];
 
 /**
  * Every reflection written on this phone, full screen — zoomed out of Your
- * words' notebook. The search springs in where the notebook was, the close
- * beside it; tapped, it sinks into the page and its field rises on the
- * keyboard, as Plans' does; put away empty, the icon springs back. Under each plan, its
- * reflections, each its question and date; a row opens Your words on it.
+ * words' notebook. From two, a search springs in beside the close
+ * (`ListSearchHeader`); tapped, it fades and its field rises on
+ * the keyboard (`ListSearchBar`). Under each plan, its reflections, each its
+ * question and date; a row opens Your words on it.
  */
 export function ReflectionsScreen() {
   const view = useReflectionsList();
@@ -55,64 +52,31 @@ export function ReflectionsScreen() {
       // A swipe down with the keyboard up only puts the keyboard away.
       keyboardDismissMode="on-drag"
       header={
-        <TitleHeader
+        <ListSearchHeader
+          testID="reflections"
           title="All reflections"
-          actions={
-            // Two buttons side by side share one pill; the search sinks into the page when it opens.
-            <HeaderButtonPill
-              testID="reflections-header-buttons"
-              // Searching, the search sinks, then the whole pill goes: the search has its own close.
-              gone={view.searching}
-              buttons={[
-                {
-                  key: "search",
-                  testID: "reflections-search-button",
-                  icon: Search,
-                  accessibilityLabel: "Search your reflections",
-                  onPress: view.openSearch,
-                  sunk: view.searching,
-                },
-                {
-                  key: "close",
-                  testID: "reflections-close-button",
-                  icon: X,
-                  accessibilityLabel: "Close",
-                  onPress: view.close,
-                },
-              ]}
-            />
-          }
+          searchable={view.searchable}
+          searching={view.searching}
+          searchLabel="Search your reflections"
+          onSearch={view.openSearch}
+          onClose={view.close}
         />
       }
       {...(view.searching && {
         overlay: (
-          // Plans' own field, on the keyboard, the full width.
-          <KeyboardBar testID="reflections-search-bar">
-            <View style={styles.field}>
-              <SearchField
-                testID="reflections-search"
-                accessibilityLabel="Search your reflections"
-                placeholder="Search anything"
-                value={view.search}
-                onChange={view.setSearch}
-                onBlur={view.leaveSearch}
-                autoFocus
-                raised
-              />
-            </View>
-            {/* Its own close, as Plans' search has: springing in beside the field. */}
-            <HeaderIconButton
-              testID="reflections-search-close"
-              icon={X}
-              accessibilityLabel="Close search"
-              raised
-              onPress={view.closeSearch}
-            />
-          </KeyboardBar>
+          <ListSearchBar
+            testID="reflections"
+            label="Search your reflections"
+            words={view.search}
+            onChange={view.setSearch}
+            onLeave={view.leaveSearch}
+            onClose={view.closeSearch}
+          />
         ),
       })}
       data={view.loading ? [] : view.plans}
       keyExtractor={(plan) => plan.planId}
+      gap={space[12]}
       // With the search open, the last plan ends clear of its bar.
       contentStyle={[
         styles.list,
@@ -133,6 +97,5 @@ export function ReflectionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  field: { flex: 1 },
-  list: { gap: space[12], paddingBottom: space[40] },
+  list: { paddingBottom: space[40] },
 });

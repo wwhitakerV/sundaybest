@@ -2,6 +2,9 @@ import type { ApiWeekHistory } from "@/core/api/contracts";
 import { addDays } from "@/utils/dates/addDays";
 import { describeRange } from "./week-view";
 
+/** From this many weeks, the full-screen weeks offer search: fewer are found by scrolling. */
+export const WEEKS_SEARCH_AT = 8;
+
 /** A sermon's artwork on a week's card: its image — a link, or a bundled one — on its colour. */
 export type WeekArt = { source: string | number | null; colors: readonly string[] };
 

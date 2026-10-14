@@ -3,7 +3,9 @@ import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { aPlan } from "@tests/factories/api-plans";
+import { buildList } from "@tests/factories/build";
 import { servePlans } from "@tests/mocks/plans-api";
+import { forgetShownSearches } from "@tests/mocks/searches-shown";
 import { planOverviewHref, studyHref } from "@/entities/plan";
 import { PlansScreen } from "@/features/plans/screens/PlansScreen";
 
@@ -11,6 +13,10 @@ jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
 }));
+
+jest.mock("@/core/storage/searches-shown", () =>
+  jest.requireActual<object>("@tests/mocks/searches-shown"),
+);
 
 // Each test waits up to 10s for the plans (see `openPlans`); a full parallel
 // run can take one past Jest's 5s default.
@@ -292,5 +298,21 @@ describe("PlansScreen", () => {
       "accessibilityValue",
       expect.objectContaining({ now: 17 }),
     );
+  });
+
+  describe("search", () => {
+    beforeEach(() => forgetShownSearches());
+
+    it("isn't offered with fewer than ten plans: scrolling finds one", async () => {
+      await openPlans(ALL);
+
+      expect(screen.queryByTestId("plans-search-button")).toBeNull();
+    });
+
+    it("is offered from ten plans", async () => {
+      await openPlans(buildList(10, (index) => aPlan({ seed: 20 + index, thumbnailUrl: ART })));
+
+      await waitFor(() => expect(screen.getByTestId("plans-search-button")).toBeVisible());
+    });
   });
 });

@@ -107,6 +107,11 @@ database — never sent to the API — and `reflection-answer-queries.ts` reads 
 writes them through TanStack Query (`useReflectionAnswers`,
 `useReflectionAnswerCount`), with the cache roots a plan reset clears.
 
+`searches-shown.ts` records which of a reader's lists have offered search
+(`searches_shown`, migration 5), and `search-shown-queries.ts`'s
+`useEarnedSearch` answers whether a list offers it now: from its threshold,
+and from then on, though the list shrinks again.
+
 ## `config/`
 
 The only place `process.env` is read. `env-schema.ts` holds the Zod schema and

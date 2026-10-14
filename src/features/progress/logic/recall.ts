@@ -27,6 +27,9 @@ export const RECALL_EMPTY = {
   message: "What you remember from each study shows here.",
 } as const;
 
+/** From this many, the list of every Quick Check offers search: fewer are found by scrolling. */
+export const QUICK_CHECKS_SEARCH_AT = 10;
+
 /** How to use the grid, under the key, while there's one to tap. */
 export const MOSAIC_HINT = "Tap any question to see it.";
 
@@ -175,4 +178,29 @@ export function groupQuickChecks(quickChecks: readonly ApiRecalledQuickCheck[]):
     plans.set(quickCheck.planId, plan);
   }
   return [...plans.values()];
+}
+
+/** A Quick Check with what a search looks through — its plan and passage — lower-cased once. */
+export type SearchableQuickCheck = ApiRecalledQuickCheck & { search: string };
+
+/** The Quick Checks, each with its search text, built once as they arrive. */
+export function toSearchable(
+  quickChecks: readonly ApiRecalledQuickCheck[],
+): SearchableQuickCheck[] {
+  return quickChecks.map((quickCheck) => ({
+    ...quickCheck,
+    search: `${quickCheck.planTitle}\n${quickCheck.reference}`.toLowerCase(),
+  }));
+}
+
+/** The Quick Checks a search finds: those holding every word of it, in their plan or passage. */
+export function searchQuickChecks(
+  quickChecks: readonly SearchableQuickCheck[],
+  query: string,
+): SearchableQuickCheck[] {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [...quickChecks];
+  return quickChecks.filter((quickCheck) =>
+    words.every((word) => quickCheck.search.includes(word)),
+  );
 }

@@ -1,12 +1,10 @@
 import { STUDY_TRANSLATION_HREF, planCompleteHref } from "@/entities/plan";
-import { tabPlanHref, toAppTab } from "@/entities/tabs";
 import { useRemindersQuery, useWeekQuery } from "@/core/api/reader-queries";
 import { useQuizSessionQuery } from "@/core/api/quiz-queries";
 import { usesTwentyFourHourClock } from "@/core/localization/clock";
 import { useReflectionAnswers } from "@/core/storage/reflection-answer-queries";
 import { useToday } from "@/core/store";
 import { describeWeekTile } from "@/features/progress";
-import { useFocusedTab } from "@/hooks/use-focused-tab";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { useRouter } from "expo-router";
@@ -18,12 +16,12 @@ import { useStudyRoute } from "./use-study-route";
  * A day's finish page: the day done, this week's strip with it filled, what
  * was gained (its key verse and the first thing written, from this phone),
  * its Quick Check — what was remembered, every answer, missed first — and
- * what's next. Done goes on to Plan complete, or back to the plan.
+ * what's next. Done goes on to Plan complete, or slides the study away, back
+ * to where it was started.
  */
 export function useDayComplete() {
   const router = useRouter();
   const session = useModalSession();
-  const focusedTab = useFocusedTab();
   const today = useToday();
   const route = useStudyRoute();
   const { planId, dayNumber, plan, day } = route;
@@ -99,8 +97,9 @@ export function useDayComplete() {
         router.replace(planCompleteHref(planId));
         return;
       }
-      // Back to the plan in the tab the study was opened from, as iOS returns from a modal.
-      session.exitTo(tabPlanHref(toAppTab(focusedTab(), "plans"), planId));
+      // Back to where the study was started — the plan, when it was opened from
+      // there — in one slide down, as iOS returns from a modal.
+      session.exit();
     },
   } as const;
 }

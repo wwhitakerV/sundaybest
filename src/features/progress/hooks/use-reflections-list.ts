@@ -1,11 +1,13 @@
-import { useState } from "react";
 import { usePreventZoomTransitionDismissal, useRouter } from "expo-router";
 
 import { useReflectionPromptsQuery } from "@/core/api/reader-queries";
 import { selectionFeedback } from "@/core/haptics/haptics";
 import { useReflectionEntries, useReflectionLines } from "@/core/storage/reflection-answer-queries";
+import { useEarnedSearch } from "@/core/storage/search-shown-queries";
 import { useToday } from "@/core/store";
+import { useListSearch } from "@/hooks/use-list-search";
 import {
+  REFLECTIONS_SEARCH_AT,
   buildReflections,
   describeListDate,
   groupByPlan,
@@ -16,8 +18,8 @@ import { wordsHref } from "../logic/progress-route";
 /**
  * The list of every reflection written on this phone, full screen: under
  * their plans, the plan written in most lately first, each its question and
- * date — found by a search when one's open, its field on the keyboard. A row
- * opens Your words on it.
+ * date — found by a search, once there are enough to need one, its field on
+ * the keyboard. A row opens Your words on it.
  */
 export function useReflectionsList() {
   const router = useRouter();
@@ -27,11 +29,12 @@ export function useReflectionsList() {
   const { lines } = useReflectionLines();
   // Only the close leaves: no swipe down — the zoom's own included — ever dismisses it.
   usePreventZoomTransitionDismissal({ unstable_dismissalBoundsRect: { maxX: 0, maxY: 0 } });
-  const [searching, setSearching] = useState(false);
-  const [search, setSearch] = useState("");
+  const search = useListSearch({ onOpen: selectionFeedback });
 
   const reflections = buildReflections(prompts.data?.prompts ?? [], entries.data ?? [], lines);
-  const found = searchReflections(reflections, search);
+  const found = searchReflections(reflections, search.query);
+  const searchable = useEarnedSearch("reflections", reflections.length, REFLECTIONS_SEARCH_AT);
+  const searched = search.query.trim();
 
   return {
     loading: prompts.isPending || entries.isPending,
@@ -48,27 +51,18 @@ export function useReflectionsList() {
       })),
     })),
     /** Searched and nothing found: says so, with what was searched. */
-    noMatch: search.trim().length > 0 && found.length === 0 ? search.trim() : null,
+    noMatch: searched.length > 0 && found.length === 0 ? searched : null,
+    /** Enough reflections to need a search: from two, and from then on. */
+    searchable,
     /** The search is open: its field on the keyboard, the icon gone into the page. */
-    searching,
-    search,
-    setSearch,
-    openSearch: () => {
-      selectionFeedback();
-      setSearching(true);
-    },
+    searching: search.searching,
+    search: search.words,
+    setSearch: search.setWords,
+    openSearch: search.open,
     /** The keyboard put away: with nothing typed, the field goes and the icon comes back. */
-    leaveSearch: () => {
-      if (search.trim().length === 0) {
-        setSearching(false);
-        setSearch("");
-      }
-    },
+    leaveSearch: search.leave,
     /** The search's own X: its words cleared, the field gone, the header's buttons back. */
-    closeSearch: () => {
-      setSearching(false);
-      setSearch("");
-    },
+    closeSearch: search.close,
     open: (reflectionId: string) => router.navigate(wordsHref(reflectionId)),
     close: () => router.back(),
   } as const;

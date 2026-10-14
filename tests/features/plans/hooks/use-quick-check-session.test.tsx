@@ -25,7 +25,7 @@ jest.mock("expo-router", () => ({
 }));
 
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitSession = jest.fn<void, []>();
+const mockExitSession = jest.fn<void, [unknown]>();
 
 const STUDIED = ["read", "scripture", "reflect", "pray"] as const;
 /** Day 2's study done, its three-question Quick Check not taken. */
@@ -98,7 +98,11 @@ beforeEach(() => {
   mockReplace.mockClear();
   mockExitSession.mockClear();
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitSession }),
+    // The study, over the tab it was opened from.
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
   });
   jest
     .mocked(useRouter)

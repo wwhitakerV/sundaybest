@@ -1,0 +1,2751 @@
+<title>SundayBest Pool Intro v6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Libre+Baskerville:wght@400;700&display=swap"
+/>
+<style>
+  /* Layout: the phone stage on the left, the director's controls beside it; stacked on a phone. */
+  :root {
+    --bg: #f5f4f4;
+    --panel: #ffffff;
+    --ink: #1b1718;
+    --muted: #6b6466;
+    --line: #e2dddd;
+    --accent: #d62626;
+    --accent-ink: #ffffff;
+    --bezel: #1b1718;
+    --chip: #f1eded;
+    --serif: "Libre Baskerville", "Baskerville", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141213;
+      --panel: #1d1a1b;
+      --ink: #f2eeee;
+      --muted: #a39b9c;
+      --line: #342f30;
+      --accent: #e5463f;
+      --accent-ink: #ffffff;
+      --bezel: #000000;
+      --chip: #2a2526;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141213;
+    --panel: #1d1a1b;
+    --ink: #f2eeee;
+    --muted: #a39b9c;
+    --line: #342f30;
+    --accent: #e5463f;
+    --accent-ink: #ffffff;
+    --bezel: #000000;
+    --chip: #2a2526;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+  }
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 24px 40px;
+    display: grid;
+    gap: 24px;
+  }
+  header {
+    display: grid;
+    gap: 6px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 1.6rem;
+    letter-spacing: 0.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  header p {
+    margin: 0;
+    color: var(--muted);
+    max-width: 62ch;
+    line-height: 1.5;
+  }
+  main {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    main {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+    }
+  }
+
+  .phone {
+    width: min(100%, calc(74vh * 390 / 844), 350px);
+    aspect-ratio: 390 / 844;
+    border: 9px solid var(--bezel);
+    border-radius: 48px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 18px 50px -24px rgba(0, 0, 0, 0.45);
+  }
+  .phone svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .panel {
+    display: grid;
+    gap: 22px;
+    min-width: 0;
+    width: 100%;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    display: grid;
+    gap: 14px;
+  }
+  .label {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  button {
+    font: 500 0.9rem var(--sans);
+    color: var(--ink);
+    background: var(--chip);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    min-width: 84px;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px;
+    background: var(--chip);
+  }
+  .seg button {
+    border: 0;
+    background: transparent;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+  }
+  .seg button[aria-pressed="true"] {
+    background: var(--panel);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+  .time {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+    margin-left: auto;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  ol.beats {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  ol.beats button {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 10px;
+    padding: 8px 10px;
+    text-align: left;
+  }
+  ol.beats .n {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  ol.beats .ms {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  ol.beats .tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--accent);
+    margin-left: 6px;
+    letter-spacing: 0.04em;
+  }
+  ol.beats li.on button {
+    background: var(--chip);
+  }
+  ol.beats li.on .n {
+    color: var(--accent);
+  }
+
+  .haptics {
+    display: flex;
+    gap: 8px;
+  }
+  .hap {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    transition:
+      background 80ms,
+      color 80ms;
+  }
+  .hap.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .tune {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px 20px;
+  }
+  .tune label {
+    display: grid;
+    gap: 4px;
+    font-size: 0.86rem;
+  }
+  .tune .v {
+    font-family: var(--mono);
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .tune .head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .note {
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  /* Each written letter is clear water (the filter in the stage's defs). */
+  #redWord > path {
+    filter: url(#waterLetters);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hap {
+      transition: none;
+    }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>SundayBest Pool Intro v6</h1>
+    <p>
+      On the launch's red page, a pool of clear water pours in, and a wet pen writes the wordmark in
+      water you can see the red through, beading at its tip, while it drips into the pool. The letters fall in, the pool erupts and fills the screen,
+      holds, then fades to the page underneath. Scrub any moment, slow it down, and tune the numbers.
+    </p>
+  </header>
+
+  <main>
+    <div class="phone">
+      <svg id="stage" viewBox="0 0 390 844" role="img" aria-label="The SundayBest intro animation">
+        <defs>
+          <!-- Goo: drips, spray and the pool merge like liquid, then turn to clear water. -->
+          <filter
+            id="gooRed"
+            filterUnits="userSpaceOnUse"
+            x="-120"
+            y="-120"
+            width="630"
+            height="1084"
+            color-interpolation-filters="sRGB"
+          >
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
+              result="shape"
+            />
+            <!--
+              Then clear water, as glass: opaque at every pixel, its look made only from
+              shading and colour, deeper for the pool than for a letter.
+            -->
+            <!-- How deep the water stands: rising from nothing at its edge. -->
+            <feGaussianBlur in="shape" stdDeviation="2.2" result="height" />
+            <!-- Where it thins toward its edge. -->
+            <feComposite in="shape" in2="height" operator="arithmetic" k2="1" k3="-1" result="thin" />
+            <feComponentTransfer in="thin" result="edge">
+              <feFuncA type="linear" slope="2.4" />
+            </feComponentTransfer>
+            <!-- Its body: clear and colourless. -->
+            <feFlood flood-color="#F2F2F1" />
+            <feComposite in2="shape" operator="in" result="body" />
+            <!--
+              Refraction inside its body, as in thick glass: bands of bent light at set depths in
+              from the edge — fine ones close in, broad ones deeper — peach, lilac and aqua, with a
+              deeper band where the water is thickest, all following the water's shape as it moves.
+              All well inside the edge, which keeps its own look.
+            -->
+            <feGaussianBlur in="shape" stdDeviation="7" result="nearDepth" />
+            <feComponentTransfer in="nearDepth" result="finePeachBand">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.225 0.6 0.525 0.15 0 0 0 0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#F5D8C4" />
+            <feComposite in2="finePeachBand" operator="in" result="finePeach" />
+            <feComponentTransfer in="nearDepth" result="fineAquaBand">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.186 0.65 0.186 0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#D2EEE8" />
+            <feComposite in2="fineAquaBand" operator="in" result="fineAqua" />
+            <!--
+              Once the water fills the screen, the screen's own edges aren't the water's: beyond
+              them counts as water too (the script fades this in), so no frame of bands traces them.
+            -->
+            <feFlood id="screenBeyondLeft" flood-color="#000" flood-opacity="0" x="-120" y="-120" width="120" height="1084" result="beyondLeft" />
+            <feFlood id="screenBeyondRight" flood-color="#000" flood-opacity="0" x="390" y="-120" width="120" height="1084" result="beyondRight" />
+            <feFlood id="screenBeyondTop" flood-color="#000" flood-opacity="0" x="-120" y="-120" width="630" height="120" result="beyondTop" />
+            <feFlood id="screenBeyondBottom" flood-color="#000" flood-opacity="0" x="-120" y="844" width="630" height="120" result="beyondBottom" />
+            <feMerge result="deepShape">
+              <feMergeNode in="shape" />
+              <feMergeNode in="beyondLeft" />
+              <feMergeNode in="beyondRight" />
+              <feMergeNode in="beyondTop" />
+              <feMergeNode in="beyondBottom" />
+            </feMerge>
+            <feGaussianBlur in="deepShape" stdDeviation="18" result="depth" />
+            <feComponentTransfer in="depth" result="peachBand">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.142 0.496 0.85 0.496 0.142 0 0 0 0 0 0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#F5DCCB" />
+            <feComposite in2="peachBand" operator="in" result="peach" />
+            <feComponentTransfer in="depth" result="lilacBand">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.356 0.8 0.356 0 0 0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#E1D8F3" />
+            <feComposite in2="lilacBand" operator="in" result="lilac" />
+            <feComponentTransfer in="depth" result="aquaBand">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.35 0.467 0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#D4EFEA" />
+            <feComposite in2="aquaBand" operator="in" result="aqua" />
+            <feGaussianBlur in="deepShape" stdDeviation="30" result="thickness" />
+            <feComponentTransfer in="thickness" result="thickBand">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.056 0.194 0.333 0.472 0.389 0.25 0.111" />
+            </feComponentTransfer>
+            <feFlood flood-color="#E0E2E4" />
+            <feComposite in2="thickBand" operator="in" result="thick" />
+            <!--
+              The water alive: every part of its body different, and changing. A texture made once
+              (the script draws it as the page loads) is laid over the water and moved every frame
+              — drifting in the pool, surging with the eruption, falling with the drain. Each tile
+              moves by where it starts, wrapped within its own size, so the pattern never shows a gap.
+            -->
+            <!-- Kept a few points in from the edge, which keeps its own look. -->
+            <feGaussianBlur in="shape" stdDeviation="3" result="inward" />
+            <feComponentTransfer in="inward" result="inside">
+              <feFuncA type="table" tableValues="0 0 0 0 0 0 0 0 0 0.5 1" />
+            </feComponentTransfer>
+            <!-- The deep bands, bent by the moving water as light is. -->
+            <feMerge result="deepBands">
+              <feMergeNode in="thick" />
+              <feMergeNode in="peach" />
+              <feMergeNode in="lilac" />
+              <feMergeNode in="aqua" />
+            </feMerge>
+            <feImage id="waterWarpImage" x="-120" y="-120" width="300" height="300" preserveAspectRatio="none" result="warpTile" />
+            <feTile in="warpTile" result="warp" />
+            <feDisplacementMap in="deepBands" in2="warp" scale="22" xChannelSelector="R" yChannelSelector="G" result="bentBands" />
+            <!-- As strong as the pool is clear (the script sets it): none in the red pool. -->
+            <feComponentTransfer in="bentBands" result="bandsShown">
+              <feFuncA id="bandStrength" type="linear" slope="1" />
+            </feComponentTransfer>
+            <feComposite in="bandsShown" in2="inside" operator="in" result="bands" />
+            <!-- Soft patches of colour where the light bends differently, drifting slowly. -->
+            <feImage id="waterTintImage" x="-120" y="-120" width="300" height="300" preserveAspectRatio="none" result="tintTile" />
+            <feTile in="tintTile" result="tintMoved" />
+            <!-- Paler or stronger with the water-body control, and with how clear the pool is. -->
+            <feComponentTransfer in="tintMoved" result="tintShown">
+              <feFuncA id="tintStrength" type="linear" slope="1" />
+            </feComponentTransfer>
+            <feComposite in="tintShown" in2="inside" operator="in" result="tint" />
+            <!-- Caustics: two webs of light at different sizes, moving apart, so they never repeat. -->
+            <feImage id="causticImageA" x="-120" y="-120" width="230" height="230" preserveAspectRatio="none" result="causticTileA" />
+            <feTile in="causticTileA" result="causticA" />
+            <feImage id="causticImageB" x="-120" y="-120" width="307" height="307" preserveAspectRatio="none" result="causticTileB" />
+            <feTile in="causticTileB" result="causticB" />
+            <!-- How bright the light is (the script sets it from the water-body control). -->
+            <feComposite id="causticMix" in="causticA" in2="causticB" operator="arithmetic" k2="0.55" k3="0.35" result="causticLight" />
+            <!-- Uneven, as real water is: a slow field leaves some of it calm, some of it bright. -->
+            <feImage id="causticFieldImage" x="-120" y="-120" width="290" height="290" preserveAspectRatio="none" result="fieldTile" />
+            <feTile in="fieldTile" result="field" />
+            <feComposite in="causticLight" in2="field" operator="arithmetic" k1="1.7" result="causticVaried" />
+            <feComposite in="causticVaried" in2="inside" operator="in" result="caustics" />
+            <!-- Glints: where the two webs cross, a spark that comes and goes — fewer as it dims. -->
+            <feComposite id="glintMix" in="causticA" in2="causticB" operator="arithmetic" k1="3.2" result="glintLight" />
+            <feComposite in="glintLight" in2="field" operator="arithmetic" k1="1.5" result="glintVaried" />
+            <feComposite in="glintVaried" in2="inside" operator="in" result="glints" />
+            <!-- Deeper toward its lower side, where it bends the light away. -->
+            <feOffset in="height" dx="-1.4" dy="-1.4" result="heightUp" />
+            <feComposite in="height" in2="heightUp" operator="arithmetic" k2="1.6" k3="-1.6" result="lowSide" />
+            <feFlood flood-color="#CBD0D3" />
+            <feComposite in2="lowSide" operator="in" result="shade" />
+            <!-- The rim, darker where the water is thin. -->
+            <feFlood flood-color="#959CA1" />
+            <feComposite in2="edge" operator="in" result="rim" />
+            <!--
+              Glass: the edge splits light into a thin spectrum, as iOS's glass does — blue then
+              cyan toward the light, a touch of green, violet on the rim itself, pink then amber
+              away from it.
+            -->
+            <feFlood flood-color="#9C8CF0" />
+            <feComposite in2="edge" operator="in" result="violetFull" />
+            <feComponentTransfer in="violetFull" result="violet">
+              <feFuncA type="linear" slope="0.3" class="poolEdgeColour" data-base="0.3" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="-1.5" dy="-1.2" result="edgeFarToLight" />
+            <feFlood flood-color="#3E8BF0" />
+            <feComposite in2="edgeFarToLight" operator="in" result="blueFull" />
+            <feComponentTransfer in="blueFull" result="blue">
+              <feFuncA type="linear" slope="0.45" class="poolEdgeColour" data-base="0.45" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="-0.75" dy="-0.6" result="edgeToLight" />
+            <feFlood flood-color="#4FD0F2" />
+            <feComposite in2="edgeToLight" operator="in" result="cyanFull" />
+            <feComponentTransfer in="cyanFull" result="cyan">
+              <feFuncA type="linear" slope="0.65" class="poolEdgeColour" data-base="0.65" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.2" dy="0.15" result="edgeMid" />
+            <feFlood flood-color="#B4E86E" />
+            <feComposite in2="edgeMid" operator="in" result="greenFull" />
+            <feComponentTransfer in="greenFull" result="green">
+              <feFuncA type="linear" slope="0.22" class="poolEdgeColour" data-base="0.22" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.802" dy="0.648" result="edgeFromLight" />
+            <feFlood flood-color="#F07AB4" />
+            <feComposite in2="edgeFromLight" operator="in" result="pinkFull" />
+            <feComponentTransfer in="pinkFull" result="pink">
+              <feFuncA type="linear" slope="0.6" class="poolEdgeColour" data-base="0.6" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="1.5" dy="1.2" result="edgeFarFromLight" />
+            <feFlood flood-color="#F6AE45" />
+            <feComposite in2="edgeFarFromLight" operator="in" result="amberFull" />
+            <feComponentTransfer in="amberFull" result="amber">
+              <feFuncA type="linear" slope="0.5" class="poolEdgeColour" data-base="0.5" />
+            </feComponentTransfer>
+            <!-- And again, fainter, further in: where light bends back through the body, reversed. -->
+            <feGaussianBlur in="shape" stdDeviation="5" result="deep" />
+            <feComposite in="shape" in2="deep" operator="arithmetic" k2="1" k3="-1" result="deepThin" />
+            <feComponentTransfer in="deepThin" result="deepEdge">
+              <feFuncA type="table" tableValues="0 0.9 0.4 0" />
+            </feComponentTransfer>
+            <feOffset in="deepEdge" dx="1.6" dy="1.3" result="deepFromLight" />
+            <feFlood flood-color="#6FD6F5" />
+            <feComposite in2="deepFromLight" operator="in" result="innerCyanFull" />
+            <feComponentTransfer in="innerCyanFull" result="innerCyan">
+              <feFuncA type="linear" slope="0.28" class="poolEdgeColour" data-base="0.28" />
+            </feComponentTransfer>
+            <feOffset in="deepEdge" dx="-1.6" dy="-1.3" result="deepToLight" />
+            <feFlood flood-color="#F59AC6" />
+            <feComposite in2="deepToLight" operator="in" result="innerRoseFull" />
+            <feComponentTransfer in="innerRoseFull" result="innerRose">
+              <feFuncA type="linear" slope="0.22" class="poolEdgeColour" data-base="0.22" />
+            </feComponentTransfer>
+            <!-- A soft sheen inside the edge: lighter toward its edges, deeper in the middle. -->
+            <feComponentTransfer in="deepThin" result="sheenMask">
+              <feFuncA type="linear" slope="1.1" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FDFEFE" />
+            <feComposite in2="sheenMask" operator="in" result="sheen" />
+            <!-- A faint glow where the light gathers, on its lower side, just in from the rim. -->
+            <feOffset in="lowSide" dx="-1.4" dy="-1.4" result="glowSide" />
+            <feComponentTransfer in="glowSide" result="glowMask">
+              <feFuncA type="linear" slope="0.5" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FAFBFC" />
+            <feComposite in2="glowMask" operator="in" result="glow" />
+            <!-- The highlight, where the light from above-left catches its curve: sharp, bright. -->
+            <feOffset in="height" dx="1.4" dy="1.4" result="heightDown" />
+            <feComposite in="height" in2="heightDown" operator="arithmetic" k2="2.4" k3="-2.4" result="litSide" />
+            <feComponentTransfer in="litSide" result="shineMask">
+              <feFuncA type="gamma" amplitude="1.3" exponent="2.2" offset="0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FFFFFF" />
+            <feComposite in2="shineMask" operator="in" result="shine" />
+            <!-- The glass's bright edge: a thin catchlight just inside the lit edge, under the spectrum. -->
+            <feGaussianBlur in="shape" stdDeviation="0.45" result="lip" />
+            <feOffset in="lip" dx="0.5" dy="0.5" result="lipDown" />
+            <feComposite in="lip" in2="lipDown" operator="arithmetic" k2="2.2" k3="-2.2" result="lipSide" />
+            <feComponentTransfer in="lipSide" result="lipMask">
+              <feFuncA type="gamma" amplitude="0.85" exponent="1.8" offset="0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FFFFFF" />
+            <feComposite in2="lipMask" operator="in" result="lipLight" />
+            <feMerge result="water">
+              <feMergeNode in="body" />
+              <feMergeNode in="tint" />
+              <feMergeNode in="bands" />
+              <feMergeNode in="caustics" />
+              <feMergeNode in="glints" />
+              <feMergeNode in="finePeach" />
+              <feMergeNode in="fineAqua" />
+              <feMergeNode in="sheen" />
+              <feMergeNode in="shade" />
+              <feMergeNode in="rim" />
+              <feMergeNode in="lipLight" />
+              <feMergeNode in="innerCyan" />
+              <feMergeNode in="innerRose" />
+              <feMergeNode in="violet" />
+              <feMergeNode in="blue" />
+              <feMergeNode in="cyan" />
+              <feMergeNode in="green" />
+              <feMergeNode in="pink" />
+              <feMergeNode in="amber" />
+              <feMergeNode in="glow" />
+              <feMergeNode in="shine" />
+            </feMerge>
+            <!-- Exactly the liquid's shape: solid inside, nothing outside. -->
+            <feComposite in="water" in2="shape" operator="in" result="clearWater" />
+            <!--
+              The pool's mix of red and clear water (k2 clear, k3 red): kept clear here, the pool
+              pouring in as water on the red page.
+            -->
+            <feFlood flood-color="#D62626" />
+            <feComposite in2="shape" operator="in" result="redWater" />
+            <feComposite
+              id="poolClearing"
+              in="clearWater"
+              in2="redWater"
+              operator="arithmetic"
+              k2="1"
+              k3="0"
+            />
+          </filter>
+          <!--
+            Clear water: each letter of the wordmark as water standing on the page, in the
+            letters' own units (1pt is 0.088 of one). Opaque at every pixel —
+            nothing behind it shows through — its look made only from shading: a cool body,
+            darker where it thins at its edges and toward its lower side, a highlight where the
+            light catches its curve, a faint glow where light gathers beneath it, and the
+            slightest split of colour at its rim, as glass bends light.
+          -->
+          <filter
+            id="waterLetters"
+            x="-6%"
+            y="-40%"
+            width="112%"
+            height="180%"
+            color-interpolation-filters="sRGB"
+          >
+            <feComponentTransfer in="SourceAlpha" result="shape">
+              <feFuncA type="identity" />
+            </feComponentTransfer>
+            <!-- How deep the water stands: rising from nothing at its edge. -->
+            <feGaussianBlur in="shape" stdDeviation="0.088" result="height" />
+            <!-- Where it thins toward its edge. -->
+            <feComposite in="shape" in2="height" operator="arithmetic" k2="1" k3="-1" result="thin" />
+            <feComponentTransfer in="thin" result="edge">
+              <feFuncA type="linear" slope="2.4" />
+            </feComponentTransfer>
+            <!-- Its body: clear, all but colourless. -->
+            <feFlood flood-color="#F0F2F3" />
+            <feComposite in2="shape" operator="in" result="body" />
+            <!-- Deeper toward its lower side, where it bends the light away. -->
+            <feOffset in="height" dx="-0.07" dy="-0.07" result="heightUp" />
+            <feComposite in="height" in2="heightUp" operator="arithmetic" k2="1.6" k3="-1.6" result="lowSide" />
+            <feFlood flood-color="#CBD0D3" />
+            <feComposite in2="lowSide" operator="in" result="shade" />
+            <!-- The rim, darker where the water is thin. -->
+            <feFlood flood-color="#959CA1" />
+            <feComposite in2="edge" operator="in" result="rim" />
+            <!--
+              Glass: the edge splits light into a thin spectrum, as iOS's glass does — blue then
+              cyan toward the light, a touch of green, violet on the rim itself, pink then amber
+              away from it.
+            -->
+            <feFlood flood-color="#9C8CF0" />
+            <feComposite in2="edge" operator="in" result="violetFull" />
+            <feComponentTransfer in="violetFull" result="violet">
+              <feFuncA type="linear" slope="0.3" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="-0.079" dy="-0.063" result="edgeFarToLight" />
+            <feFlood flood-color="#3E8BF0" />
+            <feComposite in2="edgeFarToLight" operator="in" result="blueFull" />
+            <feComponentTransfer in="blueFull" result="blue">
+              <feFuncA type="linear" slope="0.45" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="-0.04" dy="-0.032" result="edgeToLight" />
+            <feFlood flood-color="#4FD0F2" />
+            <feComposite in2="edgeToLight" operator="in" result="cyanFull" />
+            <feComponentTransfer in="cyanFull" result="cyan">
+              <feFuncA type="linear" slope="0.65" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.011" dy="0.009" result="edgeMid" />
+            <feFlood flood-color="#B4E86E" />
+            <feComposite in2="edgeMid" operator="in" result="greenFull" />
+            <feComponentTransfer in="greenFull" result="green">
+              <feFuncA type="linear" slope="0.22" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.042" dy="0.034" result="edgeFromLight" />
+            <feFlood flood-color="#F07AB4" />
+            <feComposite in2="edgeFromLight" operator="in" result="pinkFull" />
+            <feComponentTransfer in="pinkFull" result="pink">
+              <feFuncA type="linear" slope="0.6" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.079" dy="0.063" result="edgeFarFromLight" />
+            <feFlood flood-color="#F6AE45" />
+            <feComposite in2="edgeFarFromLight" operator="in" result="amberFull" />
+            <feComponentTransfer in="amberFull" result="amber">
+              <feFuncA type="linear" slope="0.5" />
+            </feComponentTransfer>
+            <!-- And again, fainter, further in: where light bends back through the body, reversed. -->
+            <feGaussianBlur in="shape" stdDeviation="0.194" result="deep" />
+            <feComposite in="shape" in2="deep" operator="arithmetic" k2="1" k3="-1" result="deepThin" />
+            <feComponentTransfer in="deepThin" result="deepEdge">
+              <feFuncA type="table" tableValues="0 0.9 0.4 0" />
+            </feComponentTransfer>
+            <feOffset in="deepEdge" dx="0.07" dy="0.056" result="deepFromLight" />
+            <feFlood flood-color="#6FD6F5" />
+            <feComposite in2="deepFromLight" operator="in" result="innerCyanFull" />
+            <feComponentTransfer in="innerCyanFull" result="innerCyan">
+              <feFuncA type="linear" slope="0.28" />
+            </feComponentTransfer>
+            <feOffset in="deepEdge" dx="-0.07" dy="-0.056" result="deepToLight" />
+            <feFlood flood-color="#F59AC6" />
+            <feComposite in2="deepToLight" operator="in" result="innerRoseFull" />
+            <feComponentTransfer in="innerRoseFull" result="innerRose">
+              <feFuncA type="linear" slope="0.22" />
+            </feComponentTransfer>
+            <!-- A soft sheen inside the edge: lighter toward its edges, deeper in the middle. -->
+            <feComponentTransfer in="deepThin" result="sheenMask">
+              <feFuncA type="linear" slope="1.1" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FDFEFE" />
+            <feComposite in2="sheenMask" operator="in" result="sheen" />
+            <!-- A faint glow where the light gathers, on its lower side, just in from the rim. -->
+            <feOffset in="lowSide" dx="-0.07" dy="-0.07" result="glowSide" />
+            <feComponentTransfer in="glowSide" result="glowMask">
+              <feFuncA type="linear" slope="0.5" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FAFBFC" />
+            <feComposite in2="glowMask" operator="in" result="glow" />
+            <!-- The highlight, where the light from above-left catches its curve: sharp, bright. -->
+            <feOffset in="height" dx="0.07" dy="0.07" result="heightDown" />
+            <feComposite in="height" in2="heightDown" operator="arithmetic" k2="2.4" k3="-2.4" result="litSide" />
+            <feComponentTransfer in="litSide" result="shineMask">
+              <feFuncA type="gamma" amplitude="1.3" exponent="2.2" offset="0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FFFFFF" />
+            <feComposite in2="shineMask" operator="in" result="shine" />
+            <!-- The glass's bright edge: a thin catchlight just inside the lit edge, under the spectrum. -->
+            <feGaussianBlur in="shape" stdDeviation="0.026" result="lip" />
+            <feOffset in="lip" dx="0.031" dy="0.031" result="lipDown" />
+            <feComposite in="lip" in2="lipDown" operator="arithmetic" k2="2.2" k3="-2.2" result="lipSide" />
+            <feComponentTransfer in="lipSide" result="lipMask">
+              <feFuncA type="gamma" amplitude="0.85" exponent="1.8" offset="0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FFFFFF" />
+            <feComposite in2="lipMask" operator="in" result="lipLight" />
+            <feMerge result="water">
+              <feMergeNode in="body" />
+              <feMergeNode in="sheen" />
+              <feMergeNode in="shade" />
+              <feMergeNode in="rim" />
+              <feMergeNode in="lipLight" />
+              <feMergeNode in="innerCyan" />
+              <feMergeNode in="innerRose" />
+              <feMergeNode in="violet" />
+              <feMergeNode in="blue" />
+              <feMergeNode in="cyan" />
+              <feMergeNode in="green" />
+              <feMergeNode in="pink" />
+              <feMergeNode in="amber" />
+              <feMergeNode in="glow" />
+              <feMergeNode in="shine" />
+            </feMerge>
+            <!-- Exactly the liquid's shape: solid inside, nothing outside. -->
+            <feComposite in="water" in2="shape" operator="in" result="clearWater" />
+            <feComposite in="clearWater" in2="shape" operator="in" />
+          </filter>
+          <!-- The drips, hanging and falling: clear water, as the letters and the pool are. -->
+          <filter
+            id="waterDrops"
+            x="-30%"
+            y="-10%"
+            width="160%"
+            height="120%"
+            color-interpolation-filters="sRGB"
+          >
+            <feComponentTransfer in="SourceAlpha" result="shape">
+              <feFuncA type="identity" />
+            </feComponentTransfer>
+            <!-- How deep the water stands: rising from nothing at its edge. -->
+            <feGaussianBlur in="shape" stdDeviation="0.9" result="height" />
+            <!-- Where it thins toward its edge. -->
+            <feComposite in="shape" in2="height" operator="arithmetic" k2="1" k3="-1" result="thin" />
+            <feComponentTransfer in="thin" result="edge">
+              <feFuncA type="linear" slope="2.4" />
+            </feComponentTransfer>
+            <!-- Its body: clear, all but colourless. -->
+            <feFlood flood-color="#F0F2F3" />
+            <feComposite in2="shape" operator="in" result="body" />
+            <!-- Deeper toward its lower side, where it bends the light away. -->
+            <feOffset in="height" dx="-0.6" dy="-0.6" result="heightUp" />
+            <feComposite in="height" in2="heightUp" operator="arithmetic" k2="1.6" k3="-1.6" result="lowSide" />
+            <feFlood flood-color="#CBD0D3" />
+            <feComposite in2="lowSide" operator="in" result="shade" />
+            <!-- The rim, darker where the water is thin. -->
+            <feFlood flood-color="#959CA1" />
+            <feComposite in2="edge" operator="in" result="rim" />
+            <!--
+              Glass: the edge splits light into a thin spectrum, as iOS's glass does — blue then
+              cyan toward the light, a touch of green, violet on the rim itself, pink then amber
+              away from it.
+            -->
+            <feFlood flood-color="#9C8CF0" />
+            <feComposite in2="edge" operator="in" result="violetFull" />
+            <feComponentTransfer in="violetFull" result="violet">
+              <feFuncA type="linear" slope="0.3" class="dripEdgeColour" data-base="0.3" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="-0.8" dy="-0.64" result="edgeFarToLight" />
+            <feFlood flood-color="#3E8BF0" />
+            <feComposite in2="edgeFarToLight" operator="in" result="blueFull" />
+            <feComponentTransfer in="blueFull" result="blue">
+              <feFuncA type="linear" slope="0.45" class="dripEdgeColour" data-base="0.45" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="-0.4" dy="-0.32" result="edgeToLight" />
+            <feFlood flood-color="#4FD0F2" />
+            <feComposite in2="edgeToLight" operator="in" result="cyanFull" />
+            <feComponentTransfer in="cyanFull" result="cyan">
+              <feFuncA type="linear" slope="0.65" class="dripEdgeColour" data-base="0.65" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.1" dy="0.08" result="edgeMid" />
+            <feFlood flood-color="#B4E86E" />
+            <feComposite in2="edgeMid" operator="in" result="greenFull" />
+            <feComponentTransfer in="greenFull" result="green">
+              <feFuncA type="linear" slope="0.22" class="dripEdgeColour" data-base="0.22" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.428" dy="0.346" result="edgeFromLight" />
+            <feFlood flood-color="#F07AB4" />
+            <feComposite in2="edgeFromLight" operator="in" result="pinkFull" />
+            <feComponentTransfer in="pinkFull" result="pink">
+              <feFuncA type="linear" slope="0.6" class="dripEdgeColour" data-base="0.6" />
+            </feComponentTransfer>
+            <feOffset in="edge" dx="0.8" dy="0.64" result="edgeFarFromLight" />
+            <feFlood flood-color="#F6AE45" />
+            <feComposite in2="edgeFarFromLight" operator="in" result="amberFull" />
+            <feComponentTransfer in="amberFull" result="amber">
+              <feFuncA type="linear" slope="0.5" class="dripEdgeColour" data-base="0.5" />
+            </feComponentTransfer>
+            <!-- And again, fainter, further in: where light bends back through the body, reversed. -->
+            <feGaussianBlur in="shape" stdDeviation="2" result="deep" />
+            <feComposite in="shape" in2="deep" operator="arithmetic" k2="1" k3="-1" result="deepThin" />
+            <feComponentTransfer in="deepThin" result="deepEdge">
+              <feFuncA type="table" tableValues="0 0.9 0.4 0" />
+            </feComponentTransfer>
+            <feOffset in="deepEdge" dx="0.7" dy="0.55" result="deepFromLight" />
+            <feFlood flood-color="#6FD6F5" />
+            <feComposite in2="deepFromLight" operator="in" result="innerCyanFull" />
+            <feComponentTransfer in="innerCyanFull" result="innerCyan">
+              <feFuncA type="linear" slope="0.28" class="dripEdgeColour" data-base="0.28" />
+            </feComponentTransfer>
+            <feOffset in="deepEdge" dx="-0.7" dy="-0.55" result="deepToLight" />
+            <feFlood flood-color="#F59AC6" />
+            <feComposite in2="deepToLight" operator="in" result="innerRoseFull" />
+            <feComponentTransfer in="innerRoseFull" result="innerRose">
+              <feFuncA type="linear" slope="0.22" class="dripEdgeColour" data-base="0.22" />
+            </feComponentTransfer>
+            <!-- A soft sheen inside the edge: lighter toward its edges, deeper in the middle. -->
+            <feComponentTransfer in="deepThin" result="sheenMask">
+              <feFuncA type="linear" slope="1.1" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FDFEFE" />
+            <feComposite in2="sheenMask" operator="in" result="sheen" />
+            <!-- A faint glow where the light gathers, on its lower side, just in from the rim. -->
+            <feOffset in="lowSide" dx="-0.6" dy="-0.6" result="glowSide" />
+            <feComponentTransfer in="glowSide" result="glowMask">
+              <feFuncA type="linear" slope="0.5" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FAFBFC" />
+            <feComposite in2="glowMask" operator="in" result="glow" />
+            <!-- The highlight, where the light from above-left catches its curve: sharp, bright. -->
+            <feOffset in="height" dx="0.6" dy="0.6" result="heightDown" />
+            <feComposite in="height" in2="heightDown" operator="arithmetic" k2="2.4" k3="-2.4" result="litSide" />
+            <feComponentTransfer in="litSide" result="shineMask">
+              <feFuncA type="gamma" amplitude="1.3" exponent="2.2" offset="0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FFFFFF" />
+            <feComposite in2="shineMask" operator="in" result="shine" />
+            <!-- The glass's bright edge: a thin catchlight just inside the lit edge, under the spectrum. -->
+            <feGaussianBlur in="shape" stdDeviation="0.3" result="lip" />
+            <feOffset in="lip" dx="0.3" dy="0.3" result="lipDown" />
+            <feComposite in="lip" in2="lipDown" operator="arithmetic" k2="2.2" k3="-2.2" result="lipSide" />
+            <feComponentTransfer in="lipSide" result="lipMask">
+              <feFuncA type="gamma" amplitude="0.85" exponent="1.8" offset="0" />
+            </feComponentTransfer>
+            <feFlood flood-color="#FFFFFF" />
+            <feComposite in2="lipMask" operator="in" result="lipLight" />
+            <feMerge result="water">
+              <feMergeNode in="body" />
+              <feMergeNode in="sheen" />
+              <feMergeNode in="shade" />
+              <feMergeNode in="rim" />
+              <feMergeNode in="lipLight" />
+              <feMergeNode in="innerCyan" />
+              <feMergeNode in="innerRose" />
+              <feMergeNode in="violet" />
+              <feMergeNode in="blue" />
+              <feMergeNode in="cyan" />
+              <feMergeNode in="green" />
+              <feMergeNode in="pink" />
+              <feMergeNode in="amber" />
+              <feMergeNode in="glow" />
+              <feMergeNode in="shine" />
+            </feMerge>
+            <!-- Exactly the liquid's shape: solid inside, nothing outside. -->
+            <feComposite in="water" in2="shape" operator="in" result="clearWater" />
+            <feComposite in="clearWater" in2="shape" operator="in" />
+          </filter>
+        </defs>
+        <rect id="bg" x="-20" y="-20" width="430" height="884" fill="#D62626" />
+        <g id="goo" filter="url(#gooRed)" fill="#D62626">
+          <path id="water" d="" />
+          <g id="gooWord"></g>
+          <g id="drops"></g>
+        </g>
+        <g id="tears" fill="#D62626" filter="url(#waterDrops)"></g>
+        <g id="redLayer">
+          <g id="redWord"></g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="panel">
+      <section class="card" aria-label="Playback">
+        <div class="row">
+          <button id="play" class="primary" type="button">Play</button>
+          <button id="replay" type="button">Replay</button>
+          <div class="seg" role="group" aria-label="Speed">
+            <button type="button" data-speed="0.1" aria-pressed="false">0.1×</button>
+            <button type="button" data-speed="0.25" aria-pressed="false">0.25×</button>
+            <button type="button" data-speed="0.5" aria-pressed="false">0.5×</button>
+            <button type="button" data-speed="1" aria-pressed="true">1×</button>
+          </div>
+          <span class="time" id="time">0.00 s</span>
+        </div>
+        <input
+          id="scrub"
+          type="range"
+          min="0"
+          max="3000"
+          step="1"
+          value="0"
+          aria-label="Scrub the timeline"
+        />
+        <div class="row">
+          <span class="label">Haptics</span>
+          <div class="haptics">
+            <span class="hap" id="hapHeavy">Heavy · pool erupts</span>
+            <span class="hap" id="hapMedium">Medium · letters hit</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="Beats">
+        <span class="label">Beats · tap one to jump to it</span>
+        <ol class="beats" id="beats"></ol>
+      </section>
+
+      <section class="card" aria-label="Tuning">
+        <span class="label">Tuning</span>
+        <div class="tune" id="tune"></div>
+        <div class="row">
+          <button id="copy" type="button">Copy settings</button>
+          <button id="reset" type="button">Reset</button>
+        </div>
+        <p class="note">
+          The lettering is your uppercase SVG. Its pen strokes are centre lines drawn through each
+          letter in writing order; each letter's full outline inks in as its last stroke ends.
+        </p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  (() => {
+    const NS = "http://www.w3.org/2000/svg";
+    const W = 390,
+      H = 844,
+      CX = 195,
+      CY = 422;
+    const WORD_W = 30.732,
+      WORD_H = 3.16;
+    const RED = "#D62626",
+      WHITE = "#ffffff";
+    const PEN = 0.72;
+
+    // The uppercase wordmark, letter by letter, as supplied.
+    const LETTERS = [
+      "M0.06,3.096 L3.63797881e-12,2.144 L0.152,2.144 C0.189333333,2.38933333 0.290666667,2.58266667 0.456,2.724 C0.621333333,2.86533333 0.824,2.936 1.064,2.936 C1.26133333,2.936 1.41933333,2.88933333 1.538,2.796 C1.65666667,2.70266667 1.716,2.58 1.716,2.428 C1.716,2.34 1.696,2.26333333 1.656,2.198 C1.616,2.13266667 1.544,2.06866667 1.44,2.006 C1.336,1.94333333 1.18666667,1.87333333 0.992,1.796 C0.778666667,1.708 0.606666667,1.618 0.476,1.526 C0.345333333,1.434 0.250666667,1.33266667 0.192,1.222 C0.133333333,1.11133333 0.104,0.986666667 0.104,0.848 C0.104,0.682666667 0.144,0.536 0.224,0.408 C0.304,0.28 0.414,0.18 0.554,0.108 C0.694,0.036 0.856,0 1.04,0 C1.28266667,0 1.51066667,0.0813333333 1.724,0.244 L1.812,0.056 L1.908,0.056 L1.952,0.884 L1.8,0.884 C1.736,0.665333333 1.64,0.500666667 1.512,0.39 C1.384,0.279333333 1.23333333,0.224 1.06,0.224 C0.897333333,0.224 0.766,0.264666667 0.666,0.346 C0.566,0.427333333 0.516,0.533333333 0.516,0.664 C0.516,0.741333333 0.534666667,0.810666667 0.572,0.872 C0.609333333,0.933333333 0.674666667,0.992 0.768,1.048 C0.861333333,1.104 0.992,1.16666667 1.16,1.236 C1.416,1.34266667 1.61933333,1.44666667 1.77,1.548 C1.92066667,1.64933333 2.028,1.75533333 2.092,1.866 C2.156,1.97666667 2.188,2.104 2.188,2.248 C2.188,2.42666667 2.14,2.58466667 2.044,2.722 C1.948,2.85933333 1.81533333,2.96666667 1.646,3.044 C1.47666667,3.12133333 1.27866667,3.16 1.052,3.16 C0.9,3.16 0.760666667,3.138 0.634,3.094 C0.507333333,3.05 0.38,2.97866667 0.252,2.88 L0.156,3.096 L0.06,3.096 Z",
+      "M5.34,1.052 L5.34,1.88 C5.34,2.17066667 5.29866667,2.41066667 5.216,2.6 C5.13333333,2.78933333 5.00333333,2.93 4.826,3.022 C4.64866667,3.114 4.41466667,3.16 4.124,3.16 C3.84933333,3.16 3.62266667,3.12266667 3.444,3.048 C3.26533333,2.97333333 3.13266667,2.85266667 3.046,2.686 C2.95933333,2.51933333 2.916,2.3 2.916,2.028 L2.916,0.952 C2.916,0.818666667 2.91466667,0.708666667 2.912,0.622 C2.90933333,0.535333333 2.902,0.465333333 2.89,0.412 C2.878,0.358666667 2.85866667,0.317333333 2.832,0.288 C2.80266667,0.250666667 2.76333333,0.226 2.714,0.214 C2.66466667,0.202 2.59333333,0.196 2.5,0.196 L2.5,0.04 L3.896,0.04 L3.896,0.196 C3.79733333,0.196 3.72066667,0.201333333 3.666,0.212 C3.61133333,0.222666667 3.568,0.248 3.536,0.288 C3.50133333,0.333333333 3.478,0.405333333 3.466,0.504 C3.454,0.602666667 3.448,0.752 3.448,0.952 L3.448,2.024 C3.448,2.30933333 3.51,2.52533333 3.634,2.672 C3.758,2.81866667 3.96266667,2.892 4.248,2.892 C4.52,2.892 4.72266667,2.81733333 4.856,2.668 C4.98933333,2.51866667 5.056,2.296 5.056,2 L5.056,1.052 C5.056,0.822666667 5.048,0.650666667 5.032,0.536 C5.016,0.421333333 4.98266667,0.338666667 4.932,0.288 C4.89733333,0.253333333 4.85066667,0.229333333 4.792,0.216 C4.73333333,0.202666667 4.65866667,0.196 4.568,0.196 L4.568,0.04 L5.788,0.04 L5.788,0.196 C5.69733333,0.196 5.62466667,0.202666667 5.57,0.216 C5.51533333,0.229333333 5.47333333,0.257333333 5.444,0.3 C5.404,0.353333333 5.37666667,0.436666667 5.362,0.55 C5.34733333,0.663333333 5.34,0.830666667 5.34,1.052 Z",
+      "M8.6,3.16 L6.76,0.648 L6.744,0.648 L6.744,2.36 C6.744,2.536 6.75333333,2.666 6.772,2.75 C6.79066667,2.834 6.82933333,2.88933333 6.888,2.916 C6.94666667,2.94266667 7.03333333,2.95866667 7.148,2.964 L7.148,3.12 L6.02,3.12 L6.02,2.964 C6.148,2.95866667 6.244,2.94266667 6.308,2.916 C6.372,2.88933333 6.41466667,2.836 6.436,2.756 C6.45733333,2.676 6.468,2.55333333 6.468,2.388 L6.468,0.772 C6.468,0.62 6.45866667,0.504 6.44,0.424 C6.42133333,0.344 6.38266667,0.287333333 6.324,0.254 C6.26533333,0.220666667 6.17733333,0.201333333 6.06,0.196 L6.06,0.04 L7,0.04 L8.688,2.364 L8.704,2.364 L8.704,0.8 C8.704,0.624 8.694,0.494 8.674,0.41 C8.654,0.326 8.61533333,0.27 8.558,0.242 C8.50066667,0.214 8.41333333,0.198666667 8.296,0.196 L8.296,0.04 L9.424,0.04 L9.424,0.196 C9.296,0.198666667 9.2,0.214 9.136,0.242 C9.072,0.27 9.02933333,0.324 9.008,0.404 C8.98666667,0.484 8.976,0.606666667 8.976,0.772 L8.976,3.16 L8.6,3.16 Z",
+      "M9.692,3.12 L9.692,2.964 C9.81733333,2.95866667 9.91266667,2.94466667 9.978,2.922 C10.0433333,2.89933333 10.0873333,2.856 10.11,2.792 C10.1326667,2.728 10.144,2.63333333 10.144,2.508 L10.144,0.652 C10.144,0.526666667 10.1346667,0.432666667 10.116,0.37 C10.0973333,0.307333333 10.0613333,0.264 10.008,0.24 C9.95466667,0.216 9.87333333,0.201333333 9.764,0.196 L9.764,0.04 L11.22,0.04 C11.468,0.04 11.696,0.0793333333 11.904,0.158 C12.112,0.236666667 12.2926667,0.347333333 12.446,0.49 C12.5993333,0.632666667 12.7186667,0.801333333 12.804,0.996 C12.8893333,1.19066667 12.932,1.40266667 12.932,1.632 C12.932,1.85066667 12.892,2.05066667 12.812,2.232 C12.732,2.41333333 12.6193333,2.57066667 12.474,2.704 C12.3286667,2.83733333 12.1566667,2.94 11.958,3.012 C11.7593333,3.084 11.54,3.12 11.3,3.12 L9.692,3.12 Z M11.232,2.904 C11.5893333,2.904 11.864,2.796 12.056,2.58 C12.248,2.364 12.344,2.05066667 12.344,1.64 C12.344,1.34933333 12.298,1.10133333 12.206,0.896 C12.114,0.690666667 11.984,0.532666667 11.816,0.422 C11.648,0.311333333 11.4466667,0.256 11.212,0.256 L10.708,0.256 C10.6626667,0.256 10.64,0.278666667 10.64,0.324 L10.64,2.448 C10.64,2.752 10.8373333,2.904 11.232,2.904 Z",
+      "M12.984,3.12 L12.984,2.964 C13.1093333,2.95066667 13.204,2.922 13.268,2.878 C13.332,2.834 13.3866667,2.75466667 13.432,2.64 L14.476,0.02 L14.704,0.02 L15.632,2.316 C15.6933333,2.45733333 15.7453333,2.57066667 15.788,2.656 C15.8306667,2.74133333 15.8733333,2.80466667 15.916,2.846 C15.9586667,2.88733333 16.006,2.916 16.058,2.932 C16.11,2.948 16.176,2.95733333 16.256,2.96 L16.256,3.12 L14.856,3.12 L14.856,2.96 C14.992,2.95733333 15.0873333,2.944 15.142,2.92 C15.1966667,2.896 15.224,2.85333333 15.224,2.792 C15.224,2.744 15.2166667,2.694 15.202,2.642 C15.1873333,2.59 15.1626667,2.52 15.128,2.432 L14.996,2.088 L13.9,2.088 C13.82,2.272 13.7626667,2.41866667 13.728,2.528 C13.6933333,2.63733333 13.676,2.71866667 13.676,2.772 C13.676,2.84933333 13.7033333,2.90066667 13.758,2.926 C13.8126667,2.95133333 13.8973333,2.964 14.012,2.964 L14.012,3.12 L12.984,3.12 Z M13.984,1.868 L14.916,1.868 L14.468,0.676 L14.452,0.676 L13.984,1.868 Z",
+      "M16.704,3.12 L16.704,2.964 C16.824,2.964 16.9146667,2.95066667 16.976,2.924 C17.0373333,2.89733333 17.0786667,2.84266667 17.1,2.76 C17.1213333,2.67733333 17.132,2.55333333 17.132,2.388 L17.132,1.956 L16.32,0.54 C16.2666667,0.446666667 16.218,0.375333333 16.174,0.326 C16.13,0.276666667 16.0833333,0.242666667 16.034,0.224 C15.9846667,0.205333333 15.924,0.196 15.852,0.196 L15.852,0.04 L17.148,0.04 L17.148,0.196 C17.028,0.196 16.942,0.206 16.89,0.226 C16.838,0.246 16.812,0.28 16.812,0.328 C16.812,0.354666667 16.82,0.387333333 16.836,0.426 C16.852,0.464666667 16.876,0.513333333 16.908,0.572 L17.508,1.648 L17.524,1.648 L18,0.848 C18.0853333,0.704 18.146,0.592666667 18.182,0.514 C18.218,0.435333333 18.236,0.372 18.236,0.324 C18.236,0.276 18.216,0.242666667 18.176,0.224 C18.136,0.205333333 18.064,0.196 17.96,0.196 L17.96,0.04 L18.916,0.04 L18.916,0.196 C18.86,0.196 18.8086667,0.205333333 18.762,0.224 C18.7153333,0.242666667 18.6673333,0.276666667 18.618,0.326 C18.5686667,0.375333333 18.514,0.445333333 18.454,0.536 C18.394,0.626666667 18.32,0.745333333 18.232,0.892 L17.628,1.916 L17.628,2.36 C17.628,2.536 17.6386667,2.66733333 17.66,2.754 C17.6813333,2.84066667 17.7226667,2.89733333 17.784,2.924 C17.8453333,2.95066667 17.936,2.964 18.056,2.964 L18.056,3.12 L16.704,3.12 Z",
+      "M19.012,3.12 L19.012,2.964 C19.1426667,2.95866667 19.24,2.94466667 19.304,2.922 C19.368,2.89933333 19.4106667,2.856 19.432,2.792 C19.4533333,2.728 19.464,2.63333333 19.464,2.508 L19.464,0.652 C19.464,0.526666667 19.4553333,0.432666667 19.438,0.37 C19.4206667,0.307333333 19.3853333,0.264 19.332,0.24 C19.2786667,0.216 19.1986667,0.201333333 19.092,0.196 L19.092,0.04 L20.328,0.04 C20.7066667,0.04 21,0.104666667 21.208,0.234 C21.416,0.363333333 21.52,0.546666667 21.52,0.784 C21.52,0.949333333 21.4633333,1.088 21.35,1.2 C21.2366667,1.312 21.064,1.40266667 20.832,1.472 L20.832,1.488 C21.016,1.49333333 21.182,1.53 21.33,1.598 C21.478,1.666 21.5953333,1.75933333 21.682,1.878 C21.7686667,1.99666667 21.812,2.13733333 21.812,2.3 C21.812,2.444 21.776,2.57266667 21.704,2.686 C21.632,2.79933333 21.5333333,2.89066667 21.408,2.96 C21.3066667,3.016 21.1826667,3.05666667 21.036,3.082 C20.8893333,3.10733333 20.7093333,3.12 20.496,3.12 L19.012,3.12 Z M20.512,2.916 C20.9733333,2.916 21.204,2.716 21.204,2.316 C21.204,2.18 21.1773333,2.062 21.124,1.962 C21.0706667,1.862 20.9946667,1.78533333 20.896,1.732 C20.816,1.684 20.7153333,1.65133333 20.594,1.634 C20.4726667,1.61666667 20.324,1.608 20.148,1.608 L19.96,1.608 L19.96,2.46 C19.96,2.62266667 20.0026667,2.73933333 20.088,2.81 C20.1733333,2.88066667 20.3146667,2.916 20.512,2.916 Z M19.96,1.392 L20.192,1.392 C20.3413333,1.392 20.458,1.382 20.542,1.362 C20.626,1.342 20.6933333,1.31466667 20.744,1.28 C20.8106667,1.23733333 20.862,1.17666667 20.898,1.098 C20.934,1.01933333 20.952,0.925333333 20.952,0.816 C20.952,0.621333333 20.902,0.478666667 20.802,0.388 C20.702,0.297333333 20.544,0.252 20.328,0.252 L20.032,0.252 C19.984,0.252 19.96,0.274666667 19.96,0.32 L19.96,1.392 Z",
+      "M23.068,0.336 L23.068,1.424 C23.2253333,1.424 23.354,1.41666667 23.454,1.402 C23.554,1.38733333 23.6326667,1.362 23.69,1.326 C23.7473333,1.29 23.7886667,1.24133333 23.814,1.18 C23.8393333,1.11866667 23.8546667,1.04133333 23.86,0.948 L24.004,0.948 L24.004,2.08 L23.86,2.08 C23.852,1.98666667 23.8353333,1.90933333 23.81,1.848 C23.7846667,1.78666667 23.744,1.738 23.688,1.702 C23.632,1.666 23.554,1.64066667 23.454,1.626 C23.354,1.61133333 23.2253333,1.604 23.068,1.604 L23.068,2.472 C23.068,2.58666667 23.0893333,2.67733333 23.132,2.744 C23.1746667,2.81066667 23.2446667,2.858 23.342,2.886 C23.4393333,2.914 23.5733333,2.928 23.744,2.928 C23.9386667,2.928 24.0946667,2.90866667 24.212,2.87 C24.3293333,2.83133333 24.42,2.76466667 24.484,2.67 C24.548,2.57533333 24.5986667,2.44266667 24.636,2.272 L24.792,2.272 L24.728,3.12 L22.14,3.12 L22.14,2.964 C22.2653333,2.95866667 22.3586667,2.94466667 22.42,2.922 C22.4813333,2.89933333 22.522,2.856 22.542,2.792 C22.562,2.728 22.572,2.63333333 22.572,2.508 L22.572,0.652 C22.572,0.526666667 22.5626667,0.432666667 22.544,0.37 C22.5253333,0.307333333 22.4886667,0.264 22.434,0.24 C22.3793333,0.216 22.296,0.201333333 22.184,0.196 L22.184,0.04 L24.592,0.04 L24.628,0.78 L24.472,0.78 C24.4506667,0.636 24.4113333,0.524 24.354,0.444 C24.2966667,0.364 24.2126667,0.308666667 24.102,0.278 C23.9913333,0.247333333 23.8426667,0.232 23.656,0.232 L23.176,0.232 C23.1333333,0.232 23.1046667,0.238666667 23.09,0.252 C23.0753333,0.265333333 23.068,0.293333333 23.068,0.336 Z",
+      "M25.236,3.096 L25.176,2.144 L25.328,2.144 C25.3653333,2.38933333 25.4666667,2.58266667 25.632,2.724 C25.7973333,2.86533333 26,2.936 26.24,2.936 C26.4373333,2.936 26.5953333,2.88933333 26.714,2.796 C26.8326667,2.70266667 26.892,2.58 26.892,2.428 C26.892,2.34 26.872,2.26333333 26.832,2.198 C26.792,2.13266667 26.72,2.06866667 26.616,2.006 C26.512,1.94333333 26.3626667,1.87333333 26.168,1.796 C25.9546667,1.708 25.7826667,1.618 25.652,1.526 C25.5213333,1.434 25.4266667,1.33266667 25.368,1.222 C25.3093333,1.11133333 25.28,0.986666667 25.28,0.848 C25.28,0.682666667 25.32,0.536 25.4,0.408 C25.48,0.28 25.59,0.18 25.73,0.108 C25.87,0.036 26.032,0 26.216,0 C26.4586667,0 26.6866667,0.0813333333 26.9,0.244 L26.988,0.056 L27.084,0.056 L27.128,0.884 L26.976,0.884 C26.912,0.665333333 26.816,0.500666667 26.688,0.39 C26.56,0.279333333 26.4093333,0.224 26.236,0.224 C26.0733333,0.224 25.942,0.264666667 25.842,0.346 C25.742,0.427333333 25.692,0.533333333 25.692,0.664 C25.692,0.741333333 25.7106667,0.810666667 25.748,0.872 C25.7853333,0.933333333 25.8506667,0.992 25.944,1.048 C26.0373333,1.104 26.168,1.16666667 26.336,1.236 C26.592,1.34266667 26.7953333,1.44666667 26.946,1.548 C27.0966667,1.64933333 27.204,1.75533333 27.268,1.866 C27.332,1.97666667 27.364,2.104 27.364,2.248 C27.364,2.42666667 27.316,2.58466667 27.22,2.722 C27.124,2.85933333 26.9913333,2.96666667 26.822,3.044 C26.6526667,3.12133333 26.4546667,3.16 26.228,3.16 C26.076,3.16 25.9366667,3.138 25.81,3.094 C25.6833333,3.05 25.556,2.97866667 25.428,2.88 L25.332,3.096 L25.236,3.096 Z",
+      "M30.692,0.04 L30.732,0.856 L30.564,0.856 C30.5533333,0.693333333 30.5226667,0.566 30.472,0.474 C30.4213333,0.382 30.3486667,0.318 30.254,0.282 C30.1593333,0.246 30.0373333,0.228 29.888,0.228 C29.752,0.228 29.6506667,0.232 29.584,0.24 C29.5173333,0.248 29.474,0.260666667 29.454,0.278 C29.434,0.295333333 29.424,0.32 29.424,0.352 L29.424,2.472 C29.424,2.58666667 29.4353333,2.67933333 29.458,2.75 C29.4806667,2.82066667 29.53,2.87266667 29.606,2.906 C29.682,2.93933333 29.7973333,2.95866667 29.952,2.964 L29.952,3.12 L28.364,3.12 L28.364,2.964 C28.5186667,2.95866667 28.634,2.93933333 28.71,2.906 C28.786,2.87266667 28.836,2.82066667 28.86,2.75 C28.884,2.67933333 28.896,2.58666667 28.896,2.472 L28.896,0.352 C28.896,0.32 28.8866667,0.295333333 28.868,0.278 C28.8493333,0.260666667 28.812,0.248 28.756,0.24 C28.7,0.232 28.6133333,0.228 28.496,0.228 C28.3946667,0.228 28.3,0.232666667 28.212,0.242 C28.124,0.251333333 28.0466667,0.276 27.98,0.316 C27.9133333,0.356 27.8606667,0.418666667 27.822,0.504 C27.7833333,0.589333333 27.7613333,0.706666667 27.756,0.856 L27.604,0.856 L27.62,0.04 L30.692,0.04 Z",
+    ];
+
+    // Pen centre lines, in writing order, in the same units as the letters.
+    const sStrokes = (o) => {
+      const x = (v) => (v + o).toFixed(3);
+      return [
+        `M${x(1.86)},0.12 L${x(1.84)},0.62 C${x(1.6)},0.25 ${x(1.3)},0.13 ${x(1.04)},0.13 C${x(0.6)},0.13 ${x(0.31)},0.4 ${x(0.31)},0.78 C${x(0.31)},1.18 ${x(0.66)},1.32 ${x(1.12)},1.52 C${x(1.66)},1.74 ${x(1.97)},1.96 ${x(1.97)},2.36 C${x(1.97)},2.78 ${x(1.58)},3.03 ${x(1.06)},3.03 C${x(0.66)},3.03 ${x(0.34)},2.84 ${x(0.16)},2.45`,
+        `M${x(0.1)},2.2 L${x(0.1)},3.05`,
+      ];
+    };
+    const STROKES = [
+      sStrokes(0),
+      [
+        "M2.58,0.12 L3.82,0.12",
+        "M3.18,0.14 L3.18,2.05 C3.18,2.72 3.55,3.0 4.15,3.0 C4.78,3.0 5.2,2.72 5.2,2.0 L5.2,0.14",
+        "M4.62,0.12 L5.74,0.12",
+      ],
+      [
+        "M6.08,3.04 L7.1,3.04",
+        "M6.6,3.0 L6.6,0.12 L6.9,0.12 L8.8,3.05 L8.84,0.12",
+        "M8.35,0.12 L9.38,0.12",
+      ],
+      [
+        "M10.39,0.12 L10.39,3.04",
+        "M9.76,0.14 L11.2,0.14 C12.1,0.14 12.64,0.78 12.64,1.62 C12.64,2.5 12.08,3.03 11.25,3.03 L9.72,3.04",
+      ],
+      [
+        "M13.03,3.04 L13.98,3.04",
+        "M13.3,3.0 L14.56,0.08 L15.78,2.98",
+        "M14.88,3.04 L16.22,3.04",
+        "M13.85,1.98 L15.05,1.98",
+      ],
+      [
+        "M15.88,0.12 L17.12,0.12",
+        "M16.3,0.14 L17.38,1.86 L17.38,3.0",
+        "M17.98,0.12 L18.9,0.12",
+        "M18.44,0.14 L17.45,1.82",
+        "M16.74,3.04 L18.03,3.04",
+      ],
+      [
+        "M19.71,0.12 L19.71,3.04",
+        "M19.06,0.14 L20.35,0.14 C20.95,0.14 21.24,0.42 21.24,0.8 C21.24,1.22 20.88,1.5 20.3,1.5 L20.0,1.5 L20.4,1.5 C21.08,1.52 21.52,1.86 21.52,2.3 C21.52,2.78 21.1,3.03 20.5,3.03 L19.04,3.04",
+      ],
+      [
+        "M24.55,0.76 L24.5,0.15 L22.82,0.15 L22.82,3.02 L24.7,3.02 L24.74,2.3",
+        "M23.0,1.51 L23.93,1.51",
+        "M23.93,0.98 L23.93,2.06",
+      ],
+      sStrokes(25.176),
+      [
+        "M27.68,0.82 L27.68,0.15 L30.66,0.15 L30.66,0.82",
+        "M29.16,0.25 L29.16,3.0",
+        "M28.42,3.04 L29.9,3.04",
+      ],
+    ];
+
+    const DEFAULTS = {
+      writeMs: 4500,
+      writeWidth: 350,
+      drips: 0.3,
+      dripSize: 0.6,
+      hangMs: 240,
+      poolPct: 8,
+      pauseMs: 0,
+      sinkMs: 0,
+      splashMs: 1050,
+      holdMs: 300,
+      fadeMs: 250,
+      waterBody: 0.82,
+      melt: 0.7,
+      textWaterLikeness: 1.42,
+      textWaterShine: 1.25,
+      textWaterGleam: 0.5,
+      textWaterColor: 2,
+      poolEdgeColor: 0.15,
+      dripEdgeColor: 1.3,
+      pourMs: 1600,
+      waterVolumeFromDrip: 0.8,
+      textDrawStartAfterPoolEntry: 1650,
+      textSeeThrough: 1,
+      dripSeeThrough: 1,
+      textLiquidOutline: 2,
+      textSwell: 0.6,
+      textWetPen: 1,
+      textSettle: 1,
+      textWobble: 4,
+      textReflection: 1,
+      textSparkle: 0.65,
+      textRimColor: 2.3,
+      textBlendToPool: 1,
+      poolSeeThrough: 0.65,
+      wetWhiteness: 0.1,
+      textWhiteness: 0.16,
+      textWetness: 2,
+      wordOffsetX: -2,
+    };
+    const TUNING = [
+      { key: "writeMs", label: "Writing time", min: 1000, max: 5000, step: 100, unit: "ms" },
+      { key: "writeWidth", label: "Writing width", min: 180, max: 350, step: 5, unit: "pt" },
+      { key: "drips", label: "How much it drips", min: 0.3, max: 3, step: 0.1, unit: "×" },
+      { key: "dripSize", label: "Drip size", min: 0.4, max: 2.5, step: 0.05, unit: "×" },
+      { key: "hangMs", label: "Drip hang time", min: 0, max: 900, step: 20, unit: "ms" },
+      { key: "poolPct", label: "Pool height", min: 5, max: 30, step: 1, unit: "%" },
+      { key: "pauseMs", label: "Pause before the fall", min: 0, max: 3000, step: 50, unit: "ms" },
+      {
+        key: "sinkMs",
+        label: "Delay before the eruption",
+        min: 0,
+        max: 1200,
+        step: 25,
+        unit: "ms",
+      },
+      { key: "splashMs", label: "Eruption time", min: 400, max: 1400, step: 25, unit: "ms" },
+      { key: "holdMs", label: "Full red hold", min: 300, max: 2000, step: 50, unit: "ms" },
+      // How long the full screen of water takes to fade to the page underneath.
+      { key: "fadeMs", label: "Fade to the page", min: 0, max: 1200, step: 10, unit: "ms" },
+      // One control for the water's living body: its caustic light, colour and glints together.
+      { key: "waterBody", label: "Water body", min: 0, max: 1.5, step: 0.02, unit: "×" },
+      // One control for how the letters melt as they fall: how soon, and how far.
+      { key: "melt", label: "Melt", min: 0, max: 2, step: 0.05, unit: "×" },
+      // Inside the written letters, never at their edges.
+      { key: "textWaterLikeness", label: "TextWaterLikeness", min: 0, max: 5, step: 0.02, unit: "×" },
+      { key: "textWaterShine", label: "TextWaterShine", min: 0, max: 6, step: 0.05, unit: "×" },
+      { key: "textWaterGleam", label: "TextWaterGleam", min: 0, max: 6, step: 0.05, unit: "×" },
+      { key: "textWaterColor", label: "TextWaterColor", min: 0, max: 8, step: 0.05, unit: "×" },
+      // How strong the colour is at the pool's and the eruption's edges: their whole spectrum.
+      { key: "poolEdgeColor", label: "PoolEdgeColor", min: 0, max: 3, step: 0.05, unit: "×" },
+      // How strong the colour is at the drips' edges: their whole spectrum.
+      { key: "dripEdgeColor", label: "DripEdgeColor", min: 0, max: 10, step: 0.05, unit: "×" },
+      // How long the pool takes to pour in, from the bottom right, at the start.
+      { key: "pourMs", label: "Pour-in time", min: 400, max: 3000, step: 50, unit: "ms" },
+      // How much the landed drips raise the pool, apart from how clear they turn it.
+      { key: "waterVolumeFromDrip", label: "WaterVolumeFromDrip", min: 0, max: 3, step: 0.05, unit: "×" },
+      // How long after the pool starts pouring in the pen starts writing.
+      { key: "textDrawStartAfterPoolEntry", label: "TextDrawStartAfterPoolEntry", min: 0, max: 3000, step: 50, unit: "ms" },
+      // v6: how much of the red page shows through the letters, bent, as through water (0 is v5's clear look).
+      { key: "textSeeThrough", label: "TextSeeThrough", min: 0, max: 1, step: 0.01, unit: "×" },
+      // And through the drips.
+      { key: "dripSeeThrough", label: "DripSeeThrough", min: 0, max: 1, step: 0.01, unit: "×" },
+      // How far the letters' corners and serifs round off, as liquid's do.
+      { key: "textLiquidOutline", label: "TextLiquidOutline", min: 0, max: 3, step: 0.05, unit: "×" },
+      // How much the letters swell, as water standing on the page does.
+      { key: "textSwell", label: "TextSwell", min: 0, max: 1.5, step: 0.05, unit: "×" },
+      // The bead of water at the pen's tip as it writes.
+      { key: "textWetPen", label: "TextWetPen", min: 0, max: 3, step: 0.05, unit: "×" },
+      // How much a letter swells as it's written, then ripples as it settles.
+      { key: "textSettle", label: "TextSettle", min: 0, max: 3, step: 0.05, unit: "×" },
+      // The letters' outlines moving a little, never still.
+      { key: "textWobble", label: "TextWobble", min: 0, max: 4, step: 0.05, unit: "×" },
+      // A soft reflection drifting slowly across the word.
+      { key: "textReflection", label: "TextReflection", min: 0, max: 4, step: 0.05, unit: "×" },
+      // Small sharp glints in the letters.
+      { key: "textSparkle", label: "TextSparkle", min: 0, max: 3, step: 0.05, unit: "×" },
+      // The colour split at the letters' rims.
+      { key: "textRimColor", label: "TextRimColor", min: 0, max: 4, step: 0.05, unit: "×" },
+      // How far the letters turn to the pool's look as they fall into it.
+      { key: "textBlendToPool", label: "TextBlendToPool", min: 0, max: 1, step: 0.05, unit: "×" },
+      // How much of the red page shows through the pool and the eruption (0 is v5's clear pool).
+      { key: "poolSeeThrough", label: "PoolSeeThrough", min: 0, max: 1, step: 0.01, unit: "×" },
+      // Lifts the see-through red of the letters, drips and pool toward white.
+      { key: "wetWhiteness", label: "WetWhiteness", min: 0, max: 1, step: 0.01, unit: "×" },
+      // The letters only: whiter, on top of WetWhiteness.
+      { key: "textWhiteness", label: "TextWhiteness", min: 0, max: 1, step: 0.01, unit: "×" },
+      // The letters only: softer, rounder and more liquid — less crisp.
+      { key: "textWetness", label: "TextWetness", min: 0, max: 3, step: 0.05, unit: "×" },
+      // The word's place across the screen, from its centre: negative is left (an optical nudge).
+      { key: "wordOffsetX", label: "WordOffsetX", min: -10, max: 10, step: 0.5, unit: "pt" },
+    ];
+    let params = { ...DEFAULTS };
+
+    const $ = (id) => document.getElementById(id);
+    const el = (tag, attrs = {}, parent) => {
+      const node = document.createElementNS(NS, tag);
+      for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+      if (parent) parent.appendChild(node);
+      return node;
+    };
+    const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+    const easeInOut = (p) => 0.5 - 0.5 * Math.cos(Math.PI * p);
+    const easeOut = (p) => 1 - (1 - p) * (1 - p);
+    const easeOutBack = (p, s = 1.5) => 1 + (s + 1) * Math.pow(p - 1, 3) + s * Math.pow(p - 1, 2);
+    const mix = (a, b, t) => a + (b - a) * t;
+    function mulberry32(a) {
+      return () => {
+        a |= 0;
+        a = (a + 0x6d2b79f5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    // ---------- The water's living body ----------
+    // Textures drawn once as the page loads and laid over the water's body (the pool's filter),
+    // moved every frame: a tileable caustic web of light, soft patches of refracted colour, and a
+    // smooth field that bends the body's bands. Every colour is solid; only how much shows varies.
+    function drawWaterTextures() {
+      const TAU = Math.PI * 2;
+      const canvas = (size, paint) => {
+        const c = document.createElement("canvas");
+        c.width = c.height = size;
+        const ctx = c.getContext("2d");
+        const img = ctx.createImageData(size, size);
+        for (let y = 0; y < size; y++)
+          for (let x = 0; x < size; x++) paint(x / size, y / size, img.data, (y * size + x) * 4);
+        ctx.putImageData(img, 0, 0);
+        return c.toDataURL("image/png");
+      };
+      // A tileable random field: soft bumps of random size at random places, wrapped at the
+      // tile's edges so it repeats seamlessly — for unevenness that doesn't look made.
+      const rnd = mulberry32(2718);
+      const bumps = (count, rMin, rMax) =>
+        Array.from({ length: count }, () => ({
+          x: rnd(),
+          y: rnd(),
+          r: rMin + (rMax - rMin) * rnd(),
+          h: 0.4 + 0.6 * rnd(),
+          k: Math.floor(rnd() * 4),
+        }));
+      const wrapped = (a, b) => {
+        const d = Math.abs(a - b);
+        return Math.min(d, 1 - d);
+      };
+      const field = (list, u, v) => {
+        let total = 0;
+        for (const b of list) {
+          const d2 = (wrapped(u, b.x) ** 2 + wrapped(v, b.y) ** 2) / (b.r * b.r);
+          total += b.h * Math.exp(-d2);
+        }
+        return total;
+      };
+      // The caustic web: bright where light focuses through the moving surface, tileable — its
+      // space bent by a random field first, so its cells vary in size and its lines wander.
+      const bendU = bumps(9, 0.12, 0.3),
+        bendV = bumps(9, 0.12, 0.3);
+      const caustic = (u0, v0) => {
+        const u = u0 + 0.05 * (field(bendU, u0, v0) - 1),
+          v = v0 + 0.05 * (field(bendV, u0, v0) - 1);
+        const px = u * TAU - 250,
+          py = v * TAU - 250;
+        let ix = px,
+          iy = py,
+          c = 1;
+        const inten = 0.005,
+          time = 7.3;
+        for (let n = 0; n < 5; n++) {
+          const t = time * (1 - 3.5 / (n + 1));
+          const nx = px + Math.cos(t - ix) + Math.sin(t + iy);
+          const ny = py + Math.sin(t - iy) + Math.cos(t + ix);
+          ix = nx;
+          iy = ny;
+          c += 1 / Math.hypot(px / (Math.sin(ix + t) / inten), py / (Math.cos(iy + t) / inten));
+        }
+        c = 1.17 - Math.pow(c / 5, 1.4);
+        return Math.min(1, Math.pow(Math.abs(c), 8));
+      };
+      const causticURL = canvas(320, (u, v, d, i) => {
+        const a = caustic(u, v);
+        d[i] = 255;
+        d[i + 1] = 255;
+        d[i + 2] = 255;
+        d[i + 3] = Math.round(255 * a);
+      });
+      // Where the light is calm and where it's bright: a slow, uneven field.
+      const calmBright = bumps(7, 0.14, 0.32);
+      const fieldURL = canvas(160, (u, v, d, i) => {
+        const f = Math.min(1, 0.25 + 0.6 * field(calmBright, u, v));
+        d[i] = 255;
+        d[i + 1] = 255;
+        d[i + 2] = 255;
+        d[i + 3] = Math.round(255 * f);
+      });
+      // Soft patches of refracted colour: blobs of random size and place, each its colour —
+      // warm, lilac, aqua or pale gold — melting into each other and the clear water.
+      const PATCHES = [
+        [247, 227, 211],
+        [232, 224, 245],
+        [217, 241, 236],
+        [252, 244, 222],
+      ];
+      const blobs = bumps(16, 0.07, 0.2);
+      const tintURL = canvas(256, (u, v, d, i) => {
+        let r = 0,
+          g = 0,
+          b = 0,
+          w = 0,
+          most = 0;
+        for (const blob of blobs) {
+          const d2 = (wrapped(u, blob.x) ** 2 + wrapped(v, blob.y) ** 2) / (blob.r * blob.r);
+          const k = blob.h * Math.exp(-d2);
+          const [pr, pg, pb] = PATCHES[blob.k];
+          r += pr * k;
+          g += pg * k;
+          b += pb * k;
+          w += k;
+          most = Math.max(most, k);
+        }
+        d[i] = Math.round(w ? r / w : 255);
+        d[i + 1] = Math.round(w ? g / w : 255);
+        d[i + 2] = Math.round(w ? b / w : 255);
+        d[i + 3] = Math.round(255 * 0.55 * Math.min(1, most * 1.2));
+      });
+      const wave = (u, v, a, b, ph) => Math.sin(TAU * (a * u + b * v) + ph);
+      // A smooth field to bend the bands by: red sideways, green up and down, tileable.
+      const warpURL = canvas(128, (u, v, d, i) => {
+        d[i] = Math.round(127.5 + 127 * 0.5 * (wave(u, v, 1, 1, 0.4) + wave(u, v, 2, -1, 2.2)));
+        d[i + 1] = Math.round(127.5 + 127 * 0.5 * (wave(u, v, -1, 2, 1.3) + wave(u, v, 1, -2, 3.7)));
+        d[i + 2] = 128;
+        d[i + 3] = 255;
+      });
+      $("causticImageA").setAttribute("href", causticURL);
+      $("causticImageB").setAttribute("href", causticURL);
+      $("waterTintImage").setAttribute("href", tintURL);
+      $("causticFieldImage").setAttribute("href", fieldURL);
+      // The gleam: a soft band of light, leaning a little, for sweeping across the letters.
+      const gleamURL = canvas(128, (u, v, d, i) => {
+        const a = Math.exp(-(((u - 0.5 - (v - 0.5) * 0.35) / 0.16) ** 2));
+        d[i] = 255;
+        d[i + 1] = 255;
+        d[i + 2] = 255;
+        d[i + 3] = Math.round(255 * a);
+      });
+      const textures = { caustic: causticURL, tint: tintURL, field: fieldURL, warp: warpURL, gleam: gleamURL };
+      for (const node of document.querySelectorAll("[data-tex]"))
+        node.setAttribute("href", textures[node.getAttribute("data-tex")]);
+      $("waterWarpImage").setAttribute("href", warpURL);
+    }
+
+    // How far the water's body has travelled by `t`, in points: up with the eruption, down with
+    // the drain — what the living body's textures ride on.
+    function waterFlow(t) {
+      const B = beats;
+      const up = clamp01((t - B.splash.start) / B.splash.dur);
+      return -1100 * (1 - (1 - up) * (1 - up));
+    }
+
+    // Moves the living body for the moment `t`: two caustic webs drifting apart, the colour
+    // patches and the bending field slower, all carried by the water's own movement and stretched
+    // tall while it surges; and the screen's edges counted as water while it fills the screen.
+    function moveWaterBody(t, clear) {
+      const B = beats;
+      const flow = waterFlow(t);
+      const surge = Math.sin(Math.PI * clamp01((t - B.splash.start) / (B.splash.dur + B.hold.dur)));
+      const tall = 1 + 0.75 * surge;
+      // Each tile starts at the filter's corner plus how far it's moved, wrapped within its own
+      // size: the repeat is seamless, so the pattern flows on without a gap.
+      const wrap = (v, size) => ((v % size) + size) % size;
+      const place = (id, w, h, dx, dy) => {
+        const el = $(id);
+        el.setAttribute("width", w.toFixed(1));
+        el.setAttribute("height", h.toFixed(1));
+        el.setAttribute("x", (-120 + wrap(dx, w)).toFixed(1));
+        el.setAttribute("y", (-120 + wrap(dy, h)).toFixed(1));
+      };
+      // A drift that wanders — easing faster and slower, turning a little — never a steady slide.
+      const wander = (rate, amp, f, ph) => rate * t + amp * Math.sin(t * f + ph);
+      place("causticImageA", 223, 223 * tall, wander(0.021, 26, 0.0011, 0.4), wander(-0.013, 22, 0.0009, 2.1) + flow);
+      place("causticImageB", 307, 307 * tall, wander(-0.016, 30, 0.0008, 1.3), wander(0.009, 24, 0.0012, 4.0) + flow * 0.8);
+      place("causticFieldImage", 290, 290, wander(0.006, 34, 0.0006, 3.1), wander(-0.004, 28, 0.0007, 0.9) + flow * 0.7);
+      place("waterTintImage", 300, 300, wander(0.008, 30, 0.0007, 5.0), wander(-0.005, 26, 0.0005, 1.7) + flow * 0.6);
+      place("waterWarpImage", 300, 300, wander(-0.011, 20, 0.0009, 2.6), wander(0.007, 18, 0.0010, 3.3) + flow * 0.7);
+      // How much of it shows: none in the red pool, coming in as it clears; then the water-body
+      // control — the light in proportion, the colour paler or stronger with it, the glints
+      // falling away faster so they're smaller and rarer when it's turned down.
+      const body = params.waterBody * clear;
+      $("bandStrength").setAttribute("slope", clear.toFixed(3));
+      $("tintStrength").setAttribute("slope", body.toFixed(3));
+      $("causticMix").setAttribute("k2", (0.55 * body).toFixed(3));
+      $("causticMix").setAttribute("k3", (0.35 * body).toFixed(3));
+      $("glintMix").setAttribute("k1", (3.2 * body * body).toFixed(3));
+      const full = clamp01((t - B.splash.start - B.splash.dur * 0.6) / (B.splash.dur * 0.4));
+      for (const id of ["screenBeyondLeft", "screenBeyondRight", "screenBeyondTop", "screenBeyondBottom"])
+        $(id).setAttribute("flood-opacity", full.toFixed(3));
+    }
+
+    // ---------- The letters' water ----------
+    // Each written letter gets its own copy of the letters' water (#waterLetters, its edges as
+    // they are), with the pool's living water added inside it, drawn finer for a letter's
+    // strokes: caustic webs, drifting colour, bent bands, calm and bright (TextWaterLikeness,
+    // and TextWaterColor for its colour) — and its shine (a
+    // sheen along each stroke, glints) and an occasional gleam sweeping across the word. All
+    // kept inside the edges, in solid colours. Its own copy, so its moving textures stay within
+    // its own bounds, with room below for the melt's streams. In letter units (1pt is 0.088).
+    function letterWater(li, letter) {
+      const box = letter.getBBox();
+      const rx = box.x - 1,
+        ry = box.y - 1,
+        rw = box.width + 2,
+        rh = box.height + 9;
+      const filter = $("waterLetters").cloneNode(true);
+      filter.setAttribute("id", `waterLetter${li}`);
+      filter.setAttribute("filterUnits", "userSpaceOnUse");
+      filter.setAttribute("x", rx.toFixed(3));
+      filter.setAttribute("y", ry.toFixed(3));
+      filter.setAttribute("width", rw.toFixed(3));
+      filter.setAttribute("height", rh.toFixed(3));
+      defs.appendChild(filter);
+      const merge = filter.querySelector('feMerge[result="water"]');
+      const add = (tag, attrs, kids = []) => {
+        const node = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        for (const [kt, ka] of kids) {
+          const kid = document.createElementNS(NS, kt);
+          for (const [k, v] of Object.entries(ka)) kid.setAttribute(k, v);
+          node.appendChild(kid);
+        }
+        filter.insertBefore(node, merge);
+        return node;
+      };
+      const image = (tex, result) =>
+        add("feImage", { "data-tex": tex, x: "0", y: "0", width: "1", height: "1", preserveAspectRatio: "none", result });
+      const inside = (from, result) => add("feComposite", { in: from, in2: "lwInside", operator: "in", result });
+      // Well inside its edges: about a point in.
+      add("feGaussianBlur", { in: "shape", stdDeviation: "0.08", result: "lwInward" });
+      add("feComponentTransfer", { in: "lwInward", result: "lwInside" }, [
+        ["feFuncA", { type: "table", tableValues: "0 0 0 0 0 0 0 0 0 0.5 1" }],
+      ]);
+      // Depth: the water deeper inside its strokes than at its edges — a cooler, deeper tone
+      // for the light, colour and gleam to show against, as the pool's body has.
+      add("feFlood", { "flood-color": "#D9E0E5", result: "lwDeepColour" });
+      const deepStrength = add("feComponentTransfer", { in: "lwInside", result: "lwDeepMask" }, [
+        ["feFuncA", { type: "linear", slope: "0.8" }],
+      ]);
+      add("feComposite", { in: "lwDeepColour", in2: "lwDeepMask", operator: "in", result: "lwDeep" });
+      // Caustics: two fine webs of light, uneven across the letter.
+      const causticA = image("caustic", "lwCaTileA");
+      add("feTile", { in: "lwCaTileA", result: "lwCaA" });
+      const causticB = image("caustic", "lwCaTileB");
+      add("feTile", { in: "lwCaTileB", result: "lwCaB" });
+      const causticMix = add("feComposite", { in: "lwCaA", in2: "lwCaB", operator: "arithmetic", k2: "0.55", k3: "0.35", result: "lwCaLight" });
+      const field = image("field", "lwFieldTile");
+      add("feTile", { in: "lwFieldTile", result: "lwField" });
+      add("feComposite", { in: "lwCaLight", in2: "lwField", operator: "arithmetic", k1: "1.7", result: "lwCaVaried" });
+      inside("lwCaVaried", "lwCaustics");
+      // Soft patches of refracted colour, drifting.
+      const tint = image("tint", "lwTintTile");
+      // The same patches, their colour pushed further for small strokes.
+      add("feTile", { in: "lwTintTile", result: "lwTintPale" });
+      const tintRichness = add("feColorMatrix", { in: "lwTintPale", type: "saturate", values: "2.6", result: "lwTintField" });
+      const tintStrength = add("feComponentTransfer", { in: "lwTintField", result: "lwTintShown" }, [
+        ["feFuncA", { type: "linear", slope: "1" }],
+      ]);
+      inside("lwTintShown", "lwTint");
+      // Bands of bent light at depths in its strokes, rippled by a moving field.
+      add("feGaussianBlur", { in: "shape", stdDeviation: "0.2", result: "lwDepth" });
+      const band = (centre, colour, result) => {
+        const vals = Array.from({ length: 41 }, (_, i) => Math.max(0, 1 - Math.abs(i / 40 - centre) / 0.06).toFixed(3)).join(" ");
+        add("feComponentTransfer", { in: "lwDepth", result: `${result}Band` }, [["feFuncA", { type: "table", tableValues: vals }]]);
+        add("feFlood", { "flood-color": colour, result: `${result}Colour` });
+        add("feComposite", { in: `${result}Colour`, in2: `${result}Band`, operator: "in", result });
+      };
+      // Richer than the eruption's: in strokes this small, its paler tones wouldn't read.
+      band(0.46, "#F2C9AE", "lwPeach");
+      band(0.6, "#D3C4F0", "lwLilac");
+      band(0.74, "#BDE8DE", "lwAqua");
+      const bandMerge = add("feMerge", { result: "lwBandsFlat" }, [
+        ["feMergeNode", { in: "lwPeach" }],
+        ["feMergeNode", { in: "lwLilac" }],
+        ["feMergeNode", { in: "lwAqua" }],
+      ]);
+      const warp = image("warp", "lwWarpTile");
+      add("feTile", { in: "lwWarpTile", result: "lwWarp" });
+      add("feDisplacementMap", { in: "lwBandsFlat", in2: "lwWarp", scale: "0.07", xChannelSelector: "R", yChannelSelector: "G", result: "lwBandsBent" });
+      // Past twice as strong, TextWaterColor makes the bands' colours richer too.
+      const bandRichness = add("feColorMatrix", { in: "lwBandsBent", type: "saturate", values: "1", result: "lwBandsRich" });
+      const bandStrength = add("feComponentTransfer", { in: "lwBandsRich", result: "lwBandsShown" }, [
+        ["feFuncA", { type: "linear", slope: "1" }],
+      ]);
+      inside("lwBandsShown", "lwBands");
+      // Shine: a glossy sheen — a narrow line of light along each stroke's crest, nearer the
+      // light, as on a bead of water; only the very middle of the stroke, never all of it...
+      add("feGaussianBlur", { in: "shape", stdDeviation: "0.13", result: "lwRidgeDepth" });
+      add("feComponentTransfer", { in: "lwRidgeDepth", result: "lwRidge" }, [
+        ["feFuncA", { type: "table", tableValues: "0 0 0 0 0 0 0 0 0 0.35 1" }],
+      ]);
+      add("feOffset", { in: "lwRidge", dx: "-0.03", dy: "-0.03", result: "lwRidgeLit" });
+      const sheenStrength = add("feComponentTransfer", { in: "lwRidgeLit", result: "lwSheenMask" }, [
+        ["feFuncA", { type: "linear", slope: "0.6" }],
+      ]);
+      add("feFlood", { "flood-color": "#FFFFFF", result: "lwWhite" });
+      add("feComposite", { in: "lwWhite", in2: "lwSheenMask", operator: "in", result: "lwSheenLight" });
+      inside("lwSheenLight", "lwSheen");
+      // ...and small, sharp glints where the light catches, coming and going.
+      const sparkMix = add("feComposite", { in: "lwCaA", in2: "lwCaB", operator: "arithmetic", k1: "5", result: "lwSparkLight" });
+      inside("lwSparkLight", "lwSpark");
+      // The gleam: a soft band of light that sweeps across the word now and then.
+      const gleam = image("gleam", "lwGleamBand");
+      const gleamStrength = add("feComponentTransfer", { in: "lwGleamBand", result: "lwGleamShown" }, [
+        ["feFuncA", { type: "linear", slope: "0" }],
+      ]);
+      inside("lwGleamShown", "lwGleam");
+      // Laid over everything else: all of it kept a point inside the edges, so the edges keep
+      // their look — and in strokes this thin, the edges' own shading reaches across the whole
+      // of the inside, so anything drawn under it would be washed out.
+      for (const r of ["lwDeep", "lwTint", "lwBands", "lwCaustics", "lwSheen", "lwSpark", "lwGleam"]) {
+        const node = document.createElementNS(NS, "feMergeNode");
+        node.setAttribute("in", r);
+        merge.appendChild(node);
+      }
+
+      // ----- v6: a liquid outline. The letter's shape, before any of the above sees it: moving a
+      // little, then softened and cut again at a lower level, so its corners and serifs round off
+      // and it swells, as water standing on the page does. -----
+      const rawShape = filter.firstElementChild;
+      rawShape.setAttribute("result", "lwRawShape");
+      const afterRaw = rawShape.nextSibling;
+      const addEarly = (tag, attrs) => {
+        const node = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        filter.insertBefore(node, afterRaw);
+        return node;
+      };
+      addEarly("feTurbulence", { type: "fractalNoise", baseFrequency: "1.1", numOctaves: "1", seed: String(li * 13 + 7), result: "lwWobbleNoise" });
+      const wobbleDrift = addEarly("feOffset", { in: "lwWobbleNoise", dx: "0", dy: "0", result: "lwWobbleMoved" });
+      const wobble = addEarly("feDisplacementMap", { in: "lwRawShape", in2: "lwWobbleMoved", scale: "0", xChannelSelector: "R", yChannelSelector: "G", result: "lwWobbled" });
+      const outlineSoft = addEarly("feGaussianBlur", { in: "lwWobbled", stdDeviation: "0.04", result: "lwSoftShape" });
+      const outlineCut = addEarly("feColorMatrix", { in: "lwSoftShape", type: "matrix", values: "0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 12 -3", result: "lwCutShape" });
+      // A hair of softness at its edge, so the cut never shows as steps.
+      addEarly("feGaussianBlur", { in: "lwCutShape", stdDeviation: "0.022", result: "shape" });
+
+      // ----- v6: the red seen through it. Water on the red page is red, bent: brighter where its
+      // curve gathers the light, deeper on its lower side, dark at its thin rim. The light and
+      // highlights stay on top. Every colour solid. -----
+      const last = filter.lastElementChild;
+      const addLate = (tag, attrs, kids = []) => {
+        const node = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        for (const [kt, ka] of kids) {
+          const kid = document.createElementNS(NS, kt);
+          for (const [k, v] of Object.entries(ka)) kid.setAttribute(k, v);
+          node.appendChild(kid);
+        }
+        filter.insertBefore(node, last);
+        return node;
+      };
+      const solid = (colour, mask, result) => {
+        addLate("feFlood", { "flood-color": colour, result: `${result}Colour` });
+        addLate("feComposite", { in: `${result}Colour`, in2: mask, operator: "in", result });
+      };
+      const insideLate = (from, result) => addLate("feComposite", { in: from, in2: "lwInside", operator: "in", result });
+      // How it stands on the page, as a bead of water does: rising softly from its edge to its
+      // middle. Wider with TextWetness, so the rim and the edge's shading ease in rather than
+      // cut: less crisp, more liquid.
+      const wetHeight = addLate("feGaussianBlur", { in: "shape", stdDeviation: "0.088", result: "lwWetHeight" });
+      addLate("feComposite", { in: "shape", in2: "lwWetHeight", operator: "arithmetic", k2: "1", k3: "-1", result: "lwWetThin" });
+      addLate("feComponentTransfer", { in: "lwWetThin", result: "lwWetEdge" }, [["feFuncA", { type: "linear", slope: "2.4" }]]);
+      const wetDeep = addLate("feGaussianBlur", { in: "shape", stdDeviation: "0.194", result: "lwWetDeepBlur" });
+      addLate("feComposite", { in: "shape", in2: "lwWetDeepBlur", operator: "arithmetic", k2: "1", k3: "-1", result: "lwWetDeepThin" });
+      solid("#DB2F2C", "shape", "lwWetBody");
+      // Its middle, lighter as it rises: the dome of the bead.
+      addLate("feComponentTransfer", { in: "lwWetHeight", result: "lwLensMask" }, [["feFuncA", { type: "table", tableValues: "0 0 0.1 0.25 0.4 0.5" }]]);
+      solid("#E8544B", "lwLensMask", "lwWetLens");
+      solid("#B51D1F", "lowSide", "lwWetShade");
+      solid("#8F1416", "lwWetEdge", "lwWetRim");
+      // Deeper just inside its edge, where the water's curve bends the light away: the middle
+      // reads lighter against it, as through a lens.
+      addLate("feComponentTransfer", { in: "lwWetDeepThin", result: "lwWetDeepMask" }, [["feFuncA", { type: "linear", slope: "0.9" }]]);
+      solid("#A3171A", "lwWetDeepMask", "lwWetDeep");
+      // Light gathered under it: a warmer red, not white.
+      solid("#EF7068", "glowMask", "lwWetGlow");
+      // Its caustic light falling through it onto the red: pink-red webs.
+      const wetCaustic = addLate("feComponentTransfer", { in: "lwCaVaried", result: "lwWetCaMask" }, [["feFuncA", { type: "linear", slope: "0.5" }]]);
+      solid("#F6A39A", "lwWetCaMask", "lwWetCaLight");
+      insideLate("lwWetCaLight", "lwWetCaustics");
+      // The rim's colour split, without its green.
+      addLate("feMerge", { result: "lwWetSpectrumFull" }, ["violet", "blue", "cyan", "pink", "amber", "innerCyan", "innerRose"].map((r) => ["feMergeNode", { in: r }]));
+      const rimColour = addLate("feComponentTransfer", { in: "lwWetSpectrumFull", result: "lwWetSpectrum" }, [["feFuncA", { type: "linear", slope: "0.6" }]]);
+      // A soft reflection, drifting slowly across the word.
+      const reflection = add("feImage", { "data-tex": "gleam", x: "0", y: "0", width: "1", height: "1", preserveAspectRatio: "none", result: "lwReflectBand" });
+      filter.insertBefore(reflection, last);
+      const reflectionStrength = addLate("feComponentTransfer", { in: "lwReflectBand", result: "lwReflectShown" }, [["feFuncA", { type: "linear", slope: "0" }]]);
+      insideLate("lwReflectShown", "lwWetReflection");
+      // Its own glints, kept low.
+      const wetSpark = addLate("feComposite", { in: "lwCaA", in2: "lwCaB", operator: "arithmetic", k1: "0", result: "lwWetSparkLight" });
+      insideLate("lwWetSparkLight", "lwWetSpark");
+      // Its highlights, softer than on the clear water: on red, full white reads as frost.
+      // Softened with TextWetness: a gloss on water, not a cut line on glass.
+      const lipSoft = addLate("feGaussianBlur", { in: "lipLight", stdDeviation: "0", result: "lwWetLipSoft" });
+      const shineSoft = addLate("feGaussianBlur", { in: "shine", stdDeviation: "0", result: "lwWetShineSoft" });
+      addLate("feComponentTransfer", { in: "lwWetLipSoft", result: "lwWetLip" }, [["feFuncA", { type: "linear", slope: "0.5" }]]);
+      addLate("feComponentTransfer", { in: "lwWetShineSoft", result: "lwWetShine" }, [["feFuncA", { type: "linear", slope: "0.85" }]]);
+      // The bead's gloss: a broad, soft light on the slope facing the light, following each
+      // stroke's curve as it rises from its edge (TextWetness).
+      addLate("feOffset", { in: "lwWetHeight", dx: "0.07", dy: "0.07", result: "lwWetHeightDown" });
+      addLate("feComposite", { in: "lwWetHeight", in2: "lwWetHeightDown", operator: "arithmetic", k2: "2.2", k3: "-2.2", result: "lwWetSlope" });
+      const gloss = addLate("feComponentTransfer", { in: "lwWetSlope", result: "lwWetGlossMask" }, [["feFuncA", { type: "gamma", amplitude: "0", exponent: "1.4", offset: "0" }]]);
+      addLate("feComposite", { in: "lwWhite", in2: "lwWetGlossMask", operator: "in", result: "lwWetGloss" });
+      addLate("feMerge", { result: "lwWetLight" }, ["lwWetGloss", "lwWetLip", "lwWetShine"].map((r) => ["feMergeNode", { in: r }]));
+      addLate("feComponentTransfer", { in: "lwSheen", result: "lwWetSheen" }, [["feFuncA", { type: "linear", slope: "0.2" }]]);
+      addLate("feMerge", { result: "lwWetFlat" }, [
+        "lwWetBody", "lwWetLens", "lwWetCaustics", "lwWetDeep", "lwWetShade", "lwWetGlow", "lwWetRim", "lwWetSpectrum",
+        "lwWetLight", "lwWetSheen", "lwWetReflection", "lwWetSpark", "lwGleam",
+      ].map((r) => ["feMergeNode", { in: r }]));
+      // Bent a little by the moving water inside it, as light through water is (TextWetness).
+      const wetBend = addLate("feDisplacementMap", { in: "lwWetFlat", in2: "lwWarp", scale: "0", xChannelSelector: "R", yChannelSelector: "G", result: "lwWet" });
+      // Under it, the body, so the bending never opens a gap at its edge.
+      addLate("feMerge", { result: "lwWetFilled" }, [["feMergeNode", { in: "lwWetBody" }], ["feMergeNode", { in: "lwWet" }]]);
+      addLate("feComposite", { in: "lwWetFilled", in2: "shape", operator: "in", result: "lwWetShaped" });
+      // Lifted toward white (WetWhiteness).
+      addLate("feComposite", { in: "lwWhite", in2: "shape", operator: "in", result: "lwWhiteShaped" });
+      const whiter = addLate("feComposite", { in: "lwWetShaped", in2: "lwWhiteShaped", operator: "arithmetic", k2: "1", k3: "0", result: "lwWetLit" });
+      // v5's clear water and the red seen through it, mixed: both solid, so the mix is too.
+      const seeThrough = addLate("feComposite", { in: "clearWater", in2: "lwWetLit", operator: "arithmetic", k2: "1", k3: "0", result: "lwMixed" });
+      last.setAttribute("in", "lwMixed");
+
+      // Each tile starts inside the letter's own bounds plus how far it's moved, wrapped within
+      // its own size, so its pattern flows on without a gap.
+      const wrap = (v, size) => ((v % size) + size) % size;
+      const place = (node, w, h, dx, dy) => {
+        node.setAttribute("width", w.toFixed(3));
+        node.setAttribute("height", h.toFixed(3));
+        node.setAttribute("x", (rx + wrap(dx, w)).toFixed(3));
+        node.setAttribute("y", (ry + wrap(dy, h)).toFixed(3));
+      };
+      const wander = (t, rate, amp, f, ph) => rate * t + amp * Math.sin(t * f + ph + li);
+      return {
+        filter: `url(#waterLetter${li})`,
+        update(t, look) {
+          const like = params.textWaterLikeness,
+            shine = params.textWaterShine;
+          place(causticA, 1.7, 1.7, wander(t, 0.00055, 0.12, 0.0011, 0.4), wander(t, -0.0004, 0.1, 0.0009, 2.1));
+          place(causticB, 2.05, 2.05, wander(t, -0.00045, 0.14, 0.0008, 1.3), wander(t, 0.0003, 0.11, 0.0012, 4.0));
+          place(field, 1.5, 1.5, wander(t, 0.0002, 0.16, 0.0006, 3.1), wander(t, -0.00015, 0.13, 0.0007, 0.9));
+          place(tint, 1.6, 1.6, wander(t, 0.00025, 0.14, 0.0007, 5.0), wander(t, -0.0002, 0.12, 0.0005, 1.7));
+          place(warp, 1.5, 1.5, wander(t, -0.0003, 0.1, 0.0009, 2.6), wander(t, 0.0002, 0.09, 0.001, 3.3));
+          deepStrength.firstChild.setAttribute("slope", Math.min(1, 0.55 * like).toFixed(3));
+          // Stronger than the pool's: a letter's strokes are thin, and these have to read in them.
+          causticMix.setAttribute("k2", (0.6 * like).toFixed(3));
+          causticMix.setAttribute("k3", (0.4 * like).toFixed(3));
+          // Its colour — the eruption body's patches and bands — runs on its own control.
+          const color = params.textWaterColor;
+          tintStrength.firstChild.setAttribute("slope", (1.8 * color).toFixed(3));
+          bandStrength.firstChild.setAttribute("slope", (1.5 * color).toFixed(3));
+          // At full strength a layer can show no more of itself, so past 2× the colour control
+          // makes the patches' and bands' colours themselves richer; at 2× and below, as before.
+          const richer = Math.max(1, color / 2);
+          tintRichness.setAttribute("values", (2.6 * richer).toFixed(3));
+          bandRichness.setAttribute("values", richer.toFixed(3));
+          sheenStrength.firstChild.setAttribute("slope", (0.9 * shine).toFixed(3));
+          sparkMix.setAttribute("k1", (3.5 * shine * shine).toFixed(3));
+          // The gleam sweeps across the whole word every 2.4 seconds, taking one to cross.
+          const phase = t < 700 ? -1 : ((t - 700) % 2400) / 1000;
+          const on = phase >= 0 && phase <= 1;
+          const centre = -3 + phase * (WORD_W + 6);
+          gleam.setAttribute("x", (centre - 1.5).toFixed(3));
+          gleam.setAttribute("y", ry.toFixed(3));
+          gleam.setAttribute("width", "3");
+          gleam.setAttribute("height", rh.toFixed(3));
+          gleamStrength.firstChild.setAttribute("slope", (on ? 0.7 * params.textWaterGleam : 0).toFixed(3));
+
+          // v6. The outline: moving, rounded, swollen (and more so while it's freshly wet).
+          wobbleDrift.setAttribute("dx", (0.35 * Math.sin(t * 0.0011 + li * 1.9)).toFixed(3));
+          wobbleDrift.setAttribute("dy", (0.35 * Math.cos(t * 0.0009 + li * 1.3)).toFixed(3));
+          wobble.setAttribute("scale", (0.045 * params.textWobble).toFixed(4));
+          outlineSoft.setAttribute("stdDeviation", Math.max(0.001, 0.04 * params.textLiquidOutline).toFixed(4));
+          // Cut where the softened shape reaches this level: lower is fatter. Kept below where
+          // a hairline's softened middle reaches, so no hairline is ever lost.
+          const level = Math.min(0.28, Math.max(0.06, 0.45 - 0.3 * (params.textSwell + look.swell)));
+          outlineCut.setAttribute("values", `0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 12 ${(0.5 - 12 * level).toFixed(3)}`);
+          // The red seen through it, and what lies on it.
+          wetCaustic.firstChild.setAttribute("slope", (0.16 * like).toFixed(3));
+          rimColour.firstChild.setAttribute("slope", (0.3 * params.textRimColor).toFixed(3));
+          wetSpark.setAttribute("k1", (3.5 * params.textSparkle * params.textSparkle).toFixed(3));
+          // The reflection wanders back and forth across the word, slowly, wide and soft.
+          const across = WORD_W / 2 + (WORD_W / 2 + 3) * Math.sin(t * 0.00032 + 0.6);
+          reflection.setAttribute("x", (across - 3).toFixed(3));
+          reflection.setAttribute("y", ry.toFixed(3));
+          reflection.setAttribute("width", "6");
+          reflection.setAttribute("height", rh.toFixed(3));
+          reflectionStrength.firstChild.setAttribute("slope", (0.2 * params.textReflection).toFixed(3));
+          seeThrough.setAttribute("k2", (1 - look.see).toFixed(3));
+          seeThrough.setAttribute("k3", look.see.toFixed(3));
+          // Whiter: the letters' own lift on top of the one they share with the drips and pool.
+          const white = 1 - (1 - params.wetWhiteness) * (1 - params.textWhiteness);
+          whiter.setAttribute("k2", (1 - white).toFixed(3));
+          whiter.setAttribute("k3", white.toFixed(3));
+          // Wetter: a softer, rounder bead, its gloss softer, its light bent by the water.
+          const wet = params.textWetness;
+          wetHeight.setAttribute("stdDeviation", (0.088 * (1 + 1.6 * wet)).toFixed(4));
+          wetDeep.setAttribute("stdDeviation", (0.194 * (1 + 0.8 * wet)).toFixed(4));
+          lipSoft.setAttribute("stdDeviation", (0.02 * wet).toFixed(4));
+          shineSoft.setAttribute("stdDeviation", (0.035 * wet).toFixed(4));
+          wetBend.setAttribute("scale", (0.12 * wet).toFixed(4));
+          gloss.firstChild.setAttribute("amplitude", (0.75 * wet).toFixed(3));
+        },
+      };
+    }
+
+    // ---------- v6: the drips and the pool, with the red seen through them ----------
+    // As the letters: the clear water (v5's) mixed with the red page seen through water —
+    // brighter in its middle, deeper on its lower side, dark at its rim — with its highlights and
+    // its rim's colour (without the green) on top, the whole lifted toward white (WetWhiteness).
+    // `id` is the filter, `p` its prefix, `lens` how far in its lighter middle starts, and `extra`
+    // any layers of its own (the pool's living light). Returns the two mixes, for the script to set.
+    function wetWater(id, p, lens, extra = () => []) {
+      const filter = $(id);
+      const last = filter.lastElementChild;
+      const add = (tag, attrs, kids = []) => {
+        const node = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+        for (const [kt, ka] of kids) {
+          const kid = document.createElementNS(NS, kt);
+          for (const [k, v] of Object.entries(ka)) kid.setAttribute(k, v);
+          node.appendChild(kid);
+        }
+        filter.insertBefore(node, last);
+        return node;
+      };
+      const solid = (colour, mask, result) => {
+        add("feFlood", { "flood-color": colour, result: `${result}Colour` });
+        add("feComposite", { in: `${result}Colour`, in2: mask, operator: "in", result });
+      };
+      add("feGaussianBlur", { in: "shape", stdDeviation: String(lens), result: `${p}Inward` });
+      add("feComponentTransfer", { in: `${p}Inward`, result: `${p}LensMask` }, [
+        ["feFuncA", { type: "table", tableValues: "0 0 0 0 0 0.15 0.35 0.5 0.6" }],
+      ]);
+      solid("#DB2F2C", "shape", `${p}Body`);
+      solid("#E8544B", `${p}LensMask`, `${p}Lens`);
+      const own = extra(add, solid);
+      solid("#B51D1F", "lowSide", `${p}Shade`);
+      solid("#EF7068", "glowMask", `${p}Glow`);
+      solid("#8F1416", "edge", `${p}Rim`);
+      // The rim's colour, without its green and fainter than on the clear water; the highlights
+      // softer too: on red, full white reads as frost.
+      add("feMerge", { result: `${p}SpectrumFull` }, ["violet", "blue", "cyan", "pink", "amber", "innerCyan", "innerRose"].map((r) => ["feMergeNode", { in: r }]));
+      add("feComponentTransfer", { in: `${p}SpectrumFull`, result: `${p}Spectrum` }, [["feFuncA", { type: "linear", slope: "0.3" }]]);
+      add("feMerge", { result: `${p}LightFull` }, ["lipLight", "shine"].map((r) => ["feMergeNode", { in: r }]));
+      add("feComponentTransfer", { in: `${p}LightFull`, result: `${p}Light` }, [["feFuncA", { type: "linear", slope: "0.6" }]]);
+      add("feMerge", { result: `${p}Wet` }, [`${p}Body`, `${p}Lens`, ...own, `${p}Shade`, `${p}Glow`, `${p}Rim`, `${p}Spectrum`, `${p}Light`].map((r) => ["feMergeNode", { in: r }]));
+      add("feComposite", { in: `${p}Wet`, in2: "shape", operator: "in", result: `${p}WetShaped` });
+      solid("#FFFFFF", "shape", `${p}White`);
+      const whiter = add("feComposite", { in: `${p}WetShaped`, in2: `${p}White`, operator: "arithmetic", k2: "1", k3: "0", result: `${p}WetLit` });
+      const see = add("feComposite", { in: "clearWater", in2: `${p}WetLit`, operator: "arithmetic", k2: "1", k3: "0", result: `${p}Mixed` });
+      last.setAttribute("in", `${p}Mixed`);
+      return { see, whiter };
+    }
+    // Sets a mix of `a` (k2) and `b` (k3): `k` of the way to b.
+    const mixTo = (node, k) => {
+      node.setAttribute("k2", (1 - k).toFixed(3));
+      node.setAttribute("k3", k.toFixed(3));
+    };
+    const dropWet = wetWater("waterDrops", "dw", 1.6);
+    // The pool: its living light falling through it onto the red, as pink-red webs.
+    const poolWet = wetWater("gooRed", "pw", 14, (add, solid) => {
+      solid("#F6A39A", "causticVaried", "pwCaLight");
+      add("feComposite", { in: "pwCaLight", in2: "inside", operator: "in", result: "pwCaustics" });
+      return ["pwCaustics"];
+    });
+
+    // ---------- Build the stage ----------
+    const defs = document.querySelector("#stage defs");
+    const measurer = el("svg", {
+      width: "0",
+      height: "0",
+      style: "position:absolute;visibility:hidden",
+    });
+    document.body.appendChild(measurer);
+    const lengthOf = (d) => {
+      const p = el("path", { d }, measurer);
+      const len = p.getTotalLength();
+      p.remove();
+      return len;
+    };
+
+    const redWord = $("redWord");
+    const letterEls = [];
+    const strokeMeta = [];
+    LETTERS.forEach((d, li) => {
+      const mask = el(
+        "mask",
+        {
+          id: `pen${li}`,
+          maskUnits: "userSpaceOnUse",
+          x: "-3",
+          y: "-3",
+          width: "37",
+          height: "10",
+        },
+        defs,
+      );
+      const ink = el("path", { d, fill: WHITE, opacity: "0" }, mask);
+      STROKES[li].forEach((sd) => {
+        const len = lengthOf(sd);
+        const path = el(
+          "path",
+          {
+            d: sd,
+            fill: "none",
+            stroke: WHITE,
+            "stroke-width": PEN,
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round",
+            "stroke-dasharray": `${len} ${len}`,
+            "stroke-dashoffset": len,
+            opacity: "0",
+          },
+          mask,
+        );
+        strokeMeta.push({ letter: li, len, el: path, start: 0, end: 0 });
+      });
+      // v6: the letter's water is drawn on a group holding it, so its liquid outline sees the
+      // pen's front (the mask is on the letter, inside), and the bead at the pen's tip with it.
+      const holder = el("g", {}, redWord);
+      const letter = el(
+        "path",
+        {
+          d,
+          fill: RED,
+          stroke: RED,
+          "stroke-width": "0",
+          "stroke-linejoin": "round",
+          mask: `url(#pen${li})`,
+        },
+        holder,
+      );
+      const bead = el("circle", { cx: "0", cy: "0", r: "0", fill: RED }, holder);
+      // Its own water, inside its edges (letterWater).
+      const water = letterWater(li, letter);
+      holder.style.filter = water.filter;
+      // Its twin in the pool's liquid: what's drawn once the letter reaches the water, so it
+      // merges with it the way a drop does.
+      const liquid = el("path", { d, visibility: "hidden" }, $("gooWord"));
+      // How it melts as it falls, as water does under gravity: drawn out downward into streams,
+      // thinning sideways, and breaking along those streams into separate drops — nothing
+      // swells. In the letter's own units (1pt is 0.088; the letter is 3.16 tall). The script
+      // sets how far it's gone each frame.
+      const melt = el(
+        "filter",
+        {
+          id: `melt${li}`,
+          x: "-30%",
+          y: "-40%",
+          width: "160%",
+          height: "520%",
+          "color-interpolation-filters": "sRGB",
+        },
+        defs,
+      );
+      const add = (tag, attrs) => el(tag, attrs, melt);
+      // A slight wobble of its own, drifting, so the outline is never still.
+      add("feTurbulence", { type: "fractalNoise", baseFrequency: "0.55", numOctaves: "2", seed: String(li * 7 + 3), result: "noise" });
+      const meltDrift = add("feOffset", { in: "noise", dx: "0", dy: "0", result: "noiseMoved" });
+      const meltBend = add("feDisplacementMap", {
+        in: "SourceGraphic",
+        in2: "noiseMoved",
+        scale: "0",
+        xChannelSelector: "R",
+        yChannelSelector: "G",
+        result: "bent",
+      });
+      // Drawn out downward, as gravity pulls it into streams: one continuous smear below it,
+      // heaviest at the letter and thinning as it trails, so each stroke tapers into a tail.
+      const smear = add("feGaussianBlur", { in: "bent", stdDeviation: "0 0", result: "smeared" });
+      const smearDown = add("feOffset", { in: "smeared", dx: "0", dy: "0", result: "trailing" });
+      const trailMerge = add("feMerge", { result: "drawnOutSoft" });
+      for (const r of ["bent", "trailing"]) el("feMergeNode", { in: r }, trailMerge);
+      add("feComponentTransfer", { in: "drawnOutSoft", result: "drawnOut" });
+      const trailBoost = melt.lastChild;
+      el("feFuncA", { type: "linear", slope: "2.6" }, trailBoost);
+      // Thinning sideways as it stretches.
+      const meltThin = add("feMorphology", { in: "drawnOut", operator: "erode", radius: "0 0", result: "thinned" });
+      // Breaking along its streams into drops: a pattern streaked downward, sliding down them.
+      add("feTurbulence", {
+        type: "fractalNoise",
+        baseFrequency: "0.85 0.32",
+        numOctaves: "2",
+        seed: String(li * 11 + 5),
+        result: "streaks",
+      });
+      const meltSlide = add("feOffset", { in: "streaks", dx: "0", dy: "0", result: "streaksMoved" });
+      const meltBreak = add("feColorMatrix", {
+        in: "streaksMoved",
+        type: "matrix",
+        values: "0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0 1",
+        result: "gaps",
+      });
+      add("feComposite", { in: "thinned", in2: "gaps", operator: "in", result: "broken" });
+      // Rounded along the stream only: the ends and the gaps, into oblong drops.
+      const meltSoft = add("feGaussianBlur", { in: "broken", stdDeviation: "0 0", result: "soft" });
+      add("feColorMatrix", {
+        in: "soft",
+        type: "matrix",
+        values: "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6",
+        result: "streams",
+      });
+      // Mixed in from the letter as it was, as it lets go, to the streams as it lands.
+      const meltMix = add("feComposite", { in: "bent", in2: "streams", operator: "arithmetic", k2: "1", k3: "0" });
+      // The liquid twin melts as the letter has, so it doesn't snap back to the letter's shape.
+      liquid.style.filter = `url(#melt${li})`;
+      letterEls.push({
+        letter,
+        holder,
+        bead,
+        water,
+        liquid,
+        ink,
+        end: 0,
+        meltDrift,
+        meltBend,
+        smear,
+        smearDown,
+        meltThin,
+        meltSlide,
+        meltBreak,
+        meltSoft,
+        meltMix,
+      });
+    });
+
+    // Where ink can drip from: the bottom edge of each letter, in its own units.
+    const BOTTOMS = [
+      [[0.5, 1.7]],
+      [[3.5, 4.8]],
+      [
+        [6.05, 7.1],
+        [8.62, 8.95],
+      ],
+      [[9.8, 11.6]],
+      [
+        [13.1, 13.9],
+        [14.9, 16.2],
+      ],
+      [[16.8, 18.0]],
+      [[19.1, 21.0]],
+      [[22.2, 24.6]],
+      [[25.68, 26.88]],
+      [[28.45, 29.9]],
+    ];
+    const LETTER_X = [
+      [0, 2.19],
+      [2.5, 5.79],
+      [6.02, 9.42],
+      [9.69, 12.93],
+      [12.98, 16.26],
+      [15.85, 18.92],
+      [19.01, 21.81],
+      [22.14, 24.79],
+      [25.18, 27.36],
+      [27.6, 30.73],
+    ];
+    // Gravity, in points per ms², for a drip, a falling letter, and thrown spray.
+    const POP_G = 0.0026;
+    const KICK_G = 0.004;
+    // How much a letter adds to the pool's height as it pours in, in points.
+    const LETTER_VOLUME = 0.6;
+    const DRIP_G = 0.0042,
+      LETTER_G = 0.0018,
+      SPRAY_G = 0.0024;
+    const COLS = 66;
+    let world = null;
+
+    // Everything that happens after the pen, worked out once for the current settings.
+    function buildWorld(B, ws) {
+      const rnd = mulberry32(99);
+      const r = (a, b) => a + (b - a) * rnd();
+      const toX = (u) => CX + params.wordOffsetX + (u - WORD_W / 2) * ws;
+      const yb = CY + (3.08 - WORD_H / 2) * ws;
+      const fallStart = B.pause.end;
+      // How far through the writing `t` is.
+      const writing = (t) => clamp01((t - B.write.start) / B.write.dur);
+      const poolH = (params.poolPct / 100) * H;
+      const fallTime = (y, surface, g) => Math.sqrt((2 * Math.max(10, surface - y)) / g);
+
+      // Drips come from a few fixed spots on each letter's bottom edge, spaced so their drops
+      // never overlap. Each spot drips one drop at a time, like a leaky tap, faster and faster,
+      // from soon after the pen reaches it until the letters fall.
+      const drips = [];
+      const maxR = 8 * params.dripSize;
+      const minGap = Math.max(1, (2.6 * maxR) / ws);
+      letterEls.forEach((_, li) => {
+        const sites = [];
+        for (const [a0, a1] of BOTTOMS[li]) {
+          const n = Math.max(1, Math.min(3, Math.floor((a1 - a0) / minGap) + 1));
+          for (let k = 0; k < n; k++) {
+            const u = n === 1 ? r(a0, a1) : mix(a0, a1, (k + r(0.25, 0.75)) / n);
+            if (sites.every((x) => Math.abs(x - u) >= minGap)) sites.push(u);
+          }
+        }
+        const reached = strokeMeta.find((m) => m.letter === li).start;
+        for (const site of sites) {
+          let t = reached + r(200, 600);
+          while (true) {
+            const hang = Math.max(40, params.hangMs * r(0.75, 1.25));
+            if (t + hang > fallStart) break;
+            const rad = (r(3.2, 5) + 3 * writing(t)) * params.dripSize;
+            const td = t + hang;
+            drips.push({ tb: t, td, th: 0, x: toX(site), r: rad, satellite: rnd() < 0.35 });
+            const perSecond = 1.1 * params.drips * (0.3 + 3 * Math.pow(writing(t), 2));
+            t = td + Math.max(30, (1000 / perSecond - hang) * r(0.6, 1.4));
+          }
+        }
+      });
+
+      // The pool is only what the drips have brought: empty until the first one lands, then
+      // growing by each drop's volume as it lands, for as long as they keep landing. Sized so
+      // what has landed by the end of the pause, as the letters let go, stands at the pool height.
+      drips.forEach((d) => {
+        d.th = d.td + fallTime(yb + d.r * 3, H, DRIP_G);
+      });
+      const byFall =
+        drips.filter((d) => d.th <= fallStart).reduce((sum, d) => sum + d.r ** 3, 0) || 1;
+      const perVolume = poolH / byFall;
+      const landed = [];
+      const level = (t) => {
+        let v = 0;
+        for (const d of landed) if (t > d.th) v += d.r ** 3 * easeOut(clamp01((t - d.th) / 220));
+        return perVolume * v;
+      };
+      // The pool pours in at the start, from the bottom right, to its height; each drip that
+      // lands raises it by its own volume — by the fall, as much again — and turns it clearer.
+      const surface = (t) => pourIn(t) * poolH + level(t) * params.waterVolumeFromDrip;
+      // When something falling from `y` at `t0` meets the surface, as high as it will be then.
+      const landing = (t0, y, g) => {
+        let th = t0 + fallTime(y, H - surface(t0 + 300), g);
+        th = t0 + fallTime(y, H - surface(th), g);
+        return th;
+      };
+      drips
+        .sort((p, q) => p.td - q.td)
+        .forEach((d) => {
+          d.th = landing(d.td, yb + d.r * 3, DRIP_G);
+          landed.push(d);
+        });
+      // Each drip knocks a few small drops up out of the pool as it lands, like a coin into water.
+      for (const d of drips) {
+        const n = rnd() < 0.45 ? 1 : rnd() < 0.6 ? 2 : 3;
+        d.kick = Array.from({ length: n }, (_, i) => ({
+          vx: i === 0 ? r(-0.03, 0.03) : r(-0.13, 0.13),
+          h: (i === 0 ? r(14, 30) : r(6, 18)) * Math.sqrt(params.dripSize),
+          r: d.r * (i === 0 ? r(0.45, 0.6) : r(0.28, 0.42)),
+          delay: r(25, 55),
+        }));
+      }
+
+      // The letters drop in a random order, the middle ones a touch ahead: a barely-there U.
+      const falls = LETTERS.map((_, i) => {
+        const mid = 1 - Math.pow((i - 4.5) / 4.5, 2);
+        const start = fallStart + r(0, 70) + 110 * (1 - mid);
+        const cx = (LETTER_X[i][0] + LETTER_X[i][1]) / 2;
+        const hit = landing(start, yb, LETTER_G);
+        // It keeps falling as it pours in; it's all water once its top has reached the surface.
+        const top = CY - (WORD_H / 2) * ws;
+        const gone = start + Math.sqrt((2 * Math.max(10, H - surface(hit) + 6 - top)) / LETTER_G);
+        return { start, hit, gone, rot: r(-8, 8), cx, x: toX(cx) };
+      });
+
+      const impacts = drips
+        .map((d) => ({ t: d.th, x: d.x, amp: 2 + d.r * 0.9, w: 60 }))
+        .concat(falls.map((f) => ({ t: f.hit, x: f.x, amp: 18, w: 110 })));
+      // Where each letter pours in, the water heaves up in answer and settles.
+      const heaves = falls.map((f) => ({ t: f.hit, x: f.x, A: 30, w: 30 }));
+      // …and throws up a crown of spray.
+      const spray = [];
+      falls.forEach((f) => {
+        for (let k = 0; k < 6; k++)
+          spray.push({
+            t0: f.hit,
+            y0: H - surface(f.hit),
+            x: f.x + r(-18, 18),
+            vx: r(-0.3, 0.3),
+            vy: -r(0.4, 0.95),
+            r: r(3, 6),
+          });
+      });
+      // The pour's front slamming into the left wall throws spray up it and off it.
+      const hit = wallHitAt();
+      for (let k = 0; k < 16; k++) {
+        const t0 = hit + params.pourMs * r(0.03, 0.12);
+        const x = r(1, 26);
+        spray.push({
+          t0,
+          y0: H - surface(t0) - wallSurge(x, t0) + 4,
+          x,
+          vx: r(0.04, 0.38),
+          vy: -r(0.4, 0.85),
+          r: r(2.5, 6.5),
+        });
+      }
+      // The eruption is thrown, not drawn: every point of the surface is flung upward and slows
+      // under gravity, fastest in the middle where the letters went in, unevenly across the
+      // width. Spray leaves ahead of it on the same gravity.
+      // Speeds below are in multiples of the slowest part of the rising water, so the whole
+      // splash scales with the eruption time.
+      const sheetPhase = Array.from({ length: 4 }, () => r(0, 6.28));
+      const wordLeft = Math.min(...falls.map((f) => f.x)),
+        wordRight = Math.max(...falls.map((f) => f.x));
+      const splash = {
+        // Drops shed from the rising wall's leading edge, all the way up.
+        edge: Array.from({ length: 230 }, () => ({
+          x: r(-10, 400),
+          at: r(0.04, 0.96),
+          up: r(0.03, 0.22),
+          vx: r(-0.45, 0.45),
+          r: r(3, 8.5),
+        })),
+        // The crown: strands fanning out from where the letters went in. Each is a chain of beads
+        // thrown at nearly the same speed, so it stretches into a strand and breaks into drops.
+        strands: Array.from({ length: 26 }, () => {
+          const side = rnd() < 0.5 ? -1 : 1;
+          return {
+            x: r(wordLeft - 10, wordRight + 10),
+            ang: side * r(0.35, 1.2),
+            v: r(1.4, 2.4),
+            dt: r(0, 90),
+            beads: Array.from({ length: 7 }, (_, k) => ({
+              k: 1 - k * r(0.03, 0.055),
+              r: r(3.5, 7) * (1 - k * 0.08),
+            })),
+          };
+        }),
+        // The central column: a thin jet racing ahead of everything, breaking into drops at its tip.
+        jet: Array.from({ length: 44 }, (_, i) => ({
+          dx: r(-13, 13),
+          dt: 40 + i * 4.5 + r(0, 8),
+          v: r(3.4, 4.4),
+          r: r(5, 11),
+        })),
+      };
+      // As the drained pool hits the bottom, a few drops barely pop back up, like a coin dropped
+      // into water, then fall out through the bottom of the phone.
+      const pops = Array.from({ length: 5 }, () => ({
+        x: r(40, 350),
+        h: r(18, 70),
+        r: r(3.5, 7),
+        delay: r(0, 90),
+      }));
+      const drain = {
+        phase: Array.from({ length: 3 }, () => r(0, 6.28)),
+        shed: Array.from({ length: 110 }, () => ({
+          x: r(-6, 396),
+          at: r(0.04, 0.8),
+          lag: r(0.6, 0.92),
+          vx: r(-0.12, 0.12),
+          r: r(3, 8),
+        })),
+      };
+      return {
+        drips,
+        falls,
+        impacts,
+        heaves,
+        spray,
+        sheetPhase,
+        splash,
+        pops,
+        drain,
+        level,
+        surface,
+        poolH,
+        yb,
+      };
+    }
+
+    // How high the pool stands: filled by the drips that have landed.
+    function levelAt(t) {
+      let letters = 0;
+      for (const f of world.falls)
+        if (t > f.hit) letters += LETTER_VOLUME * easeOut(clamp01((t - f.hit) / 200));
+      return world.surface(t) + letters;
+    }
+
+    // How much of the pool has poured in by `t`: 0 to 1, quick at first, easing in.
+    function pourIn(t) {
+      const p = clamp01(t / params.pourMs);
+      return 1 - (1 - p) * (1 - p) * (1 - p);
+    }
+
+    // The pour's shape at x, as a change to the surface's height: the water comes in at the
+    // bottom right and runs left along the bottom — nothing yet ahead of its rounded front —
+    // standing higher where it pours in; reaching the far wall, it sloshes back and forth and
+    // settles.
+    // How far the poured-in water has reached at x: 0 ahead of its front, 1 behind it. The
+    // front runs from the right edge to past the left one in the first 55% of the pour.
+    function pourReached(x, t) {
+      const run = clamp01(t / (params.pourMs * 0.55));
+      const front = 390 + 40 - (390 + 120) * (1 - (1 - run) * (1 - run));
+      const ahead = clamp01((x - front) / 46);
+      return ahead * ahead * (3 - 2 * ahead);
+    }
+
+    function pouring(x, t) {
+      const T = params.pourMs;
+      if (t > T * 3.2) return 0;
+      const filled = pourIn(t) * (params.poolPct / 100) * H;
+      if (filled <= 0) return -1;
+      const run = clamp01(t / (T * 0.55));
+      const reached = pourReached(x, t);
+      // Higher at the right while it pours in; then a slosh back and forth across the width,
+      // dying away.
+      // (The wall's rebound carries most of the slosh now, so this is only what's left of it.)
+      const lean = 0.9 * (1 - run) + 0.3 * Math.exp(-Math.max(0, t - T * 0.55) / (T * 0.55)) * Math.cos(Math.max(0, t - T * 0.55) * (5.2 / T)) * run;
+      const tilt = lean * ((x - 195) / 195);
+      // Its height here, minus the level the pool is drawn at: the difference is the shape.
+      const here = filled * reached * (1 + tilt) + wallSurge(x, t) * reached;
+      return here - filled;
+    }
+
+    // When the pour's front runs into the left wall: just after its leading edge touches it.
+    function wallHitAt() {
+      return params.pourMs * 0.55 * (1 - Math.sqrt(60 / 510));
+    }
+
+    // The pour's front hitting the left wall, as a height above the water at x. Its momentum
+    // throws it up the wall — fast, then falling back under its own weight — and the collapse
+    // sends a crest back across the pool that runs up the right wall, rebounds, and dies away.
+    function wallSurge(x, t) {
+      const T = params.pourMs;
+      const s = t - wallHitAt();
+      if (s <= 0) return 0;
+      const full = (params.poolPct / 100) * H;
+      // Fades out before the pour's shape hands back to the plain pool.
+      const fade = 1 - clamp01((t - T * 2.6) / (T * 0.6));
+      // The run-up: climbs the wall, peaks, falls back.
+      const up = T * 0.1;
+      const climb = (s / up) * Math.exp(1 - s / up);
+      const runUp = 2.4 * full * climb * Math.exp(-((x / 38) ** 2));
+      // The rebound: a crest leaving the wall as the run-up falls, crossing in about half the
+      // pour, reflected at each wall (mirror images, so it climbs the wall it meets).
+      const r = s - up;
+      let rebound = 0;
+      if (r > 0) {
+        const p = ((r * 390) / (T * 0.55)) % 780;
+        const at = p > 390 ? 780 - p : p;
+        const amp = 0.9 * full * Math.exp(-r / (T * 0.7)) * clamp01(r / (T * 0.08));
+        const crest = (c) => Math.exp(-(((x - c) / 55) ** 2));
+        const going = p > 390 ? -1 : 1;
+        rebound =
+          amp * (crest(at) + crest(-at) + crest(780 - at)) -
+          0.3 * amp * crest(at - going * 90);
+      }
+      return (runUp + rebound) * fade;
+    }
+
+    // The water's surface at x: its level, every ripple from what's landed, and a gentle slosh.
+    function surfaceAt(x, t, base) {
+      // Its ripples, and what it heaves, only where the poured-in water has reached.
+      const there = pourReached(x, t);
+      let wave = 0;
+      for (const im of world.impacts) {
+        const dt = t - im.t;
+        if (dt < 0 || dt > 1600) continue;
+        const dist = Math.abs(x - im.x);
+        wave -=
+          im.amp *
+          Math.exp(-dt / 420) *
+          Math.exp(-dist / im.w) *
+          Math.cos(0.085 * dist - 0.02 * dt);
+      }
+      const calm = Math.min(1, base / 40);
+      wave +=
+        calm *
+        (2.6 * Math.sin(x * 0.021 + t * 0.0021) +
+          1.8 * Math.sin(x * 0.047 - t * 0.0033) +
+          // A slow swell under the ripples, so the pool never sits still.
+          2.2 * Math.sin(x * 0.011 + t * 0.0013 + 1.7));
+      // Where the letters pour in, the water heaves up quickly and settles slowly.
+      let heave = 0;
+      for (const h of world.heaves) {
+        const dt = t - h.t;
+        if (dt < 0 || dt > 1400) continue;
+        heave +=
+          h.A *
+          (1 - Math.exp(-dt / 45)) *
+          Math.exp(-dt / 320) *
+          Math.exp(-(((x - h.x) / h.w) ** 2));
+      }
+      wave += Math.min(heave, 70);
+      return H - base - wave * there - pouring(x, t);
+    }
+
+    const circle = (x, y, rad) => [x, y - rad, y + rad, 2 * rad];
+
+    // Draws capsules into a pool of rects, reusing them frame to frame.
+    const dropPool = [];
+    function drawInto(layer, pool, items) {
+      while (pool.length < items.length) pool.push(el("rect", { width: "0" }, layer));
+      for (let i = 0; i < pool.length; i++) {
+        const n = pool[i],
+          it = items[i];
+        if (!it) {
+          n.setAttribute("width", "0");
+          continue;
+        }
+        const [cx, y1, y2, w] = it;
+        n.setAttribute("x", (cx - w / 2).toFixed(1));
+        n.setAttribute("y", y1.toFixed(1));
+        n.setAttribute("width", Math.max(0, w).toFixed(1));
+        n.setAttribute("height", Math.max(0, y2 - y1).toFixed(1));
+        n.setAttribute("rx", (w / 2).toFixed(1));
+      }
+    }
+
+    // ---------- Timeline ----------
+    let beats = {},
+      beatList = [],
+      total = 0;
+    function buildTimeline() {
+      // A quarter of the writing time is the pen lifting — twice as long between letters as
+      // within one — and the rest is drawing, shared among the strokes by their length.
+      let liftUnits = 0;
+      STROKES.forEach((ls, li) => {
+        liftUnits += ls.length - 1 + (li > 0 ? 2 : 0);
+      });
+      const unit = (params.writeMs * 0.25) / liftUnits;
+      const draw = params.writeMs * 0.75;
+      const totalLen = strokeMeta.reduce((s, m) => s + m.len, 0);
+      // The pen starts once the pool has been pouring in for a while.
+      let at = params.textDrawStartAfterPoolEntry,
+        idx = 0;
+      STROKES.forEach((ls, li) => {
+        if (li > 0) at += unit * 2;
+        ls.forEach((_, si) => {
+          if (si > 0) at += unit;
+          const m = strokeMeta[idx++];
+          const d = (draw * m.len) / totalLen;
+          m.start = at;
+          m.end = at + d;
+          at += d;
+        });
+        letterEls[li].end = at;
+      });
+
+      beats = {};
+      beatList = [];
+      let t = 0;
+      const add = (key, label, dur, haptic) => {
+        beats[key] = { key, label, start: t, end: t + dur, dur, haptic };
+        beatList.push(beats[key]);
+        t += dur;
+      };
+      add("pour", "The pool pours in", params.textDrawStartAfterPoolEntry);
+      add("write", "Pen writes, ink drips", params.writeMs);
+      add("pause", "Pause, dripping hard", params.pauseMs);
+      world = buildWorld(beats, params.writeWidth / WORD_W);
+      add(
+        "fall",
+        "Letters fall and pour in",
+        Math.max(...world.falls.map((f) => f.gone)) - t,
+        "medium",
+      );
+      add("sink", "The water heaves", params.sinkMs);
+      add("splash", "The pool erupts", params.splashMs, "heavy");
+      add("hold", "Full of water", params.holdMs);
+      add("fade", "Fades to the page", params.fadeMs);
+      total = t + 300;
+      renderBeats();
+      $("scrub").max = String(Math.round(total));
+    }
+
+    // The eruption, thrown from the pool's surface. Its slowest part crosses the top of the
+    // screen at three-quarters of the eruption time and would carry on to 1.6× that height;
+    // once a part of it is past the top, the screen there is full and stays full.
+    function eruption(B) {
+      const y0 = H - levelAt(B.splash.start);
+      const D = y0 + 60;
+      const A = 1.6 * D;
+      const crossing = B.splash.dur * 0.75;
+      const g = (2 * A) / (crossing / (1 - Math.sqrt(1 - D / A))) ** 2;
+      const vMin = Math.sqrt(2 * g * A);
+      const [p1, p2, p3, p4] = world.sheetPhase;
+      // A column in the middle racing ahead, a broad crown around it, the edges slowest, and
+      // unevenness at every scale across the width.
+      const speedAt = (x) =>
+        vMin *
+        (1 +
+          1.1 * Math.exp(-(((x - CX) / 60) ** 2)) +
+          0.3 * Math.exp(-(((x - CX) / 150) ** 2)) +
+          0.1 * (1 + Math.sin(x * 0.031 + p1)) +
+          0.07 * (1 + Math.sin(x * 0.067 + p2)) +
+          0.05 * (1 + Math.sin(x * 0.13 + p3)) +
+          0.03 * (1 + Math.sin(x * 0.27 + p4)));
+      const crossAt = (x) => {
+        const v = speedAt(x);
+        return (v - Math.sqrt(Math.max(0, v * v - 2 * g * D))) / g;
+      };
+      // The wall's top edge, never still: small waves run along it as it climbs.
+      const sheet = (x, s) => {
+        if (s >= crossAt(x)) return -60;
+        const churn =
+          7 * Math.sin(x * 0.09 + s * 0.021 + p2) + 4 * Math.sin(x * 0.21 - s * 0.034 + p3);
+        return y0 - speedAt(x) * s + 0.5 * g * s * s + churn * Math.min(1, s / 120);
+      };
+      return { y0, g, vMin, speedAt, crossAt, sheet };
+    }
+
+    // ---------- Render one moment ----------
+    const water = $("water"),
+      drops = $("drops"),
+      tearLayer = $("tears");
+
+    // A drop hanging from a letter, g from 0 (just appearing) to 1 (about to let go). Ink
+    // pours in steadily, so it grows by volume: quickly at first, then slowly as it gets big.
+    // It hangs almost still while it fills, then, heavy enough, stretches fast and pinches off.
+    function hangingDrop(x, y0, r, g) {
+      const rb = r * Math.cbrt(clamp01(g * 1.1));
+      const sag = r * 0.35 * g + r * 2.05 * Math.pow(g, 5);
+      const cy = y0 + rb * 0.6 + sag;
+      const a = r * (0.7 + 0.5 * g);
+      let n = mix(r, r * 0.55, g);
+      n *= 1 - clamp01((g - 0.88) / 0.12) * 0.88;
+      const yn = y0 + Math.max(0, cy - rb - y0) * 0.6;
+      return (
+        `M${x - a},${y0 - 2} C${x - a * 0.55},${y0} ${x - n},${yn - (yn - y0) * 0.5} ${x - n},${yn} ` +
+        `C${x - n},${yn + (cy - yn) * 0.5} ${x - rb},${cy - rb * 0.6} ${x - rb},${cy} ` +
+        `A${rb},${rb} 0 0 0 ${x + rb},${cy} ` +
+        `C${x + rb},${cy - rb * 0.6} ${x + n},${yn + (cy - yn) * 0.5} ${x + n},${yn} ` +
+        `C${x + n},${yn - (yn - y0) * 0.5} ${x + a * 0.55},${y0} ${x + a},${y0 - 2} Z`
+      );
+    }
+
+    // A falling teardrop: round below, drawn to a point above. Just after it lets go its tail
+    // snaps shorter; then the faster it falls, the longer the tail it pulls.
+    function fallingDrop(x, cy, r, s) {
+      const speed = DRIP_G * s;
+      const tail = r * (1.5 - 0.7 * clamp01(s / 120)) + Math.min(r * 1.4, speed * r * 0.9);
+      const tip = cy - r - tail;
+      return (
+        `M${x},${tip} C${x + r * 0.35},${tip + tail * 0.45} ${x + r},${cy - r * 0.55} ${x + r},${cy} ` +
+        `A${r},${r} 0 0 1 ${x - r},${cy} ` +
+        `C${x - r},${cy - r * 0.55} ${x - r * 0.35},${tip + tail * 0.45} ${x},${tip} Z`
+      );
+    }
+
+    // What's left on the letter after a drop lets go, pulling back up into it.
+    function stub(x, y0, r, k) {
+      const h = r * 0.8 * (1 - easeOut(k));
+      const a = r * 1.15 * (1 - 0.4 * k);
+      return `M${x - a},${y0 - 2} Q${x},${y0 + h * 2} ${x + a},${y0 - 2} Z`;
+    }
+
+    const tearPool = [];
+    function drawPaths(layer, pool, shapes) {
+      while (pool.length < shapes.length) pool.push(el("path", { d: "" }, layer));
+      for (let i = 0; i < pool.length; i++) pool[i].setAttribute("d", shapes[i] || "");
+    }
+
+    function render(t) {
+      const B = beats;
+      const ws = params.writeWidth / WORD_W;
+
+      // 1. The pen.
+      for (const m of strokeMeta) {
+        const p = easeInOut(clamp01((t - m.start) / (m.end - m.start)));
+        m.el.setAttribute("opacity", t >= m.start ? "1" : "0");
+        m.el.setAttribute("stroke-dashoffset", (m.len * (1 - p)).toFixed(4));
+      }
+      const writing = t < B.write.end;
+      // Nudged off the centre line so it looks centred (wordOffsetX): its round S and its
+      // flat-topped T make the measured centre read a little to the right.
+      const wordAt = `translate(${CX + params.wordOffsetX},${CY}) scale(${ws}) translate(${-WORD_W / 2},${-WORD_H / 2})`;
+      $("redWord").setAttribute("transform", wordAt);
+      $("gooWord").setAttribute("transform", wordAt);
+      letterEls.forEach((L, li) => {
+        L.ink.setAttribute("opacity", clamp01((t - L.end) / 180).toFixed(3));
+        if (writing) L.letter.setAttribute("mask", `url(#pen${li})`);
+        else L.letter.removeAttribute("mask");
+        // 3. Falling into the pool.
+        const f = world.falls[li];
+        // It falls, and as it reaches the water it becomes the water: just before it touches, it's
+        // drawn as part of the pool's liquid, so it merges into the surface and pours away into it.
+        const s = t - f.start;
+        const dy = s > 0 ? 0.5 * LETTER_G * s * s : 0;
+        const rot = f.rot * clamp01(dy / 220);
+        const move =
+          dy > 0
+            ? `translate(0 ${(dy / ws).toFixed(4)}) rotate(${rot.toFixed(2)} ${f.cx} 1.58)`
+            : "translate(0 0)";
+        const liquid = t >= f.hit - 50;
+        // It melts as it falls: none as it lets go, most of the way as it lands — its outline
+        // wobbling more and more, its corners rounding off into water.
+        // The melt control sets how soon it melts (higher, sooner) and how far: how long its
+        // streams stretch, how thin they draw, how much they break into drops.
+        const k = params.melt;
+        const melting = k > 0 && s > 0 && t < f.gone;
+        const m = melting ? Math.pow(clamp01(s / Math.max(1, f.hit - f.start)), 0.8 / k) : 0;
+        const shaped = Math.min(1, m * 1.25);
+        const stretch = 3.2 * m * k; // how far its streams trail below it, in letter units
+        L.smear.setAttribute("stdDeviation", `0 ${(stretch / 2).toFixed(3)}`);
+        L.smearDown.setAttribute("dy", (stretch / 2).toFixed(3));
+        L.meltBend.setAttribute("scale", (0.18 * m).toFixed(3));
+        L.meltThin.setAttribute("radius", `${(0.07 * m * k).toFixed(3)} 0`);
+        // More gaps the further it's gone: the streak pattern's cut-off rises with it.
+        const cut = -3 + 6.2 * Math.min(1, m * k);
+        L.meltBreak.setAttribute("values", `0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  7 0 0 0 ${(-cut).toFixed(3)}`);
+        L.meltSlide.setAttribute("dy", (-(s * 0.0035) % 8).toFixed(3));
+        L.meltSoft.setAttribute("stdDeviation", `0.03 ${(0.09 + 0.12 * m).toFixed(3)}`);
+        L.meltMix.setAttribute("k2", (1 - shaped).toFixed(3));
+        L.meltMix.setAttribute("k3", shaped.toFixed(3));
+        L.meltDrift.setAttribute("dx", (0.25 * Math.sin(t * 0.009 + li)).toFixed(3));
+        L.meltDrift.setAttribute("dy", (0.25 * Math.cos(t * 0.007 + li * 1.7)).toFixed(3));
+        // v6. The bead at the pen's tip, while the pen is in this letter: it gathers as a stroke
+        // starts and is drawn into the letter as the stroke ends.
+        let tip = null;
+        for (const sm of strokeMeta) {
+          if (sm.letter !== li || t < sm.start || t > sm.end) continue;
+          const p = easeInOut(clamp01((t - sm.start) / (sm.end - sm.start)));
+          const at = sm.el.getPointAtLength(sm.len * p);
+          const grow = Math.min(clamp01((t - sm.start) / 90), clamp01((sm.end - t) / 140));
+          tip = { x: at.x, y: at.y, r: 0.24 * params.textWetPen * Math.sqrt(grow) };
+        }
+        L.bead.setAttribute("cx", tip ? tip.x.toFixed(4) : "0");
+        L.bead.setAttribute("cy", tip ? tip.y.toFixed(4) : "0");
+        L.bead.setAttribute("r", tip && writing ? tip.r.toFixed(4) : "0");
+        // Swollen while it's being written, wet; once it's done, it settles to its width with a
+        // ripple: a little thinner, a little fuller, still.
+        const begun = strokeMeta.find((sm) => sm.letter === li).start;
+        const since = t - L.end;
+        const settle =
+          t < begun ? 0 : since <= 0 ? 0.4 : 0.4 * Math.exp(-since / 260) * Math.cos((since * Math.PI * 2) / 320);
+        // As it falls it turns to the pool's look, all the way by the time it lands.
+        const falling = s > 0 ? easeInOut(clamp01(s / Math.max(1, f.hit - f.start))) : 0;
+        const see = params.textSeeThrough * (1 - params.textBlendToPool * falling);
+        // Melting, it takes its melt and then its water look; otherwise just the water look.
+        L.water.update(t, { see, swell: settle * params.textSettle });
+        L.holder.style.filter = melting ? `url(#melt${li}) ${L.water.filter}` : L.water.filter;
+        L.holder.setAttribute("transform", move);
+        L.liquid.setAttribute("transform", move);
+        L.holder.setAttribute("visibility", liquid ? "hidden" : "visible");
+        L.liquid.setAttribute("visibility", liquid && t < f.gone ? "visible" : "hidden");
+      });
+
+      const items = [];
+      // 1–2. Drips: each one swells out of the bottom of its letter, sags, its neck thins and
+      // pinches off, and it falls as a teardrop. What's left on the letter pulls back up.
+      const tears = [];
+      for (const dp of world.drips) {
+        if (t < dp.tb || t >= dp.th) continue;
+        const y0 = world.yb;
+        if (t < dp.td) {
+          tears.push(hangingDrop(dp.x, y0, dp.r, (t - dp.tb) / (dp.td - dp.tb)));
+          continue;
+        }
+        const s = t - dp.td;
+        const cy = y0 + dp.r * 3 + 0.5 * DRIP_G * s * s;
+        tears.push(fallingDrop(dp.x, cy, dp.r, s));
+        // Close to the water, it joins it: the pool's surface reaches up to meet the drop.
+        const gap = H - levelAt(t) - (cy + dp.r);
+        if (gap < dp.r * 2.5) items.push(circle(dp.x, cy, dp.r));
+        if (s < 160) tears.push(stub(dp.x, y0, dp.r, s / 160));
+        if (dp.satellite && s > 25) {
+          const s2 = s - 25;
+          const sy = y0 + dp.r * 1.2 + 0.5 * DRIP_G * s2 * s2;
+          if (sy < H - levelAt(t)) tears.push(fallingDrop(dp.x, sy, dp.r * 0.32, s2));
+        }
+      }
+      for (const dp of world.drips) {
+        if (t < dp.th || t > dp.th + 900 || t >= B.splash.start) continue;
+        const from = H - levelAt(dp.th);
+        for (const k of dp.kick) {
+          const s = t - dp.th - k.delay;
+          if (s < 0) continue;
+          const v = Math.sqrt(2 * KICK_G * k.h);
+          const y = from - v * s + 0.5 * KICK_G * s * s;
+          if (s > v / KICK_G && y > H - levelAt(t) + k.r * 0.5) continue;
+          items.push(circle(dp.x + k.vx * s, y, k.r));
+        }
+      }
+      drawPaths(tearLayer, tearPool, tears);
+
+      // The pool is clear water from the moment it pours in, its living body with it.
+      const clear = 1;
+      moveWaterBody(t, clear);
+      // The colour at the pool's edges, all of its spectrum together.
+      for (const node of document.querySelectorAll(".poolEdgeColour"))
+        node.setAttribute("slope", (Number(node.getAttribute("data-base")) * params.poolEdgeColor).toFixed(3));
+      // And at the drips' edges.
+      for (const node of document.querySelectorAll(".dripEdgeColour"))
+        node.setAttribute("slope", (Number(node.getAttribute("data-base")) * params.dripEdgeColor).toFixed(3));
+      // v6: the red seen through the drips and the pool, lifted toward white.
+      mixTo(dropWet.see, params.dripSeeThrough);
+      mixTo(dropWet.whiter, params.wetWhiteness);
+      mixTo(poolWet.see, params.poolSeeThrough);
+      mixTo(poolWet.whiter, params.wetWhiteness);
+      $("poolClearing").setAttribute("k2", clear.toFixed(3));
+      $("poolClearing").setAttribute("k3", (1 - clear).toFixed(3));
+
+      // The pool, and then the eruption.
+      const base = levelAt(t);
+      const erupt = eruption(B);
+      const edge = [];
+      {
+        for (let c = 0; c <= COLS; c++) {
+          const x = (c / COLS) * 390;
+          let y = surfaceAt(x, t, base);
+          if (erupt && t >= B.splash.start) y = Math.min(y, erupt.sheet(x, t - B.splash.start));
+          edge.push([x, y]);
+        }
+        // Spray from the letters landing, and from the eruption.
+        for (const sp of world.spray) {
+          const s = t - sp.t0;
+          if (s < 0 || s > 800) continue;
+          const y = sp.y0 + sp.vy * s + 0.5 * SPRAY_G * s * s;
+          if (s > 80 && y > H - base) continue;
+          items.push(circle(sp.x + sp.vx * s, y, sp.r));
+        }
+        if (t >= B.splash.start) {
+          const S = t - B.splash.start;
+          const { g, vMin, y0 } = erupt;
+          // A flying drop and the short streak behind it. Drops back inside the water aren't drawn.
+          const fly = (x, y, rad, vx, vy) => {
+            if (y < -50 || y > H + 20 || y - rad > erupt.sheet(x, S)) return;
+            items.push(circle(x, y, rad));
+            const k = Math.min(26, 60 / Math.max(0.5, Math.hypot(vx, vy)));
+            items.push(circle(x - vx * k * 0.5, y - vy * k * 0.5, rad * 0.8));
+            items.push(circle(x - vx * k, y - vy * k, rad * 0.55));
+          };
+          for (const e of world.splash.edge) {
+            const te = e.at * erupt.crossAt(e.x);
+            const s = S - te;
+            if (s < 0) continue;
+            const vy0 = -(erupt.speedAt(e.x) - g * te) - e.up * vMin;
+            fly(
+              e.x + e.vx * s,
+              erupt.sheet(e.x, te) + vy0 * s + 0.5 * g * s * s,
+              e.r,
+              e.vx,
+              vy0 + g * s,
+            );
+          }
+          for (const st of world.splash.strands) {
+            const s = S - st.dt;
+            if (s < 0) continue;
+            for (const bd of st.beads) {
+              const v = st.v * bd.k * vMin;
+              const vx = Math.sin(st.ang) * v,
+                vy0 = -Math.cos(st.ang) * v;
+              fly(st.x + vx * s, y0 - 4 + vy0 * s + 0.5 * g * s * s, bd.r, vx, vy0 + g * s);
+            }
+          }
+          for (const j of world.splash.jet) {
+            const s = S - j.dt;
+            if (s < 0) continue;
+            const vy0 = -j.v * vMin;
+            fly(
+              CX + j.dx * (1 + s / 400),
+              y0 + vy0 * s + 0.5 * g * s * s,
+              j.r,
+              j.dx * 0.0025,
+              vy0 + g * s,
+            );
+          }
+        }
+      }
+      if (edge.length && base > 0.5) {
+        const pts = edge.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`);
+        water.setAttribute(
+          "d",
+          `M-20,${H + 60} L-20,${edge[0][1].toFixed(1)} L${pts.join(" L")} L410,${edge[edge.length - 1][1].toFixed(1)} L410,${H + 60} Z`,
+        );
+      } else {
+        water.setAttribute("d", "");
+      }
+      drawInto(drops, dropPool, items);
+
+      // 7. The full screen of water fades to the page underneath, as the app hands over to it.
+      const fade = clamp01((t - B.fade.start) / Math.max(1, B.fade.dur));
+      $("stage").style.opacity = (1 - fade).toFixed(3);
+
+      // Read-outs.
+      const firstHit = Math.min(...world.falls.map((f) => f.hit));
+      $("time").textContent = `${(t / 1000).toFixed(2)} s / ${(total / 1000).toFixed(2)} s`;
+      $("hapHeavy").classList.toggle("on", t >= B.splash.start && t < B.splash.start + 150);
+      $("hapMedium").classList.toggle("on", t >= firstHit && t < firstHit + 150);
+      beatList.forEach((b, i) => beatItems[i]?.classList.toggle("on", t >= b.start && t < b.end));
+    }
+
+    // ---------- Controls ----------
+    let t = 0,
+      playing = false,
+      speed = 1,
+      last = 0;
+    let beatItems = [];
+    function renderBeats() {
+      const list = $("beats");
+      list.textContent = "";
+      beatItems = beatList.map((b, i) => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.innerHTML = `<span class="n">${String(i + 1).padStart(2, "0")}</span><span>${b.label}${b.haptic ? `<span class="tag">${b.haptic} haptic</span>` : ""}</span><span class="ms">${Math.round(b.start)}–${Math.round(b.end)} ms</span>`;
+        btn.addEventListener("click", () => {
+          pause();
+          seek(b.start + Math.min(b.dur * 0.5, 60));
+        });
+        li.appendChild(btn);
+        list.appendChild(li);
+        return li;
+      });
+    }
+    function seek(v) {
+      t = Math.max(0, Math.min(total, v));
+      $("scrub").value = String(Math.round(t));
+      render(t);
+    }
+    function frame(now) {
+      if (!playing) return;
+      t += (now - last) * speed;
+      last = now;
+      if (t >= total) {
+        t = total;
+        seek(t);
+        pause();
+        return;
+      }
+      seek(t);
+      requestAnimationFrame(frame);
+    }
+    function play() {
+      if (t >= total) t = 0;
+      playing = true;
+      last = performance.now();
+      $("play").textContent = "Pause";
+      requestAnimationFrame(frame);
+    }
+    function pause() {
+      playing = false;
+      $("play").textContent = "Play";
+    }
+    $("play").addEventListener("click", () => (playing ? pause() : play()));
+    $("replay").addEventListener("click", () => {
+      seek(0);
+      play();
+    });
+    $("scrub").addEventListener("input", (e) => {
+      pause();
+      seek(Number(e.target.value));
+    });
+    document.querySelectorAll(".seg button").forEach((b) =>
+      b.addEventListener("click", () => {
+        speed = Number(b.dataset.speed);
+        document
+          .querySelectorAll(".seg button")
+          .forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+      }),
+    );
+
+    const tune = $("tune");
+    const readouts = {};
+    for (const s of TUNING) {
+      const label = document.createElement("label");
+      label.innerHTML = `<span class="head"><span>${s.label}</span><span class="v" id="v-${s.key}"></span></span>`;
+      const input = document.createElement("input");
+      Object.assign(input, {
+        type: "range",
+        id: `t-${s.key}`,
+        min: s.min,
+        max: s.max,
+        step: s.step,
+        value: params[s.key],
+      });
+      input.addEventListener("input", () => {
+        params[s.key] = Number(input.value);
+        readouts[s.key].textContent = `${params[s.key]} ${s.unit}`;
+        const ratio = total ? t / total : 0;
+        buildTimeline();
+        seek(ratio * total);
+      });
+      label.appendChild(input);
+      tune.appendChild(label);
+      readouts[s.key] = label.querySelector(".v");
+      readouts[s.key].textContent = `${params[s.key]} ${s.unit}`;
+    }
+    $("reset").addEventListener("click", () => {
+      params = { ...DEFAULTS };
+      for (const s of TUNING) {
+        $(`t-${s.key}`).value = params[s.key];
+        readouts[s.key].textContent = `${params[s.key]} ${s.unit}`;
+      }
+      buildTimeline();
+      seek(t);
+    });
+    $("copy").addEventListener("click", () => {
+      const out = JSON.stringify(
+        {
+          ...params,
+          beats: beatList.map(({ key, start, end }) => ({
+            key,
+            start: Math.round(start),
+            end: Math.round(end),
+          })),
+        },
+        null,
+        2,
+      );
+      const done = () => {
+        $("copy").textContent = "Copied";
+        setTimeout(() => ($("copy").textContent = "Copy settings"), 1400);
+      };
+      navigator.clipboard?.writeText(out).then(done, () => {
+        $("copy").textContent = "Couldn't copy";
+      });
+    });
+
+    drawWaterTextures();
+    buildTimeline();
+    seek(total);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduce)
+      setTimeout(() => {
+        seek(0);
+        play();
+      }, 600);
+  })();
+</script>

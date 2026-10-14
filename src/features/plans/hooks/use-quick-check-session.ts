@@ -128,7 +128,7 @@ export function useQuickCheckSession() {
         return;
       }
 
-      // Done, looking back at a finished Quick Check: back to the plan.
+      // Done, looking back at a finished Quick Check: back to where it was opened.
       if (dayDone) {
         sessionModal.exit();
         return;

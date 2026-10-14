@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reani
 
 import { useTheme } from "@/theme";
 import { useIntroClock } from "../hooks/use-intro-clock";
+import { beatList } from "../logic/frame-stats";
 import { buildScene } from "../logic/scene";
 import { INTRO_SETTINGS } from "../logic/settings";
 import { IntroCanvas } from "./IntroCanvas";
@@ -26,7 +27,19 @@ export const IntroPlayer = memo(function IntroPlayer({
   const theme = useTheme();
   const { width, height } = useWindowDimensions();
   const scene = useMemo(() => buildScene(INTRO_SETTINGS, { width, height }), [width, height]);
-  const { time, ready } = useIntroClock(scene, { revealed, onDone });
+  // It ends as the full-colour hold does: the page arrives under it there.
+  const timing = useMemo(
+    () => ({
+      holdEnd: scene.beats.hold.end,
+      firstHit: Math.min(...scene.world.falls.map((fall) => fall.hit)),
+      splashStart: scene.beats.splash.start,
+      revealAt: scene.beats.hold.end,
+      doneAt: scene.beats.hold.end,
+      beats: beatList(scene.beats),
+    }),
+    [scene],
+  );
+  const { time, ready } = useIntroClock(timing, { revealed, onDone });
   const fullRed = scene.beats.hold.start;
   const white = useAnimatedStyle(() => ({ opacity: time.get() < fullRed ? 1 : 0 }));
 

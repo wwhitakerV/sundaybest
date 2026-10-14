@@ -656,6 +656,17 @@ rather than trusting a clean lint run.
 - **RNTL skips anything hidden from VoiceOver.** Decorative art carries
   `accessibilityElementsHidden`, so queries for it need
   `{ includeHiddenElements: true }`.
+- **FlashList's own `jestSetup` is broken in 2.0.2:** it swaps `FlashList` for
+  a `RecyclerView` export that no longer exists, leaving it undefined. The Jest
+  setup mocks only its layout measurement (a 400×900 window, 100pt rows), so a
+  list draws the rows that would fit. With no layout events, a list draws no
+  further rows unless a test gives it a size and scrolls it.
+- **Reanimated's Jest mock has no `LayoutAnimationConfig`** ("ADD ME IF
+  NEEDED"); the Jest setup adds a pass-through, as it adds `useFrameCallback`,
+  and its `useAnimatedScrollHandler` does nothing, so the setup's runs the
+  handler with the scroll event.
+  Its `Animated.FlatList` is React Native's, so `itemLayoutAnimation` reaches
+  the plain `FlatList`'s props, where a test can read it.
 - **react-native-svg rewrites `mask="url(#id)"` to `id`** on the rendered
   element, and a `viewBox` to `minX`/`minY`/`vbWidth`/`vbHeight`. Assert those.
 - **`ScrollView.prototype.scrollTo` is a shared `jest.fn`** in React Native's
@@ -681,18 +692,28 @@ installed package when the dev server runs with `EXPO_UNSTABLE_MCP_SERVER=1`
 
 ## Launch
 
-- **Native launch screen.** It's plain white (no image), because iOS can't animate it.
+- **Native launch screen.** It's a plain colour (no image), because iOS can't animate it: the playing intro's `page`.
 - **Splash.** `LaunchSplashCoordinator` lifts it two frames after the app first draws. It reports through `useLaunchReady()` when the first page (Welcome or Home) is ready: the reader is known, plans and settings are in (or 2.5s has passed), and the reader has landed: Welcome for a new reader, or wherever a returning one has moved on to (Home, or a plan from a link). After 8s it reports ready regardless, so the app is never stuck behind the intro.
-- **The intro.** The launch intro (`src/features/launch-intro`, ADR 0026) is mounted once at the root over everything. It starts on the launch's page colour, plays the pen and the pool, and holds at full colour for 200ms, longer if the page isn't ready yet. Then it disappears, and the page's pieces arrive with the reveal motion (`src/ui/arrival`): Home's header comes down into place and its hero rises in, and Welcome's wordmark comes down and the rest rises in. It plays on every cold launch, about 6.5s, with no skip. Coming back from the background shows nothing.
-- **Reduce Motion on.** The white just fades to the page.
-- **Colours.** They live in `src/theme/launch-colors.json`, separate from the app's own colours. `page` is what the intro writes on, and `app.config.ts` reads it for the native launch screen too, so the hand-off can't drift. `ink` is the writing, the pool and the eruption that fills the screen. A change to `page` reaches the launch screen only with a new build.
-- **Status bar.** It's hidden while the intro plays.
+- **The intro.** The launch intro (`src/features/launch-intro`) is mounted once at the root over everything. There are four, and `src/theme/launch-colors.json`'s `intro` names the one that plays. Each starts on the launch's page colour and holds full until the page is ready. Each plays on every cold launch with no skip; coming back from the background shows nothing.
+  - **The pool movie** (`"pool-movie"`, ADR 0029), which plays now. It's the pool intro in water (`docs/prototypes/launch-intro-pool-v6.html`), filmed with `POOL_MOVIE_SETTINGS` (`npm run render:intro`). On the red page, a pool of water pours in, and the pen writes the wordmark in water you see the red through, dripping into the pool. The letters fall in and the pool erupts to fill the screen. It holds until the page is ready, then the movie fades (600ms) as the page's pieces arrive in a cascade. A test fails until it's remade after a settings change.
+  - **The water movie** (`"movie"`, ADR 0028). It's the water intro below, rendered once from its prototype with the app's settings (`npm run render:intro`) and played as a 120 fps video. The video hardware does the work, so it's smooth and light. It holds on the full screen of water until the page is ready. As the water drains, the movie is drawn only inside the water's shape, so the live page shows where the water has gone. Remake it after any change to `WATER_SETTINGS`; a test fails until it's remade.
+  - **The water intro** (`"water"`, ADR 0027, v4), drawn live with Skia. A red pool pours in from the bottom right, slams into the left wall and rebounds. The pen writes the wordmark in clear water, and its drips raise the pool and turn it clear. The letters melt into streams as they fall in, and the pool erupts to fill the screen with glass water. It holds 300ms, then drains from the top down over the live page. Each of the page's pieces arrives as the water's edge passes it (`ArrivalLineContext`, `src/ui/arrival`). About 10s.
+  - **The pool intro** (`"pool"`, ADR 0026). The pen and the pool, held at full colour for 200ms. Then it disappears, and the page's pieces arrive in a cascade (`src/ui/arrival`): Home's header comes down into place and its hero rises in, and Welcome's wordmark comes down and the rest rises in. About 6.5s.
+- **Reduce Motion on.** The page colour just fades to the page.
+- **Colours.** They live in `src/theme/launch-colors.json`, separate from the app's own colours. Each intro has its own `page` and `ink`, and the playing intro's reach the app as `launchPage` and `launchInk`. `page` is what the intro starts on, and `app.config.ts` reads the playing intro's for the native launch screen too, so the hand-off can't drift. `ink` is the pool intro's writing, pool and eruption, and the red the water intro's pool starts as. The water's glass colours are `src/theme/launch-water.ts`. A change to `page`, or to which intro plays, reaches the launch screen only with a new build.
+- **Status bar.** It's hidden while the intro covers the page. While the water drains or fades, it's back, and touches reach the page.
 
 ## Navigation
 
 - **As iOS does.** Back returns to the page the reader was just on and never changes tab; a tab tapped again goes to its first page; what's opened appears in the tab the reader is in. The rules are in `.claude/rules/ui.md`, and the routes they need in `src/app/README.md`.
 - **Every tab can show a plan,** and the Settings pages a plan's More menu leads to, so none of them sends the reader to another tab. Links are built by `@/entities/tabs` with the tab in focus (`useFocusedTab`).
+- **One tap, one movement.** A plan found in Plans' search opens on top of the results (the search is a modal with its own stack, `plan-search/`), and one from Weeks on top of Weeks (the root's `plan/[planId]`); Back returns there. Leaving a study slides it away to where it was started. iOS can only close one page and then open another as two movements, so nothing does both in one tap. Where the reader is comes from `useFocusedPlace(PLACE_ROUTES)`.
 - **No tab can be stranded.** Each tab's stack is anchored to its first page (`unstable_settings.anchor`), and the tab bar puts that page back when a tab is tapped again (`stackRootReset`).
+
+## Lists and search
+
+- **Long lists run on FlashList** (`@shopify/flash-list` 2.0.2, the version Expo SDK 57 pins; JavaScript only, MIT, one dependency, `tslib`). `ListScreen` draws Plans, All reflections, Weeks and All Quick Checks on it: only the rows near view are drawn, and reused as the list scrolls. Plans' search results stay on Reanimated's `Animated.FlatList`, because reuse would break their rows' fades and glides.
+- **Search earns its place.** Plans offers search from 10 plans, All reflections from 2, Weeks from 8 and All Quick Checks from 10; once a list has offered it, it always does, recorded on the phone (`searches_shown`). The rules are in `.claude/rules/ui.md` (Search).
 
 ## Layout
 

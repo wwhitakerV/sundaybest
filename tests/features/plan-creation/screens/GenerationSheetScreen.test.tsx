@@ -2,10 +2,10 @@ import { http, HttpResponse } from "msw";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
-import { fireEvent, render, screen } from "@tests/helpers/render";
+import { fireEvent, render, screen, waitFor } from "@tests/helpers/render";
 import { API_URL, aGeneration } from "@tests/factories/api";
 import { server } from "@tests/mocks/server";
-import { planOverviewHref } from "@/entities/plan";
+import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
 import { GenerationSheetScreen } from "@/features/plan-creation";
 import type { ApiPlanGeneration } from "@/core/api/contracts";
 import { lightTheme } from "@/theme/tokens";
@@ -106,14 +106,28 @@ describe("GenerationSheetScreen", () => {
     expect(screen.queryByTestId("generation-steps")).toBeNull();
   });
 
-  it("opens a ready plan, closing the sheet first", async () => {
+  it("opens a ready plan first, then slides the sheet away from over it", async () => {
     serve([aGeneration({ status: "completed", progress: 100 })]);
     render(<GenerationSheetScreen />);
 
     fireEvent.press(await screen.findByTestId("generation-sheet-open"));
 
-    expect(back).toHaveBeenCalledTimes(1);
     expect(push).toHaveBeenCalledWith(planOverviewHref(aGeneration().planId));
+    await waitFor(() => expect(back).toHaveBeenCalledTimes(1));
+    // The plan's on its way before the sheet goes, so the two move as one.
+    expect(push.mock.invocationCallOrder[0]).toBeLessThan(back.mock.invocationCallOrder[0] ?? 0);
+  });
+
+  it("opens New Plan over the sheet for another sermon, in one movement", async () => {
+    serve([
+      aGeneration({ status: "failed", error: { code: "noCaptions", message: "No captions." } }),
+    ]);
+    render(<GenerationSheetScreen />);
+
+    fireEvent.press(await screen.findByTestId("generation-sheet-choose-another"));
+
+    expect(push).toHaveBeenCalledWith(NEW_PLAN_HREF);
+    expect(back).not.toHaveBeenCalled();
   });
 
   it("says why a plan couldn't be built, and builds it again", async () => {

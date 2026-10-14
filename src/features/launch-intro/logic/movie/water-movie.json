@@ -1,0 +1,69 @@
+{
+  "fps": 120,
+  "frames": 1228,
+  "width": 1320,
+  "height": 2856,
+  "stage": {
+    "width": 390,
+    "height": 844
+  },
+  "durationMs": 10225,
+  "settings": {
+    "writeMs": 4500,
+    "writeWidth": 350,
+    "drips": 2,
+    "dripSize": 0.6,
+    "hangMs": 240,
+    "poolPct": 7,
+    "pauseMs": 0,
+    "sinkMs": 0,
+    "splashMs": 1050,
+    "holdMs": 300,
+    "drainMs": 1200,
+    "waterBody": 0.82,
+    "melt": 0.6,
+    "textWaterLikeness": 0.7,
+    "textWaterShine": 0.95,
+    "textWaterGleam": 1,
+    "textWaterColor": 2,
+    "poolEdgeColor": 0.3,
+    "dripEdgeColor": 0.5,
+    "pourMs": 1600,
+    "waterVolumeFromDrip": 0.8,
+    "textDrawStartAfterPoolEntry": 1650
+  },
+  "beats": {
+    "pour": {
+      "start": 0,
+      "end": 1650
+    },
+    "write": {
+      "start": 1650,
+      "end": 6150
+    },
+    "pause": {
+      "start": 6150,
+      "end": 6150
+    },
+    "fall": {
+      "start": 6150,
+      "end": 6872.59506829488
+    },
+    "sink": {
+      "start": 6872.59506829488,
+      "end": 6872.59506829488
+    },
+    "splash": {
+      "start": 6872.59506829488,
+      "end": 7922.59506829488
+    },
+    "hold": {
+      "start": 7922.59506829488,
+      "end": 8222.595068294879
+    },
+    "drain": {
+      "start": 8222.595068294879,
+      "end": 9422.595068294879
+    }
+  }
+}

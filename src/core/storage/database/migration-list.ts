@@ -161,4 +161,21 @@ export const MIGRATIONS: readonly Migration[] = [
       await db.execute("CREATE INDEX reflection_lines_user_idx ON reflection_lines(user_id)");
     },
   },
+  {
+    version: 5,
+    name: "searches-shown",
+    async up(db) {
+      // Which of a reader's lists have offered search: once a list is long
+      // enough to earn it, its search stays, though the list shrinks again.
+      // Device-only, as everything here is.
+      await db.execute(`
+        CREATE TABLE searches_shown (
+          user_id TEXT NOT NULL,
+          list TEXT NOT NULL,
+          shown_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, list)
+        )
+      `);
+    },
+  },
 ];

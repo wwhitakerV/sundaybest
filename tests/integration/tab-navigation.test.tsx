@@ -147,3 +147,56 @@ describe("moving between tabs, as iOS does", () => {
     LONG_FLOW_TIMEOUT_MS,
   );
 });
+
+describe("opening a plan over a full-screen page, as iOS does", () => {
+  it(
+    "opens a plan found in Plans' search on top of the results: its pages over it, Back stepping back to the search",
+    async () => {
+      const view = await openApp();
+      fireEvent.press(screen.getByTestId("tab-plans"));
+      act(() => router.push("/plan-search"));
+      await screen.findByTestId("plan-search-screen");
+
+      act(() => router.push({ pathname: "/plan-search/[planId]", params: { planId: PLAN.id } }));
+      await screen.findByTestId("plan-overview-continue-button");
+      expect(view.getPathname()).toBe(`/plan-search/${PLAN.id}`);
+
+      await pickFromMore("reminder");
+      expect(view.getPathname()).toBe("/plan-search/daily-reminder");
+      expect(await screen.findByTestId("daily-reminder-screen")).toBeVisible();
+
+      fireEvent.press(screen.getByTestId("daily-reminder-back-button"));
+      expect(view.getPathname()).toBe(`/plan-search/${PLAN.id}`);
+
+      act(() => router.back());
+      expect(view.getPathname()).toBe("/plan-search");
+    },
+    LONG_FLOW_TIMEOUT_MS,
+  );
+
+  it(
+    "opens a week's plan on top of Weeks: its pages over it, Back stepping back to Weeks",
+    async () => {
+      const view = await openApp();
+      fireEvent.press(screen.getByTestId("tab-progress"));
+      act(() => router.push("/weeks"));
+      act(() => router.push({ pathname: "/plan/[planId]", params: { planId: PLAN.id } }));
+      await screen.findByTestId("plan-overview-continue-button");
+      expect(view.getPathname()).toBe(`/plan/${PLAN.id}`);
+
+      await pickFromMore("how-made");
+      expect(view.getPathname()).toBe("/how-plans-are-made");
+
+      fireEvent.press(await screen.findByTestId("how-plans-are-made-privacy-privacy"));
+      expect(view.getPathname()).toBe("/privacy-policy");
+
+      act(() => router.back());
+      act(() => router.back());
+      expect(view.getPathname()).toBe(`/plan/${PLAN.id}`);
+
+      act(() => router.back());
+      expect(view.getPathname()).toBe("/weeks");
+    },
+    LONG_FLOW_TIMEOUT_MS,
+  );
+});

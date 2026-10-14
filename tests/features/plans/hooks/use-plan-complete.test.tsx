@@ -7,12 +7,9 @@ import { servePlans } from "@tests/mocks/plans-api";
 import * as haptics from "@/core/haptics/haptics";
 import { countReflectionAnswers } from "@/core/storage/reflection-answers";
 import { NEW_PLAN_HREF } from "@/entities/plan";
-import { tabPlanHref } from "@/entities/tabs";
 import { usePlanComplete } from "@/features/plans/hooks/use-plan-complete";
 
 // The tab the reader is in, under the study they're finishing.
-const mockTab: string | null = "progress";
-jest.mock("@/hooks/use-focused-tab", () => ({ useFocusedTab: () => () => mockTab }));
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),
@@ -33,7 +30,8 @@ jest.mock("expo-router", () => ({
 }));
 
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitSession = jest.fn<void, []>();
+const mockPush = jest.fn<void, [ExpoRouter.Href]>();
+const mockExitSession = jest.fn<void, [unknown]>();
 
 /** Seven days done; every Quick Check right but two answers on day 1. */
 const FINISHED = (() => {
@@ -59,11 +57,17 @@ async function renderPlanComplete(params: Record<string, string> = { planId: FIN
 beforeEach(() => {
   jest.mocked(countReflectionAnswers).mockResolvedValue(5);
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitSession }),
+    // The study, over the tab it was opened from.
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
   });
   jest
     .mocked(useRouter)
-    .mockReturnValue({ navigate: mockNavigate } as unknown as ReturnType<typeof useRouter>);
+    .mockReturnValue({ navigate: mockNavigate, push: mockPush } as unknown as ReturnType<
+      typeof useRouter
+    >);
 });
 
 describe("usePlanComplete", () => {
@@ -102,24 +106,24 @@ describe("usePlanComplete", () => {
     );
   });
 
-  it("leaves the session for the plan's overview, in the tab the study was opened from, on close", async () => {
+  it("slides the study down on close, back to where it was started", async () => {
     const { result } = await renderPlanComplete();
 
     act(() => result.current.close());
 
-    expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(tabPlanHref("progress", FINISHED.id));
+    expect(mockExitSession).toHaveBeenCalledWith({ type: "POP", payload: { count: 1 } });
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("leaves the session for New Plan on addSermon", async () => {
+  it("opens New Plan over Plan complete on addSermon, in one movement", async () => {
     const { result } = await renderPlanComplete();
 
     act(() => {
       if (result.current.found) result.current.addSermon();
     });
 
-    expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(NEW_PLAN_HREF);
+    expect(mockPush).toHaveBeenCalledWith(NEW_PLAN_HREF);
+    expect(mockExitSession).not.toHaveBeenCalled();
   });
 });
 
@@ -134,7 +138,7 @@ describe("usePlanComplete haptics", () => {
     expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("gives nothing as Close returns to the plan", async () => {
+  it("gives nothing as Close slides the study away", async () => {
     const { result } = await renderPlanComplete();
 
     act(() => result.current.close());

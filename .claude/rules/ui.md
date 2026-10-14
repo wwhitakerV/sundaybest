@@ -69,12 +69,23 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
 - Content rests clear of both (`useFrameClearance`, from `getFrameEdges`); never
   hand-tune room for a header, footer, or fade, and never hand-roll a fade.
 - Home and Plan Overview draw their own heroes and are the only exceptions.
+- **A long list is `ListScreen`, on FlashList:** only the rows near view are
+  drawn, and they're reused as it scrolls, however long the list grows. So a
+  row never keeps state of its own — what it must remember resets when it's
+  reused (`useRecyclingState`, from `@shopify/flash-list`); its artwork is
+  keyed to its image (`recyclingKey`, as `VideoThumbnail` does), so a reused
+  row never shows the last one's; rows of more than one kind say which
+  (`itemType`: Weeks' months and weeks). Space rows with `gap`, never a gap in
+  `contentStyle`. A list whose rows animate in, out and into new places
+  (Plans' search results) is Reanimated's `Animated.FlatList` instead —
+  reuse would break those animations.
 - Plans pins its header (`ListScreen`'s `pinned`): the title; the filters —
   In progress and Done with their counts, as `FilterPills` (a second tap on
-  the one picked lets it go) — centred in the room beside it; and the search
-  at the right (`HeaderIconButton`, white with its hairline edge). It stays
-  under the status bar on solid white with no fade and no shadow — the list
-  starts below the status bar, so nothing ever shows behind it. Once the list
+  the one picked lets it go) — centred in the room beside it; and, from ten
+  plans, the search at the right (`HeaderIconButton`, white with its hairline
+  edge). It stays above the list, under the status bar, on solid white with no
+  fade and no shadow — nothing ever shows behind it; pulled down past the
+  top, it comes down with the list. Once the list
   scrolls, the title is bumped left off the screen and the filters spring
   left into its place (`PlansHeader`, `motion.slide`); back at the top, both
   return. Pills whose outline springs get room either side (`bleed`), so it's
@@ -93,12 +104,23 @@ Three rules, the ones Apple's own apps keep:
 - **A tab tapped again goes to its first page,** always (the tab bar's
   `stackRootReset` puts it back even if a link left the stack without it).
 - **What's opened appears where the reader is.** A plan opened from Home,
-  Progress, Weeks or the generation bar opens in that tab; a setting opened
-  from a plan opens over the plan; leaving a study or New Plan returns to the
-  tab it was opened from. Never send someone to another tab's stack. Build the
-  link with `@/entities/tabs` (`tabPlanHref`, `tabPageHref`,
-  `tabPrivacyTopicHref`) and the tab from `useFocusedTab` — see
-  `src/app/README.md` for the routes this needs.
+  Progress or the generation bar opens in that tab; one found in Plans'
+  search opens on top of the results, and one from Weeks on top of Weeks, so
+  Back returns there; a setting opened from a plan opens over the plan.
+  Leaving a study, Day complete's Done and Plan complete's close included,
+  slides it away to where it was started. Never send someone to another tab's
+  stack. Build the link with `@/entities/tabs` (`placePlanHref`,
+  `placePageHref`, `placePrivacyTopicHref`) and where the reader is from
+  `useFocusedPlace(PLACE_ROUTES)` (`toPlace`) — see `src/app/README.md` for
+  the routes this needs.
+- **One tap, one movement.** Never close one page and open another in the
+  same tap (`router.back()` then `push`): iOS can only do them one after the
+  other, so the reader sees where they were before where they're going. Open
+  the page on top of where the reader is, or have it already underneath what
+  closes. New Plan opened from Plan complete or the generation sheet rises
+  over it, and takes it with it when it leaves (`useModalSession`'s
+  `alsoLeaving`); the generation sheet's Open starts the plan's push, then
+  closes the sheet a frame on.
 - **A Bible translation pill opens Bible translation where the reader is:**
   inside the Study's own stack during a study (`STUDY_TRANSLATION_HREF`),
   otherwise in the tab they're in — Back returns to the passage. Every
@@ -107,8 +129,8 @@ Three rules, the ones Apple's own apps keep:
 - **A page's title says how it opened.** Pushed in a stack (The Word, Your
   words, the Quick Check page, Settings' pages): `ScreenHeader` — Back, and the
   title small beside it. Zoomed or slid up over everything (All reflections,
-  All Quick Checks, Weeks): a large title (`TitleHeader`, or none where a
-  search runs the width) and Close.
+  All Quick Checks, Weeks): a large title and Close (`ListSearchHeader`), its
+  search beside the close once the list has earned one.
 - **The tab bar stays under a half sheet,** as iOS's does — it's there the
   moment the sheet slides away. It steps away only for a full-screen page or
   modal. A new half sheet over the tabs goes in `AppTabBar`'s `staysUnder`.
@@ -131,6 +153,34 @@ update, Settings' messages — is `TextBox`: the same soft fill and card edge,
 
 ## Search
 
+**Search earns its place.** A list offers search only once it's long enough
+that scrolling stops being the quick way to find something — so the app grows
+into the reader's needs, and a short list has no clutter:
+
+| List               | Search                                     | From            |
+| ------------------ | ------------------------------------------ | --------------- |
+| Plans              | full screen, the server's (`/plan-search`) | 10 plans        |
+| All reflections    | in place, on the keyboard                  | 2 reflections   |
+| Weeks              | in place, on the keyboard                  | 8 weeks         |
+| All Quick Checks   | in place, on the keyboard                  | 10 Quick Checks |
+| New Plan's sermons | always — it's how a sermon is found        | —               |
+
+Once a list has offered search, it always does, though the list shrinks
+again (`useEarnedSearch`, recorded on the phone; the rule is
+`isSearchEarned`). A new list with a search names its threshold beside its
+logic (`REFLECTIONS_SEARCH_AT`) and takes this rule.
+
+**Which kind.** A search that narrows the list in place when the list is on
+the phone and the results are its own rows (All reflections, Weeks, All Quick
+Checks: `useListSearch`, `ListSearchHeader`, `ListSearchBar`) — the reader
+keeps their bearings, under the same plans and months. A full-screen search
+with its own results when the search is the server's, finds words inside a
+plan, and shows why each matched in rows denser than the list's own cards
+(Plans). Both put the field on the keyboard with its close beside it, so they
+read as one search. A search in place filters a render behind the typing
+(`useDeferredValue`), never on a delay, and looks through text built once as
+the list arrives — never lower-cased afresh on every keystroke.
+
 Header icon buttons are white with their hairline edge, never a grey fill.
 Two side by side share one pill (`HeaderButtonPill`, iOS's grouped toolbar
 without the glass). A field on the keyboard sits in `KeyboardBar`: 8pt from
@@ -150,8 +200,11 @@ the title, one quiet line says why it matched — the church when the title did,
 else where the words were found — and where the plan stands ("Day 2 of 7"),
 so plans of one title are told apart. The words are debounced before they're
 searched. Rows already shown that still match stay mounted while the next
-search is out and move to their new place when it answers (`motion.results`);
-a skeleton in the rows' shape shows only when there are none to keep. A
+search is out and glide to their new place when it answers (`motion.results`,
+`Animated.FlatList`'s `itemLayoutAnimation`); only a screenful fades in as
+they're found — rows further down are drawn as they near view, unseen as the
+results came; a skeleton in the rows' shape shows only when there are none
+to keep. A
 field's clear is iOS's: a small grey-filled `CircleX`.
 
 ## Loading, errors, footers, and images
@@ -347,8 +400,9 @@ the screen and never scrolls (`ScrollScreen`'s `fixed`): the day panel takes
 the room the rest leaves, and the rows end 24pt above the tab bar. The week's
 dates (dark, semibold, on Daily reminder's soft pill) open the weeks: up to
 eight, a list in the app's `Popover`; past four, the full-screen weeks
-(`/weeks`), zooming out of the pill (`Link.AppleZoom`) — a search, years as
-Plans' filter pills, months, and each week a card with everything that helps
+(`/weeks`), zooming out of the pill (`Link.AppleZoom`) — its title "Weeks"
+and Close, a search beside the close from eight weeks (`ListSearchHeader`,
+its field on the keyboard), years as Plans' filter pills, months, and each week a card with everything that helps
 place it (artwork, title, church, passages, the first thing written, days
 studied). A card opens the app's `PopoverMenu` with the tab bar's own icons:
 see the week on Progress (`Flame`), or open one of its plans (`LibraryBig`).
@@ -414,12 +468,12 @@ written yet" (`SFProTitle` `message`) and how it fills (`bodyLoose`, muted) —
 no timeline, no buttons. With reflections, its header's right holds a notebook
 (`Notebook`, `HeaderIconButton`, white with its hairline edge) that zooms out
 the full-screen list of them all (`/reflections`, `Link.AppleZoom`): the
-title, then search and close side by side in one pill (`HeaderButtonPill`) —
-tapped, the search sinks into the page and, just after, the whole pill goes
+title and its close — from two reflections, search and close side by side in
+one pill (`ListSearchHeader`, `HeaderButtonPill`) — tapped, the search fades where it is and, just after, the whole pill fades — nothing in it ever shrinks, an icon being a picture that blurs when scaled —
 (`HeaderButtonPill` `gone`), while Plans' own field rises on the keyboard with
-its own close springing in beside it, as Plans' search has (`KeyboardBar`). That
+its own close springing in beside it, as Plans' search has (`ListSearchBar`). That
 close — or the keyboard put away with nothing typed — clears the search and both
-header buttons spring back up; put away with words typed, the field and its
+header buttons fade back in; put away with words typed, the field and its
 close stay at the foot, the list still filtered — then
 each plan's artwork and name (Weeks' quiet month label) over Settings' group card of its
 reflections — question, date, chevron — the plan written in most lately
@@ -452,7 +506,8 @@ a chevron. Over the card, in black, "To revisit · 1 of 12" — counted as the g
 (`ListChecks`) zooms out every Quick Check (`/quick-checks`), by plan (its artwork beside its name),
 each row its passage, "Day 3 · 2 to revisit" (or "All correct") and the
 day's capsule, small (`QuickCheckCapsule`), before its chevron — whether it's
-worth taking again, at a glance — opening its results; only its close
+worth taking again, at a glance — opening its results; from ten, a search
+by plan or passage beside the close, as All reflections' is; only its close
 leaves. Progress's Quick Check row draws them the same: green and amber dots.
 Nothing missed says so plainly; before any, the empty state's ring round
 `ListChecks`. It opens on the most recent miss — the newest
@@ -476,7 +531,8 @@ plan. Finishing the last question scores it and completes the day at once,
 then goes straight to the day's finish page: the day done, Progress's week
 strip, what it gave (passage heading, key verse in quotes, what was written),
 its Quick Check (what was remembered, every answer, missed first, numbers
-kept), and what's next as facts. Done goes back to the plan. One success
+kept), and what's next as facts. Done slides the study away, back to where
+it was started — the plan, when it was opened from there. One success
 haptic, when the day completes.
 
 A finished Quick Check, opened again, shows its results with two buttons on
@@ -484,7 +540,7 @@ one row: "Take it again" (`RotateCcw`, soft) on the left, "Done" on the right.
 Taking it again starts a fresh attempt (`POST /v1/quizzes/:id/retakes`) at
 question 1 — the finished one counts until the new one is done, and the day
 stays done. A retake, finished, shows its results there, never the day's
-finish page; Done goes back to the plan.
+finish page; Done slides it away, back to where it was opened.
 
 ## Right and wrong
 

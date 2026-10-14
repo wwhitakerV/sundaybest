@@ -4,29 +4,36 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useWeeksQuery } from "@/core/api/reader-queries";
 import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { useAllReflectionAnswers } from "@/core/storage/reflection-answer-queries";
+import { useEarnedSearch } from "@/core/storage/search-shown-queries";
 import { useToday } from "@/core/store";
-import { tabPlanHref, toAppTab } from "@/entities/tabs";
-import { useFocusedTab } from "@/hooks/use-focused-tab";
+import { placePlanHref } from "@/entities/tabs";
+import { useListSearch } from "@/hooks/use-list-search";
 import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { parseWeeksParams, progressWeekHref } from "../logic/progress-route";
-import { buildWeekCards, groupByMonth, searchWeekCards, yearsOf } from "../logic/week-history";
+import {
+  WEEKS_SEARCH_AT,
+  buildWeekCards,
+  groupByMonth,
+  searchWeekCards,
+  yearsOf,
+} from "../logic/week-history";
 import { previewHistory, toPreview } from "../logic/week-picker-preview";
 
 /**
  * The full-screen weeks' view model: every week a plan ran in as a card made
  * for remembering it — with the first thing written in it, from this phone —
- * found by year and a search within it, under their months. From a week: see it on
+ * found by year and, from eight weeks, a search within it on the keyboard,
+ * under their months. From a week: see it on
  * Progress, or open one of its plans. In development builds it can show a
  * made-up history instead.
  */
 export function useWeeksBrowser() {
   const router = useRouter();
-  const focusedTab = useFocusedTab();
   const currentWeek = getWeekStartSunday(useToday());
   const preview = toPreview(parseWeeksParams(useLocalSearchParams()));
   const query = useWeeksQuery();
   const answers = useAllReflectionAnswers();
-  const [search, setSearch] = useState("");
+  const search = useListSearch({ onOpen: selectionFeedback });
   const [year, setYear] = useState<string | null>(null);
 
   const made = preview === "real" ? null : previewHistory(preview, currentWeek);
@@ -38,19 +45,29 @@ export function useWeeksBrowser() {
     (planId) => made?.art[planId],
   );
   const years = yearsOf(cards);
-  const searching = search.trim().length > 0;
+  const searched = search.query.trim();
   // Past a year, the year picked narrows the list — a search too, within it, as its pill shows.
   const shownYear = years.length > 1 ? (year ?? years[0] ?? null) : null;
-  const found = searchWeekCards(cards, search).filter(
+  const found = searchWeekCards(cards, search.query).filter(
     (card) => shownYear === null || card.year === shownYear,
   );
+  const searchable = useEarnedSearch("weeks", cards.length, WEEKS_SEARCH_AT);
 
   return {
     loading: made === null && query.isPending,
     error: made === null && query.data === undefined ? query.error : null,
     retry: () => void query.refetch(),
-    search,
-    setSearch,
+    /** Enough weeks to need a search: from eight, and from then on. */
+    searchable,
+    /** The search is open: its field on the keyboard, the icon gone into the page. */
+    searching: search.searching,
+    search: search.words,
+    setSearch: search.setWords,
+    openSearch: search.open,
+    /** The keyboard put away: with nothing typed, the field goes and the icon comes back. */
+    leaveSearch: search.leave,
+    /** The search's own X: its words cleared, the field gone, the header's buttons back. */
+    closeSearch: search.close,
     years: years.length > 1 ? years : null,
     year: shownYear,
     pickYear: (next: string) => {
@@ -60,7 +77,7 @@ export function useWeeksBrowser() {
     },
     months: groupByMonth(found),
     /** Searched and nothing found: says so, with what was searched. */
-    noMatch: searching && found.length === 0 ? search.trim() : null,
+    noMatch: searched.length > 0 && found.length === 0 ? searched : null,
     close: () => router.back(),
     /** Back to Progress on this week — on one of its plans, when one was picked. */
     seeWeek: (weekStart: string, planId?: string) => {
@@ -72,11 +89,8 @@ export function useWeeksBrowser() {
       tapFeedback();
       // A made-up week's plan isn't anywhere to go.
       if (made) router.back();
-      else {
-        // Weeks closes, and the plan opens in the tab under it (Progress), as iOS does.
-        router.back();
-        router.push(tabPlanHref(toAppTab(focusedTab(), "progress"), planId));
-      }
+      // On top of Weeks, in one movement: Back returns to the weeks, where the reader was.
+      else router.push(placePlanHref("over", planId));
     },
   } as const;
 }

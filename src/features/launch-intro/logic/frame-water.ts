@@ -2,7 +2,8 @@ import { crossingTime, eruptionOf, launchSpeed, sheetTop, type Eruption } from "
 import { pushCircle } from "./frame-drips";
 import { levelAt, surfaceAt } from "./pool";
 import type { Scene } from "./scene";
-import { EDGE_SEGMENTS, GRAVITY } from "./settings";
+import { EDGE_SEGMENTS, GRAVITY, type Stage } from "./settings";
+import type { World } from "./world-types";
 
 /** A flying drop and the short streak behind it, unless it's back inside the water. */
 function fly(
@@ -21,7 +22,12 @@ function fly(
 }
 
 /** The eruption's flying water at `S` ms in: the wall's shed drops, the crown's strands, the jet. */
-function eruptionDrops(scene: Scene, e: Eruption, S: number, blobs: number[]): void {
+export function eruptionDrops(
+  scene: { stage: Stage; world: Pick<World, "splash"> },
+  e: Eruption,
+  S: number,
+  blobs: number[],
+): void {
   "worklet";
   const H = scene.stage.height;
   const { splash } = scene.world;

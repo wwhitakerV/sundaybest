@@ -5,7 +5,9 @@ import { useGenerationBar } from "./use-generation-bar";
 
 /**
  * The generation sheet's view model: the bar's build, its steps, and the
- * bar's actions — each closing the sheet before it goes anywhere.
+ * bar's actions. Each that goes somewhere does it in one movement: the plan
+ * opens first and the sheet slides away from over it; New Plan rises over
+ * the sheet, and takes it with it when it leaves. The rest close the sheet.
  */
 export function useGenerationSheet() {
   const router = useRouter();
@@ -25,9 +27,14 @@ export function useGenerationSheet() {
     view: bar.view,
     steps,
     close: () => router.back(),
-    open: thenClose(bar.open),
+    open: () => {
+      bar.open();
+      // A frame on, once the plan's on its way: closed together, iOS would only
+      // push it once the sheet had gone — two movements.
+      requestAnimationFrame(() => router.back());
+    },
     retry: thenClose(bar.retry),
-    chooseAnother: thenClose(bar.chooseAnother),
+    chooseAnother: bar.chooseAnother,
     dismiss: thenClose(bar.dismiss),
   };
 }

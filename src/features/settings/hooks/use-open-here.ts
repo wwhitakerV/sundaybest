@@ -1,21 +1,27 @@
 import { useRouter } from "expo-router";
 
-import { tabPageHref, tabPrivacyTopicHref, toAppTab, type TabPage } from "@/entities/tabs";
-import { useFocusedTab } from "@/hooks/use-focused-tab";
+import {
+  PLACE_ROUTES,
+  placePageHref,
+  placePrivacyTopicHref,
+  toPlace,
+  type TabPage,
+} from "@/entities/tabs";
+import { useFocusedPlace } from "@/hooks/use-focused-place";
 import type { PrivacyTopicId } from "../logic/privacy-routes";
 
 /**
- * Opens Settings' shared pages in whichever tab the reader is in — Settings
- * itself, or a plan's tab when they came from its More menu — so Back steps
- * back the way they came, as iOS does.
+ * Opens Settings' shared pages where the reader is — Settings itself, or,
+ * from a plan's More menu, the plan's tab, Plans' search or over Weeks — so
+ * Back steps back the way they came, as iOS does.
  */
 export function useOpenHere() {
   const router = useRouter();
-  const focusedTab = useFocusedTab();
-  const here = () => toAppTab(focusedTab(), "settings");
+  const focusedPlace = useFocusedPlace(PLACE_ROUTES);
+  const here = () => toPlace(focusedPlace(), "settings");
 
   return {
-    page: (page: TabPage) => router.push(tabPageHref(here(), page)),
-    privacyTopic: (topic: PrivacyTopicId) => router.push(tabPrivacyTopicHref(here(), topic)),
+    page: (page: TabPage) => router.push(placePageHref(here(), page)),
+    privacyTopic: (topic: PrivacyTopicId) => router.push(placePrivacyTopicHref(here(), topic)),
   } as const;
 }

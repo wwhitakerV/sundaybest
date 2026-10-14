@@ -53,11 +53,21 @@ export default function RootLayout() {
              */}
             {/* Progress's weeks: zooms out of the week's dates (iOS 18's zoom, set by the link). */}
             <Stack.Screen name="weeks" />
+            {/*
+             * A week's plan, on top of Weeks — and the Settings pages its More
+             * menu leads to, also at the root (`daily-reminder`, …) — so Back
+             * returns to Weeks.
+             */}
+            <Stack.Screen name="plan/[planId]" />
             {/* Every reflection: zooms out of Your words' notebook (iOS 18's zoom, set by the link). */}
             <Stack.Screen name="reflections" options={{ gestureEnabled: false }} />
             {/* Every Quick Check: zooms out of the Quick Check page's button; only its close leaves. */}
             <Stack.Screen name="quick-checks" options={{ gestureEnabled: false }} />
-            {/* Plans' search: dissolves in over Plans, full screen, the keyboard rising with it. */}
+            {/*
+             * Plans' search: dissolves in over Plans, full screen, the keyboard
+             * rising with it — with its own stack, so a plan found opens on top
+             * of the results and Back returns to them.
+             */}
             <Stack.Screen
               name="plan-search"
               options={{ presentation: "fullScreenModal", animation: "fade" }}

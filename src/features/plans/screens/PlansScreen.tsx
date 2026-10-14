@@ -14,14 +14,15 @@ import { usePlansLibrary } from "../hooks/use-plans-library";
 /**
  * The library: the user's plans from the API plan cache, under a pinned
  * header — the title, the filters (In progress and Done, each with its count)
- * centred beside it, and the search at the right. Scrolled, the filters take
- * the title's place.
+ * centred beside it, and the search at the right from ten plans. Scrolled,
+ * the filters take the title's place.
  */
 export function PlansScreen() {
   const {
     filters,
     filter,
     pickFilter,
+    searchable,
     openSearch,
     cards,
     empty,
@@ -52,6 +53,7 @@ export function PlansScreen() {
             filters={filters}
             filter={filter}
             onPickFilter={pickFilter}
+            searchable={searchable}
             onSearch={openSearch}
           />
         ),
@@ -59,6 +61,7 @@ export function PlansScreen() {
       onScroll={(y) => setCollapsed(y > COLLAPSE_AT)}
       data={pending ? [] : cards}
       keyExtractor={({ plan }) => plan.id}
+      gap={space[16]}
       contentStyle={styles.list}
       empty={
         pending ? (
@@ -102,8 +105,5 @@ const COLLAPSE_AT = space[8];
 const LIST_FOOT = 140;
 
 const styles = StyleSheet.create({
-  list: {
-    gap: space[16],
-    paddingBottom: LIST_FOOT,
-  },
+  list: { paddingBottom: LIST_FOOT },
 });

@@ -5,7 +5,7 @@ import type * as ExpoRouter from "expo-router";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { countReflectionAnswers } from "@/core/storage/reflection-answers";
-import { NEW_PLAN_HREF, planOverviewHref } from "@/entities/plan";
+import { NEW_PLAN_HREF } from "@/entities/plan";
 import { PlanCompleteScreen } from "@/features/plans/screens/PlanCompleteScreen";
 
 // Notes live on the device only; the count is all Plan Complete reads.
@@ -19,7 +19,8 @@ jest.mock("expo-router", () => ({
 }));
 
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitSession = jest.fn<void, []>();
+const mockPush = jest.fn<void, [ExpoRouter.Href]>();
+const mockExitSession = jest.fn<void, [unknown]>();
 
 /** Seven days done; every Quick Check right but two answers on day 1. */
 const FINISHED = (() => {
@@ -44,14 +45,20 @@ async function renderPlanComplete(planId = FINISHED.id) {
 
 beforeEach(() => {
   mockNavigate.mockClear();
+  mockPush.mockClear();
   mockExitSession.mockClear();
   jest.mocked(countReflectionAnswers).mockResolvedValue(5);
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitSession }),
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
   });
   jest
     .mocked(useRouter)
-    .mockReturnValue({ navigate: mockNavigate } as unknown as ReturnType<typeof useRouter>);
+    .mockReturnValue({ navigate: mockNavigate, push: mockPush } as unknown as ReturnType<
+      typeof useRouter
+    >);
 });
 
 describe("PlanCompleteScreen", () => {
@@ -97,14 +104,14 @@ describe("PlanCompleteScreen", () => {
     expect(screen.getByRole("header", { name: "Plan complete" })).toBeVisible();
   });
 
-  it("closes back to the plan's overview from the top-left button", async () => {
+  it("closes from the top-left button, sliding the study away to where it was started", async () => {
     await renderPlanComplete();
 
     expect(screen.getByLabelText("Close")).toBeVisible();
     fireEvent.press(screen.getByTestId("plan-complete-close-button"));
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(FINISHED.id));
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("shows the days done out of the plan's days", async () => {
@@ -138,14 +145,14 @@ describe("PlanCompleteScreen", () => {
     expect(screen.getByText("Add next week's sermon and keep your streak going.")).toBeVisible();
   });
 
-  it("goes to New Plan from Add sermon", async () => {
+  it("opens New Plan over Plan complete from Add sermon, in one movement", async () => {
     await renderPlanComplete();
 
     expect(screen.getByText("Add sermon")).toBeVisible();
     fireEvent.press(screen.getByTestId("plan-complete-add-sermon-button"));
 
-    expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(NEW_PLAN_HREF);
+    expect(mockPush).toHaveBeenCalledWith(NEW_PLAN_HREF);
+    expect(mockExitSession).not.toHaveBeenCalled();
   });
 
   it("shows a Share action", async () => {

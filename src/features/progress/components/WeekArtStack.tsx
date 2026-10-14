@@ -47,6 +47,8 @@ export function WeekArtStack({ art }: { art: readonly WeekArt[] }) {
                 style={StyleSheet.absoluteFill}
                 contentFit="cover"
                 cachePolicy="memory-disk"
+                // A row reused for another week shows its own art at once, never the last one's.
+                recyclingKey={String(item.source)}
               />
             )}
           </View>

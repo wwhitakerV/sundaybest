@@ -1,43 +1,30 @@
-import { useContext, useState, type ReactElement, type ReactNode } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  type LayoutChangeEvent,
-  View,
-  type ListRenderItem,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
-import Animated, {
-  runOnJS,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  useSharedValue,
-} from "react-native-reanimated";
-import { SafeAreaInsetsContext } from "react-native-safe-area-context";
+import { type ReactElement, type ReactNode } from "react";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import { FlashList, type ListRenderItem } from "@shopify/flash-list";
 
-import { space, useTheme } from "@/theme";
-import { RoundedEdge } from "../atoms/RoundedEdge";
+import { ListGap } from "./ListGap";
+import { PinnedList } from "./PinnedList";
 import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
-import { SCROLL_THROTTLE_MS, scrollProps } from "./list-scroll";
-import { PAGE_INSET, PAGE_TOP } from "./Screen";
+import { scrollProps } from "./list-scroll";
 
 export type ListScreenProps<Item> = Omit<ScrollFrameProps, "children"> & {
   data: readonly Item[];
   renderItem: ListRenderItem<Item>;
   keyExtractor: (item: Item) => string;
+  /** A row's kind, when the list holds more than one (Weeks' months and weeks): a row is reused only for one like it. */
+  itemType?: (item: Item) => string;
   /** Shown in place of the list when it's empty. */
   empty?: ReactElement;
-  /** Layout extras for the list's content (gaps, room at its foot). Never its sides. */
+  /** Between rows, and between the first and last and the list's ends. */
+  gap?: number;
+  /** Layout extras for the list's content (room at its foot). Never its sides, nor its gap. */
   contentStyle?: StyleProp<ViewStyle>;
   /**
-   * In place of a floating header: a `bar` (Plans' header) that stays pinned
-   * under the status bar on the page's own solid colour — no fade, nothing
-   * showing behind it — with, if given, a `title` above it that scrolls away
-   * with the list.
+   * In place of a floating header: a `bar` (Plans' header) pinned above the
+   * list, under the status bar, on the page's own solid colour — no fade,
+   * nothing showing behind it.
    */
   pinned?: {
-    title?: ReactNode;
     bar: ReactNode;
     /**
      * The list's top rounds into the bar along this radius (the cards'), as
@@ -52,15 +39,20 @@ export type ListScreenProps<Item> = Omit<ScrollFrameProps, "children"> & {
 };
 
 /**
- * `ScrollScreen` for a list of items, drawn as they scroll into view: the
- * list runs the screen's full width, the page inset on its content and on
- * the header and footer (`ScrollFrame`).
+ * `ScrollScreen` for a list of items, on FlashList: only the rows in view
+ * are drawn, and they're reused as the list scrolls, however long it grows —
+ * so a row never keeps state of its own (`useRecyclingState` where it must),
+ * and its artwork is keyed to its image (`recyclingKey`). The list runs the
+ * screen's full width, the page inset on its content and on the header and
+ * footer (`ScrollFrame`).
  */
 export function ListScreen<Item>({
   data,
   renderItem,
   keyExtractor,
+  itemType,
   empty,
+  gap,
   contentStyle,
   pinned,
   onScroll,
@@ -68,8 +60,10 @@ export function ListScreen<Item>({
   ...frame
 }: ListScreenProps<Item>) {
   const list = {
+    ...(itemType && { itemType }),
     ...(keyboardDismissMode && { keyboardDismissMode }),
     ...(onScroll && { onScroll }),
+    ...(gap !== undefined && { gap }),
     testID: `${frame.testID}-list`,
     data,
     renderItem,
@@ -92,12 +86,15 @@ export function ListScreen<Item>({
   );
 }
 
-type ListParts<Item> = Pick<
+/** What `ListScreen` hands the list it draws. */
+export type ListParts<Item> = Pick<
   ListScreenProps<Item>,
   | "data"
   | "renderItem"
   | "keyExtractor"
+  | "itemType"
   | "empty"
+  | "gap"
   | "contentStyle"
   | "onScroll"
   | "keyboardDismissMode"
@@ -109,7 +106,9 @@ function ClearedList<Item>({
   data,
   renderItem,
   keyExtractor,
+  itemType,
   empty,
+  gap,
   contentStyle,
   onScroll,
   keyboardDismissMode,
@@ -117,7 +116,7 @@ function ClearedList<Item>({
   const clearance = useFrameClearance();
 
   return (
-    <FlatList
+    <FlashList
       testID={testID}
       {...scrollProps(onScroll)}
       {...(keyboardDismissMode && { keyboardDismissMode })}
@@ -125,119 +124,27 @@ function ClearedList<Item>({
       data={data}
       renderItem={renderItem}
       keyExtractor={keyExtractor}
+      {...(itemType && { getItemType: itemType })}
       contentContainerStyle={[SCROLL_INSET, contentStyle]}
       showsVerticalScrollIndicator={false}
       {...(empty && { ListEmptyComponent: empty })}
+      ItemSeparatorComponent={() => <ListGap testID={testID} size={gap} />}
       ListHeaderComponent={
-        <View testID={`${testID}-top-clearance`} style={{ height: clearance.top }} />
+        <>
+          <View testID={`${testID}-top-clearance`} style={{ height: clearance.top }} />
+          <ListGap testID={testID} size={gap} />
+        </>
       }
       ListFooterComponent={
-        <View testID={`${testID}-bottom-clearance`} style={{ height: clearance.bottom }} />
+        <>
+          <ListGap testID={testID} size={gap} />
+          <View testID={`${testID}-bottom-clearance`} style={{ height: clearance.bottom }} />
+        </>
       }
     />
   );
 }
 
-/** The row the pinned bar takes in the list: the first after the title. */
-const BAR = Symbol("bar");
-
-/**
- * A list that starts under the status bar — so nothing ever scrolls behind
- * it — with its bar pinned at the top (the list's own sticky header), on the
- * page's solid colour edge to edge, under a title that scrolls away if it
- * has one.
- */
-function PinnedList<Item>({
-  testID,
-  data,
-  renderItem,
-  keyExtractor,
-  empty,
-  contentStyle,
-  onScroll,
-  keyboardDismissMode,
-  pinned,
-}: ListParts<Item> & { pinned: NonNullable<ListScreenProps<Item>["pinned"]> }) {
-  const theme = useTheme();
-  const clearance = useFrameClearance();
-  const insetTop = useContext(SafeAreaInsetsContext)?.top ?? 0;
-  const rows: readonly (Item | typeof BAR)[] = [BAR, ...data];
-  // The bar's height: where its foot is, for the rounded edge laid over the list there.
-  const [barHeight, setBarHeight] = useState(0);
-  // Only a bar pinned from the start (no title above it) keeps its foot in one place.
-  const rounded = pinned.title ? undefined : pinned.rounded;
-  // Pulled down past the top, the bar comes down with the list; the edge follows it, never over it.
-  const scrollY = useSharedValue(0);
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    scrollY.set(event.contentOffset.y);
-    if (onScroll) runOnJS(onScroll)(event.contentOffset.y);
-  });
-  const edgeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: Math.max(-scrollY.get(), 0) }],
-  }));
-
-  return (
-    <View style={[styles.list, { marginTop: insetTop }]}>
-      <Animated.FlatList
-        testID={testID}
-        {...(keyboardDismissMode && { keyboardDismissMode })}
-        onScroll={scrollHandler}
-        scrollEventThrottle={SCROLL_THROTTLE_MS}
-        style={styles.list}
-        data={rows}
-        keyExtractor={(row) => (row === BAR ? "pinned-bar" : keyExtractor(row))}
-        renderItem={(info) =>
-          info.item === BAR ? (
-            <View
-              testID={`${testID}-pinned-bar`}
-              style={[styles.bar, { backgroundColor: theme.colors.background }]}
-              {...(rounded !== undefined && {
-                onLayout: (event: LayoutChangeEvent) =>
-                  setBarHeight(event.nativeEvent.layout.height),
-              })}
-            >
-              {pinned.bar}
-            </View>
-          ) : (
-            renderItem({ ...info, item: info.item, index: info.index - 1 })
-          )
-        }
-        // With a title, it's the scroll's first child (the list's header) and the bar the second.
-        stickyHeaderIndices={[pinned.title ? 1 : 0]}
-        contentContainerStyle={[SCROLL_INSET, contentStyle]}
-        showsVerticalScrollIndicator={false}
-        {...(pinned.title && {
-          ListHeaderComponent: (
-            <View testID={`${testID}-title`} style={styles.title}>
-              {pinned.title}
-            </View>
-          ),
-        })}
-        ListFooterComponent={
-          <>
-            {data.length === 0 && empty}
-            <View testID={`${testID}-bottom-clearance`} style={{ height: clearance.bottom }} />
-          </>
-        }
-      />
-      {rounded !== undefined && barHeight > 0 && (
-        <Animated.View pointerEvents="none" style={[styles.edge, { top: barHeight }, edgeStyle]}>
-          <RoundedEdge testID={`${testID}-rounded-edge`} radius={rounded} inset={PAGE_INSET} />
-        </Animated.View>
-      )}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   list: { flex: 1 },
-  title: { paddingTop: PAGE_TOP },
-  // The rounded edge's place: at the bar's foot, across the full width.
-  edge: { position: "absolute", left: 0, right: 0 },
-  // Out to the screen's edges, so nothing scrolling under it shows at its sides.
-  bar: {
-    marginHorizontal: -PAGE_INSET,
-    paddingHorizontal: PAGE_INSET,
-    paddingVertical: space[12],
-  },
 });

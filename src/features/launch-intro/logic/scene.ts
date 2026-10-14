@@ -4,7 +4,7 @@ import { buildWorld } from "./world";
 import type { World } from "./world-types";
 
 /** One beat of the intro, in milliseconds from its start. */
-type Beat = { start: number; end: number; dur: number };
+export type Beat = { start: number; end: number; dur: number };
 
 type Beats = {
   /** The pen writes; the letters drip into the pool. */

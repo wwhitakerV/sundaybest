@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { Keyboard } from "react-native";
 import { useRouter } from "expo-router";
 
 import { usePlanSearchQuery } from "@/core/api/plan-queries";
 import { usePrefetch } from "@/core/api/prefetch";
 import { prefetchImages } from "@/core/images/prefetch-images";
-import { planOverviewHref } from "@/entities/plan";
+import { placePlanHref } from "@/entities/tabs";
 import {
   PLAN_SEARCH_DEBOUNCE_MS,
   describeNoMatch,
@@ -24,7 +25,7 @@ const PREFETCHED_PLANS = 3;
  * found, best first, the words in each title marked. While the next search
  * waits or is out, the last rows that still match stay where they are — only
  * those that no longer match leave — and the new answer reorders them in
- * place. A tap anywhere on a row opens its plan.
+ * place. A tap anywhere on a row opens its plan, on top of the search.
  */
 export function usePlanSearch() {
   const router = useRouter();
@@ -75,10 +76,10 @@ export function usePlanSearch() {
     })),
     noMatch: describeNoMatch(words),
     retry: () => void query.refetch(),
-    /** Leaves the search for the plan, on Plans. */
+    /** Opens the plan on top of the search, in one movement: Back returns to the results. */
     open: (planId: string) => {
-      router.back();
-      router.push(planOverviewHref(planId));
+      Keyboard.dismiss();
+      router.push(placePlanHref("plan-search", planId));
     },
     close: () => router.back(),
   } as const;

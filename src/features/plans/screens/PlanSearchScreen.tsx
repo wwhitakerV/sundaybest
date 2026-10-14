@@ -1,9 +1,8 @@
 import { useContext } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import { X } from "lucide-react-native";
 
-import { space } from "@/theme";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { SearchField } from "@/ui/molecules/SearchField";
 import { KEYBOARD_BAR_ROOM, KeyboardBar } from "@/ui/organisms/KeyboardBar";
@@ -28,22 +27,14 @@ export function PlanSearchScreen() {
 
   return (
     <Screen testID="plan-search-screen" edges={["top", "left", "right"]}>
-      <ScrollView
-        testID="plan-search-results"
-        style={styles.fill}
-        contentContainerStyle={[styles.content, { paddingTop: space[12], paddingBottom: foot }]}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        showsVerticalScrollIndicator={false}
-      >
-        <PlanSearchResults
-          status={view.status}
-          rows={view.rows}
-          noMatch={view.noMatch}
-          onOpen={view.open}
-          onRetry={view.retry}
-        />
-      </ScrollView>
+      <PlanSearchResults
+        status={view.status}
+        rows={view.rows}
+        noMatch={view.noMatch}
+        foot={foot}
+        onOpen={view.open}
+        onRetry={view.retry}
+      />
       <KeyboardBar testID="plan-search-bar">
         <View style={styles.fill}>
           <SearchField
@@ -70,6 +61,4 @@ export function PlanSearchScreen() {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  // At least the page's height, so a message can sit in its middle.
-  content: { flexGrow: 1 },
 });

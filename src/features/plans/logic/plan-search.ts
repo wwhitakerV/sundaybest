@@ -4,6 +4,9 @@ import { describeApiLibraryPlan } from "./api-plan-wording";
 /** How long the words must hold still before they're searched. */
 export const PLAN_SEARCH_DEBOUNCE_MS = 250;
 
+/** From this many plans, Plans offers search: fewer fit a scroll or two. */
+export const PLANS_SEARCH_AT = 10;
+
 /** Where a search stands: nothing typed, out, answered (with rows or none), or failed. */
 export type PlanSearchStatus = "idle" | "searching" | "ready" | "empty" | "error";
 

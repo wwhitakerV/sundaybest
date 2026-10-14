@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 
 import { useResetPlanMutation } from "@/core/api/plan-reset";
 import { errorFeedback, tapFeedback } from "@/core/haptics/haptics";
-import { tabPageHref, toAppTab, type TabPage } from "@/entities/tabs";
-import { useFocusedTab } from "@/hooks/use-focused-tab";
+import { PLACE_ROUTES, placePageHref, toPlace, type TabPage } from "@/entities/tabs";
+import { useFocusedPlace } from "@/hooks/use-focused-place";
 import { getMoreMenuItems, type MoreMenuKey } from "../logic/more-menu";
 
 /** Plan Detail's More menu, with a reset behind a confirmation. */
@@ -13,11 +13,11 @@ export function usePlanMoreMenu(planId: string) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const resetMutation = useResetPlanMutation();
-  const focusedTab = useFocusedTab();
+  const focusedPlace = useFocusedPlace(PLACE_ROUTES);
 
-  // Over the plan, in its own tab — Back returns to the plan, as iOS does.
+  // Over the plan, where it is — its tab, Plans' search, over Weeks — so Back returns to it.
   const openHere = (page: TabPage) =>
-    router.push(tabPageHref(toAppTab(focusedTab(), "plans"), page));
+    router.push(placePageHref(toPlace(focusedPlace(), "plans"), page));
 
   const reset = () => {
     tapFeedback();

@@ -65,3 +65,23 @@ export async function countReflectionAnswers(
   const answers = await getReflectionAnswers(userId, reflectionIds);
   return Object.values(answers).filter(({ answer }) => answer.trim().length > 0).length;
 }
+
+export function countAllReflectionAnswers(_userId: string): Promise<number> {
+  return Promise.resolve([...saved.values()].filter((answer) => answer.trim().length > 0).length);
+}
+
+export function getAllReflectionAnswers(_userId: string): Promise<Record<string, string>> {
+  return Promise.resolve(Object.fromEntries(saved));
+}
+
+/** Every answer, oldest first: in the order saved, all written at one moment. */
+export function getAllReflectionEntries(_userId: string): Promise<LocalReflectionAnswer[]> {
+  return Promise.resolve(
+    [...saved].map(([reflectionId, answer]) => ({
+      reflectionId,
+      answer,
+      answeredAt: AT,
+      updatedAt: AT,
+    })),
+  );
+}

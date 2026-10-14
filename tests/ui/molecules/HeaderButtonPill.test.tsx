@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { Search, X } from "lucide-react-native";
 import { render, screen } from "@tests/helpers/render";
 
@@ -11,6 +12,7 @@ function renderPill(gone: boolean) {
       buttons={[
         {
           key: "search",
+          testID: "pill-search",
           icon: Search,
           accessibilityLabel: "Search",
           onPress: jest.fn(),
@@ -36,5 +38,19 @@ describe("HeaderButtonPill", () => {
 
     expect(screen.getByTestId("pill-shell")).toHaveProp("pointerEvents", "auto");
     expect(screen.getByRole("button", { name: "Close" })).toBeOnTheScreen();
+  });
+
+  it("only fades as it goes: nothing in it changes size", () => {
+    renderPill(true);
+
+    // An icon is drawn once, as a picture: scaled, or clipped narrower, it blurs as it comes back.
+    for (const testID of ["pill-shell", "pill-search-slot"]) {
+      const style: unknown = StyleSheet.flatten(
+        screen.getByTestId(testID, { includeHiddenElements: true }).props.style,
+      );
+      expect(style).toMatchObject({ opacity: 0 });
+      expect(style).not.toHaveProperty("transform");
+      expect(style).not.toHaveProperty("width");
+    }
   });
 });

@@ -26,7 +26,9 @@ jest.mock("expo-router", () => ({
 jest.mock("expo-clipboard", () => ({ getStringAsync: jest.fn() }));
 
 const mockPush = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitModal = jest.fn<void, []>();
+const mockExitModal = jest.fn<void, [unknown]>();
+/** The app's own stack under New Plan: by default, the tabs it was opened over. */
+let mockUnder = ["(tabs)"];
 const LINK = aSermon().canonicalUrl;
 let created: unknown[] = [];
 
@@ -40,8 +42,17 @@ async function checkLink(result: { current: ReturnType<typeof useNewPlanFlow> },
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockUnder = ["(tabs)"];
   created = [];
-  jest.mocked(useNavigation).mockReturnValue({ getParent: () => ({ goBack: mockExitModal }) });
+  jest.mocked(useNavigation).mockReturnValue({
+    getParent: () => ({
+      getState: () => ({
+        index: mockUnder.length,
+        routes: [...mockUnder, "(plan-creation)"].map((name) => ({ name })),
+      }),
+      dispatch: mockExitModal,
+    }),
+  });
   jest
     .mocked(useRouter)
     .mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof useRouter>);
@@ -123,6 +134,24 @@ describe("useNewPlanFlow", () => {
     act(() => result.current.leading());
 
     expect(mockExitModal).toHaveBeenCalledTimes(1);
+  });
+
+  it("takes the finished study it was opened over with it, in one slide down", () => {
+    mockUnder = ["(tabs)", "study"];
+    const { result } = renderHook(useNewPlanFlow);
+
+    act(() => result.current.leading());
+
+    expect(mockExitModal).toHaveBeenCalledWith({ type: "POP", payload: { count: 2 } });
+  });
+
+  it("takes the generation sheet it was opened over with it, in one slide down", () => {
+    mockUnder = ["(tabs)", "generation"];
+    const { result } = renderHook(useNewPlanFlow);
+
+    act(() => result.current.leading());
+
+    expect(mockExitModal).toHaveBeenCalledWith({ type: "POP", payload: { count: 2 } });
   });
 
   it("steps back to the paste step on leading() from the preview", async () => {

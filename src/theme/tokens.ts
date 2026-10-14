@@ -615,9 +615,12 @@ export const motion = {
    * A page's pieces arriving once the launch intro has gone (`Arrive`): the same
    * fade-and-drift as `reveal`, held `delayMs` so the intro is fully off the
    * screen first, travelling further and a little slower so the small header
-   * reads as clearly as the hero, `staggerMs` behind the one before.
+   * reads as clearly as the hero, `staggerMs` behind the one before. Under a
+   * cover that lifts from the top down (the water intro's drain), each piece
+   * comes in instead as the cover's edge passes it, all the way in once the edge
+   * is `followPt` below its top.
    */
-  arrival: { delayMs: 120, durationMs: 400, staggerMs: 70, fromY: 16 },
+  arrival: { delayMs: 120, durationMs: 400, staggerMs: 70, fromY: 16, followPt: 140 },
   /**
    * Progress's day panel arriving with a new day or passage: it fades in as it
    * rises `fromY` into place, easing out. Under Reduce Motion, the fade alone.

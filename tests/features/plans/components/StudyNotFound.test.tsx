@@ -5,7 +5,7 @@ import { StudyNotFound } from "@/features/plans/components/StudyNotFound";
 
 const mockExit = jest.fn();
 jest.mock("@/hooks/use-modal-session", () => ({
-  useModalSession: () => ({ exit: mockExit, exitTo: jest.fn() }),
+  useModalSession: () => ({ exit: mockExit }),
 }));
 
 beforeEach(() => mockExit.mockClear());

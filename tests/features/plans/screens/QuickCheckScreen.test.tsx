@@ -13,11 +13,16 @@ import { getFloatingNavBarBottom } from "@/ui/organisms/floatingNavBar";
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
   useRouter: jest.fn(),
-  useNavigation: () => ({ getParent: () => ({ goBack: mockExitSession }) }),
+  useNavigation: () => ({
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
+  }),
   useLocalSearchParams: jest.fn<{ planId: string; day: string }, []>(),
 }));
 
-const mockExitSession = jest.fn<void, []>();
+const mockExitSession = jest.fn<void, [unknown]>();
 // These walk a whole quiz or study day through the API; a full parallel run
 // can take them past Jest's 5s default.
 jest.setTimeout(20_000);

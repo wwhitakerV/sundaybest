@@ -3,4 +3,13 @@
  * Deep imports such as `@/entities/tabs/logic/thing` are blocked by lint.
  */
 export { toAppTab } from "./logic/app-tab";
-export { tabPageHref, tabPlanHref, tabPrivacyTopicHref, type TabPage } from "./routes";
+export { PLACE_ROUTES, toPlace } from "./logic/place";
+export {
+  placePageHref,
+  placePlanHref,
+  placePrivacyTopicHref,
+  tabPageHref,
+  tabPlanHref,
+  tabPrivacyTopicHref,
+  type TabPage,
+} from "./routes";

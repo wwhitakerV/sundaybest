@@ -35,7 +35,7 @@ jest.mock("expo-router", () => ({
 jest.setTimeout(20_000);
 
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitSession = jest.fn<void, []>();
+const mockExitSession = jest.fn<void, [unknown]>();
 
 /** Three days, none done: day 1 open, its reading with a moment in the sermon to hear. */
 const STILL_PRAYING = (() => {
@@ -110,7 +110,10 @@ beforeEach(() => {
   mockReplace.mockClear();
   mockExitSession.mockClear();
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitSession }),
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
   });
   jest
     .mocked(useRouter)

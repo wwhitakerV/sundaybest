@@ -20,7 +20,8 @@ const stay = () => undefined;
  * A day's one finish page, a single scroll: the day done and its sermon;
  * this week's strip, the day filled; what it gave — its key verse and what
  * was written; its Quick Check, when it had one — what was remembered and
- * every answer, missed first; and what's next. Done goes back to the plan.
+ * every answer, missed first; and what's next. Done slides the study away,
+ * back to where it was started.
  */
 export function DayCompleteScreen() {
   const view = useDayComplete();

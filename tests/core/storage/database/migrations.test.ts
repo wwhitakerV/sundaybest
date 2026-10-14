@@ -22,6 +22,8 @@ describe("MIGRATIONS", () => {
       [1, "real-data-cache-and-outbox"],
       [2, "scope-private-reflections-to-user"],
       [3, "scope-offline-server-state-to-user"],
+      [4, "reflection-lines"],
+      [5, "searches-shown"],
     ]);
   });
 });

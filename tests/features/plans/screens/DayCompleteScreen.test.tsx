@@ -6,7 +6,7 @@ import type * as ExpoRouter from "expo-router";
 import { aPlan } from "@tests/factories/api-plans";
 import { PROGRESS_NOW, serveProgress } from "@tests/factories/api-progress";
 import { servePlans } from "@tests/mocks/plans-api";
-import { planCompleteHref, planOverviewHref } from "@/entities/plan";
+import { planCompleteHref } from "@/entities/plan";
 import { DayCompleteScreen } from "@/features/plans/screens/DayCompleteScreen";
 import { lightTheme } from "@/theme/tokens";
 
@@ -19,7 +19,7 @@ jest.mock("expo-router", () => ({
 
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
-const mockExitSession = jest.fn<void, []>();
+const mockExitSession = jest.fn<void, [unknown]>();
 
 /** Three days: day 1 just finished, days 2 and 3 to go. */
 const STILL_PRAYING = aPlan({ seed: 2, title: "Still Praying", lengthDays: 3, completedDays: 1 });
@@ -47,7 +47,10 @@ beforeEach(() => {
   mockNavigate.mockClear();
   mockExitSession.mockClear();
   jest.mocked(useNavigation).mockReturnValue({
-    getParent: () => ({ goBack: mockExitSession }),
+    getParent: () => ({
+      getState: () => ({ index: 1, routes: [{ name: "(tabs)" }, { name: "study" }] }),
+      dispatch: mockExitSession,
+    }),
   });
   jest.mocked(useRouter).mockReturnValue({
     replace: mockReplace,
@@ -133,13 +136,13 @@ describe("DayCompleteScreen", () => {
     expect(screen.queryByTestId("day-complete-back-button")).toBeNull();
   });
 
-  it("leaves the session for the plan's overview on Done!", async () => {
+  it("slides the study away on Done!, back to where it was started", async () => {
     await renderDayComplete();
 
     fireEvent.press(screen.getByTestId("day-complete-done-button"));
 
     expect(mockExitSession).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith(planOverviewHref(STILL_PRAYING.id));
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("goes on to Plan Complete on Done! when the day finished the plan", async () => {
