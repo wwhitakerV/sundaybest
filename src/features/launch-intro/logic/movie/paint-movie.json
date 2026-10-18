@@ -1,0 +1,91 @@
+{
+  "fps": 120,
+  "frames": 707,
+  "width": 1320,
+  "height": 2856,
+  "stage": {
+    "width": 390,
+    "height": 844
+  },
+  "durationMs": 5883.333333333333,
+  "settings": {
+    "blankMs": 300,
+    "swipeMs": 240,
+    "strokeLength": 470,
+    "strokeHeight": 82,
+    "popMs": 260,
+    "popStagger": 22,
+    "wetMs": 0,
+    "runMs": 750,
+    "trailMs": 460,
+    "waviness": 1.9,
+    "wobble": 3,
+    "streaks": 1.7,
+    "drips": 4,
+    "runVolume": 0.1,
+    "separation": 2,
+    "dripVolume": 2.6,
+    "dripSpeed": 0.45,
+    "dripHangMs": 460,
+    "coat": 1.6,
+    "coatMs": 100,
+    "slide": 0.95,
+    "pauseMs": 300,
+    "letterSpeed": 1,
+    "poolPct": 6,
+    "writeWidth": 350,
+    "sinkMs": 0,
+    "splashMs": 1050,
+    "holdMs": 200,
+    "fadeMs": 0
+  },
+  "beats": {
+    "blank": {
+      "start": 0,
+      "end": 300
+    },
+    "swipe": {
+      "start": 300,
+      "end": 540
+    },
+    "pop": {
+      "start": 540,
+      "end": 998
+    },
+    "wet": {
+      "start": 998,
+      "end": 998
+    },
+    "drop": {
+      "start": 998,
+      "end": 2702.1793730355976
+    },
+    "settle": {
+      "start": 2702.1793730355976,
+      "end": 3356.9400152600338
+    },
+    "fall": {
+      "start": 3356.9400152600338,
+      "end": 4227.696349566448
+    },
+    "sink": {
+      "start": 4227.696349566448,
+      "end": 4227.696349566448
+    },
+    "splash": {
+      "start": 4227.696349566448,
+      "end": 5277.696349566448
+    },
+    "hold": {
+      "start": 5277.696349566448,
+      "end": 5477.696349566448
+    },
+    "fade": {
+      "start": 5477.696349566448,
+      "end": 5477.696349566448
+    }
+  },
+  "moments": {
+    "firstHit": 4062.2743987705203
+  }
+}

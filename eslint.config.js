@@ -148,7 +148,6 @@ const LONG_DATA_FILES = [
   "src/theme/tokens.ts",
   "src/core/mock-data/**",
   "src/core/plan-builder/day-templates.ts",
-  "src/features/launch-intro/logic/wordmark.ts",
 ];
 
 /** Style keys that space things out, and the ones that round corners. */
@@ -219,6 +218,8 @@ module.exports = defineConfig([
     // and Node rather than React Native. The root tsconfig excludes it too, so
     // these app rules (and their type-aware parser) don't reach it.
     "api/**",
+    // The retired launch intros, kept only until they're deleted (ADR 0031).
+    "legacy-intro-and-assets/**",
   ]),
 
   // 1. Expo's recommended config (registers import, expo, react, react-hooks,

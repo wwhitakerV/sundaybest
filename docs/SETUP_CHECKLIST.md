@@ -315,17 +315,16 @@ shipping, not because they recur.
       `icon-development.png`, and `icon-preview.png` are generated
       block-letter placeholders (`npm run icons`). Real artwork is needed
       before any TestFlight or App Store submission, with no alpha channel.
-      The native launch screen is plain white; the launch intro plays over it
-      (ADR 0026). `assets/splash-wordmark.png` and
-      `scripts/render-splash-wordmark.swift` are no longer used.
+      The native launch screen is the launch red (`src/theme/launch-colors.json`);
+      the launch intro's movie plays over it (ADR 0030).
 - [ ] **Make a development build for a real iPhone.** Until there is one, the
       phone lacks expo-image's and Skia's native modules — so the launch intro
-      (ADR 0026) can't run — and the plain-white launch screen isn't applied.
+      (ADR 0030) can't play — and the red launch screen isn't applied.
       All of these are native, so a JS reload can't bring them.
 - [ ] **Check Skia's privacy manifest needs.** `@shopify/react-native-skia`
       ships no `PrivacyInfo.xcprivacy`. On the next build, run Xcode's privacy
       report and record the result (none needed, or its reasons) beside
-      `privacyManifests` in `app.config.ts` (ADR 0026). - This Mac can't build locally: React Native needs Xcode 16.1+, which
+      `privacyManifests` in `app.config.ts` (Skia plays the launch movie, ADR 0030). - This Mac can't build locally: React Native needs Xcode 16.1+, which
       needs macOS 14+; it has Xcode 14.3.1 on macOS 13. - `eas.json`'s `development` profile builds for the Simulator only. Add a
       device profile (the same without `"simulator": true`) — plan first,
       per `CLAUDE.md`. - Register the phone: `npx eas-cli@latest device:create` (Apple

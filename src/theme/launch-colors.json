@@ -1,5 +1,1 @@
-{
-  "intro": "pool-movie",
-  "water": { "page": "#FFFFFF", "ink": "#D62626" },
-  "pool": { "page": "#D62626", "ink": "#FFFFFF" }
-}
+{ "page": "#D62626" }

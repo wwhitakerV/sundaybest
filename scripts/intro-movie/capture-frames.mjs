@@ -1,11 +1,9 @@
 #!/usr/bin/env node
-// Captures a launch intro film, frame by frame, from its prototype with the
-// app's own settings for it, at a phone's resolution and 120 frames a second:
+// Captures the launch intro's film, frame by frame, from the paint prototype
+// (launch-intro-pool-paint.html) with the app's own settings for it
+// (PAINT_MOVIE_SETTINGS), at a phone's resolution and 120 frames a second:
 //
-//   pool    the pool intro in water (launch-intro-pool-v6.html, POOL_MOVIE_SETTINGS)
-//   water   the water intro (launch-intro-pool-v4.html, WATER_SETTINGS)
-//
-//   node scripts/intro-movie/capture-frames.mjs <frames dir> [fps] [film]
+//   node scripts/intro-movie/capture-frames.mjs <frames dir> [fps]
 //
 // Writes <frames dir>/00000.png… and <frames dir>/movie.json: the size, the
 // frame rate, the settings it was captured with, its beats, and the moment the
@@ -22,18 +20,13 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { POOL_MOVIE_SETTINGS } from "../../src/features/launch-intro/logic/movie/pool-movie-settings.ts";
-import { WATER_SETTINGS } from "../../src/features/launch-intro/logic/water/settings.ts";
+import { PAINT_MOVIE_SETTINGS } from "../../src/features/launch-intro/logic/movie/paint-movie-settings.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-/**
- * Each film's prototype and settings. The pool film ends by fading, which the
- * app does over the page itself: the prototype's own fade is left out of it.
- */
-const FILMS = {
-  pool: { prototype: "launch-intro-pool-v6.html", settings: POOL_MOVIE_SETTINGS, ownFade: true },
-  water: { prototype: "launch-intro-pool-v4.html", settings: WATER_SETTINGS, ownFade: false },
-};
+/** The prototype, the app's settings for it, and the line it seeks to once built (the capture starts it at 0). */
+const PROTOTYPE = join(ROOT, "docs/prototypes/launch-intro-pool-paint.html");
+const SETTINGS = PAINT_MOVIE_SETTINGS;
+const FIRST_SEEK = "    seek(beats.drop.start + 260);\n";
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const PORT = 9333;
 
@@ -42,16 +35,11 @@ const STAGE = { width: 390, height: 844 };
 /** The largest iPhone, 440pt wide at 3×: smaller ones scale it down. */
 const VIEW = { width: 440, height: Math.round((440 * STAGE.height) / STAGE.width), scale: 3 };
 
-const [framesDir, fpsArg, filmArg = "pool"] = process.argv.slice(2);
-const film = FILMS[filmArg];
-if (!framesDir || !film) {
-  console.error(
-    "Usage: node scripts/intro-movie/capture-frames.mjs <frames dir> [fps] [pool|water]",
-  );
+const [framesDir, fpsArg] = process.argv.slice(2);
+if (!framesDir) {
+  console.error("Usage: node scripts/intro-movie/capture-frames.mjs <frames dir> [fps]");
   process.exit(1);
 }
-const PROTOTYPE = join(ROOT, "docs/prototypes", film.prototype);
-const SETTINGS = film.settings;
 const FPS = Number(fpsArg ?? 120);
 mkdirSync(framesDir, { recursive: true });
 
@@ -72,10 +60,8 @@ function stageOnlyCopy() {
   );
   // It plays from the start on its own after a moment; the capture moves it instead.
   swap("    if (!reduce)\n", "    if (false)\n");
-  // The app fades the film over the page itself, so the film holds the full screen of water.
-  if (film.ownFade) swap('$("stage").style.opacity = (1 - fade).toFixed(3);', "");
   swap(
-    "    seek(total);\n",
+    FIRST_SEEK,
     `    seek(0);
     document.getElementById("stage").setAttribute("preserveAspectRatio", "none");
     window.__intro = {
@@ -138,6 +124,9 @@ const chrome = spawn(
   [
     "--headless=new",
     `--remote-debugging-port=${PORT}`,
+    // Its own profile: with the everyday Chrome open on the default one, a second Chrome
+    // hands over to it and exits, and the debugging port never opens.
+    `--user-data-dir=${join(framesDir, "chrome-profile")}`,
     "--hide-scrollbars",
     "--allow-file-access-from-files",
     `--window-size=${VIEW.width},${VIEW.height}`,

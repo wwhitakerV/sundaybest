@@ -2,7 +2,7 @@
 import type { ReadingPaper } from "@/types/domain";
 
 import { fonts } from "./fonts";
-import { LAUNCH_COLORS } from "./launch-colors";
+import { LAUNCH_PAGE } from "./launch-colors";
 
 const palette = {
   white: "#FFFFFF",
@@ -147,10 +147,8 @@ const palette = {
  */
 type ColorTokens = {
   background: string;
-  /** The launch intro's page: what it writes on, and the native launch screen (launch-colors.ts). */
+  /** The launch intro's page: the red its movie starts on, and the native launch screen (launch-colors.ts). */
   launchPage: string;
-  /** The launch intro's ink: the writing, drips, pool and eruption (launch-colors.ts). */
-  launchInk: string;
   surface: string;
   text: string;
   lightIcon: string;
@@ -339,8 +337,7 @@ type ColorTokens = {
 
 const lightColors: ColorTokens = {
   background: palette.white,
-  launchPage: LAUNCH_COLORS.page,
-  launchInk: LAUNCH_COLORS.ink,
+  launchPage: LAUNCH_PAGE,
   surface: palette.paper,
   text: palette.black,
   textMuted: palette.grey,
@@ -433,8 +430,7 @@ const lightColors: ColorTokens = {
 
 const darkColors: ColorTokens = {
   background: palette.slate900,
-  launchPage: LAUNCH_COLORS.page,
-  launchInk: LAUNCH_COLORS.ink,
+  launchPage: LAUNCH_PAGE,
   surface: palette.slate700,
   text: palette.white,
   textMuted: palette.grey,
@@ -615,12 +611,9 @@ export const motion = {
    * A page's pieces arriving once the launch intro has gone (`Arrive`): the same
    * fade-and-drift as `reveal`, held `delayMs` so the intro is fully off the
    * screen first, travelling further and a little slower so the small header
-   * reads as clearly as the hero, `staggerMs` behind the one before. Under a
-   * cover that lifts from the top down (the water intro's drain), each piece
-   * comes in instead as the cover's edge passes it, all the way in once the edge
-   * is `followPt` below its top.
+   * reads as clearly as the hero, `staggerMs` behind the one before.
    */
-  arrival: { delayMs: 120, durationMs: 400, staggerMs: 70, fromY: 16, followPt: 140 },
+  arrival: { delayMs: 120, durationMs: 400, staggerMs: 70, fromY: 16 },
   /**
    * Progress's day panel arriving with a new day or passage: it fades in as it
    * rises `fromY` into place, easing out. Under Reduce Motion, the fade alone.

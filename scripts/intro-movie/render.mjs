@@ -1,17 +1,15 @@
 #!/usr/bin/env node
-// Makes a launch intro's movie: captures every frame from its prototype with
-// the app's settings, encodes them, and puts the movie and its timing where the
-// app reads them.
+// Makes the launch intro's movie: captures every frame of the paint prototype
+// with the app's settings, encodes them, and puts the movie and its timing where
+// the app reads them.
 //
-//   npm run render:intro                       the pool film: capture and encode (about 30 minutes)
-//   npm run render:intro -- --film water       the water film (v4's)
+//   npm run render:intro                       capture and encode (a few minutes)
 //   npm run render:intro -- --frames <dir>     re-encode frames already captured
 //   npm run render:intro -- --mbps 12          bitrate in megabits a second (default below)
 //
-// The pool film writes assets/intro/pool-movie.mp4 and
-// src/features/launch-intro/logic/movie/pool-movie.json; the water film,
-// water-intro.mp4 and water-movie.json. Run it after any change to the film's
-// settings or to its prototype; a test fails until it's run.
+// It writes assets/intro/paint-movie.mp4 and
+// src/features/launch-intro/logic/movie/paint-movie.json. Run it after any
+// change to the film's settings or to its prototype; a test fails until it's run.
 
 import { spawnSync } from "node:child_process";
 import { copyFileSync, mkdirSync, mkdtempSync, statSync } from "node:fs";
@@ -21,15 +19,11 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const HERE = join(ROOT, "scripts/intro-movie");
-const FILMS = {
-  pool: { movie: "assets/intro/pool-movie.mp4", timing: "pool-movie.json" },
-  water: { movie: "assets/intro/water-intro.mp4", timing: "water-movie.json" },
-};
 const FPS = 120;
 /**
- * Enough that the water's soft gradients don't block or band and the caustics
- * inside the letters survive (checked frame by frame against the capture): about
- * 15 MB. The encoder's own choice, about 4.5, blocked visibly.
+ * Enough that the soft liquid edges don't block or band (checked frame by frame
+ * against the capture): the paint movie comes out about 4.4 MB. The encoder's
+ * own choice, about 4.5, blocked visibly.
  */
 const DEFAULT_MBPS = 12;
 
@@ -40,14 +34,8 @@ const option = (name) => {
 };
 const mbps = Number(option("mbps") ?? DEFAULT_MBPS);
 let frames = option("frames");
-const filmName = option("film") ?? "pool";
-const film = FILMS[filmName];
-if (!film) {
-  console.error(`No film "${filmName}": pool or water.`);
-  process.exit(1);
-}
-const MOVIE = join(ROOT, film.movie);
-const TIMING = join(ROOT, "src/features/launch-intro/logic/movie", film.timing);
+const MOVIE = join(ROOT, "assets/intro/paint-movie.mp4");
+const TIMING = join(ROOT, "src/features/launch-intro/logic/movie/paint-movie.json");
 
 /** Runs a step, stopping the render if it fails. */
 function run(command, commandArgs) {
@@ -58,13 +46,7 @@ function run(command, commandArgs) {
 if (!frames) {
   frames = mkdtempSync(join(tmpdir(), "sundaybest-intro-"));
   console.log(`Capturing frames into ${frames}…`);
-  run(process.execPath, [
-    "--no-warnings",
-    join(HERE, "capture-frames.mjs"),
-    frames,
-    String(FPS),
-    filmName,
-  ]);
+  run(process.execPath, ["--no-warnings", join(HERE, "capture-frames.mjs"), frames, String(FPS)]);
 }
 
 console.log(`Encoding at ${mbps} Mbps…`);

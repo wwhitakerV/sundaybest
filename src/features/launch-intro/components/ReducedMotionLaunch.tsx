@@ -14,16 +14,14 @@ import { motion, useTheme } from "@/theme";
 
 /**
  * The launch with Reduce Motion on: none of the intro, only the colour the app
- * opened on, fading away to the page once it's ready (shown under it, all of
- * it, as the fade begins: `onStart`).
+ * opened on, fading away to the page once it's ready (shown under it as the
+ * fade begins).
  */
 export function ReducedMotionLaunch({
   revealed,
-  onStart,
   onDone,
 }: {
   revealed: SharedValue<number>;
-  onStart: () => void;
   onDone: () => void;
 }) {
   const theme = useTheme();
@@ -34,7 +32,6 @@ export function ReducedMotionLaunch({
     if (!ready) return;
     // The page appears under the white as it starts to fade.
     revealed.set(1);
-    onStart();
     // A fade is what Reduce Motion asks for, so it plays even with the setting on.
     opacity.set(
       withTiming(
@@ -45,7 +42,7 @@ export function ReducedMotionLaunch({
         },
       ),
     );
-  }, [ready, opacity, onStart, onDone, revealed]);
+  }, [ready, opacity, onDone, revealed]);
 
   const fade = useAnimatedStyle(() => ({ opacity: opacity.get() }));
 

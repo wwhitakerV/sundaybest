@@ -1,0 +1,5 @@
+{
+  "intro": "paint-movie",
+  "water": { "page": "#FFFFFF", "ink": "#D62626" },
+  "pool": { "page": "#D62626", "ink": "#FFFFFF" }
+}

@@ -23,3 +23,6 @@ assets/theology-exams/
 # the server workspace: its own package, tooling, and style — as for ESLint
 # (eslint.config.js) and the root tsconfig
 api/
+
+# the retired launch intros, kept only until they're deleted (ADR 0031)
+legacy-intro-and-assets/

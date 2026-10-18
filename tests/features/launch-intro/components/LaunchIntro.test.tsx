@@ -67,15 +67,15 @@ describe("LaunchStage", () => {
     expect(await screen.findByTestId("launch-intro-canvas")).toBeOnTheScreen();
   });
 
-  it("plays the pool intro's movie, as launch-colors names it", async () => {
+  it("plays the paint intro's movie", async () => {
     reduceMotion(false);
 
     launch();
 
-    expect(await screen.findByTestId("launch-intro-pool-movie")).toBeOnTheScreen();
+    expect(await screen.findByTestId("launch-intro-paint-movie")).toBeOnTheScreen();
   });
 
-  it("keeps the app covered in the page's colour under the intro until the screen is full of water", async () => {
+  it("keeps the app covered in the page's colour under the intro until the screen is full white", async () => {
     reduceMotion(false);
 
     launch();

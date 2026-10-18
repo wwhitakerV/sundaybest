@@ -33,10 +33,8 @@ export type Film = {
   asset: number;
   beats: Readonly<Record<string, { start: number; end: number }>>;
   moments: ClockMoments;
-  /** Where the screen is full of water: the movie holds here until the page is ready. */
+  /** Where the screen is full white: the movie holds here until the page is ready. */
   holdStart: number;
-  /** Called with the time of every frame on screen (a worklet), for anything that follows it. */
-  follow?: (t: number) => void;
 };
 
 type MovieClockOptions = {
@@ -47,7 +45,7 @@ type MovieClockOptions = {
 
 /**
  * A launch intro's movie, and its clock: the movie's own time, the time of the
- * frame on screen, drives everything. It holds on the full screen of water until
+ * frame on screen, drives everything. It holds on the full white screen until
  * the page underneath is ready (`ready`, set by `IntroReadyBridge`), fires the
  * haptics on their frames, shows the page at the film's reveal, and ends at its
  * end. A movie that never shows a frame steps aside to the page.
@@ -62,7 +60,7 @@ export function useMovieClock(film: Film, { revealed, onReveal, onDone }: MovieC
   const measuring = __DEV__;
   const frames = useSharedValue<FrameStats>({});
   const beats = useMemo(() => beatList(film.beats), [film.beats]);
-  const { moments, holdStart, follow } = film;
+  const { moments, holdStart } = film;
 
   useFrameCallback((frame) => {
     "worklet";
@@ -75,7 +73,6 @@ export function useMovieClock(film: Film, { revealed, onReveal, onDone }: MovieC
       const dt = frame.timeSincePreviousFrame ?? 0;
       frames.set(recordFrame(frames.get(), beatAt(beats, t), dt));
     }
-    if (follow) follow(t);
     if (before < 0) return;
     const passed = clockCrossings(before, t, moments);
     if (passed.drop) runOnJS(dropFeedback)();

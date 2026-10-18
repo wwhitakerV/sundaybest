@@ -291,16 +291,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       expoRouterPlugin(),
       // The launch screen: a plain colour, nothing else. iOS can't animate it, so the
       // launch intro (src/features/launch-intro) starts on the same colour and
-      // plays over the app from the first frame — see ADRs 0026 and 0027. A native
+      // plays over the app from the first frame — see ADRs 0030 and 0031. A native
       // change, so it ships with a new build, not an OTA update.
       splashScreenPlugin({
-        // The same colour as the page the playing launch intro starts on, from one place.
-        backgroundColor:
-          LAUNCH_COLORS[
-            LAUNCH_COLORS.intro === "pool" || LAUNCH_COLORS.intro === "pool-movie"
-              ? "pool"
-              : "water"
-          ].page,
+        // The red the launch intro's movie starts on, from one place.
+        backgroundColor: LAUNCH_COLORS.page,
         resizeMode: "contain",
       }),
 

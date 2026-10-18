@@ -1,27 +1,9 @@
-import type { Stage } from "../settings";
-import type { WaterSettings } from "../water/settings";
-import movie from "./water-movie.json";
+import type { ClockMoments } from "../clock";
+
+/** A screen, or the stage the movie was drawn on, in points. */
+export type Stage = { width: number; height: number };
 
 type Beat = { start: number; end: number };
-
-/**
- * The water intro as a movie (`assets/intro/water-intro.mp4`), made from its
- * prototype by `npm run render:intro`: its size and frame rate, the stage it
- * was drawn on (in the prototype's points), the settings it was made with, and
- * where its beats fall. Written by the render, beside the movie; never by hand.
- */
-type Movie = {
-  fps: number;
-  frames: number;
-  width: number;
-  height: number;
-  stage: Stage;
-  durationMs: number;
-  settings: WaterSettings;
-  beats: Record<"pour" | "write" | "pause" | "fall" | "sink" | "splash" | "hold" | "drain", Beat>;
-};
-
-export const MOVIE: Movie = movie;
 
 /**
  * How the movie's stage fills a screen: scaled to cover it, centred, its
@@ -38,8 +20,33 @@ export function coverFit(stage: Stage, screen: Stage) {
   };
 }
 
-/** Whether the movie holds where it is: the screen is full of water and the page isn't ready. */
+/** Whether the movie holds where it is: the screen is full white and the page isn't ready. */
 export function holdsFor(t: number, ready: boolean, holdStart: number): boolean {
   "worklet";
   return !ready && t >= holdStart;
+}
+
+/**
+ * The moments the movie's clock acts on: the haptics as the first letter lands
+ * and as the pool erupts, the page shown as the movie starts to fade, and the
+ * intro done once it has.
+ */
+export function movieMoments(film: {
+  beats: { splash: Beat; fade: Beat };
+  moments: { firstHit: number };
+}): ClockMoments {
+  return {
+    firstHit: film.moments.firstHit,
+    splashStart: film.beats.splash.start,
+    revealAt: film.beats.fade.start,
+    doneAt: film.beats.fade.end,
+  };
+}
+
+/** How much of the movie shows at `t`: all of it until the fade, evenly less over it, then none. */
+export function fadeOpacity(t: number, fade: Beat): number {
+  "worklet";
+  if (t <= fade.start) return 1;
+  if (t >= fade.end) return 0;
+  return 1 - (t - fade.start) / (fade.end - fade.start);
 }
