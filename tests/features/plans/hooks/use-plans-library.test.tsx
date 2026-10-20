@@ -69,13 +69,13 @@ beforeEach(() => {
 });
 
 describe("usePlansLibrary", () => {
-  it("starts on All", async () => {
+  it("starts with no filter picked", async () => {
     const { result } = await renderLibrary();
 
-    expect(result.current.filter).toBe("All");
+    expect(result.current.filter).toBeNull();
   });
 
-  it("shows a card for each of the reader's own plans on All, newest first", async () => {
+  it("shows a card for each of the reader's own plans with no filter picked, newest first", async () => {
     const { result } = await renderLibrary();
 
     expect(result.current.cards.map(({ plan }) => plan.id)).toEqual([
@@ -89,17 +89,15 @@ describe("usePlansLibrary", () => {
     const { result } = await renderLibrary();
 
     expect(result.current.filters).toEqual([
-      { label: "All", count: 3 },
       { label: "In progress", count: 1 },
       { label: "Done", count: 1 },
-      { label: "Saved", count: 1 },
     ]);
   });
 
-  it("narrows to the finished plans on setFilter(Done)", async () => {
+  it("narrows to the finished plans when Done is picked", async () => {
     const { result } = await renderLibrary();
 
-    act(() => result.current.setFilter("Done"));
+    act(() => result.current.pickFilter("Done"));
 
     expect(result.current.filter).toBe("Done");
     expect(result.current.cards.map(({ plan }) => plan.id)).toEqual([FINISHED.id]);
@@ -206,19 +204,21 @@ describe("usePlansLibrary start", () => {
 });
 
 describe("usePlansLibrary haptics", () => {
-  it("selects with a selection haptic once when the filter changes", async () => {
+  it("selects with a selection haptic once when a filter is picked", async () => {
     const { result } = await renderLibrary();
 
-    act(() => result.current.setFilter("Done"));
+    act(() => result.current.pickFilter("Done"));
 
     expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
   });
 
-  it("is silent when the current filter is picked again", async () => {
+  it("lets the filter go when it's picked again, every plan showing, and that's a change too", async () => {
     const { result } = await renderLibrary();
 
-    act(() => result.current.setFilter("All"));
+    act(() => result.current.pickFilter("Done"));
+    act(() => result.current.pickFilter("Done"));
 
-    expect(haptics.selectionFeedback).not.toHaveBeenCalled();
+    expect(result.current.filter).toBeNull();
+    expect(haptics.selectionFeedback).toHaveBeenCalledTimes(2);
   });
 });

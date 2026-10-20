@@ -217,6 +217,10 @@ type ColorTokens = {
   toggleThumbOff: string;
   /** Header/tab-bar icon colour, and the centered nav-title's active state. */
   chromeIcon: string;
+  /** The status bar's time and battery on the page. */
+  statusInk: string;
+  /** The status bar's time and battery over a dark hero or paper (`StatusBarTone light`). */
+  statusInkOnDark: string;
   /** The centered header title's own colour — quieter than `chromeIcon`. */
   chromeTitle: string;
   /** The right-aligned step counter in a header ("1 of 2"). */
@@ -369,6 +373,8 @@ const lightColors: ColorTokens = {
   selected: palette.green,
   toggleThumbOff: palette.white,
   chromeIcon: palette.ink,
+  statusInk: palette.black,
+  statusInkOnDark: palette.white,
   chromeTitle: palette.darkgrey,
   chromeStepCounter: palette.grey,
   hairline: palette.hairline,
@@ -462,6 +468,8 @@ const darkColors: ColorTokens = {
   selected: palette.green,
   toggleThumbOff: palette.greyLight,
   chromeIcon: palette.white,
+  statusInk: palette.white,
+  statusInkOnDark: palette.white,
   chromeTitle: palette.grey,
   chromeStepCounter: palette.grey,
   hairline: palette.hairlineOnDark,
@@ -804,6 +812,19 @@ const typography = {
    * the mono, in capitals, tracked wide. One style, so every such label in
    * the app reads the same.
    */
+  /**
+   * The status bar's time, in the editorial face, two points under iOS's own: the serif sits larger.
+   * Drawn at a fixed size (`StatusLabel`): the bar never grows with text.
+   */
+  statusBarTime: { fontFamily: fonts.editorialHeading, fontSize: 15, fontWeight: "500" },
+  /** The status bar's time's colon: a step smaller, raised to the figures' middle. */
+  statusBarColon: { fontFamily: fonts.editorialHeading, fontSize: 12, fontWeight: "500" },
+  /**
+   * The battery's percentage, inside it, in the editorial face's bold — the
+   * Medium is too light that small. Its own line height, so the figures can
+   * be centred on what they measure (`CapsuleBattery`). Fixed size.
+   */
+  statusBarFigures: { fontFamily: fonts.editorialBold, fontSize: 13, fontWeight: "700" },
   kicker: {
     fontFamily: fonts.metaLabel,
     fontSize: 13,

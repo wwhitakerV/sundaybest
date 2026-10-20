@@ -18,9 +18,7 @@ beforeEach(() => {
   jest
     .mocked(useRouter)
     .mockReturnValue({ back: jest.fn() } as unknown as ReturnType<typeof useRouter>);
-  jest
-    .mocked(useNavigation)
-    .mockReturnValue({ setOptions: jest.fn() });
+  jest.mocked(useNavigation).mockReturnValue({ setOptions: jest.fn() });
 });
 
 describe("WordScreen", () => {

@@ -1,50 +1,39 @@
-import { describeStreak, describeUpNextTime } from "@/features/plans/logic/day-complete";
+import { describeRemembered, describeUpNext } from "@/features/plans/logic/day-complete";
 
-describe("describeStreak", () => {
-  it("is null with no streak", () => {
-    expect(describeStreak(0)).toBeNull();
+const TODAY = "2026-09-23";
+const REMINDER_ON = { enabled: true, time: "06:30" };
+
+describe("describeUpNext", () => {
+  it("says it opens tomorrow, with the reminder's time beside it", () => {
+    expect(describeUpNext("2026-09-24", TODAY, REMINDER_ON)).toBe(
+      "Opens tomorrow · Reminder at 6:30 AM",
+    );
   });
 
-  it("spells a streak of one", () => {
-    expect(describeStreak(1)).toBe("One day streak");
+  it("names the weekday when it opens later", () => {
+    expect(describeUpNext("2026-09-25", TODAY, null)).toBe("Opens Friday");
   });
 
-  it("spells a streak of two", () => {
-    expect(describeStreak(2)).toBe("Two day streak");
+  it("says it's open now when its day has come, or it has no date", () => {
+    expect(describeUpNext(TODAY, TODAY, null)).toBe("Open now");
+    expect(describeUpNext(null, TODAY, null)).toBe("Open now");
   });
 
-  it("spells a streak of six", () => {
-    expect(describeStreak(6)).toBe("Six day streak");
+  it("leaves the reminder out when it's off", () => {
+    expect(describeUpNext("2026-09-24", TODAY, { enabled: false, time: "06:30" })).toBe(
+      "Opens tomorrow",
+    );
   });
 
-  it("spells a streak of twenty", () => {
-    expect(describeStreak(20)).toBe("Twenty day streak");
-  });
-
-  it("uses digits past twenty", () => {
-    expect(describeStreak(21)).toBe("21 day streak");
+  it("gives the reminder's time on the 24-hour clock when the phone uses it", () => {
+    expect(describeUpNext("2026-09-24", TODAY, { enabled: true, time: "19:05" }, true)).toBe(
+      "Opens tomorrow · Reminder at 19:05",
+    );
   });
 });
 
-describe("describeUpNextTime", () => {
-  it("is Tomorrow with no reminder", () => {
-    expect(describeUpNextTime(null)).toBe("Tomorrow");
-  });
-
-  it("is Tomorrow when the reminder is off", () => {
-    expect(describeUpNextTime({ enabled: false, time: "06:30" })).toBe("Tomorrow");
-  });
-
-  it("names the morning time when the reminder is on", () => {
-    expect(describeUpNextTime({ enabled: true, time: "06:30" })).toBe("Tomorrow at 6:30 AM");
-  });
-
-  it("names an afternoon time on the 12-hour clock", () => {
-    expect(describeUpNextTime({ enabled: true, time: "19:05" })).toBe("Tomorrow at 7:05 PM");
-  });
-
-  it("names midnight and noon", () => {
-    expect(describeUpNextTime({ enabled: true, time: "00:00" })).toBe("Tomorrow at 12:00 AM");
-    expect(describeUpNextTime({ enabled: true, time: "12:00" })).toBe("Tomorrow at 12:00 PM");
+describe("describeRemembered", () => {
+  it("says how many were remembered, of how many", () => {
+    expect(describeRemembered(8, 10)).toBe("You remembered 8 of 10");
   });
 });

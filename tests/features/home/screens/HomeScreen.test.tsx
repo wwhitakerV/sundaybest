@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from "@tests/helpers/render";
+import { act, render, screen, fireEvent, waitFor, within } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
@@ -6,8 +6,23 @@ import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { studyHref } from "@/entities/plan";
 import { tabPlanHref } from "@/entities/tabs";
+import { openShareSheet } from "@/core/sharing/share-sheet";
 import { HomeScreen } from "@/features/home/screens/HomeScreen";
+import { ScrollToTopProvider, useScrollToTop } from "@/ui/organisms/status-bar/scroll-to-top";
+import { forgetLikedVerses } from "@tests/mocks/liked-verses";
 import { lightTheme } from "@/theme/tokens";
+import { space } from "@/theme";
+import { PAGE_INSET } from "@/ui/organisms/Screen";
+import { ScrollView, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+
+jest.mock("@/core/storage/liked-verses", () =>
+  jest.requireActual<object>("@tests/mocks/liked-verses"),
+);
+
+jest.mock("@/core/sharing/share-sheet", () => ({
+  openShareSheet: jest.fn(() => Promise.resolve()),
+  snapshotPng: jest.fn(() => Promise.resolve(null)),
+}));
 
 jest.mock("expo-router", () => ({
   ...jest.requireActual<typeof ExpoRouter>("expo-router"),
@@ -203,14 +218,6 @@ describe("HomeScreen", () => {
       expect(screen.getByTestId("home-tab-header")).toHaveProp("pointerEvents", "auto");
     });
 
-    it("lists the user's plans, with a finished one marked when it finished", async () => {
-      await renderHome();
-
-      expect(screen.getByTestId(`home-tab-plan-${FINISHED.id}`)).toHaveTextContent(
-        /Finished Oct 5/,
-      );
-    });
-
     it("shows the day the server says the plan is on", async () => {
       await renderHome([aPlan({ seed: 1, title: ACTIVE.title, lengthDays: 6, completedDays: 2 })]);
 
@@ -237,5 +244,168 @@ describe("HomeScreen", () => {
 
     expect(screen.getByTestId("home-tab-date")).toHaveTextContent(/^\d{2}\.\d{2}\.\d{2}$/);
     expect(screen.getByTestId("home-tab-date")).toHaveStyle(lightTheme.typography.headerDate);
+  });
+});
+
+describe("HomeScreen's verse of the day", () => {
+  // Monday 19 October 2026: Colossians 3:13.
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date("2026-10-19T10:00:00"), advanceTimers: true });
+    jest.mocked(openShareSheet).mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  const card = () => screen.getByTestId("home-verse");
+
+  it("sits below the plan card", async () => {
+    await renderHome();
+
+    const order = screen
+      .getAllByTestId(/^home-(tab-active-hero|verse)$/)
+      .map((element) => String(element.props.testID));
+    expect(order).toEqual(["home-tab-active-hero", "home-verse"]);
+  });
+
+  it("names itself in red, with no paint: the wordmark's is the page's one stroke", async () => {
+    await renderHome();
+
+    expect(within(card()).getByText("Verse of the day")).toHaveStyle({
+      color: lightTheme.colors.accent,
+    });
+    expect(screen.queryByTestId("home-verse-content-label")).toBeNull();
+  });
+
+  it("shows the verse, where it's from, and the day it's for", async () => {
+    await renderHome();
+
+    expect(within(card()).getByText(/^Bear with one another and forgive/)).toBeOnTheScreen();
+    expect(within(card()).getByText("Colossians 3:13 · BSB")).toBeOnTheScreen();
+    expect(within(card()).getByText("Monday, October 19")).toBeOnTheScreen();
+  });
+
+  it("closes on the day's line, beneath its heart and share", async () => {
+    await renderHome();
+
+    const caption = "Forgive without pretending the trust was never broken.";
+    expect(within(card()).queryByText(caption)).toBeNull();
+    expect(within(screen.getByTestId("home-verse-caption")).getByText(caption)).toBeOnTheScreen();
+    const order = screen
+      .getAllByTestId(/^home-verse-(actions|caption)$/)
+      .map((element) => String(element.props.testID));
+    expect(order).toEqual(["home-verse-actions", "home-verse-caption"]);
+  });
+
+  it("stands well apart from the plan card above it", async () => {
+    await renderHome();
+
+    expect(screen.getByTestId("home-verse-section")).toHaveStyle({ marginTop: space[28] });
+  });
+
+  it("sits on the page as part of it, with no card or edge around it", async () => {
+    await renderHome();
+
+    expect(card()).not.toHaveStyle({ borderWidth: 1 });
+    expect(card()).not.toHaveStyle({ backgroundColor: lightTheme.colors.surface });
+  });
+
+  it("is itself a way to share it, named for that", async () => {
+    await renderHome();
+
+    expect(card()).toHaveProp("accessibilityRole", "button");
+    expect(card()).toHaveAccessibleName("Verse of the day, Colossians 3:13. Share");
+  });
+
+  it("opens iOS's share sheet with the verse when it's tapped", async () => {
+    await renderHome();
+
+    fireEvent.press(card());
+
+    await waitFor(() =>
+      expect(openShareSheet).toHaveBeenCalledWith({
+        message: expect.stringContaining("Colossians 3:13 (BSB)") as string,
+        png: null,
+      }),
+    );
+  });
+
+  it("has a heart and a share beneath it, side by side", async () => {
+    await renderHome();
+
+    const actions = within(screen.getByTestId("home-verse-actions"));
+    expect(actions.getByRole("button", { name: "Like" })).toBeOnTheScreen();
+    expect(actions.getByRole("button", { name: "Share" })).toBeOnTheScreen();
+  });
+
+  it("shares from its share button", async () => {
+    await renderHome();
+
+    fireEvent.press(screen.getByRole("button", { name: "Share" }));
+
+    await waitFor(() => expect(openShareSheet).toHaveBeenCalledTimes(1));
+  });
+
+  it("is liked with its heart, which then says so", async () => {
+    forgetLikedVerses();
+    await renderHome();
+    const heart = () => screen.getByTestId("home-verse-actions-like");
+    await waitFor(() => expect(heart()).not.toBeSelected());
+
+    fireEvent.press(heart());
+
+    await waitFor(() => expect(heart()).toBeSelected());
+  });
+
+  it("draws its share card off the screen, signed with the wordmark, unseen by VoiceOver", async () => {
+    await renderHome();
+
+    // Hidden from VoiceOver, so found only when hidden elements are asked for.
+    const share = screen.getByTestId("home-verse-share-card", { includeHiddenElements: true });
+    expect(share).toHaveProp("accessibilityElementsHidden", true);
+    expect(share).toHaveProp("importantForAccessibility", "no-hide-descendants");
+    expect(
+      within(share).getByTestId("home-verse-share-card-wordmark", { includeHiddenElements: true }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByTestId("home-verse-share-card")).toBeNull();
+  });
+
+  it("keeps its share card wholly past the screen's edge, the page's inset and all", async () => {
+    await renderHome();
+
+    const share = screen.getByTestId("home-verse-share-card", { includeHiddenElements: true });
+    const { left, width } = StyleSheet.flatten(share.props.style as StyleProp<ViewStyle>) as {
+      left: number;
+      width: number;
+    };
+    expect(left + width).toBeLessThanOrEqual(-PAGE_INSET);
+  });
+});
+
+describe("HomeScreen and the status bar", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("scrolls Home back to its top when the status bar is tapped, as iOS's does", async () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    let tapBar: () => void = () => undefined;
+    function Bar() {
+      tapBar = useScrollToTop();
+      return null;
+    }
+    servePlans([ACTIVE, FINISHED, SAMPLE]);
+    render(
+      <ScrollToTopProvider>
+        <HomeScreen />
+        <Bar />
+      </ScrollToTopProvider>,
+    );
+    await waitFor(() => expect(screen.queryByTestId("home-content-pending")).toBeNull(), {
+      timeout: 10000,
+    });
+
+    act(() => tapBar());
+
+    expect(scrollTo).toHaveBeenCalledWith({ y: 0, animated: true });
   });
 });

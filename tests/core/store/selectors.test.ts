@@ -10,7 +10,6 @@ import {
   getInProgressPlans,
   getLatestQuizScore,
   getUpNext,
-  getLibraryPlans,
   getPlanById,
   getPlanDay,
   getPlanDays,
@@ -54,9 +53,8 @@ describe("plan selectors", () => {
     expect(getInProgressPlans(state).map((plan) => plan.id)).toEqual([ACTIVE]);
   });
 
-  it("lists finished plans and saved ones", () => {
+  it("lists finished plans", () => {
     expect(getCompletedPlans(state).map((plan) => plan.id)).toEqual([COMPLETED]);
-    expect(getLibraryPlans(state).map((plan) => plan.id)).toEqual([SAVED, COMPLETED]);
   });
 
   it("lists the user's built plans, not drafts, ones being built, or the untried sample", () => {

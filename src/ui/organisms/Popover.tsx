@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 import { usePresence } from "@/hooks/use-presence";
 import { radius, useTheme } from "@/theme";
+import { useStatusBarOverlay } from "./status-bar/overlay";
 
 /** It grows from this to full size, out of the corner it hangs from. */
 const START_SCALE = 0.85;
@@ -47,6 +48,7 @@ export function Popover({
   children,
 }: PopoverProps) {
   const theme = useTheme();
+  const statusBar = useStatusBarOverlay();
   const { mounted, progress } = usePresence(visible);
   const dimStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
   const popoverStyle = useAnimatedStyle(() => ({
@@ -103,6 +105,8 @@ export function Popover({
           {children}
         </View>
       </Animated.View>
+      {/* The app's status bar stays over the popover, as iOS's does. */}
+      {statusBar}
     </Modal>
   );
 }

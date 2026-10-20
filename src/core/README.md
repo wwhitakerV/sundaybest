@@ -21,6 +21,7 @@ fonts/        font loading
 haptics/      haptic vocabulary (selection, tap, outcomes) and the entrance buzz
 accessibility/ OS accessibility settings (Reduce Motion) and VoiceOver announcements
 links/        opens allowed outside links (Bible passages) in an in-app Safari sheet
+sharing/      iOS's share sheet, and a view's picture to share in it
 notifications/ local-notification permission and SundayBest reminder scheduling
 mock-data/    connected mock records for every screen, as `AppData` (see below)
 store/        legacy/mock-backed Plans/Study/Fun state while those slices migrate (see below)
@@ -111,6 +112,20 @@ writes them through TanStack Query (`useReflectionAnswers`,
 (`searches_shown`, migration 5), and `search-shown-queries.ts`'s
 `useEarnedSearch` answers whether a list offers it now: from its threshold,
 and from then on, though the list shrinks again.
+
+`liked-verses.ts` keeps the verses of the day a reader has liked, by date
+(`liked_verses`, migration 6) — on the phone only — and
+`liked-verse-queries.ts`'s `useLikedVerse` says whether one is liked and
+toggles it: shown at once, put back if the phone can't keep it.
+
+## `sharing/`
+
+`share-sheet.ts`: `openShareSheet` opens iOS's own share sheet (React Native's
+`Share`) with words and, when there is one, a picture as a `data:` PNG, which
+iOS hands to the reader's apps as an image. `snapshotPng` takes a view's picture
+with Skia's `makeImageFromView`, on or off the screen; it gives `null` when it
+can't, and the words go alone. Nothing is shared without the reader picking
+where it goes. Home's verse of the day uses both.
 
 ## `config/`
 

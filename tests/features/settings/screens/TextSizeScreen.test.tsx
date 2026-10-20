@@ -111,13 +111,13 @@ describe("TextSizeScreen", () => {
     );
   });
 
-  it("sets its explanatory note as a centred footnote, in the darker supporting grey", () => {
+  it("sets its explanatory note as its footnote, in the darker supporting grey", () => {
     render(<TextSizeScreen />);
 
     expect(screen.getByText(/This changes text throughout SundayBest/)).toHaveStyle({
       color: lightTheme.colors.textSupporting,
-      textAlign: "center",
     });
+    expect(screen.getByTestId("text-size-footnote")).toBeOnTheScreen();
   });
 
   it("marks the size the reader chose", async () => {

@@ -1,4 +1,5 @@
-import { StatusBar, StyleSheet, View } from "react-native";
+import { useRef } from "react";
+import { StyleSheet, View } from "react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 
@@ -13,12 +14,15 @@ import { useHomeView } from "../hooks/use-home-view";
 import { CONTENT_TOP, useHeroCollapse } from "../hooks/use-hero-collapse";
 import { PlanRow } from "../components/PlanRow";
 import { StartHereCard } from "../components/StartHereCard";
+import { VerseCard } from "../components/VerseCard";
 import { controlHeight, space } from "@/theme";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { Arrive } from "@/ui/arrival/Arrive";
 import { Wordmark } from "@/ui/atoms/Wordmark";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
+import { useScrollToTopTarget } from "@/ui/organisms/status-bar/scroll-to-top";
+import { StatusBarTone } from "@/ui/organisms/status-bar/tone";
 
 /** A header action's 44pt tap target — the masthead row keeps it. */
 const HEADER_HEIGHT = controlHeight.hitTarget;
@@ -49,6 +53,9 @@ export function HomeScreen() {
     flightStyle,
     phase,
   } = useHeroCollapse();
+  const scroll = useRef<Animated.ScrollView>(null);
+  // A tap on the status bar scrolls Home up, as iOS's does.
+  useScrollToTopTarget(() => scroll.current?.scrollTo({ y: 0, animated: true }));
 
   if (view.error) {
     return (
@@ -81,6 +88,7 @@ export function HomeScreen() {
         </Arrive>
 
         <Animated.ScrollView
+          ref={scroll}
           testID="home-tab-scroll"
           onContentSizeChange={onContentSizeChange}
           snapToOffsets={snapOffsets}
@@ -109,6 +117,20 @@ export function HomeScreen() {
                 />
               ) : (
                 <StartHereCard onAddSermon={view.addSermon} />
+              )}
+
+              {view.verse && (
+                <VerseCard
+                  testID="home-verse"
+                  verse={view.verse.verse}
+                  reference={view.verse.reference}
+                  passage={view.verse.passage}
+                  caption={view.verse.caption}
+                  day={view.verse.day}
+                  liked={view.verse.liked}
+                  onLike={view.verse.toggleLike}
+                  onShare={view.verse.share}
+                />
               )}
 
               {!view.hasPlans && view.sample && (
@@ -145,7 +167,7 @@ export function HomeScreen() {
         <ArtworkFlight thumbnailUrl={view.flight.thumbnailUrl} style={flightStyle} />
       )}
 
-      {isFocused && !view.loading && phase.lightStatusBar && <StatusBar barStyle="light-content" />}
+      {isFocused && !view.loading && phase.lightStatusBar && <StatusBarTone light />}
     </View>
   );
 }

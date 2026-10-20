@@ -127,7 +127,7 @@ describe("navigation", () => {
   );
 
   it(
-    "opens a day's Quick Check on Finish, takes it to Done, lands on Day Complete, and Done! returns to the overview",
+    "opens a day's Quick Check on Finish, and its last answer lands straight on Day Complete",
     async () => {
       const view = await openApp();
       await openFromPlans(TEMPTATION);
@@ -152,13 +152,12 @@ describe("navigation", () => {
       fireEvent.press(screen.getByTestId("quick-check-choice-a"));
       await screen.findByTestId("quick-check-feedback");
       fireEvent.press(screen.getByTestId("quick-check-finish-button"));
-      await screen.findByTestId("quick-check-results");
-      expect(screen.getByText("2/3")).toBeVisible();
-      expect(view.getPathname()).toBe(`/study/${TEMPTATION.id}/quick-check`);
 
-      fireEvent.press(screen.getByTestId("quick-check-done-button"));
+      // Scored and the day completed in one movement: its results never show on the way.
       expect(await screen.findByTestId("day-complete-screen")).toBeVisible();
       expect(view.getPathname()).toBe(`/study/${TEMPTATION.id}/day-complete`);
+      expect(screen.queryByTestId("quick-check-results")).toBeNull();
+      expect(screen.getByText("You remembered 2 of 3")).toBeVisible();
     },
     LONG_FLOW_TIMEOUT_MS,
   );

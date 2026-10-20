@@ -36,20 +36,20 @@ describe("ContactSupportScreen", () => {
   it("asks what it's about as a row of the app's chips, a question to start", () => {
     render(<ContactSupportScreen />);
 
-    expect(screen.getByTestId("contact-support-topic-question")).toBeSelected();
-    fireEvent.press(screen.getByTestId("contact-support-topic-bug"));
+    expect(screen.getByTestId("contact-support-topics-option-Question")).toBeSelected();
+    fireEvent.press(screen.getByTestId("contact-support-topics-option-Bug"));
 
-    expect(screen.getByTestId("contact-support-topic-bug")).toBeSelected();
-    expect(screen.getByTestId("contact-support-topic-question")).not.toBeSelected();
+    expect(screen.getByTestId("contact-support-topics-option-Bug")).toBeSelected();
+    expect(screen.getByTestId("contact-support-topics-option-Question")).not.toBeSelected();
   });
 
   it("asks for the message in the words of what it's about", () => {
     render(<ContactSupportScreen />);
 
     expect(screen.getByLabelText("Message")).toHaveProp("placeholder", "What's your question?");
-    fireEvent.press(screen.getByTestId("contact-support-topic-bug"));
+    fireEvent.press(screen.getByTestId("contact-support-topics-option-Bug"));
     expect(screen.getByLabelText("Message")).toHaveProp("placeholder", "What happened?");
-    fireEvent.press(screen.getByTestId("contact-support-topic-idea"));
+    fireEvent.press(screen.getByTestId("contact-support-topics-option-Idea"));
     expect(screen.getByLabelText("Message")).toHaveProp("placeholder", "What's your idea?");
   });
 
@@ -79,7 +79,7 @@ describe("ContactSupportScreen", () => {
       within(screen.getByTestId("contact-support-footnote")).getByText(
         /is included so we can help faster\. Never send passwords or payment details\./,
       ),
-    ).toHaveStyle({ textAlign: "center" });
+    ).toBeOnTheScreen();
   });
 
   it("sets nothing in bold", () => {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { X } from "lucide-react-native";
 
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
@@ -7,6 +7,7 @@ import { ScreenHeader } from "@/ui/molecules/ScreenHeader";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { StudySkeleton } from "../components/StudySkeleton";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
+import { StatusBarTone } from "@/ui/organisms/status-bar/tone";
 import { TextSizeScope } from "@/ui/typography/TextSizeScope";
 import { ReadingSheet } from "../components/ReadingSheet";
 import { StudyHeader } from "../components/StudyHeader";
@@ -145,7 +146,7 @@ function StudyPage({ view }: { view: FoundStudy }) {
         onPaperChange={reading.setPaper}
       />
 
-      {paper.name === "dark" && <StatusBar animated barStyle="light-content" />}
+      {paper.name === "dark" && <StatusBarTone light />}
     </>
   );
 }

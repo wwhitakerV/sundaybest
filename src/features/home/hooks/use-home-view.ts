@@ -16,12 +16,14 @@ import { homePlanOverviewHref } from "../logic/routes";
 import { tabPlanHref } from "@/entities/tabs";
 import { usePrefetch } from "@/core/api/prefetch";
 import { prefetchImages } from "@/core/images/prefetch-images";
+import { useDailyVerse } from "./use-daily-verse";
 
 /** Home's server-backed plan view model. */
 export function useHomeView() {
   const router = useRouter();
   const today = useToday();
   const plansQuery = usePlansQuery();
+  const verse = useDailyVerse(today);
   const allPlans = plansQuery.data?.plans ?? [];
   const plan = getApiActivePlan(allPlans);
   const sample = getApiSamplePlan(allPlans);
@@ -84,6 +86,8 @@ export function useHomeView() {
     hasPlans: getApiUserPlans(allPlans).length > 0,
     sample: sample ? { id: sample.id, title: sample.title, detail: describeApiPlan(sample) } : null,
     flight: plan ? { thumbnailUrl: plan.sermon.thumbnailUrl } : null,
+    /** Today's verse, under the plan; tapped, it's shared. */
+    verse,
     loading: plansQuery.isPending,
     error: plansQuery.data === undefined ? plansQuery.error : null,
     retry: () => void plansQuery.refetch(),

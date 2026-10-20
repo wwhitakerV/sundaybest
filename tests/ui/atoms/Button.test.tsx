@@ -86,11 +86,11 @@ describe("Button", () => {
     expect(screen.queryByTestId("a-button-icon")).toBeNull();
   });
 
-  it("applies the soft variant: a pill filled with the segment colour and a 1pt container border", () => {
+  it("applies the soft variant: a white pill with a card's 1pt edge, holding on the white dock", () => {
     render(<Button testID="a-button" label="Share" variant="soft" onPress={() => undefined} />);
 
     expect(screen.getByTestId("a-button")).toHaveStyle({
-      backgroundColor: lightTheme.colors.segmentBackground,
+      backgroundColor: lightTheme.colors.background,
       borderWidth: 1,
       borderColor: lightTheme.colors.containerBorder,
     });

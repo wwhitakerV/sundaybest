@@ -193,6 +193,10 @@ jest.mock("@shopify/react-native-skia", () => {
     ColorChannel: noop,
     FilterMode: noop,
     MipmapMode: noop,
+    ImageFormat: { JPEG: 3, PNG: 4, WEBP: 6 },
+    // A view's snapshot: none by default, as a phone without Skia's native side would give;
+    // a test that shares a picture gives it one.
+    makeImageFromView: jest.fn(() => Promise.resolve(null)),
     // A video that never loads: no frame, still at its start, as a phone sees it
     // before the movie has opened.
     useVideo: () => ({

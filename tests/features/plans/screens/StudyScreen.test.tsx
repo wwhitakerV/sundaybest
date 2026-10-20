@@ -1,9 +1,9 @@
-import { StatusBar } from "react-native";
 import { http, HttpResponse } from "msw";
 import { render, screen, fireEvent, waitFor } from "@tests/helpers/render";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { StatusBarTone } from "@/ui/organisms/status-bar/tone";
 import { API_URL, someSettings } from "@tests/factories/api";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
@@ -278,8 +278,16 @@ describe("StudyScreen", () => {
       await goToStep("pray");
 
       expect(screen.getByText("Lord, day 1. Amen.")).toBeVisible();
-      // Inside StudyNav, which Jest's Reanimated mock leaves at its opacity-0
-      // opening frame — assert presence, not visibility.
+      // Its way on is the day's Quick Check. Inside StudyNav, which Jest's Reanimated mock leaves
+      // at its opacity-0 opening frame — assert presence, not visibility.
+      expect(screen.getByText("Quick Check")).toBeOnTheScreen();
+    });
+
+    it("ends on Finish for a plan made without Quick Checks", async () => {
+      await openStudy(NO_QUIZ);
+
+      await goToStep("pray");
+
       expect(screen.getByText("Finish")).toBeOnTheScreen();
     });
   });
@@ -463,13 +471,13 @@ describe("StudyScreen", () => {
     it("lights the status bar text on Night paper", async () => {
       await openStudy(STILL_PRAYING, { readingPaper: "night" });
 
-      expect(screen.UNSAFE_getByType(StatusBar).props.barStyle).toBe("light-content");
+      expect(screen.UNSAFE_getByType(StatusBarTone).props).toEqual({ light: true });
     });
 
     it("leaves the status bar alone on a light paper", async () => {
       await openStudy(STILL_PRAYING, { readingPaper: "white" });
 
-      expect(screen.UNSAFE_queryByType(StatusBar)).toBeNull();
+      expect(screen.UNSAFE_queryByType(StatusBarTone)).toBeNull();
     });
   });
 

@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 import { StyleSheet, View, useWindowDimensions } from "react-native";
 import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
@@ -10,6 +10,7 @@ import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
 import { useHideTabBarFab, useTabBarAccessory } from "@/ui/organisms/tab-bar/tab-bar-accessory";
+import { useScrollToTopTarget } from "@/ui/organisms/status-bar/scroll-to-top";
 import { controlHeight, space } from "@/theme";
 import { FadeInView } from "../components/FadeInView";
 import { PlanAbout } from "../components/PlanAbout";
@@ -57,6 +58,9 @@ export function PlanOverviewScreen() {
     navLine: navTop + NAV_BUTTON / 2,
     statusBarLine: insetTop / 2,
   });
+  const scroll = useRef<Animated.ScrollView>(null);
+  // A tap on the status bar scrolls the plan up, as iOS's does.
+  useScrollToTopTarget(() => scroll.current?.scrollTo({ y: 0, animated: true }));
 
   useTabBarAccessory(
     {
@@ -113,6 +117,7 @@ export function PlanOverviewScreen() {
       <Screen testID="plan-overview-screen" edges={["left", "right"]}>
         <FadeInView testID="plan-overview-content" style={styles.fill}>
           <Animated.ScrollView
+            ref={scroll}
             onScroll={onScroll}
             scrollEventThrottle={16}
             showsVerticalScrollIndicator={false}

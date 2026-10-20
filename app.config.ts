@@ -285,6 +285,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       config: {
         usesNonExemptEncryption: false,
       },
+
+      // SundayBest draws its own status bar (ADR 0032), so iOS's is hidden from
+      // the native splash on; the app keeps it hidden (`SystemStatusBar`). A
+      // native change, so it ships with a new build.
+      infoPlist: {
+        UIStatusBarHidden: true,
+      },
     },
 
     plugins: [

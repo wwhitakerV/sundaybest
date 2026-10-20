@@ -1,7 +1,6 @@
 import {
   INITIAL_STATE,
   appReducer,
-  getLibraryPlans,
   getPlanById,
   getPlanDay,
   getPlanProgress,
@@ -126,21 +125,6 @@ describe("plans", () => {
       "archived",
     );
     expect(run({ type: "plan/archive", planId: BUILDING, at: AT })).toBe(state);
-  });
-
-  it("saves a plan once, and removes it", () => {
-    const save: AppAction = { type: "plan/save", planId: READY, libraryItemId: "lib-1", at: AT };
-    const saved = run(save);
-    const savedTwice = appReducer(saved, { ...save, libraryItemId: "lib-2" });
-    const removed = appReducer(saved, { type: "plan/removeSaved", planId: READY });
-
-    expect(getLibraryPlans(saved).map((plan) => plan.id)).toContain(READY);
-    expect(savedTwice).toBe(saved);
-    expect(getLibraryPlans(removed).map((plan) => plan.id)).not.toContain(READY);
-  });
-
-  it("won't save a draft", () => {
-    expect(run({ type: "plan/save", planId: DRAFT, libraryItemId: "lib-1", at: AT })).toBe(state);
   });
 });
 

@@ -1,6 +1,5 @@
-import { StatusBar } from "react-native";
-
 import { useTheme } from "@/theme";
+import { StatusBarTone } from "@/ui/organisms/status-bar/tone";
 
 export type PlanStatusBarProps = {
   /** Whether the page, not the hero, is under it now. */
@@ -12,7 +11,5 @@ export type PlanStatusBarProps = {
 /** Plan Detail's status bar, set for what's under it: the sermon's colour, or the page. */
 export function PlanStatusBar({ overPage, light }: PlanStatusBarProps) {
   const theme = useTheme();
-  const lightContent = overPage ? theme.name === "dark" : light;
-
-  return <StatusBar animated barStyle={lightContent ? "light-content" : "dark-content"} />;
+  return <StatusBarTone light={overPage ? theme.name === "dark" : light} />;
 }

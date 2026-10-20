@@ -2,6 +2,7 @@ import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
 import { Popover } from "@/ui/organisms/Popover";
+import { StatusBarOverlayProvider } from "@/ui/organisms/status-bar/overlay";
 import { SFProBody } from "@/ui/typography/SFProBody";
 
 function popover(props: { visible?: boolean; onClose?: () => void } = {}) {
@@ -72,5 +73,26 @@ describe("Popover", () => {
     fireEvent.press(screen.getByTestId("a-popover-scrim", { includeHiddenElements: true }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Popover and the status bar", () => {
+  it("keeps the app's status bar over the popover, as iOS's stays", () => {
+    render(
+      <StatusBarOverlayProvider bar={<SFProBody testID="the-status-bar">1:03</SFProBody>}>
+        <Popover
+          visible
+          onClose={() => undefined}
+          anchor={{ top: 120, right: 16 }}
+          accessibilityLabel="Reminder time"
+          testID="a-popover"
+        >
+          <SFProBody>Inside</SFProBody>
+        </Popover>
+      </StatusBarOverlayProvider>,
+    );
+
+    // Beside a view modal to VoiceOver, so drawn but not read: found as hidden.
+    expect(screen.getByTestId("the-status-bar", { includeHiddenElements: true })).toBeOnTheScreen();
   });
 });

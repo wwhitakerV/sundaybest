@@ -1,11 +1,12 @@
-import { type ReactElement, type ReactNode } from "react";
+import { useRef, type ReactElement, type ReactNode } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { FlashList, type ListRenderItem } from "@shopify/flash-list";
+import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
 
 import { ListGap } from "./ListGap";
 import { PinnedList } from "./PinnedList";
 import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
 import { scrollProps } from "./list-scroll";
+import { useScrollToTopTarget } from "./status-bar/scroll-to-top";
 
 export type ListScreenProps<Item> = Omit<ScrollFrameProps, "children"> & {
   data: readonly Item[];
@@ -114,9 +115,13 @@ function ClearedList<Item>({
   keyboardDismissMode,
 }: ListParts<Item>) {
   const clearance = useFrameClearance();
+  const list = useRef<FlashListRef<Item>>(null);
+  // A tap on the status bar scrolls the list up, as iOS's does.
+  useScrollToTopTarget(() => list.current?.scrollToTop({ animated: true }));
 
   return (
     <FlashList
+      ref={list}
       testID={testID}
       {...scrollProps(onScroll)}
       {...(keyboardDismissMode && { keyboardDismissMode })}

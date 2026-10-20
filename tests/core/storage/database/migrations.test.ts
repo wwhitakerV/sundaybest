@@ -24,6 +24,7 @@ describe("MIGRATIONS", () => {
       [3, "scope-offline-server-state-to-user"],
       [4, "reflection-lines"],
       [5, "searches-shown"],
+      [6, "liked-verses"],
     ]);
   });
 });

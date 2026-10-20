@@ -1,6 +1,11 @@
 import { http, HttpResponse } from "msw";
 
-import { progressResponseSchema, type ApiProgress } from "@/core/api/contracts";
+import {
+  progressResponseSchema,
+  weekResponseSchema,
+  type ApiProgress,
+  type ApiWeek,
+} from "@/core/api/contracts";
 import { API_URL, aReminder } from "./api";
 import { aPlan, summaryOf } from "./api-plans";
 import { server } from "../mocks/server";
@@ -82,10 +87,43 @@ export function aProgress(weekStart: string, overrides: Partial<ApiProgress> = {
 }
 
 /**
- * Serves the reader's progress, a week at a time for whichever week is asked
- * for, and their daily reminder (on, at 6:30 AM). Returns the weeks asked for.
+ * A week of study, as `/v1/me/week` returns it for `weekStart`: the fixtures'
+ * studied days done, today, the days ahead, and the plan under way in its
+ * header. No passages, and no Quick Check answered yet.
  */
-export function serveProgress(overrides: Partial<ApiProgress> = {}): string[] {
+export function aWeekOfStudy(weekStart: string, overrides: Partial<ApiWeek> = {}): ApiWeek {
+  return weekResponseSchema.parse({
+    today: PROGRESS_TODAY,
+    weekStart,
+    translation: "BSB",
+    weeks: [{ weekStart: sundayOf(PROGRESS_TODAY), planCount: 1, title: PLAN_UNDER_WAY.title }],
+    header: { planCount: 1, title: PLAN_UNDER_WAY.title, church: null },
+    days: Array.from({ length: 7 }, (_, index) => {
+      const date = addDays(weekStart, index);
+      const state =
+        date === PROGRESS_TODAY
+          ? "today"
+          : date > PROGRESS_TODAY
+            ? "upcoming"
+            : STUDIED.has(date)
+              ? "studied"
+              : "notStudied";
+      return { date, state, passages: [] };
+    }),
+    summary: { passageCount: STUDIED.size, bookCount: 1, right: 0, missed: 0 },
+    ...overrides,
+  });
+}
+
+/**
+ * Serves the reader's progress and their week of study, a week at a time for
+ * whichever week is asked for, and their daily reminder (on, at 6:30 AM).
+ * Returns the weeks asked for.
+ */
+export function serveProgress(
+  overrides: Partial<ApiProgress> = {},
+  weekOverrides: Partial<ApiWeek> = {},
+): string[] {
   const asked: string[] = [];
   server.use(
     http.get(`${API_URL}/v1/me/progress`, ({ request }) => {
@@ -93,6 +131,12 @@ export function serveProgress(overrides: Partial<ApiProgress> = {}): string[] {
         new URL(request.url).searchParams.get("weekStart") ?? sundayOf(PROGRESS_TODAY);
       asked.push(weekStart);
       return HttpResponse.json(aProgress(weekStart, overrides));
+    }),
+    http.get(`${API_URL}/v1/me/week`, ({ request }) => {
+      const weekStart =
+        new URL(request.url).searchParams.get("weekStart") ?? sundayOf(PROGRESS_TODAY);
+      asked.push(weekStart);
+      return HttpResponse.json(aWeekOfStudy(weekStart, weekOverrides));
     }),
     http.get(`${API_URL}/v1/me/reminders`, () => HttpResponse.json({ reminders: [aReminder()] })),
   );

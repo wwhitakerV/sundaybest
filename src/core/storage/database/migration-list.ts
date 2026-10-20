@@ -178,4 +178,21 @@ export const MIGRATIONS: readonly Migration[] = [
       `);
     },
   },
+  {
+    version: 6,
+    name: "liked-verses",
+    async up(db) {
+      // The verses of the day a reader has liked, by the day they were the
+      // verse, and where they're from. Device-only, as everything here is.
+      await db.execute(`
+        CREATE TABLE liked_verses (
+          user_id TEXT NOT NULL,
+          verse_date TEXT NOT NULL,
+          reference TEXT NOT NULL,
+          liked_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, verse_date)
+        )
+      `);
+    },
+  },
 ];

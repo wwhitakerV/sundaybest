@@ -118,38 +118,40 @@ describe("PlansScreen", () => {
     expect(screen.getByTestId("plans-content-pending")).toBeOnTheScreen();
   });
 
-  it("shows the filters as pills", async () => {
+  // The pills show once the header has measured itself, so the filters can spring into the
+  // title's place — which Jest never lays out: these assert presence, not visibility.
+  it("shows the filters as pills: In progress and Done", async () => {
     await openPlans();
 
-    expect(screen.getByTestId("plans-filter-pills")).toBeVisible();
-    for (const label of ["All", "In progress", "Done", "Saved"]) {
-      expect(screen.getByTestId(`plans-filter-pills-option-${label}`)).toBeVisible();
+    expect(screen.getByTestId("plans-filter-pills")).toBeOnTheScreen();
+    for (const label of ["In progress", "Done"]) {
+      expect(screen.getByTestId(`plans-filter-pills-option-${label}`)).toBeOnTheScreen();
     }
   });
 
   it("counts each filter's plans", async () => {
     await openPlans();
 
-    expect(screen.getByTestId("plans-filter-pills-option-All")).toHaveTextContent("All4");
     expect(screen.getByTestId("plans-filter-pills-option-In progress")).toHaveTextContent(
       "In progress1",
     );
     expect(screen.getByTestId("plans-filter-pills-option-Done")).toHaveTextContent("Done1");
-    expect(screen.getByTestId("plans-filter-pills-option-Saved")).toHaveTextContent("Saved2");
   });
 
-  it("marks the filter picked as selected", async () => {
+  it("marks the filter picked as selected, and lets it go when it's picked again", async () => {
     await openPlans();
+    const done = () => screen.getByTestId("plans-filter-pills-option-Done");
 
-    expect(screen.getByTestId("plans-filter-pills-option-All")).toBeSelected();
+    expect(done()).not.toBeSelected();
 
-    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
+    fireEvent.press(done());
+    expect(done()).toBeSelected();
 
-    expect(screen.getByTestId("plans-filter-pills-option-Done")).toBeSelected();
-    expect(screen.getByTestId("plans-filter-pills-option-All")).not.toBeSelected();
+    fireEvent.press(done());
+    expect(done()).not.toBeSelected();
   });
 
-  it("lists every plan under All, newest first", async () => {
+  it("lists every plan with no filter picked, newest first", async () => {
     await openPlans();
 
     expect(listed()).toEqual(ALL.map(({ id }) => `plans-item-${id}`));
@@ -160,11 +162,6 @@ describe("PlansScreen", () => {
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
     expect(listed()).toEqual([`plans-item-${NEGATIVE_THINKING.id}`]);
-
-    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
-    expect([...listed()].sort()).toEqual(
-      [`plans-item-${TEMPTATION.id}`, `plans-item-${NEGATIVE_THINKING.id}`].sort(),
-    );
 
     fireEvent.press(screen.getByTestId("plans-filter-pills-option-In progress"));
     expect(listed()).toEqual([`plans-item-${ACTIVE.id}`]);
@@ -275,13 +272,11 @@ describe("PlansScreen", () => {
   it("says so when the filter picked holds no plans", async () => {
     await openPlans([ACTIVE, STILL_PRAYING]);
 
-    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Saved"));
+    fireEvent.press(screen.getByTestId("plans-filter-pills-option-Done"));
 
     const empty = screen.getByTestId("plans-empty");
-    expect(within(empty).getByText("Nothing saved yet")).toBeOnTheScreen();
-    expect(
-      within(empty).getByText("Save a plan from its More menu to keep it here."),
-    ).toBeOnTheScreen();
+    expect(within(empty).getByText("No finished plans yet")).toBeOnTheScreen();
+    expect(within(empty).getByText("Plans you finish will show here.")).toBeOnTheScreen();
     expect(screen.queryAllByTestId(CARD)).toHaveLength(0);
   });
 

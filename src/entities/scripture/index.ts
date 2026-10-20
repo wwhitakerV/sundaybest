@@ -4,3 +4,4 @@
  */
 export { PassageCard } from "./ui/PassageCard";
 export { PassageHeading } from "./ui/PassageHeading";
+export { pickKeyVerse } from "./logic/key-verse";

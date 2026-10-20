@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor, within } from "@tests/helpers/render";
+import { ScrollView } from "react-native";
+import { act, render, screen, fireEvent, waitFor, within } from "@tests/helpers/render";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
@@ -7,6 +8,7 @@ import { servePlans } from "@tests/mocks/plans-api";
 import { selectionFeedback } from "@/core/haptics/haptics";
 import { quickCheckHref, studyHref } from "@/entities/plan";
 import { PlanOverviewScreen } from "@/features/plans/screens/PlanOverviewScreen";
+import { ScrollToTopProvider, useScrollToTop } from "@/ui/organisms/status-bar/scroll-to-top";
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),
@@ -476,7 +478,6 @@ describe("PlanOverviewScreen's More menu", () => {
     fireEvent.press(screen.getByTestId("plan-overview-more-button"));
 
     expect(screen.getByTestId("plan-overview-more-menu")).toBeOnTheScreen();
-    expect(screen.getByTestId("plan-overview-more-save")).toBeOnTheScreen();
     expect(screen.getByTestId("plan-overview-more-reminder")).toBeOnTheScreen();
     expect(screen.getByTestId("plan-overview-more-how-made")).toBeOnTheScreen();
     expect(screen.getByTestId("plan-overview-more-reset")).toBeOnTheScreen();
@@ -485,15 +486,30 @@ describe("PlanOverviewScreen's More menu", () => {
   // The page's own More button is wired the same way, but takes no touches
   // until the hero scrolls from under it — which Reanimated's mock can't
   // drive here; tests/features/plans/components/PlanNav.test.tsx presses it.
+});
 
-  it("offers Remove from Saved the next time it opens, once the plan is saved", async () => {
-    await openOverview();
-    fireEvent.press(screen.getByTestId("plan-overview-more-button"));
-    expect(screen.getByText("Save plan")).toBeOnTheScreen();
+describe("PlanOverviewScreen and the status bar", () => {
+  afterEach(() => jest.restoreAllMocks());
 
-    fireEvent.press(screen.getByTestId("plan-overview-more-save"));
-    fireEvent.press(screen.getByTestId("plan-overview-more-button"));
+  it("scrolls the plan back to its top when the status bar is tapped, as iOS's does", async () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    let tapBar: () => void = () => undefined;
+    function Bar() {
+      tapBar = useScrollToTop();
+      return null;
+    }
+    servePlans([ACTIVE, READY]);
+    jest.mocked(useLocalSearchParams).mockReturnValue({ planId: ACTIVE.id });
+    render(
+      <ScrollToTopProvider>
+        <PlanOverviewScreen />
+        <Bar />
+      </ScrollToTopProvider>,
+    );
+    await screen.findByTestId("plan-overview-title");
 
-    expect(await screen.findByText("Remove from Saved")).toBeOnTheScreen();
+    act(() => tapBar());
+
+    expect(scrollTo).toHaveBeenCalledWith({ y: 0, animated: true });
   });
 });

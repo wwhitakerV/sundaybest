@@ -84,7 +84,7 @@ describe("PrivacyPolicyScreen", () => {
       within(screen.getByTestId("privacy-policy-footnote")).getByText(
         "Effective October 7, 2026 · Privacy version 1.0",
       ),
-    ).toHaveStyle({ textAlign: "center" });
+    ).toBeOnTheScreen();
   });
 
   it("sets nothing in bold", () => {

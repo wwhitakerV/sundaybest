@@ -61,7 +61,12 @@ export function useQuickCheckSession() {
           )
         : 0;
 
-  const status: QuizStatus = apiSession?.attempt.status ?? standing?.status ?? "notStarted";
+  // A first Quick Check finished moves on to Day Complete in one movement: until it has, the
+  // last question stays, though scoring it has already marked the attempt completed.
+  const [movingOn, setMovingOn] = useState(false);
+  const status: QuizStatus = movingOn
+    ? "inProgress"
+    : (apiSession?.attempt.status ?? standing?.status ?? "notStarted");
   const questionCount = apiSession?.quiz.questions.length ?? standing?.questionCount ?? 0;
   const questions = useMemo<QuickCheckQuestionView[]>(
     () => toQuestionViews(apiSession),
@@ -116,6 +121,7 @@ export function useQuickCheckSession() {
       // The last answer in: the Quick Check is scored and the day completed at once — so it counts
       // even if the reader leaves — and the day's finish page shows both.
       if (nextAction.kind === "finish") {
+        if (!dayDone) setMovingOn(true);
         await completeAttempt.mutateAsync();
         if (dayDone) {
           // Taken again: its results show here, the day already done.
@@ -137,6 +143,8 @@ export function useQuickCheckSession() {
       successFeedback();
       router.replace(dayCompleteHref(planId, dayNumber));
     } catch {
+      // It didn't get there: whatever was saved shows, so finishing can be tried again.
+      setMovingOn(false);
       Alert.alert(
         "Couldn't update Quick Check",
         "SundayBest couldn't save that answer. Check your connection and try again.",

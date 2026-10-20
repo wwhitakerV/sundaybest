@@ -43,12 +43,14 @@ describe("MeetTheCreatorScreen", () => {
     expect(card.getByRole("header", { name: "Walter Whitaker" })).toHaveStyle(ABOUT_TITLE);
   });
 
-  it("says what he does and where, under his name", () => {
+  it("says what he does under his name, and where he is among his facts beneath", () => {
     render(<MeetTheCreatorScreen />);
 
     const card = within(screen.getByTestId("meet-the-creator-portrait"));
     expect(card.getByText("Creator, Engineer & Designer")).toBeVisible();
-    expect(card.getByText("Dallas, TX")).toBeVisible();
+    expect(
+      within(screen.getByTestId("meet-the-creator-facts")).getByText("Dallas, TX"),
+    ).toBeVisible();
   });
 
   it("opens his letter on a standfirst, as About this plan opens", () => {

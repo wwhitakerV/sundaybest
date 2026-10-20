@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 
 import { AppProviders } from "@/core/providers/AppProviders";
 import { LaunchStage } from "@/features/launch-intro";
+import { statusBarLayout } from "@/features/status-bar";
 import { ErrorBoundary, SuspenseFallback } from "@/core/monitoring/error-boundary";
 import { HeaderArrivalProvider } from "@/ui/header-entrance/HeaderArrivalProvider";
 import { headerEntranceLayout } from "@/ui/header-entrance/HeaderEntranceScope";
@@ -31,7 +32,12 @@ export default function RootLayout() {
       <HeaderArrivalProvider tabRoots={TAB_ROOTS}>
         {/* The cold-launch intro plays over the app, which stays hidden until it's revealed. */}
         <LaunchStage>
-          <Stack screenOptions={{ headerShown: false }} screenLayout={headerEntranceLayout}>
+          {/* SundayBest draws its own status bar over the app (ADR 0032). */}
+          <Stack
+            screenOptions={{ headerShown: false }}
+            screenLayout={headerEntranceLayout}
+            layout={statusBarLayout}
+          >
             {/*
              * Declared first so Welcome stays the initial route: explicitly listed
              * screens are registered ahead of auto-discovered ones.

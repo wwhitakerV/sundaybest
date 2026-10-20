@@ -142,11 +142,11 @@ describe("QuickCheckScreen", () => {
       expect(screen.queryByText("Quick check")).toBeNull();
     });
 
-    it("heads it with the day's quiz and how many questions", async () => {
+    it("heads it as the bridge from the study: the study done, then the facts", async () => {
       await openQuickCheck();
 
-      expect(screen.getByRole("header", { name: "Day 2 Quiz" })).toBeVisible();
-      expect(screen.getByText("3 questions on today's study")).toBeVisible();
+      expect(screen.getByRole("header", { name: "Today's study is done." })).toBeVisible();
+      expect(screen.getByText("3 questions · about 1 minute")).toBeVisible();
     });
 
     it("offers to start a quiz not yet taken, showing no question", async () => {
@@ -251,37 +251,21 @@ describe("QuickCheckScreen", () => {
   });
 
   describe("completing", () => {
-    /** Answers the rest of the attempt under way, and sees the score. */
-    async function finishWith(second: string, third: string) {
-      await answer(second);
+    it("goes straight on to Day Complete when its last question is finished", async () => {
+      await underWay();
+      await answer("b");
       press("quick-check-next-button");
       await screen.findByText("Question 3?");
-      await answer(third);
+      await answer("a");
+
       press("quick-check-finish-button");
-      await screen.findByTestId("quick-check-results");
-    }
 
-    it("scores a perfect run", async () => {
-      await underWay();
-
-      await finishWith("a", "a");
-
-      expect(screen.getByText("3/3")).toBeVisible();
-      expect(screen.getByText("You know this one")).toBeVisible();
-      expect(screen.getByText("100% right")).toBeVisible();
-    });
-
-    it("scores a run with a wrong answer, and reviews which one", async () => {
-      await underWay();
-
-      await finishWith("b", "a");
-
-      expect(screen.getByText("2/3")).toBeVisible();
-      expect(screen.getByText("67% right")).toBeVisible();
-      const [, second] = UNDER_WAY_QUESTIONS;
-      expect(
-        within(screen.getByTestId(`quick-check-results-question-${second}`)).getByText("Missed"),
-      ).toBeVisible();
+      await waitFor(() =>
+        expect(mockReplace).toHaveBeenCalledWith(dayCompleteHref(UNDER_WAY.id, 2)),
+      );
+      // One tap, one movement: its results never slide in on the way.
+      expect(screen.queryByTestId("quick-check-results")).toBeNull();
+      expect(screen.getByText("Question 3?")).toBeVisible();
     });
 
     it("opens a quiz already finished on its results", async () => {
@@ -289,6 +273,28 @@ describe("QuickCheckScreen", () => {
 
       expect(screen.getByTestId("quick-check-results")).toBeVisible();
       expect(screen.getByText("2/3")).toBeVisible();
+      expect(screen.getByText("67% right")).toBeVisible();
+    });
+
+    it("reviews which question was missed", async () => {
+      await finished();
+
+      const [, second] = FINISHED_QUESTIONS;
+      expect(
+        within(screen.getByTestId(`quick-check-results-question-${second}`)).getByText("Missed"),
+      ).toBeVisible();
+    });
+
+    it("scores a perfect run", async () => {
+      await openQuickCheck(FINISHED, {
+        quizzes: {
+          [quizOf(FINISHED)]: aQuizSession(FINISHED, 2, { status: "completed", answered: 3 }),
+        },
+      });
+
+      expect(screen.getByText("3/3")).toBeVisible();
+      expect(screen.getByText("You know this one")).toBeVisible();
+      expect(screen.getByText("100% right")).toBeVisible();
     });
 
     it("lays its results out as a milestone page", async () => {
@@ -323,5 +329,5 @@ describe("QuickCheckScreen", () => {
   });
 });
 
-/** The ids of the quiz's questions, in order. */
-const UNDER_WAY_QUESTIONS = aQuizSession(UNDER_WAY, 2).quiz.questions.map(({ id }) => id);
+/** The ids of the finished quiz's questions, in order. */
+const FINISHED_QUESTIONS = aQuizSession(FINISHED, 2).quiz.questions.map(({ id }) => id);

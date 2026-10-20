@@ -1,5 +1,6 @@
 import LibreBaskervilleRegular from "../../assets/fonts/LibreBaskerville-Regular.ttf";
 import LibreBaskervilleMedium from "../../assets/fonts/LibreBaskerville-Medium.ttf";
+import LibreBaskervilleBold from "../../assets/fonts/LibreBaskerville-Bold.ttf";
 import IBMPlexMonoRegular from "../../assets/fonts/IBMPlexMono-Regular.ttf";
 import IBMPlexMonoMedium from "../../assets/fonts/IBMPlexMono-Medium.ttf";
 import IBMPlexMonoSemiBold from "../../assets/fonts/IBMPlexMono-SemiBold.ttf";
@@ -14,7 +15,7 @@ import IBMPlexMonoSemiBold from "../../assets/fonts/IBMPlexMono-SemiBold.ttf";
  * Medium", not "IBM Plex Mono" at a different weight) and would be a
  * typo-prone string to spread across the app otherwise.
  *
- * Libre Baskerville's two files are static cuts (400 and 500) of the variable
+ * Libre Baskerville's three files are static cuts (400, 500 and 700) of the variable
  * `LibreBaskerville-VariableFont_wght.ttf`, made with fontTools'
  * `varLib.instancer --static --update-name-table`: iOS can't pick a weight off
  * a variable font's axis through `fontWeight`, so each weight is its own file.
@@ -22,6 +23,7 @@ import IBMPlexMonoSemiBold from "../../assets/fonts/IBMPlexMono-SemiBold.ttf";
 export const FONT_ASSETS = {
   "LibreBaskerville-Regular": LibreBaskervilleRegular,
   "LibreBaskerville-Medium": LibreBaskervilleMedium,
+  "LibreBaskerville-Bold": LibreBaskervilleBold,
   "IBMPlexMono-Regular": IBMPlexMonoRegular,
   "IBMPlexMono-Medium": IBMPlexMonoMedium,
   "IBMPlexMono-SemiBold": IBMPlexMonoSemiBold,
@@ -42,6 +44,8 @@ export const fonts = {
   editorialHeading: "LibreBaskerville-Medium" satisfies FontFamilyKey,
   /** Longer prayer or reading text. */
   editorialBody: "LibreBaskerville-Regular" satisfies FontFamilyKey,
+  /** Small figures that must hold their own: the status bar's battery percentage. */
+  editorialBold: "LibreBaskerville-Bold" satisfies FontFamilyKey,
   /** Dates, "Day 2 of 6", issue numbers, timestamps. */
   metaLabel: "IBMPlexMono-Medium" satisfies FontFamilyKey,
   /** Longer metadata / helper copy. */

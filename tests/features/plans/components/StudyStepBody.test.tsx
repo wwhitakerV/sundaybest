@@ -16,6 +16,7 @@ function renderStep(stepKey: StudyStepKey, withProvider = true) {
       content={studyDayContent()}
       answerFor={() => ""}
       onAnswerChange={jest.fn()}
+      onChangeTranslation={jest.fn()}
     />
   );
   return render(

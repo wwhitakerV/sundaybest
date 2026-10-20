@@ -4,6 +4,7 @@ import { act, render, screen, fireEvent } from "@tests/helpers/render";
 import { lightTheme } from "@/theme/tokens";
 
 import { BottomSheet } from "@/ui/organisms/BottomSheet";
+import { StatusBarOverlayProvider } from "@/ui/organisms/status-bar/overlay";
 
 function sheet(props: { visible: boolean; onClose?: () => void }) {
   return (
@@ -116,5 +117,18 @@ describe("BottomSheet", () => {
 
       expect(screen.queryByTestId("a-sheet", { includeHiddenElements: true })).toBeNull();
     });
+  });
+});
+
+describe("BottomSheet and the status bar", () => {
+  it("keeps the app's status bar over the sheet and its scrim, as iOS's stays", () => {
+    render(
+      <StatusBarOverlayProvider bar={<Text testID="the-status-bar">1:03</Text>}>
+        {sheet({ visible: true })}
+      </StatusBarOverlayProvider>,
+    );
+
+    // Beside a view modal to VoiceOver, so drawn but not read: found as hidden.
+    expect(screen.getByTestId("the-status-bar", { includeHiddenElements: true })).toBeOnTheScreen();
   });
 });

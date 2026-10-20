@@ -255,51 +255,14 @@ describe("usePlanOverview's More menu", () => {
     expect(more(result).open).toBe(false);
   });
 
-  it("offers save, reminder, how it's made, and reset, in that order", async () => {
+  it("offers the reminder, how it's made, and reset, in that order", async () => {
     const { result } = await renderOverview();
 
     expect(more(result).items.map((item) => item.label)).toEqual([
-      "Save plan",
       "Daily reminder",
       "How plans are made",
       "Reset plan",
     ]);
-  });
-
-  it("saves the plan, and offers to remove it", async () => {
-    const { result, seen } = await renderOverview();
-
-    act(() => more(result).items[0]?.select());
-
-    await waitFor(() => expect(more(result).items[0]?.label).toBe("Remove from Saved"));
-    await waitFor(() =>
-      expect(seen).toContainEqual(
-        expect.objectContaining({ method: "PUT", path: `/v1/plans/${ACTIVE.id}/saved` }),
-      ),
-    );
-  });
-
-  it("removes a saved plan when selected", async () => {
-    const saved = aPlan({ seed: 1, lengthDays: 6, completedDays: 1, saved: true });
-    const { result, seen } = await renderOverview({ planId: saved.id }, [saved]);
-    expect(more(result).items[0]?.label).toBe("Remove from Saved");
-
-    act(() => more(result).items[0]?.select());
-
-    await waitFor(() => expect(more(result).items[0]?.label).toBe("Save plan"));
-    await waitFor(() =>
-      expect(seen).toContainEqual(
-        expect.objectContaining({ method: "DELETE", path: `/v1/plans/${saved.id}/saved` }),
-      ),
-    );
-  });
-
-  it("gives a selection haptic for a change to Saved", async () => {
-    const { result } = await renderOverview();
-
-    act(() => more(result).items[0]?.select());
-
-    expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
   });
 
   it("opens the daily reminder over the plan, in its own tab, with no haptic", async () => {
@@ -326,7 +289,7 @@ describe("usePlanOverview's More menu", () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     const { result, seen } = await renderOverview();
 
-    act(() => more(result).items[3]?.select());
+    act(() => more(result).items[2]?.select());
 
     expect(alert).toHaveBeenCalledWith(
       "Reset this plan?",
@@ -349,7 +312,7 @@ describe("usePlanOverview's More menu", () => {
     const alert = jest.spyOn(Alert, "alert").mockImplementation(() => undefined);
     const { result, seen } = await renderOverview();
 
-    act(() => more(result).items[3]?.select());
+    act(() => more(result).items[2]?.select());
     const buttons = alert.mock.calls[0]?.[2] ?? [];
     act(() => buttons.find((button) => button.text === "Cancel")?.onPress?.());
 

@@ -4,7 +4,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { aPlan } from "@tests/factories/api-plans";
-import { PROGRESS_NOW, serveProgress } from "@tests/factories/api-progress";
+import { PROGRESS_NOW, PROGRESS_TODAY, serveProgress } from "@tests/factories/api-progress";
 import { servePlans } from "@tests/mocks/plans-api";
 import { planCompleteHref } from "@/entities/plan";
 import { DayCompleteScreen } from "@/features/plans/screens/DayCompleteScreen";
@@ -22,7 +22,13 @@ const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, [unknown]>();
 
 /** Three days: day 1 just finished, days 2 and 3 to go. */
-const STILL_PRAYING = aPlan({ seed: 2, title: "Still Praying", lengthDays: 3, completedDays: 1 });
+const STILL_PRAYING = aPlan({
+  seed: 2,
+  title: "Still Praying",
+  lengthDays: 3,
+  completedDays: 1,
+  startDate: PROGRESS_TODAY,
+});
 /** One day: finishing it finished the plan. */
 const TEMPTATION = aPlan({
   seed: 3,
@@ -35,7 +41,7 @@ const TEMPTATION = aPlan({
 async function renderDayComplete(plan = STILL_PRAYING, dayNumber = 1) {
   servePlans([STILL_PRAYING, TEMPTATION]);
   // Today's study makes a two-day run.
-  serveProgress({ streak: { current: 2, longest: 7 } });
+  serveProgress();
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId: plan.id, day: String(dayNumber) });
   render(<DayCompleteScreen />);
   await screen.findByTestId("day-complete-done-button");
@@ -100,13 +106,6 @@ describe("DayCompleteScreen", () => {
     expect(screen.getByRole("header", { name: "Day 1 done" })).toBeVisible();
   });
 
-  it("spells the streak, today's study included", async () => {
-    await renderDayComplete();
-
-    expect(screen.getByTestId("day-complete-streak")).toBeVisible();
-    expect(screen.getByText("Two day streak")).toBeVisible();
-  });
-
   it("shows the week", async () => {
     await renderDayComplete();
 
@@ -118,7 +117,7 @@ describe("DayCompleteScreen", () => {
 
     expect(screen.getByTestId("day-complete-up-next")).toBeVisible();
     expect(screen.getByText("Up next: Day 2 reading")).toBeVisible();
-    expect(screen.getByText("Tomorrow at 6:30 AM")).toBeVisible();
+    expect(screen.getByText("Opens tomorrow · Reminder at 6:30 AM")).toBeVisible();
   });
 
   it("looks ahead to nothing after a plan's last day", async () => {
@@ -127,16 +126,16 @@ describe("DayCompleteScreen", () => {
     expect(screen.queryByTestId("day-complete-up-next")).toBeNull();
   });
 
-  it("offers one button, Done!, whatever the day", async () => {
+  it("offers one button, Done, whatever the day", async () => {
     await renderDayComplete(TEMPTATION);
 
     expect(screen.getByTestId("day-complete-done-button")).toBeVisible();
-    expect(screen.getByText("Done!")).toBeVisible();
+    expect(screen.getByText("Done")).toBeVisible();
     expect(screen.queryByTestId("day-complete-quick-check-button")).toBeNull();
     expect(screen.queryByTestId("day-complete-back-button")).toBeNull();
   });
 
-  it("slides the study away on Done!, back to where it was started", async () => {
+  it("slides the study away on Done, back to where it was started", async () => {
     await renderDayComplete();
 
     fireEvent.press(screen.getByTestId("day-complete-done-button"));
@@ -145,7 +144,7 @@ describe("DayCompleteScreen", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("goes on to Plan Complete on Done! when the day finished the plan", async () => {
+  it("goes on to Plan Complete on Done when the day finished the plan", async () => {
     await renderDayComplete(TEMPTATION);
 
     fireEvent.press(screen.getByTestId("day-complete-done-button"));

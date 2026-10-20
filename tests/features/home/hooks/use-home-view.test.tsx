@@ -1,11 +1,18 @@
+import { createRef } from "react";
+import type { View } from "react-native";
+import { http, HttpResponse } from "msw";
 import { act, renderHook, waitFor } from "@tests/helpers/render";
 import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
+import { API_URL, someSettings } from "@tests/factories/api";
 import { aPlan, summaryOf } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
+import { forgetLikedVerses, likedVerses } from "@tests/mocks/liked-verses";
+import { server } from "@tests/mocks/server";
 import * as haptics from "@/core/haptics/haptics";
-import { planOverviewHref, studyHref } from "@/entities/plan";
+import { openShareSheet } from "@/core/sharing/share-sheet";
+import { studyHref } from "@/entities/plan";
 import { tabPlanHref } from "@/entities/tabs";
 import { useHomeView } from "@/features/home/hooks/use-home-view";
 import { describeApiPlan } from "@/features/plans";
@@ -16,6 +23,15 @@ jest.mock("@/core/haptics/haptics", () => ({
   successFeedback: jest.fn(),
   warningFeedback: jest.fn(),
   errorFeedback: jest.fn(),
+}));
+
+jest.mock("@/core/storage/liked-verses", () =>
+  jest.requireActual<object>("@tests/mocks/liked-verses"),
+);
+
+jest.mock("@/core/sharing/share-sheet", () => ({
+  openShareSheet: jest.fn(() => Promise.resolve()),
+  snapshotPng: jest.fn(() => Promise.resolve("cG5n")),
 }));
 
 jest.mock("expo-router", () => ({
@@ -117,14 +133,6 @@ describe("useHomeView", () => {
     });
   });
 
-  it("opens a plan's overview with openPlan", async () => {
-    const { result } = await renderHomeView();
-
-    act(() => result.current.openPlan(ACTIVE.id));
-
-    expect(mockPush).toHaveBeenCalledWith(planOverviewHref(ACTIVE.id));
-  });
-
   it("opens New Plan with addSermon", async () => {
     const { result } = await renderHomeView();
 
@@ -186,12 +194,88 @@ describe("useHomeView's haptics", () => {
 
     expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
   });
+});
 
-  it("gives nothing as a plan is opened", async () => {
+describe("useHomeView's verse of the day", () => {
+  // Monday 19 October 2026: Colossians 3:13.
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date("2026-10-19T10:00:00"), advanceTimers: true });
+    jest.mocked(openShareSheet).mockClear();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it("offers today's verse, in the reader's translation, with the day's line", async () => {
     const { result } = await renderHomeView();
 
-    act(() => result.current.openPlan(ACTIVE.id));
+    expect(result.current.verse).toMatchObject({
+      verse: expect.stringMatching(/^Bear with one another and forgive/) as string,
+      reference: "Colossians 3:13 · BSB",
+      caption: "Forgive without pretending the trust was never broken.",
+    });
+  });
 
-    expect(haptics.tapFeedback).not.toHaveBeenCalled();
+  it("is in the KJV for a reader who reads it", async () => {
+    server.use(
+      http.get(`${API_URL}/v1/me/settings`, () =>
+        HttpResponse.json({ settings: someSettings({ bibleTranslation: "KJV" }) }),
+      ),
+    );
+    const { result } = await renderHomeView();
+
+    await waitFor(() => expect(result.current.verse?.reference).toBe("Colossians 3:13 · KJV"));
+    expect(result.current.verse?.verse).toMatch(/^Forbearing one another/);
+  });
+
+  it("shares it through iOS's share sheet, as its picture and its words, with a tap", async () => {
+    const { result } = await renderHomeView();
+
+    await act(() => result.current.verse?.share(createRef<View>()));
+
+    expect(haptics.tapFeedback).toHaveBeenCalledTimes(1);
+    expect(openShareSheet).toHaveBeenCalledWith({
+      message: expect.stringMatching(
+        /^“Bear with one another[\s\S]*”\nColossians 3:13 \(BSB\)$/,
+      ) as string,
+      png: "cG5n",
+    });
+  });
+
+  it("names the day it's for", async () => {
+    const { result } = await renderHomeView();
+
+    expect(result.current.verse?.day).toBe("Monday, October 19");
+  });
+
+  it("isn't liked until it's liked", async () => {
+    forgetLikedVerses();
+    const { result } = await renderHomeView();
+
+    expect(result.current.verse?.liked).toBe(false);
+  });
+
+  it("is liked with a selection haptic, and the like is kept on the phone", async () => {
+    forgetLikedVerses();
+    const { result } = await renderHomeView();
+    await waitFor(() => expect(result.current.verse?.likeReady).toBe(true));
+
+    act(() => result.current.verse?.toggleLike());
+
+    await waitFor(() => expect(result.current.verse?.liked).toBe(true));
+    expect(haptics.selectionFeedback).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(likedVerses().has("2026-10-19")).toBe(true));
+  });
+
+  it("opens one share sheet for a quick second tap", async () => {
+    const { result } = await renderHomeView();
+
+    const card = createRef<View>();
+    await act(() =>
+      Promise.all([result.current.verse?.share(card), result.current.verse?.share(card)]),
+    );
+
+    expect(openShareSheet).toHaveBeenCalledTimes(1);
   });
 });

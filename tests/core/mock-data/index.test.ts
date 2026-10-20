@@ -53,7 +53,6 @@ describe("MOCK_DATA", () => {
       data.quizAttempts,
       data.quizAnswers,
       data.reminders,
-      data.library,
     ];
 
     for (const table of tables) {
@@ -127,20 +126,6 @@ describe("MOCK_DATA", () => {
   it("marks a day completed exactly when it has a completion time", () => {
     for (const day of all(data.planDays)) {
       expect(day.status === "completed").toBe(day.completedAt !== null);
-    }
-  });
-
-  it("saves only things that exist", () => {
-    const tableFor = {
-      plan: data.plans,
-      sermon: data.sermons,
-      scripture: data.scripture,
-      reflection: data.reflections,
-      prayer: data.prayers,
-    } as const;
-
-    for (const item of all(data.library)) {
-      expect(tableFor[item.kind][item.itemId]).toBeDefined();
     }
   });
 

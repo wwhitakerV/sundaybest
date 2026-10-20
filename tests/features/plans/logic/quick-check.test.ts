@@ -52,7 +52,7 @@ describe("getQuickCheckAction", () => {
       }),
     ).toEqual({
       kind: "start",
-      label: "Start",
+      label: "Start Quick Check",
       testID: "quick-check-start-button",
       enabled: true,
     });
@@ -72,7 +72,7 @@ describe("getQuickCheckAction", () => {
   it("waits for the last answer before the score", () => {
     expect(
       getQuickCheckAction({ status: "inProgress", result: "unanswered", isLastQuestion: true }),
-    ).toMatchObject({ kind: "finish", label: "See your score", enabled: false });
+    ).toMatchObject({ kind: "finish", label: "Finish", enabled: false });
   });
 
   it("moves on once a question is checked, right or wrong", () => {
@@ -94,7 +94,7 @@ describe("getQuickCheckAction", () => {
         result: "incorrect",
         isLastQuestion: true,
       }),
-    ).toMatchObject({ kind: "finish", label: "See your score" });
+    ).toMatchObject({ kind: "finish", label: "Finish" });
   });
 
   it("is done once the quiz is complete", () => {

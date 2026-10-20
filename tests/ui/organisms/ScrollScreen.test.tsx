@@ -1,6 +1,6 @@
 import { Stop } from "react-native-svg";
-import { StyleSheet } from "react-native";
-import { fireEvent, render, screen } from "@tests/helpers/render";
+import { ScrollView, StyleSheet } from "react-native";
+import { act, fireEvent, render, screen } from "@tests/helpers/render";
 
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { EDGE_FADE, GRADUAL_FADE } from "@/ui/organisms/frame-edges";
@@ -12,6 +12,7 @@ import { PAGE_INSET, PAGE_TOP } from "@/ui/organisms/Screen";
 import { edgeFade } from "@/theme";
 import { useFrameClearance } from "@/ui/organisms/ScrollFrame";
 import { ScrollScreen } from "@/ui/organisms/ScrollScreen";
+import { ScrollToTopProvider, useScrollToTop } from "@/ui/organisms/status-bar/scroll-to-top";
 
 function renderPage(extra: { feedback?: boolean } = {}) {
   return render(
@@ -302,5 +303,30 @@ describe("ScrollScreen, fixed", () => {
 
   it("keeps the page inset at its sides", () => {
     expect(renderFixed()).toHaveStyle({ paddingHorizontal: PAGE_INSET });
+  });
+});
+
+describe("ScrollScreen and the status bar", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it("scrolls back to its top when the status bar is tapped, as iOS's does", () => {
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    let tapBar: () => void = () => undefined;
+    function Bar() {
+      tapBar = useScrollToTop();
+      return null;
+    }
+    render(
+      <ScrollToTopProvider>
+        <ScrollScreen testID="a-page">
+          <SFProBody>The content</SFProBody>
+        </ScrollScreen>
+        <Bar />
+      </ScrollToTopProvider>,
+    );
+
+    act(() => tapBar());
+
+    expect(scrollTo).toHaveBeenCalledWith({ y: 0, animated: true });
   });
 });

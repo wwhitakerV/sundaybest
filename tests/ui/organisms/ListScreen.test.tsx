@@ -1,10 +1,12 @@
-import { StyleSheet } from "react-native";
+import type { ReactElement } from "react";
+import { ScrollView, StyleSheet } from "react-native";
 import { FlashList } from "@shopify/flash-list";
-import { fireEvent, render, screen, within } from "@tests/helpers/render";
+import { act, fireEvent, render, screen, within } from "@tests/helpers/render";
 
 import { SFProBody } from "@/ui/typography/SFProBody";
 import { EDGE_FADE } from "@/ui/organisms/frame-edges";
 import { ListScreen } from "@/ui/organisms/ListScreen";
+import { ScrollToTopProvider, useScrollToTop } from "@/ui/organisms/status-bar/scroll-to-top";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 
 const ITEMS = [{ id: "a" }, { id: "b" }];
@@ -169,5 +171,53 @@ describe("ListScreen", () => {
 
       expect(screen.getByText("Nothing yet")).toBeVisible();
     });
+  });
+});
+
+describe("ListScreen and the status bar", () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  function tapStatusBarOver(page: ReactElement) {
+    const scrollTo = jest.spyOn(ScrollView.prototype, "scrollTo");
+    let tapBar: () => void = () => undefined;
+    function Bar() {
+      tapBar = useScrollToTop();
+      return null;
+    }
+    render(
+      <ScrollToTopProvider>
+        {page}
+        <Bar />
+      </ScrollToTopProvider>,
+    );
+    act(() => tapBar());
+    return scrollTo;
+  }
+
+  it("scrolls its list back to the top when the status bar is tapped", () => {
+    const scrollTo = tapStatusBarOver(
+      <ListScreen
+        testID="a-list-page"
+        data={ITEMS}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <SFProBody>{`Item ${item.id}`}</SFProBody>}
+      />,
+    );
+
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ y: 0, animated: true }));
+  });
+
+  it("scrolls a pinned list back to the top too", () => {
+    const scrollTo = tapStatusBarOver(
+      <ListScreen
+        testID="a-list-page"
+        pinned={{ bar: <SFProBody>The bar</SFProBody> }}
+        data={ITEMS}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => <SFProBody>{`Item ${item.id}`}</SFProBody>}
+      />,
+    );
+
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ y: 0, animated: true }));
   });
 });

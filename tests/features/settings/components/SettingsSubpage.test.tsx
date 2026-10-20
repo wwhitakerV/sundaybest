@@ -75,7 +75,7 @@ describe("SettingsSubpage", () => {
     expect(screen.getByTestId("a-page-body")).toHaveStyle({ gap: space[24] });
   });
 
-  it("sets its footnote apart at its foot: centred, in the supporting grey", () => {
+  it("sets its footnote apart at its foot: left-aligned under the cards' words, in the supporting grey", () => {
     render(
       <SettingsSubpage testID="a-page" title="Text size" footnote="A line at the foot.">
         <SFProBody>Body</SFProBody>
@@ -83,10 +83,11 @@ describe("SettingsSubpage", () => {
     );
 
     expect(screen.getByText("A line at the foot.")).toHaveStyle({
-      ...lightTheme.typography.cardDetail,
+      ...lightTheme.typography.rowDetail,
       color: lightTheme.colors.textSupporting,
-      textAlign: "center",
+      paddingHorizontal: space[18] + 1,
     });
+    expect(screen.getByText("A line at the foot.")).not.toHaveStyle({ textAlign: "center" });
     expect(screen.getByTestId("a-page-footnote")).toHaveStyle({
       marginTop: "auto",
       paddingTop: space[40],

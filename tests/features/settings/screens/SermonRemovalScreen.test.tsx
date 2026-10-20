@@ -80,7 +80,7 @@ describe("SermonRemovalScreen", () => {
       within(screen.getByTestId("sermon-removal-footnote")).getByText(
         "Please don't include members' private information.",
       ),
-    ).toHaveStyle({ textAlign: "center" });
+    ).toBeOnTheScreen();
   });
 
   it("sets nothing in bold", () => {

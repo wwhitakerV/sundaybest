@@ -16,9 +16,7 @@ function underApp(...names: string[]) {
     getState: () => ({ index: names.length - 1, routes: names.map((name) => ({ name })) }),
     dispatch,
   };
-  jest
-    .mocked(useNavigation)
-    .mockReturnValue({ getParent: () => app } as unknown as ReturnType<typeof useNavigation>);
+  jest.mocked(useNavigation).mockReturnValue({ getParent: () => app });
   return dispatch;
 }
 

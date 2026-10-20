@@ -1,6 +1,6 @@
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
-import { FlashList, type ListRenderItem } from "@shopify/flash-list";
+import { FlashList, type FlashListRef, type ListRenderItem } from "@shopify/flash-list";
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
@@ -16,6 +16,7 @@ import { ListGap } from "./ListGap";
 import { SCROLL_INSET, useFrameClearance } from "./ScrollFrame";
 import { SCROLL_THROTTLE_MS } from "./list-scroll";
 import { PAGE_INSET } from "./Screen";
+import { useScrollToTopTarget } from "./status-bar/scroll-to-top";
 
 /** FlashList, its scroll followed on the UI thread (the bar's pull-down). */
 const AnimatedFlashList = Animated.createAnimatedComponent(FlashList);
@@ -52,6 +53,9 @@ export function PinnedList<Item>({
   const pulledStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: Math.max(-scrollY.get(), 0) }],
   }));
+  const list = useRef<FlashListRef<unknown>>(null);
+  // A tap on the status bar scrolls the list up, as iOS's does.
+  useScrollToTopTarget(() => list.current?.scrollToTop({ animated: true }));
 
   return (
     <View style={[styles.list, { marginTop: insetTop }]}>
@@ -63,6 +67,7 @@ export function PinnedList<Item>({
         {pinned.bar}
       </Animated.View>
       <AnimatedFlashList
+        ref={list}
         testID={testID}
         {...(keyboardDismissMode && { keyboardDismissMode })}
         onScroll={scrollHandler}

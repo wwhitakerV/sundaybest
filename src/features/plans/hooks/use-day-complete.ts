@@ -1,4 +1,5 @@
 import { STUDY_TRANSLATION_HREF, planCompleteHref } from "@/entities/plan";
+import { pickKeyVerse } from "@/entities/scripture";
 import { useRemindersQuery, useWeekQuery } from "@/core/api/reader-queries";
 import { useQuizSessionQuery } from "@/core/api/quiz-queries";
 import { usesTwentyFourHourClock } from "@/core/localization/clock";
@@ -8,7 +9,7 @@ import { describeWeekTile } from "@/features/progress";
 import { useModalSession } from "@/hooks/use-modal-session";
 import { getWeekStartSunday } from "@/utils/dates/getWeekStartSunday";
 import { useRouter } from "expo-router";
-import { describeRemembered, describeUpNext, pickKeyVerse } from "../logic/day-complete";
+import { describeRemembered, describeUpNext } from "../logic/day-complete";
 import { describeQuizReview, missedFirst, toQuestionViews } from "../logic/quick-check-review";
 import { useStudyRoute } from "./use-study-route";
 

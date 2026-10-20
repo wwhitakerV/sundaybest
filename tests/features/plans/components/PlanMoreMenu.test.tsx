@@ -10,9 +10,8 @@ describe("PlanMoreMenu", () => {
       <PlanMoreMenu
         open
         onClose={jest.fn()}
-        saved={false}
         anchor={{ top: 0, right: 0 }}
-        items={getMoreMenuItems(false).map((item) => ({
+        items={getMoreMenuItems().map((item) => ({
           ...item,
           select: item.key === "reset" ? reset : jest.fn(),
         }))}

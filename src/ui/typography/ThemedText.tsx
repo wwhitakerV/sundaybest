@@ -36,9 +36,14 @@ export type TypographyProps = Omit<TextProps, "style"> & {
 export function ThemedText({
   type,
   tone = "text",
+  fixed = false,
   style,
   ...props
-}: TypographyProps & { type: TextStyle }) {
+}: TypographyProps & {
+  type: TextStyle;
+  /** Drawn at its designed size whatever the reader's text size or iOS's (the status bar). */
+  fixed?: boolean;
+}) {
   const theme = useTheme();
   const scale = useTextScale();
   const offset = useTextOffset();
@@ -46,7 +51,12 @@ export function ThemedText({
   return (
     <Text
       {...props}
-      style={[scaleTypeStyle(type, scale, offset), { color: toneColor(theme.colors, tone) }, style]}
+      {...(fixed && { allowFontScaling: false })}
+      style={[
+        fixed ? type : scaleTypeStyle(type, scale, offset),
+        { color: toneColor(theme.colors, tone) },
+        style,
+      ]}
     />
   );
 }

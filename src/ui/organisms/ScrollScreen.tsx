@@ -11,6 +11,7 @@ import {
 
 import { useScrollToEnd } from "@/hooks/use-scroll-to-end";
 import { SCROLL_INSET, ScrollFrame, useFrameClearance, type ScrollFrameProps } from "./ScrollFrame";
+import { useScrollToTopTarget } from "./status-bar/scroll-to-top";
 
 /** How often a scroll reports its position: once a frame. */
 const SCROLL_THROTTLE_MS = 16;
@@ -88,6 +89,8 @@ function ClearedScroll({
   const clearance = useFrameClearance();
   const scroll = useRef<ScrollView>(null);
   useScrollToEnd(scroll, clearance.verdict ? clearance.bottom : null);
+  // A tap on the status bar scrolls the page up, as iOS's does.
+  useScrollToTopTarget(() => scroll.current?.scrollTo({ y: 0, animated: true }));
 
   if (fixed) {
     // A page that never scrolls is no scroller: a scroll view's content has no height limit,

@@ -5,7 +5,7 @@ import type * as ExpoRouter from "expo-router";
 
 import { API_URL, aReminder } from "@tests/factories/api";
 import { aPlan } from "@tests/factories/api-plans";
-import { PROGRESS_NOW, serveProgress } from "@tests/factories/api-progress";
+import { PROGRESS_NOW, PROGRESS_TODAY, serveProgress } from "@tests/factories/api-progress";
 import { servePlans } from "@tests/mocks/plans-api";
 import { server } from "@tests/mocks/server";
 import * as haptics from "@/core/haptics/haptics";
@@ -33,8 +33,14 @@ const mockNavigate = jest.fn<void, [ExpoRouter.Href]>();
 const mockReplace = jest.fn<void, [ExpoRouter.Href]>();
 const mockExitSession = jest.fn<void, [unknown]>();
 
-/** Three days, day 1 just finished. */
-const STILL_PRAYING = aPlan({ seed: 2, title: "Still Praying", lengthDays: 3, completedDays: 1 });
+/** Three days, started today: day 1 just finished, day 2 opening tomorrow. */
+const STILL_PRAYING = aPlan({
+  seed: 2,
+  title: "Still Praying",
+  lengthDays: 3,
+  completedDays: 1,
+  startDate: PROGRESS_TODAY,
+});
 /** One day, just finished — and with it, the plan. */
 const TEMPTATION = aPlan({
   seed: 3,
@@ -46,8 +52,7 @@ const TEMPTATION = aPlan({
 /** Day Complete for this plan's day, once its plan, progress and reminder have arrived. */
 async function renderDayComplete(plan = STILL_PRAYING, day = "1") {
   servePlans([STILL_PRAYING, TEMPTATION]);
-  // Today's study makes a two-day run.
-  serveProgress({ streak: { current: 2, longest: 7 } });
+  serveProgress();
   jest.mocked(useLocalSearchParams).mockReturnValue({ planId: plan.id, day });
   const view = renderHook(() => useDayComplete());
   await waitFor(() => expect(view.result.current.loading).toBe(false));
@@ -108,18 +113,18 @@ describe("useDayComplete", () => {
     expect(result.current).toMatchObject({ today: "2026-09-23" });
   });
 
-  it("spells the streak, today's study included", async () => {
-    const { result } = await renderDayComplete();
-
-    expect(result.current).toMatchObject({ streakLabel: "Two day streak" });
-  });
-
-  it("holds the week's completion counts", async () => {
+  it("shows the week as Progress does: days studied and missed, today, and the days ahead", async () => {
     const { result } = await renderDayComplete();
     const view = result.current;
 
-    expect(view.found && view.week.map((day) => day.completedDayCount)).toEqual([
-      0, 0, 1, 0, 0, 0, 0,
+    expect(view.found && view.tiles.map(({ look }) => [look.mark, look.today])).toEqual([
+      ["missed", false],
+      ["missed", false],
+      ["done", false],
+      [null, true],
+      [null, false],
+      [null, false],
+      [null, false],
     ]);
   });
 
@@ -127,11 +132,11 @@ describe("useDayComplete", () => {
     const { result } = await renderDayComplete();
 
     expect(result.current).toMatchObject({
-      upNext: { title: "Day 2 reading", when: "Tomorrow at 6:30 AM" },
+      upNext: { title: "Day 2 reading", when: "Opens tomorrow · Reminder at 6:30 AM" },
     });
   });
 
-  it("says just Tomorrow when the daily reminder is off", async () => {
+  it("says only when it opens when the daily reminder is off", async () => {
     servePlans([STILL_PRAYING]);
     serveProgress();
     server.use(
@@ -144,7 +149,7 @@ describe("useDayComplete", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(result.current).toMatchObject({
-      upNext: { title: "Day 2 reading", when: "Tomorrow" },
+      upNext: { title: "Day 2 reading", when: "Opens tomorrow" },
     });
   });
 

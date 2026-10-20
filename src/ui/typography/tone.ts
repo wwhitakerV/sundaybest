@@ -21,6 +21,8 @@ export type Tone = Extract<
   | "chromeTitle"
   | "chromeStepCounter"
   | "chromeIcon"
+  | "statusInk"
+  | "statusInkOnDark"
   | "stepLabelActive"
   | "stepLabelInactive"
   | "selected"

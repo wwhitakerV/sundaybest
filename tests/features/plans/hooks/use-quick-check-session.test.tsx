@@ -209,22 +209,46 @@ describe("useQuickCheckSession", () => {
     expect(result.current).toMatchObject({ status: "inProgress", currentIndex: 1 });
   });
 
+  /** The attempt under way, answered to its last question and finished. */
+  async function finishUnderWay() {
+    const view = await underWay();
+    await tapAnswer(view.result, "wrong");
+    await pressAction(view.result);
+    await tapAnswer(view.result, "right");
+    expect(view.result.current.action.kind).toBe("finish");
+    await pressAction(view.result);
+    return view;
+  }
+
   it("scores the attempt on the server after its last question", async () => {
-    const { result, seen } = await underWay();
-    await tapAnswer(result, "wrong");
-    await pressAction(result);
-    await tapAnswer(result, "right");
-    expect(result.current.action.kind).toBe("finish");
+    const { result, seen } = await finishUnderWay();
 
-    await pressAction(result);
+    expect(
+      seen.some(
+        ({ method, path }) =>
+          method === "POST" && path.startsWith("/v1/quiz-attempts/") && path.endsWith("/complete"),
+      ),
+    ).toBe(true);
+    expect(result.current.score).toMatchObject({ correct: 2, total: 3, percentage: 67 });
+  });
 
-    expect(seen.some(({ method, path }) => method === "POST" && path.endsWith("/complete"))).toBe(
-      true,
+  it("completes the day as it finishes, and goes straight on to Day Complete", async () => {
+    const { seen } = await finishUnderWay();
+
+    expect(seen).toContainEqual(
+      expect.objectContaining({
+        method: "POST",
+        path: `/v1/plans/${UNDER_WAY.id}/days/2/complete`,
+      }),
     );
-    expect(result.current).toMatchObject({
-      status: "completed",
-      score: { correct: 2, total: 3, percentage: 67 },
-    });
+    expect(mockReplace).toHaveBeenCalledWith(dayCompleteHref(UNDER_WAY.id, 2));
+  });
+
+  it("stays on its last question as it moves on, never turning to its results on the way", async () => {
+    const { result } = await finishUnderWay();
+
+    expect(result.current).toMatchObject({ status: "inProgress", page: 3, currentIndex: 2 });
+    expect(result.current.action.kind).toBe("finish");
   });
 
   it("opens a finished quiz on its score, with every answer to review", async () => {

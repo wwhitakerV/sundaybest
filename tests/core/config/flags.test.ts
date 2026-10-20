@@ -31,13 +31,15 @@ describe("flags", () => {
       attestation: false,
       crashReporting: false,
       verboseLogging: true,
+      // Off for now in every build: the week picker's made-up histories, for design review.
+      designPreviews: false,
     });
   });
 
   it("answers isEnabled for every known flag", () => {
     const answers = FEATURE_FLAGS.map((flag: FeatureFlag) => typeof flags.isEnabled(flag));
 
-    expect(answers).toEqual(["boolean", "boolean", "boolean"]);
+    expect(answers).toEqual(["boolean", "boolean", "boolean", "boolean"]);
   });
 });
 

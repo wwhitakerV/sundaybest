@@ -305,13 +305,12 @@ describe("DailyReminderScreen", () => {
     });
   });
 
-  it("sets its explanatory note as a centred footnote, in the darker supporting grey, at regular weight", async () => {
+  it("sets its explanatory note as its footnote, in the darker supporting grey, at regular weight", async () => {
     await showReminder();
 
     expect(screen.getByText(/Reminders are scheduled on this iPhone/)).toHaveStyle({
       color: lightTheme.colors.textSupporting,
       fontWeight: "400",
-      textAlign: "center",
     });
   });
 

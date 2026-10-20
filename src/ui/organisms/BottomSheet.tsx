@@ -8,6 +8,7 @@ import { motion, radius, space, useTheme } from "@/theme";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { SheetGrabber } from "@/ui/atoms/SheetGrabber";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
+import { useStatusBarOverlay } from "./status-bar/overlay";
 
 /** The sheet's share of the screen's height, unless it asks for more. */
 const HEIGHT_RATIO = 0.5;
@@ -43,6 +44,7 @@ export function BottomSheet({
   children,
 }: BottomSheetProps) {
   const theme = useTheme();
+  const statusBar = useStatusBarOverlay();
   const { height } = useWindowDimensions();
   const sheetHeight = height * heightRatio;
   const { mounted, progress } = usePresence(visible, motion.sheet);
@@ -88,6 +90,8 @@ export function BottomSheet({
           </View>
           {children}
         </Animated.View>
+        {/* The app's status bar stays over the sheet and its scrim, as iOS's does. */}
+        {statusBar}
       </View>
     </Modal>
   );
