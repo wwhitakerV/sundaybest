@@ -39,7 +39,7 @@ export default function RootLayout() {
             layout={statusBarLayout}
           >
             {/*
-             * Declared first so Welcome stays the initial route: explicitly listed
+             * Declared first so the launch route stays the initial route: explicitly listed
              * screens are registered ahead of auto-discovered ones.
              */}
             <Stack.Screen name="index" />
@@ -79,6 +79,11 @@ export default function RootLayout() {
               options={{ presentation: "fullScreenModal", animation: "fade" }}
             />
             <Stack.Screen name="study" options={{ presentation: "fullScreenModal" }} />
+            {/* RISE, the daily game: full screen over everything, closed by its X. */}
+            <Stack.Screen
+              name="rise"
+              options={{ presentation: "fullScreenModal", gestureEnabled: false }}
+            />
             {/*
              * New Plan — its two steps — is the same kind of full-screen modal:
              * it slides up over whatever opened it, and closes the moment the

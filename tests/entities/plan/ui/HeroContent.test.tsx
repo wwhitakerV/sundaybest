@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@tests/helpers/render";
 
-import { Lock } from "lucide-react-native";
+import { BookOpen, Lock, Plus } from "lucide-react-native";
 
 import { lightTheme } from "@/theme/tokens";
 import { HeroContent, type HeroContentProps, type HeroPlan } from "@/entities/plan/ui/HeroContent";
@@ -189,5 +189,24 @@ describe("HeroContent", () => {
     expect(button).toHaveStyle({ backgroundColor: lightTheme.colors.waitingFill, borderWidth: 0 });
     expect(screen.getByText("Day 3 tomorrow")).toHaveStyle({ color: lightTheme.colors.waitingInk });
     expect(screen.UNSAFE_getAllByType(Lock)).toHaveLength(1);
+  });
+
+  it("leads its action with an open book, as a way into the day", () => {
+    renderContent();
+
+    expect(screen.UNSAFE_getAllByType(BookOpen)).toHaveLength(1);
+  });
+
+  it("takes another icon for an action that isn't a day — Add a sermon's plus", () => {
+    renderContent({ actionIcon: Plus });
+
+    expect(screen.UNSAFE_getAllByType(Plus)).toHaveLength(1);
+    expect(screen.UNSAFE_queryAllByType(BookOpen)).toHaveLength(0);
+  });
+
+  it("leaves out the church line when there's no church", () => {
+    renderContent({ plan: { church: null } });
+
+    expect(screen.queryByText("VOUS Church")).toBeNull();
   });
 });

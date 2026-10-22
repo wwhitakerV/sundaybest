@@ -16,7 +16,7 @@ function typeFor(typography: Theme["typography"], variant: SerifBodyVariant) {
   }
 }
 
-/** Reading in the editorial face, Libre Baskerville Regular: a passage of Scripture, a prayer, or a standfirst. */
+/** Reading in the editorial face, Tiempos Text: a passage of Scripture, a prayer, or a standfirst. */
 export function SerifBody({ variant = "scripture", ...props }: SerifBodyProps) {
   const { typography } = useTheme();
   return <ThemedText type={typeFor(typography, variant)} {...props} />;

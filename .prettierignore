@@ -26,3 +26,8 @@ api/
 
 # the retired launch intros, kept only until they're deleted (ADR 0031)
 legacy-intro-and-assets/
+legacy-welcome/
+legacy-home-hero/
+legacy-the-99/
+# RISE's bank and schedule, as npm run build:rise writes them
+src/entities/rise/data/

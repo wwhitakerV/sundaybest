@@ -4,7 +4,6 @@ import {
   type ApiPlanSummary,
   type ApiReminder,
   type ApiStudyDay,
-  type ApiUser,
   type ApiUserSettings,
   getPlanResponseSchema,
   getStudyDayResponseSchema,
@@ -19,7 +18,6 @@ import { removeCachedResource } from "@/core/storage/api-resource-cache";
  * a write: the envelopes the API answers with, and the shared updates the
  * plan, study, and quiz writes make.
  */
-export type MeEnvelope = { user: ApiUser };
 export type SettingsEnvelope = { settings: ApiUserSettings };
 export type RemindersEnvelope = { reminders: ApiReminder[] };
 export type PlansEnvelope = { plans: ApiPlanSummary[] };

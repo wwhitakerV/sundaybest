@@ -21,6 +21,11 @@ const palette = {
   slate900: "#0B0D12",
   slate700: "#171A21",
   accent: "#D62626",
+  // RISE's balloons: a saved one's green — set darker than the red, so the
+  // two part by lightness too, for eyes that don't tell red from green — and
+  // a burst one's torn latex, matte and a step darker than the red.
+  balloonGreen: "#1A7044",
+  balloonScrap: "#9E1C1C",
   lightIcon: "#d2d2d0",
   // A quiet grey that still reads as a line on white — lighter than
   // `lightIcon`, firmer than `mist`. Not from the brand
@@ -257,6 +262,10 @@ type ColorTokens = {
    * story's lifted pieces. What's behind it shows through, faintly.
    */
   frostedRim: string;
+  /** RISE: a balloon saved into the atmosphere, its answer right. */
+  balloonSaved: string;
+  /** RISE: a burst balloon's torn latex, left where it fell. */
+  balloonScrap: string;
   /** A right answer: its check, and the words saying so. */
   correct: string;
   /** Behind a right answer, and its verdict panel. */
@@ -391,6 +400,8 @@ const lightColors: ColorTokens = {
   mediaScrim: palette.scrim,
   onMediaScrim: palette.white,
   frostedRim: palette.frost,
+  balloonSaved: palette.balloonGreen,
+  balloonScrap: palette.balloonScrap,
   correct: palette.correctInk,
   correctSurface: palette.correctMist,
   correctBorder: palette.correctLine,
@@ -487,6 +498,8 @@ const darkColors: ColorTokens = {
   mediaScrim: palette.scrim,
   onMediaScrim: palette.white,
   frostedRim: palette.frostOnDark,
+  balloonSaved: palette.balloonGreen,
+  balloonScrap: palette.balloonScrap,
   correct: palette.correctInk,
   correctSurface: palette.correctMistOnDark,
   correctBorder: palette.correctLineOnDark,
@@ -623,6 +636,40 @@ export const motion = {
    */
   arrival: { delayMs: 120, durationMs: 400, staggerMs: 70, fromY: 16 },
   /**
+   * Home's welcome, before a reader's first plan, played the first time only: a
+   * blank beat (`blankMs`); the wordmark then the date fading in as they rise
+   * `fromY` on a short spring with a hint of overshoot (`rise`, about 0.74 of
+   * critical damping), `staggerMs` apart, faded over `fadeMs`; the kicker
+   * fading in where it sits (`kickerMs`); the note typing in a letter every
+   * `letterMs`, `paragraphPauseMs` between paragraphs, `typeDelayMs` after the
+   * kicker; then, `buttonDelayMs` after the last letter, the empty pill
+   * fading in as it rises over `cascadeMs`; `punchDelayMs` after it's settled,
+   * its words punching in from `punchFrom` of their size as they rise `fromY`,
+   * on a short, crisp spring (`punch`, about 0.56 of critical damping, settled
+   * in about `punchSettleMs`) that springs back just past full; and
+   * `offerDelayMs` after that, the link under it fading in gently over
+   * `offerFadeMs`.
+   */
+  welcome: {
+    blankMs: 300,
+    rise: { damping: 20, stiffness: 260, mass: 0.7 },
+    fromY: 8,
+    fadeMs: 260,
+    staggerMs: 70,
+    kickerMs: 220,
+    typeDelayMs: 150,
+    letterMs: 18,
+    paragraphPauseMs: 240,
+    buttonDelayMs: 120,
+    cascadeMs: 360,
+    punchDelayMs: 200,
+    punchFrom: 0.6,
+    punch: { damping: 16, stiffness: 340, mass: 0.6 },
+    punchSettleMs: 300,
+    offerDelayMs: 150,
+    offerFadeMs: 800,
+  },
+  /**
    * Progress's day panel arriving with a new day or passage: it fades in as it
    * rises `fromY` into place, easing out. Under Reduce Motion, the fade alone.
    */
@@ -718,9 +765,12 @@ const radii = {
 } as const;
 
 /**
- * `fontFamily` keys reference `src/theme/fonts.ts`'s custom-loaded faces.
- * Roles with no `fontFamily` intentionally fall back to the system font
- * (SF Pro on iOS) — it isn't a bundled asset, so it's a `fontWeight` alone.
+ * `fontFamily` keys reference `src/theme/fonts.ts`'s custom-loaded cuts, and
+ * every role names one, its `fontWeight` that cut's own: Canela for the
+ * wordmark and the largest headlines, Canela Deck for titles and questions,
+ * Tiempos Text for reading, Söhne for everything else (ADR 0034). Söhne is
+ * set a touch tight from 20pt and a touch open at 13pt and under (±1% of its
+ * size) where a role doesn't track itself.
  *
  * Sizes are fixed, not scaled at runtime. The design spec is drawn at a 320px
  * reference width; each value here is that spec multiplied by 1.228125 (the
@@ -729,21 +779,35 @@ const radii = {
  * these same absolute values and adapt through layout, not type size.
  */
 const typography = {
-  /** 16pt: Libre Baskerville runs ~13% wider than the Bodoni it replaced, so it keeps the same width. */
-  masthead: { fontFamily: fonts.masthead, fontSize: 16, fontWeight: "400" },
+  /** 16pt: the size the wordmark was set at in Libre Baskerville, kept through the change to Canela. */
+  masthead: { fontFamily: fonts.masthead, fontSize: 16, fontWeight: "500" },
   editorialHeading: { fontFamily: fonts.editorialHeading, fontSize: 20, fontWeight: "500" },
   /** The editorial face, larger: the title of the day picked on Plan Detail. */
   editorialTitle: { fontFamily: fonts.editorialHeading, fontSize: 24, fontWeight: "500" },
-  /** A study question set in the editorial face (Reflect, and the Welcome tour's copy of it). */
+  /**
+   * A study question set in the editorial face (Reflect). Leaded at no less
+   * than Canela Deck's own 1.3×: any tighter and iOS trims its tallest glyphs.
+   */
   editorialQuestion: {
     fontFamily: fonts.editorialHeading,
     fontSize: 24,
     fontWeight: "500",
-    lineHeight: 30,
+    lineHeight: 32,
+  },
+  /**
+   * A question to be read through, a size under a study's (`editorialQuestion`):
+   * RISE's questions in what was learned. Leaded at Canela Deck's own 1.3×,
+   * so iOS never trims its tallest glyphs.
+   */
+  editorialQuestionCompact: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 20,
+    fontWeight: "500",
+    lineHeight: 26,
   },
   /** The editorial face at its largest: a page's own title (a theology exam's overview). */
   editorialDisplay: {
-    fontFamily: fonts.editorialHeading,
+    fontFamily: fonts.display,
     fontSize: 34,
     fontWeight: "500",
     lineHeight: 43,
@@ -756,7 +820,7 @@ const typography = {
    * (0.75× its size) and ascenders.
    */
   editorialHero: {
-    fontFamily: fonts.editorialHeading,
+    fontFamily: fonts.display,
     fontSize: 52,
     fontWeight: "500",
     lineHeight: 65,
@@ -764,7 +828,7 @@ const typography = {
   },
   /** A subject's name on its book's cover: set close, never so close it clips (1.25×). */
   folioTitle: {
-    fontFamily: fonts.editorialHeading,
+    fontFamily: fonts.display,
     fontSize: 40,
     fontWeight: "500",
     lineHeight: 50,
@@ -772,7 +836,7 @@ const typography = {
   },
   /** …and on a book made shorter to fit a shorter screen. */
   folioTitleCompact: {
-    fontFamily: fonts.editorialHeading,
+    fontFamily: fonts.display,
     fontSize: 30,
     fontWeight: "500",
     lineHeight: 38,
@@ -813,18 +877,12 @@ const typography = {
    * the app reads the same.
    */
   /**
-   * The status bar's time, in the editorial face, two points under iOS's own: the serif sits larger.
+   * The status bar's time, in the editorial face, a point under iOS's own: the serif sits larger.
    * Drawn at a fixed size (`StatusLabel`): the bar never grows with text.
    */
-  statusBarTime: { fontFamily: fonts.editorialHeading, fontSize: 15, fontWeight: "500" },
+  statusBarTime: { fontFamily: fonts.editorialHeading, fontSize: 16, fontWeight: "500" },
   /** The status bar's time's colon: a step smaller, raised to the figures' middle. */
-  statusBarColon: { fontFamily: fonts.editorialHeading, fontSize: 12, fontWeight: "500" },
-  /**
-   * The battery's percentage, inside it, in the editorial face's bold — the
-   * Medium is too light that small. Its own line height, so the figures can
-   * be centred on what they measure (`CapsuleBattery`). Fixed size.
-   */
-  statusBarFigures: { fontFamily: fonts.editorialBold, fontSize: 13, fontWeight: "700" },
+  statusBarColon: { fontFamily: fonts.editorialHeading, fontSize: 13, fontWeight: "500" },
   kicker: {
     fontFamily: fonts.metaLabel,
     fontSize: 13,
@@ -834,38 +892,65 @@ const typography = {
   },
   metaBody: { fontFamily: fonts.metaBody, fontSize: 13, fontWeight: "400" },
   metaEmphasis: { fontFamily: fonts.metaEmphasis, fontSize: 11, fontWeight: "600" },
-  body: { fontSize: 17, fontWeight: "400" },
+  body: { fontFamily: fonts.ui, fontSize: 17, fontWeight: "400" },
   /** Body, leaded for a short paragraph in a sheet. */
-  bodyLoose: { fontSize: 17, fontWeight: "400", lineHeight: 26 },
-  label: { fontSize: 14, fontWeight: "500" },
-  headline: { fontSize: 24, fontWeight: "700" },
+  bodyLoose: { fontFamily: fonts.ui, fontSize: 17, fontWeight: "400", lineHeight: 26 },
+  label: { fontFamily: fonts.uiMedium, fontSize: 14, fontWeight: "500" },
+  headline: { fontFamily: fonts.uiBold, fontSize: 24, fontWeight: "700", letterSpacing: -0.24 },
   /** The headline's size at regular weight — a number chosen from a row (New Plan's days). */
-  headlineRegular: { fontSize: 24, fontWeight: "400" },
+  headlineRegular: { fontFamily: fonts.ui, fontSize: 24, fontWeight: "400", letterSpacing: -0.24 },
   /** A title on a large card (the Plans library's): bold, set close for up to three lines. */
-  cardTitle: { fontSize: 20, fontWeight: "700", lineHeight: 25 },
-  smallCardTitle: { fontSize: 18, fontWeight: "600", lineHeight: 22 },
-  /** A card title a touch lighter than `cardTitle`, at its size: a plan card's, over its artwork. */
-  offerTitle: { fontSize: 20, fontWeight: "600", lineHeight: 25 },
+  cardTitle: {
+    fontFamily: fonts.uiBold,
+    fontSize: 20,
+    fontWeight: "700",
+    lineHeight: 25,
+    letterSpacing: -0.2,
+  },
+  smallCardTitle: { fontFamily: fonts.uiSemibold, fontSize: 18, fontWeight: "600", lineHeight: 22 },
+  /** A plan's title on its card, over its artwork: Canela Deck, as plan titles are everywhere, at its own 1.3× leading. */
+  offerTitle: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 20,
+    fontWeight: "500",
+    lineHeight: 26,
+  },
   /** The number on a small tile (Plan Detail's days): large enough to read at a glance. */
-  tileNumber: { fontSize: 22, fontWeight: "600" },
+  tileNumber: {
+    fontFamily: fonts.uiSemibold,
+    fontSize: 22,
+    fontWeight: "600",
+    letterSpacing: -0.22,
+  },
   /** A study step's name on its row (Plan Detail's day): clear, and firm enough to tap. */
-  stepTitle: { fontSize: 18, fontWeight: "600", lineHeight: 24 },
+  stepTitle: { fontFamily: fonts.uiSemibold, fontSize: 18, fontWeight: "600", lineHeight: 24 },
   /** The date under it: small, in the hero's mono, set in capitals by the tile. */
   tileDate: { fontFamily: fonts.metaLabel, fontSize: 11, fontWeight: "500", letterSpacing: 0.6 },
 
-  /** Hero sentence. Spec 30/500/1.06/-0.03em. */
-  display: { fontSize: 37, fontWeight: "500", lineHeight: 39, letterSpacing: -1.11 },
+  /**
+   * The study featured on Home: Canela, large, at its own spacing — no
+   * tracking pulled in — leaded over its own 1.22× so iOS never trims its tops.
+   */
+  featureTitle: { fontFamily: fonts.display, fontSize: 28, fontWeight: "500", lineHeight: 35 },
+  /** Hero sentence: Canela, leaded just over its own 1.22× so iOS never trims its tops. */
+  display: {
+    fontFamily: fonts.display,
+    fontSize: 37,
+    fontWeight: "500",
+    lineHeight: 46,
+    letterSpacing: -1.11,
+  },
   /**
    * The static weekday strip. Spec 17/-0.01em, IBM Plex Mono Medium — set a
    * touch under the spec's scaled 21, so the strip sits quieter under the
    * wordmark.
    */
   dayStrip: { fontFamily: fonts.metaLabel, fontSize: 19, fontWeight: "500", letterSpacing: -0.19 },
-  /** The date opposite the wordmark on Home: the day strip's mono, a size under the wordmark. */
+  /** The date opposite the wordmark on Home: a dateline in Söhne's regular weight, a size and a shade under ink, so the wordmark leads. */
   headerDate: {
-    fontFamily: fonts.metaLabel,
-    fontSize: 15,
-    fontWeight: "500",
+    fontFamily: fonts.metaBody,
+    fontSize: 14,
+    fontWeight: "400",
     letterSpacing: -0.15,
   },
   /** Supporting copy and footnotes. Spec 11/1.45/0.02em, IBM Plex Mono. */
@@ -877,62 +962,113 @@ const typography = {
     letterSpacing: 0.28,
   },
   /** Feature-row labels. Spec 13.5. */
-  listItem: { fontSize: 17, fontWeight: "500" },
+  listItem: { fontFamily: fonts.uiMedium, fontSize: 17, fontWeight: "500" },
   /** A list item's weight, larger — a sermon's title over its preview. */
-  listItemLarge: { fontSize: 20, fontWeight: "500" },
+  listItemLarge: {
+    fontFamily: fonts.uiMedium,
+    fontSize: 20,
+    fontWeight: "500",
+    letterSpacing: -0.2,
+  },
   /** A single letter standing for a day of the week, large enough to tap by: Daily reminder's days. */
-  dayLetter: { fontSize: 22, fontWeight: "600" },
+  dayLetter: {
+    fontFamily: fonts.uiSemibold,
+    fontSize: 22,
+    fontWeight: "600",
+    letterSpacing: -0.22,
+  },
   /** Button labels, both variants. Spec 15/-0.01em. */
-  button: { fontSize: 18, fontWeight: "600" },
+  button: { fontFamily: fonts.uiSemibold, fontSize: 18, fontWeight: "600" },
   /** A compact button's label — a smaller call to action set on a colour. */
-  compactButton: { fontSize: 16, fontWeight: "600" },
+  compactButton: { fontFamily: fonts.uiSemibold, fontSize: 16, fontWeight: "600" },
   /** A heading over one section of a scrolling page ("Play now"): bold, a step under `headline`. */
-  sectionTitle: { fontSize: 22, fontWeight: "700", lineHeight: 28, letterSpacing: -0.22 },
+  sectionTitle: {
+    fontFamily: fonts.uiBold,
+    fontSize: 22,
+    fontWeight: "700",
+    lineHeight: 28,
+    letterSpacing: -0.22,
+  },
   /** A title on a tile or a small card (Fun's games): bold, set close. */
-  tileTitle: { fontSize: 17, fontWeight: "700", lineHeight: 22 },
+  tileTitle: { fontFamily: fonts.uiBold, fontSize: 17, fontWeight: "700", lineHeight: 22 },
   /** Supporting copy on a card, under its title: a line or two, quiet. */
-  cardDetail: { fontSize: 15, fontWeight: "400", lineHeight: 20 },
+  cardDetail: { fontFamily: fonts.ui, fontSize: 15, fontWeight: "400", lineHeight: 20 },
   /** A row's description under its name (Settings' options, About's rows): leaded, so two or three lines still read easily. */
-  rowDetail: { fontSize: 15, fontWeight: "400", lineHeight: 22 },
+  rowDetail: { fontFamily: fonts.ui, fontSize: 15, fontWeight: "400", lineHeight: 22 },
   /** A search result's title: regular, leaded for two lines read at a glance (Plans' search). */
-  resultTitle: { fontSize: 17, fontWeight: "400", lineHeight: 23 },
+  resultTitle: { fontFamily: fonts.ui, fontSize: 17, fontWeight: "400", lineHeight: 23 },
   /** The words a search found, inside a regular line: medium, the rest left regular. */
-  match: { fontWeight: "500" },
+  match: { fontFamily: fonts.uiMedium, fontWeight: "500" },
   /** A line of facts under a page's title ("12 subjects · 48 exams"): the system face, firm and easy to read. */
-  summaryStrong: { fontSize: 15, fontWeight: "600", lineHeight: 20 },
+  summaryStrong: { fontFamily: fonts.uiSemibold, fontSize: 15, fontWeight: "600", lineHeight: 20 },
   /** A fact set plainly in a row ("15 questions", "8–12 min"): the system face, small and firm enough to read. */
-  factLabel: { fontSize: 13, fontWeight: "600", lineHeight: 18 },
+  factLabel: {
+    fontFamily: fonts.uiSemibold,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+    letterSpacing: 0.13,
+  },
   /** A tag's label — a small pill naming a kind or a count ("Quiz", "12 day streak"). */
-  tag: { fontSize: 12, fontWeight: "600", lineHeight: 16 },
+  tag: {
+    fontFamily: fonts.uiSemibold,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 16,
+    letterSpacing: 0.12,
+  },
 
   /** Centered header title ("New plan", "Day 2 of 6", "Quick check"). Spec 14/500. */
-  navTitle: { fontSize: 17, fontWeight: "500" },
+  navTitle: { fontFamily: fonts.uiMedium, fontSize: 17, fontWeight: "500" },
   /** A full-screen fallback's heading ("Something went wrong") — where the app's own components can't be used. */
-  fallbackTitle: { fontSize: 20, fontWeight: "600" },
+  fallbackTitle: {
+    fontFamily: fonts.uiSemibold,
+    fontSize: 20,
+    fontWeight: "600",
+    letterSpacing: -0.2,
+  },
   /** …its message… */
-  fallbackBody: { fontSize: 15, fontWeight: "400" },
+  fallbackBody: { fontFamily: fonts.ui, fontSize: 15, fontWeight: "400" },
   /** …and its one action ("Try again"). */
-  fallbackAction: { fontSize: 15, fontWeight: "600" },
+  fallbackAction: { fontFamily: fonts.uiSemibold, fontSize: 15, fontWeight: "600" },
   /** The clock in a drawn phone's status bar (the Welcome tour's phones). */
-  statusTime: { fontSize: 17, fontWeight: "600" },
+  statusTime: { fontFamily: fonts.uiSemibold, fontSize: 17, fontWeight: "600" },
   /** A message's title on an emptied page (Plans' search): medium, a step under a page's own title. */
-  messageTitle: { fontSize: 24, fontWeight: "500", lineHeight: 30 },
+  messageTitle: {
+    fontFamily: fonts.uiMedium,
+    fontSize: 24,
+    fontWeight: "500",
+    lineHeight: 30,
+    letterSpacing: -0.24,
+  },
   /** Top-level tab-root titles (Plans, Progress, Settings). Spec 24/500/1.12/-0.02em. */
-  screenTitle: { fontSize: 29, fontWeight: "500", lineHeight: 32, letterSpacing: -0.58 },
+  screenTitle: {
+    fontFamily: fonts.uiMedium,
+    fontSize: 29,
+    fontWeight: "500",
+    lineHeight: 32,
+    letterSpacing: -0.58,
+  },
   /** A header's right-aligned step count ("1 of 2"). Spec 11 mono/0.02em. */
   stepCounter: { fontFamily: fonts.metaBody, fontSize: 14, fontWeight: "400", letterSpacing: 0.28 },
   /** A segmented control's option label. Spec 12.5/400. */
-  segmentLabel: { fontSize: 15, fontWeight: "400" },
+  segmentLabel: { fontFamily: fonts.ui, fontSize: 15, fontWeight: "400" },
   /** The picked option's label: the same size, firmer. */
-  segmentLabelActive: { fontSize: 15, fontWeight: "600" },
+  segmentLabelActive: { fontFamily: fonts.uiSemibold, fontSize: 15, fontWeight: "600" },
   /** A borderless filter-tabs label (Plans' All/In progress/Done/Saved row). Spec 13/400. */
-  filterLabel: { fontSize: 16, fontWeight: "400" },
+  filterLabel: { fontFamily: fonts.ui, fontSize: 16, fontWeight: "400" },
   /** A filter tab's superscript count. Spec 9pt. */
-  filterCount: { fontSize: 11, fontWeight: "400" },
+  filterCount: { fontFamily: fonts.ui, fontSize: 11, fontWeight: "400", letterSpacing: 0.11 },
   /** A Daily Study step label (Read/Scripture/Reflect/Pray) below the progress line. */
-  stepLabel: { fontSize: 13, fontWeight: "400", lineHeight: 16 },
-  /** Long-form reading (a Daily Study's Read step): body size, loosely leaded for a page of it. */
-  reading: { fontSize: 17, fontWeight: "400", lineHeight: 30 },
+  stepLabel: {
+    fontFamily: fonts.ui,
+    fontSize: 13,
+    fontWeight: "400",
+    lineHeight: 16,
+    letterSpacing: 0.13,
+  },
+  /** Long-form reading (a Daily Study's Read step): Tiempos Text at body size, leaded about 1.6× for a page of it. */
+  reading: { fontFamily: fonts.editorialBody, fontSize: 17, fontWeight: "400", lineHeight: 27 },
   /** A Scripture passage set as the page's centrepiece. The editorial face, generously leaded. */
   scripture: { fontFamily: fonts.editorialBody, fontSize: 24, fontWeight: "400", lineHeight: 36 },
   /**

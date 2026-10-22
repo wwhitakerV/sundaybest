@@ -263,6 +263,12 @@ carries a literal value for any of them.
       ([ADR 0014](./adr/0014-expo-web-browser-for-passage-links.md)). It's a
       native module too: until the dev client is rebuilt, tapping a passage
       link fails. One rebuild covers this and `expo-clipboard` together.
+- [ ] **Rebuild the development client for `expo-battery` and our haptics
+      module** (`modules/sundaybest-haptics`, [ADR 0033](./adr/0033-own-haptics-module.md)):
+      `npx expo prebuild -p ios`, then `npx expo run:ios`. Both are native.
+      Until then the status bar shows no battery, the welcome's typing tick
+      falls back to the firmer selection tick, and iOS's own status bar may
+      show at launch (the `UIStatusBarHidden` key lands with the rebuild).
 
 ## Per developer
 
@@ -311,6 +317,28 @@ The final gate. Some of these are one-time repo/account setup, not
 per-developer or per-release — grouped here because they specifically block
 shipping, not because they recur.
 
+- [ ] **License the typefaces, and swap the trial files for the real ones.**
+      SundayBest is set in Klim's Canela (Canela, Canela Deck),
+      Söhne and Tiempos Text (ADR 0034; `src/theme/fonts.ts`). The files in
+      `assets/fonts/Canela_Collection/`, `Soehne_Family/` and
+      `Tiempos_Text_Family/` are Klim's trial fonts: their licence
+      (`assets/fonts/KlimTestFonts/`, `assets/fonts/Soehne/`) allows
+      evaluation inside the team only — no consumer-facing use, no build that
+      leaves the team, TestFlight included. They also hold little beyond
+      letters, figures and `. , -` — no apostrophes, quotes, `? ! : ; ( ) &`,
+      dashes or middle dot — and no OpenType features (kerning, ligatures,
+      tabular figures), so iOS draws the missing characters in its own face.
+      Buy Klim app licences for the cuts `FONT_ASSETS` loads (Canela Medium;
+      Canela Deck Medium; Söhne Buch,
+      Kräftig, Halbfett, Dreiviertelfett; Tiempos Text Regular and Italic),
+      drop the licensed files in and repoint `FONT_ASSETS`. The trial kits in
+      `assets/fonts/Soehne/`, `assets/fonts/Domaine/` and `assets/fonts/Tiempos/` (the same
+      20 MB kit, three times) can then go. `app.config.ts`'s expo-font list still embeds Libre
+      Baskerville and IBM Plex Mono; point it at the licensed files then (plan
+      first, per `CLAUDE.md`).
+- [ ] **Decide how "our plans" are managed in production.** The admin page
+      that adds and removes them (`/dev/admin`, see `api/README.md`) exists only
+      in development, so production's "Try one of ours" needs its own way in.
 - [ ] **Replace the placeholder app icons.** `assets/icon.png`,
       `icon-development.png`, and `icon-preview.png` are generated
       block-letter placeholders (`npm run icons`). Real artwork is needed
@@ -381,3 +409,16 @@ shipping, not because they recur.
       attestation/session backend obligations especially. An app that
       attests but whose server doesn't verify is worse than no attestation
       at all: it looks secure without being secure.
+- [ ] **Decide on RISE's leaderboard before building one.** Scores leave the
+      phone only once it exists, so it needs an ADR and a privacy-policy
+      change first. For it to be fair: the API names today's day (the
+      phone's clock can be set ahead — until then a run is played on the
+      phone's UTC date); the server scores the marks against its own copy of
+      the answers; one ranked run a device a day; ties broken by decision
+      time, which is already kept with every run.
+- [ ] **Grow RISE's question bank.** 60 questions make ten days; after that
+      the schedule asks them again in new combinations. Each new question
+      needs checking against a reliable source before it's added to
+      `scripts/rise/questions.json`, then `npm run build:rise`. The France
+      time-zones question (rise-027, replacing a second Colosseum one) needs
+      that check too.

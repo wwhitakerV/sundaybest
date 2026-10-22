@@ -66,6 +66,15 @@ export async function syncLocalReminder(reminder: ApiReminder): Promise<void> {
   );
 }
 
+/** Cancels every SundayBest reminder on the phone, of either kind — development's "Start over". */
+export async function cancelAllLocalReminders(): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  const ours = scheduled.filter((request) => request.content.data?.sundayBestReminderKind);
+  await Promise.all(
+    ours.map((request) => Notifications.cancelScheduledNotificationAsync(request.identifier)),
+  );
+}
+
 async function cancelLocalReminder(kind: ApiReminder["kind"]): Promise<void> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   const matching = scheduled.filter(

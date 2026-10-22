@@ -500,6 +500,12 @@ describe("TabBar", () => {
 
       expect(screen.getByTestId("tab-home")).toBeOnTheScreen();
     });
+
+    it("lets the tabs take its room: the bar's full width", () => {
+      renderFabless(false);
+
+      expect(screen.getByTestId("tab-bar-capsule")).toHaveStyle({ marginRight: 0 });
+    });
   });
 
   describe("on a page that runs to the screen's foot", () => {

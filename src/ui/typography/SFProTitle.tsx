@@ -43,7 +43,7 @@ function typeFor(typography: Theme["typography"], variant: SFProTitleVariant) {
   }
 }
 
-/** Titles in the system face, SF Pro: a screen's, a section's, a card's, a step's, the nav bar's. */
+/** Titles in the interface face, Söhne: a screen's, a section's, a card's, a step's, the nav bar's. */
 export function SFProTitle({ variant = "screen", ...props }: SFProTitleProps) {
   const { typography } = useTheme();
   return <ThemedText type={typeFor(typography, variant)} {...props} />;

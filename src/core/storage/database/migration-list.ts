@@ -195,4 +195,56 @@ export const MIGRATIONS: readonly Migration[] = [
       `);
     },
   },
+  {
+    version: 7,
+    name: "moments-seen",
+    async up(db) {
+      // One-time moments a reader has had on this phone (Home's welcome), so
+      // they play once and never again. Device-only, as everything here is.
+      await db.execute(`
+        CREATE TABLE moments_seen (
+          user_id TEXT NOT NULL,
+          moment TEXT NOT NULL,
+          seen_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, moment)
+        )
+      `);
+    },
+  },
+  {
+    version: 8,
+    name: "game-results",
+    async up(db) {
+      // Each day's result in a daily game (The 99: how long the flock was kept
+      // whole), one per reader per day, so the game is played once a day and
+      // compared with yesterday. Device-only, as everything here is.
+      await db.execute(`
+        CREATE TABLE game_results (
+          user_id TEXT NOT NULL,
+          game TEXT NOT NULL,
+          daily INTEGER NOT NULL,
+          survived_ms INTEGER NOT NULL,
+          played_at TEXT NOT NULL,
+          PRIMARY KEY (user_id, game, daily)
+        )
+      `);
+    },
+  },
+  {
+    version: 9,
+    name: "game-results-saved",
+    async up(db) {
+      // The 99 is now scored by sheep saved, its time second: each day's count,
+      // empty for a day played before it was kept.
+      await db.execute("ALTER TABLE game_results ADD COLUMN saved INTEGER");
+    },
+  },
+  {
+    version: 10,
+    name: "game-results-detail",
+    async up(db) {
+      // RISE keeps each day's run with its score, as JSON its own schema reads back.
+      await db.execute("ALTER TABLE game_results ADD COLUMN detail TEXT");
+    },
+  },
 ];

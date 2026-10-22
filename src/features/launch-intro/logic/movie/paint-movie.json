@@ -1,19 +1,19 @@
 {
   "fps": 120,
-  "frames": 707,
+  "frames": 822,
   "width": 1320,
   "height": 2856,
   "stage": {
     "width": 390,
     "height": 844
   },
-  "durationMs": 5883.333333333333,
+  "durationMs": 6841.666666666667,
   "settings": {
     "blankMs": 300,
-    "swipeMs": 240,
-    "strokeLength": 470,
-    "strokeHeight": 82,
-    "popMs": 260,
+    "swipeMs": 520,
+    "strokeLength": 334,
+    "strokeHeight": 66,
+    "popMs": 730,
     "popStagger": 22,
     "wetMs": 0,
     "runMs": 750,
@@ -32,8 +32,8 @@
     "slide": 0.95,
     "pauseMs": 300,
     "letterSpeed": 1,
-    "poolPct": 6,
-    "writeWidth": 350,
+    "poolPct": 5,
+    "writeWidth": 280,
     "sinkMs": 0,
     "splashMs": 1050,
     "holdMs": 200,
@@ -46,46 +46,46 @@
     },
     "swipe": {
       "start": 300,
-      "end": 540
+      "end": 820
     },
     "pop": {
-      "start": 540,
-      "end": 998
+      "start": 820,
+      "end": 1748
     },
     "wet": {
-      "start": 998,
-      "end": 998
+      "start": 1748,
+      "end": 1748
     },
     "drop": {
-      "start": 998,
-      "end": 2702.1793730355976
+      "start": 1748,
+      "end": 3431.550230160001
     },
     "settle": {
-      "start": 2702.1793730355976,
-      "end": 3356.9400152600338
+      "start": 3431.550230160001,
+      "end": 4310.791249354617
     },
     "fall": {
-      "start": 3356.9400152600338,
-      "end": 4227.696349566448
+      "start": 4310.791249354617,
+      "end": 5187.20290435954
     },
     "sink": {
-      "start": 4227.696349566448,
-      "end": 4227.696349566448
+      "start": 5187.20290435954,
+      "end": 5187.20290435954
     },
     "splash": {
-      "start": 4227.696349566448,
-      "end": 5277.696349566448
+      "start": 5187.20290435954,
+      "end": 6237.20290435954
     },
     "hold": {
-      "start": 5277.696349566448,
-      "end": 5477.696349566448
+      "start": 6237.20290435954,
+      "end": 6437.20290435954
     },
     "fade": {
-      "start": 5477.696349566448,
-      "end": 5477.696349566448
+      "start": 6437.20290435954,
+      "end": 6437.20290435954
     }
   },
   "moments": {
-    "firstHit": 4062.2743987705203
+    "firstHit": 5025.003622059965
   }
 }

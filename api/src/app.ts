@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import type { AppContext } from "./app-context.js";
 import { registerApiDocs } from "./docs/openapi.js";
 import { AppError, isAppError } from "./http/errors.js";
+import { registerDevAdminRoutes } from "./routes/dev-admin.js";
 import { registerV1Routes } from "./routes/v1.js";
 import { registerRateLimit } from "./http/rate-limit.js";
 
@@ -69,6 +70,8 @@ export async function buildApp(context: AppContext): Promise<FastifyInstance> {
   });
 
   await registerV1Routes(app, context);
+  // Development only: the page that manages our plans (`/dev/admin`).
+  registerDevAdminRoutes(app, context);
 
   app.setNotFoundHandler((request, reply) => {
     void reply.code(404).send({

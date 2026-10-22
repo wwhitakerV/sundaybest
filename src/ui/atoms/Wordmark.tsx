@@ -9,6 +9,10 @@ export type WordmarkProps = { testID?: string; style?: StyleProp<ViewStyle> };
  * SundayBest's wordmark, drawn straight from assets/sb-wordmark.svg at the size
  * and in the colours the file sets: replace the file and the app draws the new
  * one. The one place the mark is drawn.
+ *
+ * Wherever it's shown, it sits flush left: against the left edge of the
+ * screen or card it's on, never inset — its caller cancels its own side
+ * inset (Home's masthead, the verse share card).
  */
 export const Wordmark = memo(function Wordmark({ testID, style }: WordmarkProps) {
   return (

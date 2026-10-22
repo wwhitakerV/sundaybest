@@ -1,65 +1,75 @@
 import { useRef } from "react";
 import { StyleSheet, View } from "react-native";
-import { useIsFocused } from "expo-router";
 import Animated from "react-native-reanimated";
 
 import { PAGE_INSET, Screen } from "@/ui/organisms/Screen";
 import { ScreenLoadError } from "@/ui/organisms/ScreenLoadError";
 import { FLOATING_NAV_BAR_CLEARANCE } from "@/ui/organisms/floatingNavBar";
-import { ActivePlanBar } from "../components/ActivePlanBar";
 import { HomeSkeleton } from "../components/HomeSkeleton";
-import { ActivePlanHero } from "../components/ActivePlanHero";
 import { ArtworkFlight } from "../components/ArtworkFlight";
+import { DailyRise } from "../components/DailyRise";
+import { FeaturedStudy } from "../components/FeaturedStudy";
+import { StudyBar } from "../components/StudyBar";
+import { useDailyRise } from "../hooks/use-daily-rise";
+import { useStudyScroll } from "../hooks/use-study-scroll";
 import { useHomeView } from "../hooks/use-home-view";
-import { CONTENT_TOP, useHeroCollapse } from "../hooks/use-hero-collapse";
-import { PlanRow } from "../components/PlanRow";
-import { StartHereCard } from "../components/StartHereCard";
+import { useHomeDevMenu } from "../hooks/use-home-dev-menu";
+import { useRiseIn } from "../hooks/use-rise-in";
+import { reached, useWelcomeEntrance } from "../hooks/use-welcome-entrance";
+import { StartHereHero } from "../components/StartHereHero";
+import { HomeOnboarding } from "../components/HomeOnboarding";
+import { HomeWordmark } from "../components/HomeWordmark";
 import { VerseCard } from "../components/VerseCard";
-import { controlHeight, space } from "@/theme";
+import { Divider } from "@/ui/atoms/Divider";
+import { controlHeight, motion, space } from "@/theme";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
-import { SFProBody } from "@/ui/typography/SFProBody";
 import { Arrive } from "@/ui/arrival/Arrive";
-import { Wordmark } from "@/ui/atoms/Wordmark";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
 import { useScrollToTopTarget } from "@/ui/organisms/status-bar/scroll-to-top";
-import { StatusBarTone } from "@/ui/organisms/status-bar/tone";
+import { useHideTabBar } from "@/ui/organisms/tab-bar/tab-bar-accessory";
+
+/**
+ * How far the wordmark runs off the screen's left edge, as if it came from
+ * beyond the page: its brush's dry start is cut away, its S still clear of
+ * the edge.
+ */
+const WORDMARK_BLEED = 12;
 
 /** A header action's 44pt tap target — the masthead row keeps it. */
 const HEADER_HEIGHT = controlHeight.hitTarget;
 
 /**
- * Home, from the API plan cache. With a plan under way: that plan featured up top,
- * full width in its sermon's colour (`ActivePlanHero`) — where it stands,
- * Continue straight into today's study, and its artwork zooming open into
- * Plan Detail. Scrolling up, the header fades
- * and the featured plan collapses into a plan bar pinned at the top
- * (`useHeroCollapse`), reversing on the way back. With
- * none: a card to add a sermon, and the sample to try if they've no plans
- * yet. The tab bar's + also starts a new plan.
+ * Home, from the API plan cache, set as an editorial page on white: the
+ * masthead, then the study under way (`FeaturedStudy`) — its 16:9 artwork,
+ * where it stands, its title in Canela, today's study, and Continue — and the
+ * verse of the day open beneath it. With no plan under way: Start here. With
+ * no plans of their own yet: the welcome (`HomeOnboarding`). The tab bar's +
+ * also starts a new plan.
  */
 export function HomeScreen() {
   const view = useHomeView();
-  const isFocused = useIsFocused();
-  const {
-    insetTop,
-    snapOffsets,
-    onContentSizeChange,
-    onScroll,
-    onHeaderLayout,
-    onScrollLayout,
-    headerStyle,
-    heroMotion,
-    barMotion,
-    flightStyle,
-    phase,
-  } = useHeroCollapse();
+  // Today's game, under the study: playing itself while it's on screen.
+  const dailyGame = useDailyRise(!view.onboarding && !view.loading);
+  // The featured study answering the scroll: parallax, fading words, the bar coming in.
+  const { artworkRef, wordsRef, continueRef, mastheadRef, ...studyScroll } = useStudyScroll();
+  // Before a first plan: a blank beat, then the masthead, the note and the button in turn.
+  const welcome = useWelcomeEntrance(view.onboarding);
+  // Development builds: Home's states and the welcome's replay, in the developer menu.
+  useHomeDevMenu(welcome.replay);
+  const mastheadShown = !view.onboarding || reached(welcome.phase, "masthead");
+  const wordmarkRise = useRiseIn(mastheadShown);
+  const dateRise = useRiseIn(mastheadShown, motion.welcome.staggerMs);
+  // Before a plan of their own, the page is the whole screen: the tab bar steps away.
+  useHideTabBar(view.onboarding);
   const scroll = useRef<Animated.ScrollView>(null);
   // A tap on the status bar scrolls Home up, as iOS's does.
   useScrollToTopTarget(() => scroll.current?.scrollTo({ y: 0, animated: true }));
 
   if (view.error) {
     return (
-      <ScreenLoadError testID="home-load-error" title="Couldn't load Home" onRetry={view.retry} />
+      <View style={styles.root}>
+        <ScreenLoadError testID="home-load-error" title="Couldn't load Home" onRetry={view.retry} />
+      </View>
     );
   }
 
@@ -69,105 +79,130 @@ export function HomeScreen() {
         {/* After the launch, the header comes down into place and the hero rises in. */}
         <Arrive from="above" order={0}>
           <Animated.View
-            testID="home-tab-header"
-            onLayout={onHeaderLayout}
-            pointerEvents={phase.headerTouchable ? "auto" : "none"}
-            style={[styles.header, headerStyle]}
+            pointerEvents={studyScroll.barTouchable ? "none" : "auto"}
+            style={studyScroll.mastheadStyle}
           >
-            <Wordmark />
-            <MonoLabel
-              variant="headerDate"
-              tone="textMuted"
-              testID="home-tab-date"
-              numberOfLines={1}
-              style={styles.date}
+            <View
+              ref={mastheadRef}
+              collapsable={false}
+              onLayout={studyScroll.onMastheadLayout}
+              testID="home-tab-header"
+              style={styles.header}
             >
-              {view.date}
-            </MonoLabel>
+              {/* Before a first plan, the wordmark then the date rise in after a blank beat. */}
+              <Animated.View style={[styles.wordmark, wordmarkRise]}>
+                <HomeWordmark onPress={view.devActions} />
+              </Animated.View>
+              <Animated.View style={[styles.dateSlot, dateRise]}>
+                <MonoLabel
+                  variant="headerDate"
+                  tone="textSupporting"
+                  testID="home-tab-date"
+                  numberOfLines={1}
+                  style={styles.date}
+                >
+                  {view.date}
+                </MonoLabel>
+              </Animated.View>
+            </View>
           </Animated.View>
         </Arrive>
 
-        <Animated.ScrollView
-          ref={scroll}
-          testID="home-tab-scroll"
-          onContentSizeChange={onContentSizeChange}
-          snapToOffsets={snapOffsets}
-          snapToStart={false}
-          snapToEnd={false}
-          onLayout={onScrollLayout}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <Arrive from="below" order={1}>
-            <SkeletonHandoff
-              testID="home-handoff"
-              pending={view.loading}
-              skeleton={<HomeSkeleton testID="home-content-pending" />}
-              style={styles.home}
-            >
-              {view.active ? (
-                <ActivePlanHero
-                  plan={view.active.hero}
-                  href={view.active.href}
-                  onContinue={view.continueToday}
-                  motion={heroMotion}
-                />
-              ) : (
-                <StartHereCard onAddSermon={view.addSermon} />
-              )}
-
-              {view.verse && (
-                <VerseCard
-                  testID="home-verse"
-                  verse={view.verse.verse}
-                  reference={view.verse.reference}
-                  passage={view.verse.passage}
-                  caption={view.verse.caption}
-                  day={view.verse.day}
-                  liked={view.verse.liked}
-                  onLike={view.verse.toggleLike}
-                  onShare={view.verse.share}
-                />
-              )}
-
-              {!view.hasPlans && view.sample && (
-                <View style={styles.sample}>
-                  <SFProBody tone="textMuted" style={styles.label}>
-                    Try a sample
-                  </SFProBody>
-
-                  <PlanRow
-                    testID="home-tab-sample-plan"
-                    title={view.sample.title}
-                    detail={view.sample.detail}
-                    done={false}
-                    onPress={view.openSample}
+        {view.onboarding ? (
+          // Drawn once the phone's said whether the welcome's been seen, so it plays — or doesn't — whole.
+          welcome.ready && (
+            <Arrive from="below" order={1} style={styles.onboarding}>
+              <HomeOnboarding
+                key={welcome.run}
+                testID="home-onboarding"
+                onAddSermon={view.addSermon}
+                phase={welcome.phase}
+                onTyped={welcome.typed}
+                samples={view.samples}
+                onOpenSample={view.openSample}
+              />
+            </Arrive>
+          )
+        ) : (
+          <Animated.ScrollView
+            ref={scroll}
+            testID="home-tab-scroll"
+            onScroll={studyScroll.onScroll}
+            scrollEventThrottle={16}
+            snapToOffsets={studyScroll.snapOffsets}
+            snapToStart={false}
+            snapToEnd={false}
+            onContentSizeChange={studyScroll.onContentSizeChange}
+            onLayout={(event) => studyScroll.onScrollLayout(event.nativeEvent.layout.height)}
+            style={styles.scroll}
+            contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}
+          >
+            <Arrive from="below" order={1}>
+              <SkeletonHandoff
+                testID="home-handoff"
+                pending={view.loading}
+                skeleton={<HomeSkeleton testID="home-content-pending" />}
+                style={styles.home}
+              >
+                {view.active ? (
+                  <FeaturedStudy
+                    study={view.active.study}
+                    href={view.active.href}
+                    onContinue={view.continueToday}
+                    artworkRef={artworkRef}
+                    onArtworkLayout={studyScroll.onArtworkLayout}
+                    artworkStyle={studyScroll.artworkStyle}
+                    wordsRef={wordsRef}
+                    onWordsLayout={studyScroll.onWordsLayout}
+                    wordsStyle={studyScroll.wordsStyle}
+                    continueRef={continueRef}
+                    onContinueLayout={studyScroll.onContinueLayout}
+                    continueStyle={studyScroll.continueStyle}
                   />
-                </View>
-              )}
-            </SkeletonHandoff>
-          </Arrive>
-        </Animated.ScrollView>
+                ) : (
+                  <StartHereHero onAddSermon={view.addSermon} />
+                )}
+                <Divider testID="home-game-rule" />
+                <DailyRise {...dailyGame} />
+                {/* A rule between the two sections, as a page sets apart its next story. */}
+                {view.verse && <Divider testID="home-section-rule" />}
+                {view.verse && (
+                  <VerseCard
+                    testID="home-verse"
+                    verse={view.verse.verse}
+                    reference={view.verse.reference}
+                    passage={view.verse.passage}
+                    caption={view.verse.caption}
+                    day={view.verse.day}
+                    liked={view.verse.liked}
+                    onLike={view.verse.toggleLike}
+                    onShare={view.verse.share}
+                  />
+                )}
+              </SkeletonHandoff>
+            </Arrive>
+          </Animated.ScrollView>
+        )}
       </Screen>
 
       {!view.loading && view.active && (
-        <ActivePlanBar
-          plan={view.active.bar}
-          topInset={insetTop}
-          motion={barMotion}
-          href={view.active.href}
-          onContinue={view.continueToday}
-        />
+        <>
+          <StudyBar
+            study={view.active.study}
+            topInset={studyScroll.insetTop}
+            style={studyScroll.barStyle}
+            thumbStyle={studyScroll.barThumbStyle}
+            touchable={studyScroll.barTouchable}
+            href={view.active.href}
+            onContinue={view.continueToday}
+          />
+          <ArtworkFlight
+            thumbnailUrl={view.active.study.thumbnailUrl}
+            style={studyScroll.flightStyle}
+          />
+        </>
       )}
-
-      {!view.loading && view.flight && (
-        <ArtworkFlight thumbnailUrl={view.flight.thumbnailUrl} style={flightStyle} />
-      )}
-
-      {isFocused && !view.loading && phase.lightStatusBar && <StatusBarTone light />}
     </View>
   );
 }
@@ -184,7 +219,11 @@ const styles = StyleSheet.create({
     gap: space[12],
   },
 
+  // The wordmark comes in from beyond the screen's left edge: the header's inset is the date's alone.
+  wordmark: { marginLeft: -(PAGE_INSET + WORDMARK_BLEED) },
+
   // When the row is tight, the date gives way; the wordmark never does.
+  dateSlot: { flexShrink: 1 },
   date: { flexShrink: 1, paddingBottom: space[2] },
 
   scroll: {
@@ -193,22 +232,15 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    gap: space[28],
     paddingHorizontal: PAGE_INSET,
-    paddingTop: CONTENT_TOP,
+    paddingTop: space[20],
     paddingBottom: FLOATING_NAV_BAR_CLEARANCE,
   },
 
-  // The page's parts, as far apart as the scroll keeps them.
+  // The study, the rule and the verse: two sections of a page, with generous room between.
   home: {
-    gap: space[28],
+    gap: space[40],
   },
 
-  sample: {
-    gap: space[12],
-  },
-
-  label: {
-    marginLeft: space[6],
-  },
+  onboarding: { flex: 1 },
 });

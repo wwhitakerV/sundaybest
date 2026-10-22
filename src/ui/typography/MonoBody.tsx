@@ -16,7 +16,7 @@ function typeFor(typography: Theme["typography"], variant: MonoBodyVariant) {
   }
 }
 
-/** Running text in the mono, IBM Plex Mono: meta body, supporting copy and footnotes, a step counter. */
+/** Running text in the interface face, Söhne (it was the mono's role): meta body, supporting copy and footnotes, a step counter. */
 export function MonoBody({ variant = "body", ...props }: MonoBodyProps) {
   const { typography } = useTheme();
   return <ThemedText type={typeFor(typography, variant)} {...props} />;

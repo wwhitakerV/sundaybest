@@ -14,6 +14,11 @@ export function getApiSamplePlan(plans: readonly ApiPlanSummary[]): ApiPlanSumma
   return plans.find((plan) => plan.isSample && plan.status === "ready") ?? null;
 }
 
+/** Every ready-made plan of ours not yet started: the ones to try. */
+export function getApiSamplePlans(plans: readonly ApiPlanSummary[]): ApiPlanSummary[] {
+  return plans.filter((plan) => plan.isSample && plan.status === "ready");
+}
+
 export function getApiInProgressPlans(plans: readonly ApiPlanSummary[]): ApiPlanSummary[] {
   return getApiUserPlans(plans)
     .filter((plan) => plan.status === "active")

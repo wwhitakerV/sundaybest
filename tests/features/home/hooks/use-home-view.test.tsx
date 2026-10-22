@@ -6,16 +6,14 @@ import { useRouter } from "expo-router";
 import type * as ExpoRouter from "expo-router";
 
 import { API_URL, someSettings } from "@tests/factories/api";
-import { aPlan, summaryOf } from "@tests/factories/api-plans";
+import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { forgetLikedVerses, likedVerses } from "@tests/mocks/liked-verses";
 import { server } from "@tests/mocks/server";
 import * as haptics from "@/core/haptics/haptics";
 import { openShareSheet } from "@/core/sharing/share-sheet";
 import { studyHref } from "@/entities/plan";
-import { tabPlanHref } from "@/entities/tabs";
 import { useHomeView } from "@/features/home/hooks/use-home-view";
-import { describeApiPlan } from "@/features/plans";
 
 jest.mock("@/core/haptics/haptics", () => ({
   tapFeedback: jest.fn(),
@@ -121,16 +119,18 @@ describe("useHomeView", () => {
     expect(result.current.hasPlans).toBe(true);
   });
 
-  it("has no active plan, and offers the sample, when there's only the sample", async () => {
+  it("is onboarding, with no active plan, when there's only the sample", async () => {
     const { result } = await renderHomeView([SAMPLE]);
 
     expect(result.current.active).toBeNull();
     expect(result.current.hasPlans).toBe(false);
-    expect(result.current.sample).toEqual({
-      id: SAMPLE.id,
-      title: SAMPLE.title,
-      detail: describeApiPlan(summaryOf(SAMPLE)),
-    });
+    expect(result.current.onboarding).toBe(true);
+  });
+
+  it("isn't onboarding once there's a plan of their own", async () => {
+    const { result } = await renderHomeView([ACTIVE, SAMPLE]);
+
+    expect(result.current.onboarding).toBe(false);
   });
 
   it("opens New Plan with addSermon", async () => {
@@ -159,22 +159,6 @@ describe("useHomeView", () => {
       pathname: "/(tabs)/home/[planId]",
       params: { planId: waiting.id },
     });
-  });
-
-  it("opens the sample plan's overview in Home with openSample", async () => {
-    const { result } = await renderHomeView([SAMPLE]);
-
-    act(() => result.current.openSample());
-
-    expect(mockPush).toHaveBeenCalledWith(tabPlanHref("home", SAMPLE.id));
-  });
-
-  it("does nothing on openSample when there is no sample", async () => {
-    const { result } = await renderHomeView([ACTIVE]);
-
-    act(() => result.current.openSample());
-
-    expect(mockPush).not.toHaveBeenCalled();
   });
 });
 

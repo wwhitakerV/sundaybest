@@ -6,6 +6,7 @@ import { ApiProvider } from "@/core/api/ApiProvider";
 import { initializePinning } from "@/core/api/pinning/pinning";
 import { createQueryClient } from "@/core/api/query-client";
 import { env } from "@/core/config/env";
+import { registerStartOver } from "@/core/dev-menu/start-over";
 import { useAppFonts } from "@/core/fonts/use-app-fonts";
 import { AppStoreProvider } from "@/core/store/AppStoreProvider";
 import { LaunchSplashCoordinator } from "./LaunchSplashCoordinator";
@@ -32,6 +33,8 @@ export function AppProviders({ children, fallback = null, offlineCache }: AppPro
   const queryClient = useMemo(() => createQueryClient(), []);
   const { loaded, error } = useAppFonts();
   const fontsReady = loaded || error !== null;
+  // Development builds: "Start over as a new reader", in the developer menu (ADR 0035).
+  useEffect(registerStartOver, []);
 
   if (!fontsReady) return fallback;
 

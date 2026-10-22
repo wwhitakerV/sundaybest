@@ -9,13 +9,13 @@ export const PAINT_MOVIE_SETTINGS = {
   /** The blank red screen before the stroke. */
   blankMs: 300,
   /** How long the stroke takes to sweep across. */
-  swipeMs: 240,
+  swipeMs: 520,
   /** How long the stroke is, in points. */
-  strokeLength: 470,
+  strokeLength: 334,
   /** How tall the stroke is, in points. */
-  strokeHeight: 82,
+  strokeHeight: 66,
   /** How long each letter takes to press up under the paint. */
-  popMs: 260,
+  popMs: 730,
   /** The delay from one letter's press to the next's. */
   popStagger: 22,
   /** How long the paint sits before it runs. */
@@ -53,9 +53,9 @@ export const PAINT_MOVIE_SETTINGS = {
   /** How fast the letters fall: a multiplier on their gravity. */
   letterSpeed: 1,
   /** How deep the pool stands, as a percentage of the screen's height. */
-  poolPct: 6,
+  poolPct: 5,
   /** How wide the wordmark is, in points. */
-  writeWidth: 350,
+  writeWidth: 280,
   /** The delay after the letters pour in, before the pool erupts. */
   sinkMs: 0,
   /** How long the eruption takes to fill the screen. */

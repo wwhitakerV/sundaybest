@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { Text, type StyleProp, type TextProps } from "react-native";
 
 import { useTheme } from "@/theme";
-import type { LayoutTextStyle } from "./ThemedText";
+import { italicFace } from "@/theme/fonts";
+import { useLineFace, type LayoutTextStyle } from "./ThemedText";
 import { toneColor, type Tone } from "./tone";
 
 export type SpanProps = Omit<TextProps, "style"> & {
@@ -25,12 +26,14 @@ export type SpanProps = Omit<TextProps, "style"> & {
 export function Span({ tone, italic = false, match = false, style, ...props }: SpanProps) {
   const theme = useTheme();
   const color = tone ? toneColor(theme.colors, tone) : undefined;
+  // Italic is its own cut: the line's, slanted by its designer, never by iOS.
+  const face = useLineFace();
   return (
     <Text
       {...props}
       style={[
         color !== undefined && { color },
-        italic && { fontStyle: "italic" },
+        italic && { fontFamily: italicFace(face), fontStyle: "italic" },
         match && theme.typography.match,
         style,
       ]}

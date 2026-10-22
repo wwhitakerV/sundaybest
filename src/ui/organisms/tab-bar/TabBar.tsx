@@ -20,8 +20,8 @@ import {
   CAPSULE_HEIGHT,
   CAPSULE_INSET_IN_ROW,
   CAPSULE_RADIUS,
+  FAB_ROOM,
   FAB_SIZE,
-  GAP_TO_FAB,
   RAISE_GEOMETRY,
   RAISE_LIFT,
   SIDE_MARGIN,
@@ -103,19 +103,13 @@ export function TabBar({ staysUnder = [], ...props }: TabBarProps) {
   const [lastAccessory, setLastAccessory] = useState<TabBarAccessory | null>(accessory);
   if (accessory && accessory !== lastAccessory) setLastAccessory(accessory);
   const [rowWidth, setRowWidth] = useState(0);
-  const { capsuleStyle, tabsStyle, gatheredStyle, buttonStyle } = useTabBarMinimize(
-    minimized,
-    accessory !== null,
-    rowWidth > 0 ? rowWidth - FAB_SIZE - GAP_TO_FAB : 0,
-    CAPSULE_HEIGHT,
-  );
   // A banner floats above the tabs unless a screen's button is raised there.
   const banner = useShownTabBarBanner();
   const bannerShown = banner !== null && banner !== undefined && !raised;
   const [lastBanner, setLastBanner] = useState<ReactNode>(banner);
   if (banner != null && banner !== lastBanner) setLastBanner(banner);
   const bannerStyle = useTabBarBannerReveal(bannerShown, RAISE_LIFT);
-  const { slotStyle, fabStyle, tintStyle } = useTabBarRaise(
+  const { slotStyle, fabStyle, tintStyle, fabGone } = useTabBarRaise(
     {
       buttonRaised: raised,
       fabShrunk: raised || (bannerShown && !minimized),
@@ -126,6 +120,14 @@ export function TabBar({ staysUnder = [], ...props }: TabBarProps) {
     { ...RAISE_GEOMETRY, fabDrop: FAB_SIZE + getFloatingNavBarBottom(insets.bottom) },
   );
 
+  const { capsuleStyle, tabsStyle, gatheredStyle, buttonStyle } = useTabBarMinimize(
+    minimized,
+    accessory !== null,
+    rowWidth > 0 ? rowWidth - FAB_ROOM : 0,
+    CAPSULE_HEIGHT,
+    // A screen with no use for the FAB: the tabs take its room as it goes.
+    { room: FAB_ROOM, taken: fabGone },
+  );
   const capsuleBottom = getFloatingNavBarBottom(insets.bottom);
   // Tall enough for the raised button; held down by the lift until it rises.
   const tintHeight = getFloatingNavBarTintHeight(capsuleBottom) + RAISE_LIFT;
@@ -237,7 +239,7 @@ const styles = StyleSheet.create({
   // is the FAB's height without the FAB being in it.
   capsule: {
     flex: 1,
-    marginRight: FAB_SIZE + GAP_TO_FAB,
+    marginRight: FAB_ROOM,
     marginVertical: CAPSULE_INSET_IN_ROW,
     height: CAPSULE_HEIGHT,
     borderRadius: CAPSULE_RADIUS,

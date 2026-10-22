@@ -10,9 +10,9 @@ export type ArtworkFlightProps = {
 };
 
 /**
- * The featured plan's artwork in flight: a copy that floats over everything
- * and travels from the hero's artwork up into the plan bar's thumbnail as
- * the plan collapses — while both of those hide. It sits exactly on one or
+ * The featured study's artwork in flight: a copy that floats over everything
+ * and travels from the artwork up into the plan bar's thumbnail as the bar
+ * comes in — while both of those hide. It sits exactly on one or
  * the other at each end, so the hand-off can't be seen. Never takes taps.
  */
 export function ArtworkFlight({ thumbnailUrl, style }: ArtworkFlightProps) {

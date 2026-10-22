@@ -20,6 +20,9 @@
     "android",
     "coverage",
     "api",
-    "legacy-intro-and-assets"
+    "legacy-intro-and-assets",
+    "legacy-welcome",
+    "legacy-home-hero",
+    "legacy-the-99"
   ]
 }

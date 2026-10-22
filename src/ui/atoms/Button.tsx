@@ -4,7 +4,7 @@ import type { LucideIcon } from "lucide-react-native";
 import { controlHeight, radius, space, useTheme } from "@/theme";
 import { SFProLabel } from "@/ui/typography/SFProLabel";
 
-type ButtonVariant = "primary" | "soft" | "secondary";
+type ButtonVariant = "primary" | "soft" | "secondary" | "waiting";
 
 const ICON_SIZE = 20;
 
@@ -27,6 +27,9 @@ export type ButtonProps = {
  * action beside a primary one.
  * `secondary`: text-only, no fill or border, for a lower-emphasis action
  * alongside a primary button.
+ * `waiting`: the main action's place when its way on isn't open yet ("Day 3
+ * tomorrow") — the pill in opaque `waitingFill` with `waitingInk`, no edge,
+ * never translucent.
  */
 export function Button({
   label,
@@ -39,7 +42,12 @@ export function Button({
 }: ButtonProps) {
   const theme = useTheme();
   const isPrimary = variant === "primary";
-  const ink = isPrimary ? theme.colors.onControlPrimary : theme.colors.text;
+  const isWaiting = variant === "waiting";
+  const ink = isPrimary
+    ? theme.colors.onControlPrimary
+    : isWaiting
+      ? theme.colors.waitingInk
+      : theme.colors.text;
 
   return (
     <Pressable
@@ -62,6 +70,7 @@ export function Button({
           },
         ],
         variant === "secondary" && styles.secondary,
+        isWaiting && [styles.pill, { backgroundColor: theme.colors.waitingFill }],
         disabled && styles.disabled,
       ]}
     >
@@ -73,7 +82,9 @@ export function Button({
           strokeWidth={theme.icon.strokeWidth}
         />
       )}
-      <SFProLabel tone={isPrimary ? "onControlPrimary" : "text"}>{label}</SFProLabel>
+      <SFProLabel tone={isPrimary ? "onControlPrimary" : isWaiting ? "waitingInk" : "text"}>
+        {label}
+      </SFProLabel>
     </Pressable>
   );
 }

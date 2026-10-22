@@ -33,13 +33,15 @@ describe("flags", () => {
       verboseLogging: true,
       // Off for now in every build: the week picker's made-up histories, for design review.
       designPreviews: false,
+      // Home's states with made-up plans: development builds only.
+      homePreviews: true,
     });
   });
 
   it("answers isEnabled for every known flag", () => {
     const answers = FEATURE_FLAGS.map((flag: FeatureFlag) => typeof flags.isEnabled(flag));
 
-    expect(answers).toEqual(["boolean", "boolean", "boolean", "boolean"]);
+    expect(answers).toEqual(["boolean", "boolean", "boolean", "boolean", "boolean"]);
   });
 });
 
@@ -73,6 +75,18 @@ describe("createStaticFlagSource", () => {
       const flags = createStaticFlagSource(envFor({ sentryDsn: "https://sentry.invalid/0" }));
 
       expect(flags.isEnabled("crashReporting")).toBe(true);
+    });
+  });
+
+  describe("homePreviews", () => {
+    it.each([
+      ["development", true],
+      ["preview", false],
+      ["production", false],
+    ] as const)("is %p -> %p", (variant, expected) => {
+      const flags = createStaticFlagSource(envFor({ variant }));
+
+      expect(flags.isEnabled("homePreviews")).toBe(expected);
     });
   });
 

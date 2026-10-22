@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { Text, type StyleProp, type TextProps, type TextStyle } from "react-native";
 
 import { useTheme } from "@/theme";
@@ -20,6 +20,14 @@ export type LayoutTextStyle = Omit<
   letterSpacing?: never;
   color?: never;
 };
+
+/** The cut a line is drawn in, for a `Span` inside it to take that cut's italic. */
+const LineFace = createContext<string | undefined>(undefined);
+
+/** The cut of the line this text sits in. */
+export function useLineFace(): string | undefined {
+  return useContext(LineFace);
+}
 
 /** Props every typography component takes. */
 export type TypographyProps = Omit<TextProps, "style"> & {
@@ -49,14 +57,16 @@ export function ThemedText({
   const offset = useTextOffset();
 
   return (
-    <Text
-      {...props}
-      {...(fixed && { allowFontScaling: false })}
-      style={[
-        fixed ? type : scaleTypeStyle(type, scale, offset),
-        { color: toneColor(theme.colors, tone) },
-        style,
-      ]}
-    />
+    <LineFace.Provider value={typeof type.fontFamily === "string" ? type.fontFamily : undefined}>
+      <Text
+        {...props}
+        {...(fixed && { allowFontScaling: false })}
+        style={[
+          fixed ? type : scaleTypeStyle(type, scale, offset),
+          { color: toneColor(theme.colors, tone) },
+          style,
+        ]}
+      />
+    </LineFace.Provider>
   );
 }

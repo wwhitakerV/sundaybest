@@ -23,6 +23,7 @@ export const FEATURE_FLAGS = [
   "crashReporting",
   "verboseLogging",
   "designPreviews",
+  "homePreviews",
 ] as const;
 
 export type FeatureFlag = (typeof FEATURE_FLAGS)[number];
@@ -56,6 +57,10 @@ export function createStaticFlagSource(config: Env): FlagSource {
     // picker's growth, say. Off for now; when on, development builds only:
     // never a reader's. Turn back on with `config.variant === "development"`.
     designPreviews: false,
+    // Home's states with made-up plans — loading, an error, no plans, a day
+    // open, today done… — stepped through from its header, to design each
+    // one. Development builds only: never a reader's.
+    homePreviews: config.variant === "development",
   };
 
   const snapshot = Object.freeze({ ...values });
@@ -75,6 +80,8 @@ export function createStaticFlagSource(config: Env): FlagSource {
           return values.verboseLogging;
         case "designPreviews":
           return values.designPreviews;
+        case "homePreviews":
+          return values.homePreviews;
       }
     },
     snapshot() {

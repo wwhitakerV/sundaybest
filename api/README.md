@@ -184,3 +184,18 @@ Automatic Fastify request logging is disabled. Completion logs use the matched r
 - `GET /health/ready` — process can query PostgreSQL
 
 Run the API and open `http://localhost:4100/docs` for the canonical interactive Swagger surface, or `GET /openapi.json` for the generated OpenAPI document. See `src/docs/architecture.md` for the data-flow decisions.
+
+## Managing our plans
+
+"Try one of ours" in the app lists the plans marked as ours (`plans.visibility =
+"sample"`). While developing, manage them at **http://localhost:4100/dev/admin**
+(or the API's `PORT`):
+
+- **Add:** paste a YouTube sermon link, pick its length and whether it has a
+  Quick Check. The plan is generated like any other, so the worker must be running
+  (`npm run dev:worker`). It shows in the app once it's ready.
+- **Remove:** it leaves "Try one of ours"; anyone already studying it keeps it.
+
+It exists only when `NODE_ENV` isn't production and `DEV_SESSION_ENABLED` is on,
+and it answers only requests from this machine. Our plans belong to one users
+row, "SundayBest (our plans)", made the first time one is added.

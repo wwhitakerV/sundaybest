@@ -40,7 +40,7 @@ function typeFor(typography: Theme["typography"], variant: SFProLabelVariant) {
   }
 }
 
-/** Control and UI labels in the system face, SF Pro: buttons, segments, filters, tags, steps, tiles. */
+/** Control and UI labels in the interface face, Söhne: buttons, segments, filters, tags, steps, tiles. */
 export function SFProLabel({ variant = "button", ...props }: SFProLabelProps) {
   const { typography } = useTheme();
   return <ThemedText type={typeFor(typography, variant)} {...props} />;

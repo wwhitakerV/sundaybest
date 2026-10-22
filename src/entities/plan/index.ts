@@ -7,8 +7,6 @@ export { getPlanEndsLine } from "./logic/plan-ends-line";
 export { formatDay, formatDayOfTotal, formatPlanLength } from "./logic/plan-wording";
 export { describePlanHero } from "./logic/plan-hero";
 export {
-  HOME_HREF,
-  PLANS_HREF,
   STUDY_TRANSLATION_HREF,
   NEW_PLAN_HREF,
   dayCompleteHref,

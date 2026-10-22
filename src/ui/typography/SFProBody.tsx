@@ -37,7 +37,7 @@ function typeFor(typography: Theme["typography"], variant: SFProBodyVariant) {
   }
 }
 
-/** Running text in the system face, SF Pro: body, list items, labels, reading, supporting detail. */
+/** Running text in the interface face, Söhne: body, list items, labels, supporting detail — and `reading`, long-form teaching, in Tiempos Text. */
 export function SFProBody({ variant = "body", ...props }: SFProBodyProps) {
   const { typography } = useTheme();
   return <ThemedText type={typeFor(typography, variant)} {...props} />;

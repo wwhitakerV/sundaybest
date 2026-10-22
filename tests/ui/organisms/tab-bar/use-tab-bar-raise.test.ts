@@ -34,6 +34,11 @@ describe("useTabBarRaise", () => {
     });
   });
 
+  it("says how far the FAB has gone, for the tabs to take its room", () => {
+    expect(raise({}).fabGone.value).toBe(0);
+    expect(raise({ fabHidden: true }).fabGone.value).toBe(1);
+  });
+
   it("lets the screen's button reach the bar's edge once the FAB's gone", () => {
     expect(raise({ fabHidden: true }).slotStyle).toMatchObject({ right: 0 });
   });

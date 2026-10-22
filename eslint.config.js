@@ -220,6 +220,9 @@ module.exports = defineConfig([
     "api/**",
     // The retired launch intros, kept only until they're deleted (ADR 0031).
     "legacy-intro-and-assets/**",
+    "legacy-welcome/**",
+    "legacy-home-hero/**",
+    "legacy-the-99/**",
   ]),
 
   // 1. Expo's recommended config (registers import, expo, react, react-hooks,

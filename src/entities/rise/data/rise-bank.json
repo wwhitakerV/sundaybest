@@ -1,0 +1,738 @@
+[
+  {
+    "id": "rise-001",
+    "category": "animals",
+    "difficulty": "medium",
+    "question": "Which animal has three hearts?",
+    "options": [
+      "Octopus",
+      "Dolphin"
+    ],
+    "correctIndex": 0,
+    "fact": "Two hearts pump blood through its gills, and a third through the rest of its body.",
+    "conflicts": [
+      "rise-006"
+    ]
+  },
+  {
+    "id": "rise-002",
+    "category": "animals",
+    "difficulty": "easy",
+    "question": "Which animal can doze standing up?",
+    "options": [
+      "Horse",
+      "Rabbit"
+    ],
+    "correctIndex": 0,
+    "fact": "Locking joints in its legs let a horse doze on its feet. It lies down for deep sleep."
+  },
+  {
+    "id": "rise-003",
+    "category": "animals",
+    "difficulty": "medium",
+    "question": "Which animal has blue blood?",
+    "options": [
+      "Lobster",
+      "Shark"
+    ],
+    "correctIndex": 0,
+    "fact": "Its blood carries oxygen with copper, not iron, and turns blue when it does."
+  },
+  {
+    "id": "rise-004",
+    "category": "animals",
+    "difficulty": "medium",
+    "question": "Which bird can fly backward?",
+    "options": [
+      "Sparrow",
+      "Hummingbird"
+    ],
+    "correctIndex": 1,
+    "fact": "It swings its wings in a figure-eight, so it can hover, and even fly backward."
+  },
+  {
+    "id": "rise-005",
+    "category": "animals",
+    "difficulty": "hard",
+    "question": "Which animal has fingerprints similar to humans?",
+    "options": [
+      "Koala",
+      "Panda"
+    ],
+    "correctIndex": 0,
+    "fact": "A koala's fingerprints are so like ours they're hard to tell apart, even under a microscope."
+  },
+  {
+    "id": "rise-006",
+    "category": "animals",
+    "difficulty": "easy",
+    "question": "Which animal is a mammal?",
+    "options": [
+      "Penguin",
+      "Dolphin"
+    ],
+    "correctIndex": 1,
+    "fact": "Dolphins breathe air and feed their young on milk. Penguins are birds."
+  },
+  {
+    "id": "rise-007",
+    "category": "animals",
+    "difficulty": "medium",
+    "question": "Which animal can regrow lost arms?",
+    "options": [
+      "Starfish",
+      "Clam"
+    ],
+    "correctIndex": 0,
+    "fact": "Many starfish regrow lost arms, and a few can grow a whole new body from one arm."
+  },
+  {
+    "id": "rise-008",
+    "category": "animals",
+    "difficulty": "easy",
+    "question": "Which animal has the longest neck?",
+    "options": [
+      "Camel",
+      "Giraffe"
+    ],
+    "correctIndex": 1,
+    "fact": "A giraffe's neck is nearly 2 metres long, yet has just seven bones, like ours."
+  },
+  {
+    "id": "rise-009",
+    "category": "animals",
+    "difficulty": "easy",
+    "question": "Which animal spins silk?",
+    "options": [
+      "Spider",
+      "Scorpion"
+    ],
+    "correctIndex": 0,
+    "fact": "Weight for weight, some spider silk is stronger than steel."
+  },
+  {
+    "id": "rise-010",
+    "category": "animals",
+    "difficulty": "medium",
+    "question": "Which animal lays eggs?",
+    "options": [
+      "Platypus",
+      "Otter"
+    ],
+    "correctIndex": 0,
+    "fact": "The platypus is one of the few mammals that lay eggs, with the echidnas."
+  },
+  {
+    "id": "rise-011",
+    "category": "space_science",
+    "difficulty": "medium",
+    "question": "Which planet is the hottest?",
+    "options": [
+      "Mercury",
+      "Venus"
+    ],
+    "correctIndex": 1,
+    "fact": "Its thick carbon dioxide air traps heat, so it's hotter than Mercury, which is closer to the Sun.",
+    "conflicts": [
+      "rise-013",
+      "rise-051"
+    ]
+  },
+  {
+    "id": "rise-012",
+    "category": "space_science",
+    "difficulty": "easy",
+    "question": "Which planet has the most prominent rings?",
+    "options": [
+      "Saturn",
+      "Mars"
+    ],
+    "correctIndex": 0,
+    "fact": "Saturn's rings are mostly ice, and stretch more than twice as wide as the planet."
+  },
+  {
+    "id": "rise-013",
+    "category": "space_science",
+    "difficulty": "easy",
+    "question": "Which planet is closest to the Sun?",
+    "options": [
+      "Venus",
+      "Mercury"
+    ],
+    "correctIndex": 1,
+    "fact": "A year on Mercury lasts just 88 Earth days.",
+    "conflicts": [
+      "rise-051"
+    ]
+  },
+  {
+    "id": "rise-014",
+    "category": "space_science",
+    "difficulty": "medium",
+    "question": "Which planet is known for its Great Red Spot?",
+    "options": [
+      "Jupiter",
+      "Neptune"
+    ],
+    "correctIndex": 0,
+    "fact": "The Great Red Spot is a storm wider than Earth that has raged for centuries."
+  },
+  {
+    "id": "rise-015",
+    "category": "space_science",
+    "difficulty": "medium",
+    "question": "Which is larger?",
+    "options": [
+      "Earth",
+      "Neptune"
+    ],
+    "correctIndex": 1,
+    "fact": "Neptune is nearly four times as wide as Earth."
+  },
+  {
+    "id": "rise-016",
+    "category": "space_science",
+    "difficulty": "easy",
+    "question": "Which travels faster?",
+    "options": [
+      "Light",
+      "Sound"
+    ],
+    "correctIndex": 0,
+    "fact": "Light covers about 300,000 km a second, nearly a million times faster than sound."
+  },
+  {
+    "id": "rise-017",
+    "category": "space_science",
+    "difficulty": "easy",
+    "question": "Which star is closest to Earth?",
+    "options": [
+      "Sirius",
+      "Sun"
+    ],
+    "correctIndex": 1,
+    "fact": "The Sun is a star. The next nearest, Proxima Centauri, is over four light-years away."
+  },
+  {
+    "id": "rise-018",
+    "category": "space_science",
+    "difficulty": "medium",
+    "question": "Which planet rotates on its side?",
+    "options": [
+      "Uranus",
+      "Jupiter"
+    ],
+    "correctIndex": 0,
+    "fact": "Uranus spins tipped on its side, probably knocked over by a giant collision long ago."
+  },
+  {
+    "id": "rise-019",
+    "category": "space_science",
+    "difficulty": "medium",
+    "question": "Which is a galaxy?",
+    "options": [
+      "Andromeda",
+      "Orion"
+    ],
+    "correctIndex": 0,
+    "fact": "Andromeda is a galaxy 2.5 million light-years away, yet visible without a telescope. Orion is a constellation."
+  },
+  {
+    "id": "rise-020",
+    "category": "space_science",
+    "difficulty": "hard",
+    "question": "Which planet has Olympus Mons?",
+    "options": [
+      "Venus",
+      "Mars"
+    ],
+    "correctIndex": 1,
+    "fact": "Olympus Mons, on Mars, is a volcano about two and a half times the height of Everest."
+  },
+  {
+    "id": "rise-021",
+    "category": "geography",
+    "difficulty": "medium",
+    "question": "Which country has more people?",
+    "options": [
+      "Canada",
+      "India"
+    ],
+    "correctIndex": 1,
+    "fact": "India passed China in 2023 to become the most populous country on Earth."
+  },
+  {
+    "id": "rise-022",
+    "category": "geography",
+    "difficulty": "easy",
+    "question": "Which country contains the city of Kyoto?",
+    "options": [
+      "Japan",
+      "China"
+    ],
+    "correctIndex": 0,
+    "fact": "Kyoto was Japan's capital for more than a thousand years, until 1869.",
+    "conflicts": [
+      "rise-028"
+    ]
+  },
+  {
+    "id": "rise-023",
+    "category": "geography",
+    "difficulty": "easy",
+    "question": "Which continent contains the Sahara?",
+    "options": [
+      "Asia",
+      "Africa"
+    ],
+    "correctIndex": 1,
+    "fact": "The Sahara is nearly the size of the United States."
+  },
+  {
+    "id": "rise-024",
+    "category": "geography",
+    "difficulty": "easy",
+    "question": "Which country is shaped like a boot?",
+    "options": [
+      "Italy",
+      "Greece"
+    ],
+    "correctIndex": 0,
+    "fact": "Italy's boot even has a heel and a toe: Puglia and Calabria."
+  },
+  {
+    "id": "rise-025",
+    "category": "geography",
+    "difficulty": "medium",
+    "question": "Which ocean is the largest?",
+    "options": [
+      "Atlantic",
+      "Pacific"
+    ],
+    "correctIndex": 1,
+    "fact": "The Pacific is larger than all of Earth's land put together."
+  },
+  {
+    "id": "rise-026",
+    "category": "geography",
+    "difficulty": "hard",
+    "question": "Which country contains Machu Picchu?",
+    "options": [
+      "Peru",
+      "Mexico"
+    ],
+    "correctIndex": 0,
+    "fact": "The Inca built Machu Picchu in the 1400s, high in Peru's Andes."
+  },
+  {
+    "id": "rise-027",
+    "category": "geography",
+    "difficulty": "medium",
+    "question": "Which country has more time zones?",
+    "options": [
+      "France",
+      "Russia"
+    ],
+    "correctIndex": 0,
+    "fact": "With its overseas territories, France spans 12 time zones. Russia spans 11."
+  },
+  {
+    "id": "rise-028",
+    "category": "geography",
+    "difficulty": "medium",
+    "question": "Which country contains Mount Fuji?",
+    "options": [
+      "Japan",
+      "Nepal"
+    ],
+    "correctIndex": 0,
+    "fact": "Mount Fuji is an active volcano. It last erupted in 1707."
+  },
+  {
+    "id": "rise-029",
+    "category": "geography",
+    "difficulty": "medium",
+    "question": "Which river flows through Egypt?",
+    "options": [
+      "Amazon",
+      "Nile"
+    ],
+    "correctIndex": 1,
+    "fact": "The Nile flows north, ending in the Mediterranean Sea."
+  },
+  {
+    "id": "rise-030",
+    "category": "geography",
+    "difficulty": "hard",
+    "question": "Which continent is the driest?",
+    "options": [
+      "Antarctica",
+      "Australia"
+    ],
+    "correctIndex": 0,
+    "fact": "Antarctica gets less rain and snow than most deserts. Australia is the driest inhabited continent."
+  },
+  {
+    "id": "rise-031",
+    "category": "human_body",
+    "difficulty": "medium",
+    "question": "Which organ produces insulin?",
+    "options": [
+      "Pancreas",
+      "Liver"
+    ],
+    "correctIndex": 0,
+    "fact": "Insulin lets your body's cells take in sugar from the blood."
+  },
+  {
+    "id": "rise-032",
+    "category": "human_body",
+    "difficulty": "medium",
+    "question": "Which organ filters blood to produce urine?",
+    "options": [
+      "Stomach",
+      "Kidney"
+    ],
+    "correctIndex": 1,
+    "fact": "Your kidneys filter about 180 litres of fluid from your blood every day."
+  },
+  {
+    "id": "rise-033",
+    "category": "human_body",
+    "difficulty": "hard",
+    "question": "Which part of the eye controls pupil size?",
+    "options": [
+      "Iris",
+      "Retina"
+    ],
+    "correctIndex": 0,
+    "fact": "The iris is a ring of muscle, and its pattern is as unique as a fingerprint."
+  },
+  {
+    "id": "rise-034",
+    "category": "human_body",
+    "difficulty": "medium",
+    "question": "Which vitamin is produced in skin through sunlight exposure?",
+    "options": [
+      "Vitamin C",
+      "Vitamin D"
+    ],
+    "correctIndex": 1,
+    "fact": "Sunlight on your skin starts your body making vitamin D."
+  },
+  {
+    "id": "rise-035",
+    "category": "human_body",
+    "difficulty": "easy",
+    "question": "Which blood cells carry oxygen?",
+    "options": [
+      "Red",
+      "White"
+    ],
+    "correctIndex": 0,
+    "fact": "Red blood cells carry oxygen using an iron-rich protein, which is what makes them red."
+  },
+  {
+    "id": "rise-036",
+    "category": "human_body",
+    "difficulty": "easy",
+    "question": "Which bone protects the brain?",
+    "options": [
+      "Skull",
+      "Pelvis"
+    ],
+    "correctIndex": 0,
+    "fact": "The skull is made of 22 bones, most of them locked together."
+  },
+  {
+    "id": "rise-037",
+    "category": "human_body",
+    "difficulty": "easy",
+    "question": "Which organ pumps blood?",
+    "options": [
+      "Lung",
+      "Heart"
+    ],
+    "correctIndex": 1,
+    "fact": "Your heart beats around 100,000 times a day."
+  },
+  {
+    "id": "rise-038",
+    "category": "human_body",
+    "difficulty": "medium",
+    "question": "Which part of the body contains the smallest bones?",
+    "options": [
+      "Ear",
+      "Hand"
+    ],
+    "correctIndex": 0,
+    "fact": "The stirrup, in your middle ear, is the smallest bone in your body: about 3 mm long."
+  },
+  {
+    "id": "rise-039",
+    "category": "human_body",
+    "difficulty": "hard",
+    "question": "Tooth enamel is mostly made of which?",
+    "options": [
+      "Calcium",
+      "Sodium"
+    ],
+    "correctIndex": 0,
+    "fact": "Enamel is mostly calcium phosphate, and it's the hardest substance in your body."
+  },
+  {
+    "id": "rise-040",
+    "category": "human_body",
+    "difficulty": "medium",
+    "question": "Which sense relies on the cochlea?",
+    "options": [
+      "Smell",
+      "Hearing"
+    ],
+    "correctIndex": 1,
+    "fact": "The cochlea is a fluid-filled spiral in your ear that turns sound into nerve signals."
+  },
+  {
+    "id": "rise-041",
+    "category": "history_art",
+    "difficulty": "easy",
+    "question": "Which civilization built the pyramids at Giza?",
+    "options": [
+      "Egyptian",
+      "Roman"
+    ],
+    "correctIndex": 0,
+    "fact": "The Great Pyramid was the tallest building in the world for nearly 4,000 years.",
+    "conflicts": [
+      "rise-044"
+    ]
+  },
+  {
+    "id": "rise-042",
+    "category": "history_art",
+    "difficulty": "hard",
+    "question": "Which invention came first?",
+    "options": [
+      "Telephone",
+      "Telegraph"
+    ],
+    "correctIndex": 1,
+    "fact": "Electric telegraphs carried messages from the 1830s, decades before the telephone in 1876."
+  },
+  {
+    "id": "rise-043",
+    "category": "history_art",
+    "difficulty": "medium",
+    "question": "Who painted the Mona Lisa?",
+    "options": [
+      "Picasso",
+      "Leonardo"
+    ],
+    "correctIndex": 1,
+    "fact": "Leonardo da Vinci began the Mona Lisa around 1503, and kept working on it for years."
+  },
+  {
+    "id": "rise-044",
+    "category": "history_art",
+    "difficulty": "easy",
+    "question": "Which civilization built the Colosseum?",
+    "options": [
+      "Roman",
+      "Greek"
+    ],
+    "correctIndex": 0,
+    "fact": "The Colosseum opened in Rome in 80 AD, and could hold around 50,000 people."
+  },
+  {
+    "id": "rise-045",
+    "category": "history_art",
+    "difficulty": "medium",
+    "question": "Which explorer reached the Americas in 1492?",
+    "options": [
+      "Columbus",
+      "Magellan"
+    ],
+    "correctIndex": 0,
+    "fact": "Columbus first landed in the Bahamas, not on the mainland."
+  },
+  {
+    "id": "rise-046",
+    "category": "history_art",
+    "difficulty": "easy",
+    "question": "Which ship sank in 1912?",
+    "options": [
+      "Titanic",
+      "Mayflower"
+    ],
+    "correctIndex": 0,
+    "fact": "The Titanic sank on its first voyage, after striking an iceberg."
+  },
+  {
+    "id": "rise-047",
+    "category": "history_art",
+    "difficulty": "medium",
+    "question": "Who developed the theory of general relativity?",
+    "options": [
+      "Newton",
+      "Einstein"
+    ],
+    "correctIndex": 1,
+    "fact": "Einstein published general relativity in 1915. It explains gravity as curved space and time."
+  },
+  {
+    "id": "rise-048",
+    "category": "history_art",
+    "difficulty": "medium",
+    "question": "Which artist painted Starry Night?",
+    "options": [
+      "Van Gogh",
+      "Monet"
+    ],
+    "correctIndex": 0,
+    "fact": "Van Gogh painted The Starry Night in 1889, while staying at an asylum in southern France."
+  },
+  {
+    "id": "rise-049",
+    "category": "history_art",
+    "difficulty": "hard",
+    "question": "Which civilization developed cuneiform writing?",
+    "options": [
+      "Sumerian",
+      "Aztec"
+    ],
+    "correctIndex": 0,
+    "fact": "Cuneiform, pressed into clay over 5,000 years ago, is among the earliest writing."
+  },
+  {
+    "id": "rise-050",
+    "category": "history_art",
+    "difficulty": "medium",
+    "question": "Which invention came first?",
+    "options": [
+      "Radio",
+      "Television"
+    ],
+    "correctIndex": 0,
+    "fact": "Radio signals crossed the Atlantic in 1901. Television arrived in the 1920s."
+  },
+  {
+    "id": "rise-051",
+    "category": "general_science",
+    "difficulty": "easy",
+    "question": "Which metal is liquid at room temperature?",
+    "options": [
+      "Mercury",
+      "Copper"
+    ],
+    "correctIndex": 0,
+    "fact": "Mercury doesn't freeze until about -39 °C."
+  },
+  {
+    "id": "rise-052",
+    "category": "general_science",
+    "difficulty": "easy",
+    "question": "Which fruit has seeds on its outside?",
+    "options": [
+      "Strawberry",
+      "Blueberry"
+    ],
+    "correctIndex": 0,
+    "fact": "A strawberry's seeds are really tiny fruits, each holding a seed of its own."
+  },
+  {
+    "id": "rise-053",
+    "category": "general_science",
+    "difficulty": "hard",
+    "question": "Which food is made from fermented soybeans?",
+    "options": [
+      "Tempeh",
+      "Hummus"
+    ],
+    "correctIndex": 0,
+    "fact": "Tempeh comes from Indonesia. Hummus is made from chickpeas."
+  },
+  {
+    "id": "rise-054",
+    "category": "general_science",
+    "difficulty": "easy",
+    "question": "Which material is harder?",
+    "options": [
+      "Quartz",
+      "Diamond"
+    ],
+    "correctIndex": 1,
+    "fact": "Diamond is the hardest natural material, and scratches quartz with ease."
+  },
+  {
+    "id": "rise-055",
+    "category": "general_science",
+    "difficulty": "hard",
+    "question": "Which substance is naturally magnetic?",
+    "options": [
+      "Magnetite",
+      "Graphite"
+    ],
+    "correctIndex": 0,
+    "fact": "Lodestones, made of magnetite, were the first compasses."
+  },
+  {
+    "id": "rise-056",
+    "category": "general_science",
+    "difficulty": "medium",
+    "question": "Which freezes at a lower temperature?",
+    "options": [
+      "Freshwater",
+      "Seawater"
+    ],
+    "correctIndex": 1,
+    "fact": "Salt lowers seawater's freezing point to about -2 °C."
+  },
+  {
+    "id": "rise-057",
+    "category": "general_science",
+    "difficulty": "medium",
+    "question": "Which gas is most abundant in Earth's atmosphere?",
+    "options": [
+      "Nitrogen",
+      "Oxygen"
+    ],
+    "correctIndex": 0,
+    "fact": "Nitrogen makes up about 78% of the air. Oxygen, about 21%."
+  },
+  {
+    "id": "rise-058",
+    "category": "general_science",
+    "difficulty": "medium",
+    "question": "Which is a type of cloud?",
+    "options": [
+      "Cumulus",
+      "Tundra"
+    ],
+    "correctIndex": 0,
+    "fact": "Cumulus are the puffy, fair-weather clouds. Tundra is cold, treeless land."
+  },
+  {
+    "id": "rise-059",
+    "category": "general_science",
+    "difficulty": "medium",
+    "question": "Which instrument measures earthquakes?",
+    "options": [
+      "Barometer",
+      "Seismometer"
+    ],
+    "correctIndex": 1,
+    "fact": "A seismometer records the ground shaking. A barometer measures air pressure."
+  },
+  {
+    "id": "rise-060",
+    "category": "general_science",
+    "difficulty": "medium",
+    "question": "Which metal conducts electricity better at room temperature?",
+    "options": [
+      "Silver",
+      "Iron"
+    ],
+    "correctIndex": 0,
+    "fact": "Silver conducts electricity better than any other metal, even copper."
+  }
+]

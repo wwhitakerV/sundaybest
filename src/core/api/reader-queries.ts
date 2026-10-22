@@ -17,7 +17,7 @@ import {
   offlineCacheKeys,
   persistServerCache,
 } from "./offline-cache";
-import type { MeEnvelope, RemindersEnvelope, SettingsEnvelope } from "./query-cache-sync";
+import type { RemindersEnvelope, SettingsEnvelope } from "./query-cache-sync";
 import { enqueueMutation } from "@/core/storage/mutation-outbox";
 import { withoutUndefined } from "@/utils/object/withoutUndefined";
 
@@ -98,24 +98,6 @@ export function useReflectionPromptsQuery() {
 export function useWordQuery() {
   const api = useSundayBestApi();
   return useQuery({ queryKey: apiQueryKeys.word, queryFn: () => api.word.get() });
-}
-
-export function useCompleteOnboardingMutation() {
-  const api = useSundayBestApi();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => api.user.completeOnboarding(createIdempotencyKey("user:onboarding")),
-    onSuccess: (data) => {
-      queryClient.setQueryData<MeEnvelope>(apiQueryKeys.me, data);
-      void persistServerCache({
-        cacheKey: offlineCacheKeys.me,
-        resourceType: "me",
-        schema: getMeResponseSchema,
-        value: data,
-      });
-    },
-  });
 }
 
 export function useUpdateSettingsMutation() {

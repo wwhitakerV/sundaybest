@@ -34,7 +34,7 @@ function typeFor(typography: Theme["typography"], variant: MonoLabelVariant) {
   }
 }
 
-/** Short labels in the mono, IBM Plex Mono: meta, dates, the weekday strip, emphasis. */
+/** Short labels in the interface face, Söhne, often tracked capitals (it was the mono's role): meta, dates, the weekday strip, emphasis. */
 export function MonoLabel({ variant = "label", ...props }: MonoLabelProps) {
   const { typography } = useTheme();
   return <ThemedText type={typeFor(typography, variant)} {...props} />;

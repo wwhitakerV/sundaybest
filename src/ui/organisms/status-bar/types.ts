@@ -1,12 +1,12 @@
 /** The time as the status bar shows it: its hour and minutes apart, and how it's read aloud. */
 export type StatusBarTime = { hours: string; minutes: string; spoken: string };
 
-/** How the battery is drawn — its percentage, red when low — and read aloud. */
+/** How the battery is drawn — a brush stroke as long as the charge, red when low, hollow in Low Power Mode, a bolt while it charges — and read aloud. */
 export type StatusBarBattery = {
   level: number;
   tone: "ink" | "low";
-  italic: boolean;
-  endCap: "dot" | "bolt";
+  hollow: boolean;
+  charging: boolean;
   spoken: string;
 };
 

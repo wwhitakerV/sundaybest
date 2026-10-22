@@ -587,6 +587,11 @@ insets.
   indicator, Plans' filter), `snap` for a marker that must land dead still (the
   text-size dot), `sheet` for a sheet. The entrances keep their own tuning
   until they're redesigned.
+- Every sheet with the grabber bar drags down by its top — the bar, the
+  title and round them — as iOS's do (`BottomSheet`, `useSheetDrag`): it
+  follows the finger, closes past a quarter of its height or on a flick
+  down (as a tap above it does), and otherwise springs back. Its content
+  stays for scrolling. Never a grabber on a sheet that won't drag.
 - Do not draw a sheet or menu with `Modal`'s own `animationType`: compose
   `BottomSheet`, or `Popover` (`PopoverMenu` for a menu), which slide and grow as iOS's do and stay
   mounted while they leave (`usePresence`).

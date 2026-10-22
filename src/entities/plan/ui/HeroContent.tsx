@@ -6,14 +6,14 @@ import {
   type ViewStyle,
 } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import { BookOpen, Lock } from "lucide-react-native";
+import { BookOpen, Lock, type LucideIcon } from "lucide-react-native";
 
 import { space, useTheme } from "@/theme";
 import { CompactButton } from "@/ui/atoms/CompactButton";
 import { StepProgress } from "@/ui/atoms/StepProgress";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
-import { SFProTitle } from "@/ui/typography/SFProTitle";
 import { SFProBody } from "@/ui/typography/SFProBody";
+import { SerifTitle } from "@/ui/typography/SerifTitle";
 
 const HALO_RADIUS = 12;
 /**
@@ -63,6 +63,8 @@ export type HeroContentProps = {
   continueHandOver?: ContinueHandOver;
   /** Whether it ends on the day-by-day line — not on a page that shows the days itself. Hidden unless said. */
   showProgress?: boolean;
+  /** The action's icon: the open book, into a day, unless the action is something else (Add a sermon's plus). */
+  actionIcon?: LucideIcon;
   testIDs: HeroContentTestIDs;
   /** Its placement in the hero. */
   style?: StyleProp<ViewStyle>;
@@ -80,6 +82,7 @@ export function HeroContent({
   onContinue,
   continueHandOver,
   showProgress = false,
+  actionIcon = BookOpen,
   testIDs,
   style,
 }: HeroContentProps) {
@@ -104,15 +107,15 @@ export function HeroContent({
         >
           {words.status}
         </MonoLabel>
-        <SFProTitle
+        <SerifTitle
           testID={testIDs.title}
           accessibilityRole="header"
-          variant="headline"
+          variant="title"
           tone={ink}
           style={[styles.centred, halo]}
         >
           {title}
-        </SFProTitle>
+        </SerifTitle>
         {church && (
           <SFProBody tone={muted} style={[styles.centred, halo]}>
             {church}
@@ -130,7 +133,7 @@ export function HeroContent({
         <CompactButton
           testID={testIDs.continueButton}
           label={words.action}
-          icon={words.waiting ? Lock : BookOpen}
+          icon={words.waiting ? Lock : actionIcon}
           tone={words.waiting ? "waiting" : light ? "light" : "dark"}
           onPress={onContinue}
         />

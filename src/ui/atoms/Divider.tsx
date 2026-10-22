@@ -10,7 +10,7 @@ export type DividerProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/** A thin rule between the rows of a list, in the theme's divider colour. */
+/** A thin rule between the rows of a list, or a page's sections, in the theme's divider colour. */
 export function Divider({ testID, style }: DividerProps) {
   const theme = useTheme();
 

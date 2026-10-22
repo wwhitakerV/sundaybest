@@ -3,6 +3,7 @@ import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  type SharedValue,
   type WithSpringConfig,
 } from "react-native-reanimated";
 
@@ -34,14 +35,17 @@ const BUTTON_TRAVEL = 44;
  * opening back out — springs, fired whenever `minimized` or `buttonShown`
  * changes (not tied to a gesture). The button can stay shown with the tabs
  * open (`useTabBarRaise` moves it). `fullWidth` is the capsule's width open;
- * `circle` its width gathered. The springs follow the system Reduce Motion
- * setting.
+ * `circle` its width gathered. `fabRoom` is the floating button's room
+ * beside it — `room` wide — and how much of it the button has left (`taken`,
+ * 0–1): the capsule widens into it as the button goes. The springs follow the
+ * system Reduce Motion setting.
  */
 export function useTabBarMinimize(
   minimized: boolean,
   buttonShown: boolean,
   fullWidth: number,
   circle: number,
+  fabRoom?: { room: number; taken: SharedValue<number> },
 ) {
   const capsule = useSharedValue(minimized ? 1 : 0);
   const button = useSharedValue(buttonShown ? 1 : 0);
@@ -53,12 +57,16 @@ export function useTabBarMinimize(
     button.set(withSpring(buttonShown ? 1 : 0, buttonSpring(buttonShown)));
   }, [buttonShown, button]);
 
-  const capsuleStyle = useAnimatedStyle(() =>
-    fullWidth > 0
+  const capsuleStyle = useAnimatedStyle(() => {
+    // The floating button's room the capsule has taken, as the button goes.
+    const taken = fabRoom ? fabRoom.room * fabRoom.taken.value : 0;
+    const room = fabRoom ? { marginRight: fabRoom.room - taken } : {};
+    const open = fullWidth + taken;
+    return fullWidth > 0
       ? // Sized outright once measured — not flexed — so it can gather.
-        { flex: 0, width: fullWidth - (fullWidth - circle) * bounceWithin(capsule.value) }
-      : {},
-  );
+        { flex: 0, width: open - (open - circle) * bounceWithin(capsule.value), ...room }
+      : room;
+  });
   // The tabs give way quickly; the active one appears alone as it gathers.
   const tabsStyle = useAnimatedStyle(() => ({
     opacity: 1 - clampUnit(bounceWithin(capsule.value) * 2),

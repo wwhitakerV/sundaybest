@@ -5,12 +5,13 @@ import type * as ExpoRouter from "expo-router";
 import { aPlan } from "@tests/factories/api-plans";
 import { servePlans } from "@tests/mocks/plans-api";
 import { studyHref } from "@/entities/plan";
-import { tabPlanHref } from "@/entities/tabs";
 import { openShareSheet } from "@/core/sharing/share-sheet";
 import { HomeScreen } from "@/features/home/screens/HomeScreen";
 import { ScrollToTopProvider, useScrollToTop } from "@/ui/organisms/status-bar/scroll-to-top";
 import { forgetLikedVerses } from "@tests/mocks/liked-verses";
 import { lightTheme } from "@/theme/tokens";
+import { flags } from "@/core/config/flags";
+import * as tabBarAccessory from "@/ui/organisms/tab-bar/tab-bar-accessory";
 import { space } from "@/theme";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { ScrollView, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
@@ -58,6 +59,19 @@ const SAMPLE = aPlan({
 });
 
 /** Home, once these plans have arrived. */
+/**
+ * A shipped build: no state preview, so the header carries its date. (Tests
+ * run as a development build, where the preview takes the date's place.)
+ */
+function shippedBuild() {
+  const real = flags.isEnabled.bind(flags);
+  jest
+    .spyOn(flags, "isEnabled")
+    .mockImplementation((flag) => flag !== "homePreviews" && real(flag));
+}
+
+afterEach(() => jest.restoreAllMocks());
+
 async function renderHome(plans: Parameters<typeof servePlans>[0] = [ACTIVE, FINISHED, SAMPLE]) {
   servePlans(plans);
   render(<HomeScreen />);
@@ -113,15 +127,54 @@ describe("HomeScreen", () => {
     expect(scroll).toHaveProp("snapToEnd", false);
   });
 
-  describe("with no plan under way", () => {
-    it("offers to add a sermon instead of a plan", async () => {
+  describe("for a newcomer, with no plans of their own", () => {
+    it("gives them one page of words: no hero, no verse, no sample", async () => {
       await renderHome([SAMPLE]);
 
-      expect(screen.getByText("Start with last Sunday's sermon")).toBeVisible();
-      expect(screen.queryByTestId("home-tab-active-plan")).toBeNull();
+      expect(screen.getByTestId("home-onboarding")).toBeOnTheScreen();
+      expect(screen.queryByTestId("home-tab-start-here")).toBeNull();
+      expect(screen.queryByTestId("home-verse")).toBeNull();
+      expect(screen.queryByText(SAMPLE.title)).toBeNull();
+      expect(screen.queryByText(/sample/i)).toBeNull();
     });
 
-    it("navigates to New Plan when Add a sermon is pressed", async () => {
+    it("says what SundayBest is, what a day holds, and what to do", async () => {
+      await renderHome([SAMPLE]);
+
+      const page = within(screen.getByTestId("home-onboarding"));
+      expect(
+        page.getByText("SundayBest turns a sermon into a few minutes of study each day."),
+      ).toBeVisible();
+      expect(
+        page.getByText(
+          "Each day brings a reading, the Scripture behind it, a question to sit with, and a prayer, so what you heard stays with you.",
+        ),
+      ).toBeVisible();
+      expect(page.getByText("Start with a sermon you want to remember.")).toBeVisible();
+    });
+
+    it("never guesses when they heard the sermon", async () => {
+      await renderHome([SAMPLE]);
+
+      expect(screen.queryByText(/last Sunday/i)).toBeNull();
+    });
+
+    it("has one button, Add a sermon, under its words", async () => {
+      await renderHome([SAMPLE]);
+
+      const page = within(screen.getByTestId("home-onboarding"));
+      const add = screen.getByTestId("home-tab-add-sermon-button");
+      const buttons = page.getAllByRole("button");
+      expect(buttons).toHaveLength(1);
+      expect(buttons[0]).toBe(add);
+      expect(add).toHaveAccessibleName("Add a sermon");
+      const order = screen
+        .getAllByTestId(/^home-(onboarding-words|tab-add-sermon-button)$/)
+        .map((element) => String(element.props.testID));
+      expect(order).toEqual(["home-onboarding-words", "home-tab-add-sermon-button"]);
+    });
+
+    it("opens New Plan when Add a sermon is pressed", async () => {
       await renderHome([SAMPLE]);
 
       fireEvent.press(screen.getByTestId("home-tab-add-sermon-button"));
@@ -129,13 +182,65 @@ describe("HomeScreen", () => {
       expect(mockPush).toHaveBeenCalledWith("/(plan-creation)/paste-sermon");
     });
 
-    it("offers the sample plan to try", async () => {
+    it("sets its words low on the page, above the button, as a note is", async () => {
       await renderHome([SAMPLE]);
 
-      expect(screen.getByText("The Church Must Not Partner with the World")).toBeVisible();
-      expect(screen.getByText("Sample plan, 5 days")).toBeVisible();
-      fireEvent.press(screen.getByTestId("home-tab-sample-plan"));
-      expect(mockPush).toHaveBeenCalledWith(tabPlanHref("home", SAMPLE.id));
+      expect(screen.getByTestId("home-onboarding")).toHaveStyle({ justifyContent: "flex-end" });
+    });
+
+    it("asks the tab bar to leave out its plus: the page's own button does just that", async () => {
+      const hide = jest.spyOn(tabBarAccessory, "useHideTabBarFab");
+      await renderHome([SAMPLE]);
+
+      expect(hide).toHaveBeenLastCalledWith(true);
+    });
+  });
+
+  describe("with plans, but none under way", () => {
+    it("shows the start hero in the plan's place, on the brand's red", async () => {
+      await renderHome([FINISHED]);
+
+      expect(screen.getByTestId("home-tab-start-here")).toHaveStyle({
+        backgroundColor: lightTheme.colors.accent,
+        paddingTop: 52,
+        paddingBottom: 40,
+      });
+      expect(screen.queryByTestId("home-onboarding")).toBeNull();
+    });
+
+    it("sets its words in white on the red, its button white", async () => {
+      await renderHome([FINISHED]);
+
+      const hero = within(screen.getByTestId("home-tab-start-here"));
+      expect(hero.getByText("Turn a sermon into daily study")).toHaveStyle({
+        color: lightTheme.colors.inkOnDark,
+      });
+      expect(screen.getByTestId("home-tab-add-sermon-button")).toHaveStyle({
+        backgroundColor: lightTheme.colors.background,
+      });
+    });
+
+    it("says where they are, and how to begin", async () => {
+      await renderHome([FINISHED]);
+
+      const hero = within(screen.getByTestId("home-tab-start-here"));
+      expect(hero.getByText("START HERE")).toBeVisible();
+      expect(hero.getByText("Search for it, or paste its link.")).toBeVisible();
+    });
+
+    it("navigates to New Plan when Add a sermon is pressed", async () => {
+      await renderHome([FINISHED]);
+
+      fireEvent.press(screen.getByTestId("home-tab-add-sermon-button"));
+
+      expect(mockPush).toHaveBeenCalledWith("/(plan-creation)/paste-sermon");
+    });
+
+    it("keeps the tab bar's plus", async () => {
+      const hide = jest.spyOn(tabBarAccessory, "useHideTabBarFab");
+      await renderHome([FINISHED]);
+
+      expect(hide).toHaveBeenLastCalledWith(false);
     });
   });
 
@@ -232,6 +337,7 @@ describe("HomeScreen", () => {
   });
 
   it("lets the date give way before the masthead when the header is tight", async () => {
+    shippedBuild();
     servePlans([ACTIVE]);
     render(<HomeScreen />);
 
@@ -239,6 +345,7 @@ describe("HomeScreen", () => {
   });
 
   it("dates its header beside the masthead, as 09.30.26 in the mono", () => {
+    shippedBuild();
     servePlans([ACTIVE]);
     render(<HomeScreen />);
 
@@ -407,5 +514,29 @@ describe("HomeScreen and the status bar", () => {
     act(() => tapBar());
 
     expect(scrollTo).toHaveBeenCalledWith({ y: 0, animated: true });
+  });
+});
+
+describe("HomeScreen's state preview (development builds)", () => {
+  it("starts on the real Home and steps to the next state when tapped", async () => {
+    await renderHome();
+
+    const preview = () => screen.getByTestId("home-preview");
+    expect(preview()).toHaveAccessibleName("Preview: Real");
+
+    fireEvent.press(preview());
+
+    expect(screen.getByTestId("home-content-pending")).toBeOnTheScreen();
+    expect(preview()).toHaveAccessibleName("Preview: Loading");
+  });
+
+  it("keeps the switcher on the error page, so it can step on", async () => {
+    await renderHome();
+
+    fireEvent.press(screen.getByTestId("home-preview"));
+    fireEvent.press(screen.getByTestId("home-preview"));
+
+    expect(screen.getByTestId("home-load-error")).toBeOnTheScreen();
+    expect(screen.getByTestId("home-preview")).toHaveAccessibleName("Preview: Couldn't load");
   });
 });

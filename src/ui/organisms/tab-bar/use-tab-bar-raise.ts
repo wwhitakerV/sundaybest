@@ -91,7 +91,8 @@ export function useTabBarRaise(state: TabBarRaiseState, geometry: TabBarRaiseGeo
     transform: [{ translateY: mix(lift, 0, tint.value) }],
   }));
 
-  return { slotStyle, fabStyle, tintStyle };
+  // How far the FAB has gone (0–1): the tabs take its room as it goes.
+  return { slotStyle, fabStyle, tintStyle, fabGone: gone };
 }
 
 /**

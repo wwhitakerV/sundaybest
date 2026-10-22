@@ -63,12 +63,17 @@ function timeEar(layout: StatusBarPlacement) {
 
 /**
  * The battery centred on `batteryX` (or at a home-button bar's right edge):
- * the ears are the same width, so its box runs `timeX` either side of it.
+ * a box `timeX` either side of it — wide enough, and centred on it wherever
+ * it's been nudged to.
  */
 function batteryEar(layout: StatusBarPlacement) {
   return layout.edged
     ? { right: space[16], alignItems: "flex-end" as const }
-    : { left: layout.batteryX - layout.timeX, right: 0, alignItems: "center" as const };
+    : {
+        left: layout.batteryX - layout.timeX,
+        width: layout.timeX * 2,
+        alignItems: "center" as const,
+      };
 }
 
 const styles = StyleSheet.create({

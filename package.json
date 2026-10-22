@@ -15,6 +15,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "render:intro": "node --no-warnings scripts/intro-movie/render.mjs",
     "build:verses": "node scripts/daily-verses/build.mjs",
+    "build:rise": "api/node_modules/.bin/tsx scripts/rise/build.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

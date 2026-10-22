@@ -15,19 +15,18 @@ import { LaunchReadyContext } from "./launch-ready";
 /**
  * Lifts the plain-white native splash as soon as the app has drawn — the launch
  * intro, white too, is already over it — and tells the intro when the first
- * page (Welcome or Home) is genuinely ready to be revealed (`useLaunchReady`).
+ * page (Home) is genuinely ready to be revealed (`useLaunchReady`).
  * It is launch-only: once ready, route queries can show local/cached pending
  * states but the launch never comes back.
  *
- * Plans are prefetched for both new and returning users. That means Welcome's
- * sample-plan action is already backed by the real API, while a returning user's
- * Home plan data is committed before the intro reveals it. Settings are also
- * awaited so global text scaling cannot visibly jump after the reveal.
+ * Plans are prefetched for both new and returning users, so Home knows
+ * whether to welcome a newcomer — and has its sample plans to offer — or has
+ * a returning reader's plans committed before the intro reveals it. Settings
+ * are also awaited so global text scaling cannot visibly jump after the reveal.
  */
 /**
- * The longest the reveal waits on plans and settings. Who the reader is
- * (`me`) is always waited for — it decides Welcome or Home — but the rest moves
- * on to its skeletons rather than holding for a whole timeout.
+ * The longest the reveal waits on the reader, their plans and settings: past
+ * it, Home moves on to its skeletons rather than holding for a whole timeout.
  */
 const LAUNCH_HOLD_MAX_MS = 2500;
 
@@ -43,15 +42,14 @@ export function LaunchSplashCoordinator({ children }: { children: ReactNode }) {
   const me = useCurrentUserQuery();
   const plans = usePlansQuery();
   const settings = useUserSettingsQuery();
-  const onboarded = Boolean(me.data?.user.onboardedAt);
 
   const serverBootstrapDone = !me.isPending && !plans.isPending && !settings.isPending;
-  // Wherever the launch lands is the page to reveal: Welcome for a new reader; for a returning
-  // one, wherever they've moved on to from the first route — Home, or a plan opened from a link.
-  const landed = !onboarded || pathname !== "/";
+  // Wherever the launch lands is the page to reveal: wherever the first route
+  // has moved on to — Home, or a plan opened from a link.
+  const landed = pathname !== "/";
   const [heldTooLong, setHeldTooLong] = useState(false);
   const [gaveUp, setGaveUp] = useState(false);
-  const ready = gaveUp || (!me.isPending && (serverBootstrapDone || heldTooLong) && landed);
+  const ready = gaveUp || ((serverBootstrapDone || heldTooLong) && landed);
 
   useEffect(() => {
     const timer = setTimeout(() => setHeldTooLong(true), LAUNCH_HOLD_MAX_MS);

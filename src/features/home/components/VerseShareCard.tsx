@@ -40,7 +40,7 @@ export function VerseShareCard({ ref, testID, ...verse }: VerseShareCardProps) {
       importantForAccessibility="no-hide-descendants"
       style={[
         styles.card,
-        { backgroundColor: theme.colors.surface, padding: space[32], gap: space[24] },
+        { backgroundColor: theme.colors.surface, padding: CARD_PADDING, gap: space[24] },
       ]}
     >
       <View style={styles.middle}>
@@ -50,6 +50,9 @@ export function VerseShareCard({ ref, testID, ...verse }: VerseShareCardProps) {
     </View>
   );
 }
+
+/** The card's room inside its edges — but for the wordmark, which runs to its left edge. */
+const CARD_PADDING = space[32];
 
 const styles = StyleSheet.create({
   // Off the screen: laid out and drawn, never in view.
@@ -61,5 +64,6 @@ const styles = StyleSheet.create({
     height: SHARE_CARD.height,
   },
   middle: { flex: 1, justifyContent: "center" },
-  wordmark: { alignSelf: "center" },
+  // Flush with the card's left edge, as the wordmark always is.
+  wordmark: { alignSelf: "flex-start", marginLeft: -CARD_PADDING },
 });

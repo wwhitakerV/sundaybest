@@ -118,6 +118,19 @@ and from then on, though the list shrinks again.
 `liked-verse-queries.ts`'s `useLikedVerse` says whether one is liked and
 toggles it: shown at once, put back if the phone can't keep it.
 
+`device-wipe.ts`'s `wipeDeviceData` empties every reader table above in one
+transaction, keeping the database's key — development's "Start over" only.
+
+## `dev-menu/`
+
+Development builds only (ADR 0035): `dev-menu.ts` is the one importer of React
+Native's `DevSettings` — `addDevMenuItem` (a no-op outside a development debug
+build, once per title) and `reloadApp`. `start-over.ts` adds "Start over as a
+new reader": `security/session/forget-identity.ts` forgets who the install
+is, `storage/device-wipe.ts` empties the phone, `notifications` cancels its
+reminders, and the app reloads into its first launch. Nothing is drawn on any
+screen for it, and the server is never touched.
+
 ## `sharing/`
 
 `share-sheet.ts`: `openShareSheet` opens iOS's own share sheet (React Native's
