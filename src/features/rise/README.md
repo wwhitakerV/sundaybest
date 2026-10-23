@@ -28,7 +28,9 @@ right answers out of six; time to spare breaks ties.
   question in its foot. Behind the words the outcome is alive — the balloon
   with the answer and the time it kept on it, adrift; or the red one,
   drifting, then bursting, its debris resting on the hairline. The words can
-  be long-pressed to copy.
+  be selected as iOS selects, and a tap lets go. The balloon is in reach:
+  held and dragged, thrown to ricochet off the page's edges, or stopped dead
+  by a tap — and while it's held the page won't turn.
 - **Share**: a sheet with the reader's own board as a poster at the top —
   the answers blurred past reading, the score and decision time on black —
   and two cards under it: a post (4:5, cropped to what happened: feeds and

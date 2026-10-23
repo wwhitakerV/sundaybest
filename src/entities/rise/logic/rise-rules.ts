@@ -52,6 +52,14 @@ export type Balloon = {
   label: string;
   /** A line under its answer, smaller: the time it kept ("+1.5s"), on a page of what was learned. */
   note?: string;
+  /** In a finger's hold (a page of what was learned): where it was taken, from its middle. */
+  held?: boolean;
+  gripX?: number;
+  gripY?: number;
+  /** Stopped dead by a touch: still until this time, then drifting again. */
+  restUntil?: number;
+  /** Thrown: coasting through the air on its own momentum, until it's slowed to its drift. */
+  thrown?: boolean;
   x: number;
   y: number;
   vx: number;

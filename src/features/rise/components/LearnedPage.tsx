@@ -1,29 +1,26 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
+import { Gesture, GestureDetector, type NativeGesture } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 
-import { burstFeedback } from "@/core/haptics/haptics";
-import { RiseDrifter } from "@/entities/rise";
-import { space, useTheme } from "@/theme";
+import { burstFeedback, paintFeedback, tapFeedback } from "@/core/haptics/haptics";
+import { RiseDrifter, useRiseDrifter } from "@/entities/rise";
+import { space } from "@/theme";
 import { PageEnter } from "@/ui/atoms/PageEnter";
-import { MonoLabel } from "@/ui/typography/MonoLabel";
-import { SerifTitle } from "@/ui/typography/SerifTitle";
-import { SFProBody } from "@/ui/typography/SFProBody";
+import { SelectableText } from "@/ui/typography/SelectableText";
 import type { LearnedRow } from "../logic/describe-rise";
 
 /** The print margin at the sides: an advertisement's, not an app's. */
 const MARGIN = space[40];
 /** The air above the fact: it opens the page. */
 const TOP = 64;
-/**
- * The words' halo: a soft edge of the page's white round each letter, so
- * they still read where a balloon or paint passes under them.
- */
-const HALO_RADIUS = 10;
 
 export type LearnedPageProps = {
   row: LearnedRow;
   /** Reduce Motion: the parts fade without moving, the balloon still. */
   still: boolean;
+  /** The pager the page is on: while the balloon's held, it can't turn. */
+  pager: NativeGesture;
 };
 
 /**
@@ -33,65 +30,91 @@ export type LearnedPageProps = {
  * it all, across the page, the outcome is alive: the balloon with the answer
  * and the time it kept on it, adrift, passing under the type; or the red
  * one, the answer on it, drifting, then bursting there — its debris resting
- * on the page's floor, the hairline. The words can be long-pressed to copy.
+ * on the page's floor, the hairline. The words can be selected as iOS
+ * selects — a word, handles, Copy, Look Up — and taken away; a tap lets go.
+ * The balloon is in reach: held, dragged, thrown to ricochet off the page's
+ * edges, or stopped dead by a tap — and while it's held the page won't turn.
  * Mounted each time it's arrived at, so it plays again. A fact too long for
  * the page scrolls; it's never cut.
  */
-export function LearnedPage({ row, still }: LearnedPageProps) {
-  const { colors } = useTheme();
+export function LearnedPage({ row, still, pager }: LearnedPageProps) {
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const rose = row.verdict === "right";
-  const halo = { textShadowColor: colors.background, textShadowRadius: HALO_RADIUS };
+  const [clear, setClear] = useState(0);
+  const drifter = useRiseDrifter({
+    verdict: rose ? "rose" : "burst",
+    label: row.answer,
+    note: row.time,
+    size,
+    still,
+    pager,
+    onBurst: burstFeedback,
+    onGrab: paintFeedback,
+    onStop: tapFeedback,
+  });
+  const letGo = () => setClear((count) => count + 1);
+  // A tap anywhere lets go of what's selected, as iOS does; a touch on the balloon plays with it.
+  const touches = Gesture.Simultaneous(
+    drifter.touch,
+    Gesture.Tap().onEnd(() => {
+      runOnJS(letGo)();
+    }),
+  );
 
   return (
-    <View
-      testID={`rise-learned-${row.id}`}
-      style={styles.page}
-      onLayout={(event) => {
-        const { width, height } = event.nativeEvent.layout;
-        setSize({ width, height });
-      }}
-    >
-      {size && (
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <RiseDrifter
-            key={`${size.width}x${size.height}`}
-            verdict={rose ? "rose" : "burst"}
-            label={row.answer}
-            note={row.time}
-            width={size.width}
-            height={size.height}
-            still={still}
-            onBurst={burstFeedback}
-          />
-        </View>
-      )}
-      <ScrollView
-        style={styles.statement}
-        contentContainerStyle={styles.statementInset}
-        showsVerticalScrollIndicator={false}
+    <GestureDetector gesture={touches}>
+      <View
+        testID={`rise-learned-${row.id}`}
+        style={styles.page}
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout;
+          setSize({ width, height });
+        }}
       >
-        <PageEnter order={0} still={still}>
-          <SerifTitle variant="statement" selectable style={halo}>
-            {row.fact}
-          </SerifTitle>
-        </PageEnter>
-      </ScrollView>
-      <View style={styles.credits}>
-        <View style={styles.asked}>
-          <PageEnter order={1} still={still}>
-            <MonoLabel variant="labelTracked" tone="accent" selectable style={halo}>
-              {`${row.category.toUpperCase()} · QUESTION ${row.number}`}
-            </MonoLabel>
-          </PageEnter>
-          <PageEnter order={2} still={still}>
-            <SFProBody variant="rowDetail" tone="textSupporting" selectable style={halo}>
-              {row.question}
-            </SFProBody>
-          </PageEnter>
+        {size && (
+          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <RiseDrifter
+              game={drifter.game}
+              verdict={rose ? "rose" : "burst"}
+              width={size.width}
+              height={size.height}
+            />
+          </View>
+        )}
+        <View style={styles.page}>
+          <ScrollView
+            style={styles.statement}
+            contentContainerStyle={styles.statementInset}
+            showsVerticalScrollIndicator={false}
+          >
+            <PageEnter order={0} still={still}>
+              <SelectableText
+                testID="rise-learned-fact"
+                clear={clear}
+                parts={[{ text: row.fact, face: "statement" }]}
+              />
+            </PageEnter>
+          </ScrollView>
+          <View style={styles.credits}>
+            {/* What was asked, one selection: dragged from its label down into its question. */}
+            <PageEnter order={1} still={still}>
+              <SelectableText
+                testID="rise-learned-asked"
+                clear={clear}
+                parts={[
+                  {
+                    text: `${row.category.toUpperCase()} · QUESTION ${row.number}`,
+                    face: "label",
+                    tone: "accent",
+                  },
+                  { text: row.question, face: "detail", tone: "textSupporting" },
+                ]}
+              />
+            </PageEnter>
+          </View>
         </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 }
 
@@ -101,5 +124,4 @@ const styles = StyleSheet.create({
   statementInset: { paddingHorizontal: MARGIN, paddingTop: TOP, paddingBottom: space[24] },
   // The credits at the page's foot, left: what was asked — clear of the floor, where debris rests.
   credits: { paddingHorizontal: MARGIN, paddingBottom: space[24] },
-  asked: { gap: space[4] },
 });

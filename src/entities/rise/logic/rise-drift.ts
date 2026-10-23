@@ -33,6 +33,14 @@ const CRUISE = { far: 0.016, near: 0.03, settle: 0.0012 };
 const CROSSING = { rise: 0.08, settle: 0.002 };
 /** How much speed a bounce keeps: off an edge, and off another balloon. */
 const KEEP = { wall: 0.94, balloon: 0.85 };
+/** A hard hit off an edge keeps less: up to this much less, from an impact this fast (points/ms). */
+const HARD_HIT = { loses: 0.14, at: 0.8 };
+/**
+ * Thrown, it coasts through air: drag that grows with its speed (per ms, and
+ * per ms per point/ms) — a rush shed quickly, a long glide after — until it's
+ * slowed to `handBack` times its drift's pace, when its drift takes it back.
+ */
+const COAST = { drag: 1 / 3000, rush: 0.00035, handBack: 1.3 };
 /** How close to the atmosphere's edges it may come. */
 const CLEAR = 6;
 /**
@@ -55,15 +63,43 @@ function circlesOf(b: Balloon, game: RiseGame): number[] {
   return out;
 }
 
+/** Whether a point is on a balloon's body, by the circles it collides with. */
+export function touchesBalloon(b: Balloon, game: RiseGame, x: number, y: number): boolean {
+  "worklet";
+  const circles = circlesOf(b, game);
+  for (let i = 0; i < circles.length; i += 3) {
+    if (Math.hypot(x - circles[i]!, y - circles[i + 1]!) <= circles[i + 2]!) return true;
+  }
+  return false;
+}
+
 /** One substep of its own motion: cruising (or, crossing, lifted on), leaning and rocking. */
 function move(b: Balloon, game: RiseGame, dt: number): void {
   "worklet";
+  // Held, a finger moves it; stopped by a touch, it stays still a beat — it only leans and rights itself.
+  const resting = b.restUntil !== undefined && game.time < b.restUntil;
+  if (b.held || resting) {
+    if (resting) {
+      b.vx = 0;
+      b.vy = 0;
+    }
+    const lean = Math.max(-TILT.most, Math.min(TILT.most, b.vx * TILT.lean));
+    b.spin += (-(b.angle - lean) * TILT.stiff - b.spin * TILT.damp) * dt;
+    b.angle += b.spin * dt;
+    return;
+  }
   if (b.mode === MODE.free) {
     const target = game.stage.savedScale * (DEPTH.far + (DEPTH.near - DEPTH.far) * b.depth);
     b.scale += (target - b.scale) * Math.min(1, SHRINK * dt);
     const cruise = CRUISE.far + (CRUISE.near - CRUISE.far) * b.depth;
     const speed = Math.hypot(b.vx, b.vy);
-    if (speed < 0.0001) {
+    if (b.thrown && speed > cruise * COAST.handBack) {
+      const keep = Math.max(0, 1 - (COAST.drag + COAST.rush * speed) * dt);
+      b.vx *= keep;
+      b.vy *= keep;
+    } else if (b.thrown) {
+      b.thrown = false;
+    } else if (speed < 0.0001) {
       b.vx = Math.cos(b.phase * TAU) * cruise;
       b.vy = Math.sin(b.phase * TAU) * cruise;
     } else {
@@ -98,7 +134,10 @@ function walls(b: Balloon, game: RiseGame): void {
       edges.push({ depth: y + r - (stage.lineY - CLEAR), px: x, py: y + r, nx: 0, ny: -1 });
     }
     for (const edge of edges) {
-      if (edge.depth > 0) resolveContact(game, null, b, edge, KEEP.wall);
+      if (edge.depth <= 0) continue;
+      const impact = Math.abs(b.vx * edge.nx + b.vy * edge.ny);
+      const keep = KEEP.wall - HARD_HIT.loses * Math.min(1, impact / HARD_HIT.at);
+      resolveContact(game, null, b, edge, keep);
     }
   }
   if (b.mode === MODE.crossing) {

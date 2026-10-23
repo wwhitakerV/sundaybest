@@ -1,5 +1,6 @@
 import { stepBalloons } from "../logic/rise-balloons";
 import { burstBalloon, stepDamage } from "../logic/rise-damage";
+import { touchesBalloon } from "../logic/rise-drift";
 import { MODE, STRING_POINTS, type RiseGame } from "../logic/rise-rules";
 import { segmentLength } from "../logic/rise-setup";
 
@@ -19,6 +20,12 @@ const START = { x: 0.32, y: 0.64, heading: -0.7, speed: 0.03 };
 const BURST_AFTER_MS = 1700;
 /** Its saved size, so at the nearest depth it's drawn at `BALLOON_W`. */
 const NEAREST = 1.12;
+/**
+ * In a finger's hold: the squash as it's taken; let go slower than `still`
+ * (points/ms), it stops dead for `restMs`; flung, never faster than
+ * `fastest`; and how much an off-centre throw sets it spinning.
+ */
+const HAND = { squash: 0.0005, still: 0.06, restMs: 2000, fastest: 2.4, spin: 0.00005 };
 
 /** The page's one-balloon game — the answer on it, and its time beneath when it kept one — the page's edges its own. */
 export function drifterGame(
@@ -120,4 +127,67 @@ export function settleDrifter(game: RiseGame, rose: boolean): void {
     stepBalloons(game, 1000 / 60);
     stepDamage(game, 1000 / 60);
   }
+}
+
+/** Whether a touch at (x, y) lands on the balloon, while it's whole. */
+export function touchesDrifter(game: RiseGame, x: number, y: number): boolean {
+  "worklet";
+  const b = game.balloons[0]!;
+  return b.mode === MODE.free && touchesBalloon(b, game, x, y);
+}
+
+/** A finger takes hold of it where it touched: it stops, giving under the touch. */
+export function holdDrifter(game: RiseGame, x: number, y: number): void {
+  "worklet";
+  const b = game.balloons[0]!;
+  b.held = true;
+  b.gripX = b.x - x;
+  b.gripY = b.y - y;
+  b.vx = 0;
+  b.vy = 0;
+  b.restUntil = 0;
+  b.thrown = false;
+  b.pokeV += HAND.squash;
+}
+
+/** The finger moves, at (vx, vy) points/ms: the balloon goes with it, its grip kept, never off the page. */
+export function dragDrifter(game: RiseGame, x: number, y: number, vx: number, vy: number): void {
+  "worklet";
+  const b = game.balloons[0]!;
+  if (!b.held) return;
+  const halfW = (game.stage.balloonW / 2) * b.scale;
+  const halfH = (game.stage.balloonH / 2) * b.scale;
+  b.x = Math.max(halfW, Math.min(game.stage.width - halfW, x + (b.gripX ?? 0)));
+  b.y = Math.max(halfH, Math.min(game.stage.height - halfH, y + (b.gripY ?? 0)));
+  b.vx = vx;
+  b.vy = vy;
+}
+
+/**
+ * Let go, the finger going at (vx, vy) points/ms: barely moving, it stops
+ * dead a beat (a tap does this); flung, it flies at the finger's speed —
+ * capped — spinning by how far off its middle it was thrown. Whether it
+ * stopped is returned, for its knock.
+ */
+export function releaseDrifter(game: RiseGame, vx: number, vy: number): boolean {
+  "worklet";
+  const b = game.balloons[0]!;
+  if (!b.held) return false;
+  b.held = false;
+  const speed = Math.hypot(vx, vy);
+  if (speed < HAND.still) {
+    b.vx = 0;
+    b.vy = 0;
+    b.restUntil = game.time + HAND.restMs;
+    return true;
+  }
+  const keep = Math.min(1, HAND.fastest / speed);
+  b.vx = vx * keep;
+  b.vy = vy * keep;
+  b.thrown = true;
+  // The finger's place from the middle, crossed with its throw: a flick off-centre spins it.
+  const fromX = -(b.gripX ?? 0);
+  const fromY = -(b.gripY ?? 0);
+  b.spin += (fromX * b.vy - fromY * b.vx) * HAND.spin;
+  return false;
 }

@@ -5,6 +5,7 @@
 export { RiseBoard } from "./ui/RiseBoard";
 export { RiseMark } from "./ui/RiseMark";
 export { RiseDrifter } from "./ui/RiseDrifter";
+export { useRiseDrifter } from "./ui/use-rise-drifter";
 export { useRiseAutoplay } from "./ui/use-rise-autoplay";
 export { useRisePoster } from "./ui/use-rise-poster";
 export { POSTER, type PosterFormat } from "./ui/draw-poster";

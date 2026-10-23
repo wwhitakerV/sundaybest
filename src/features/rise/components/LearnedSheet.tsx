@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View, useWindowDimensions } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useReduceMotion } from "@/core/accessibility/use-reduce-motion";
@@ -34,6 +35,8 @@ export function LearnedSheet({ visible, rows, onClose }: LearnedSheetProps) {
   const insets = useSafeAreaInsets();
   const still = useReduceMotion();
   const pager = useRef<ScrollView>(null);
+  // The pager's own gesture, so a held balloon can keep it from turning.
+  const paging = useMemo(() => Gesture.Native(), []);
   const [place, setPlace] = useState({ page: 0, visit: 0 });
   const [pageHeight, setPageHeight] = useState(0);
   const [openFor, setOpenFor] = useState(visible);
@@ -43,10 +46,36 @@ export function LearnedSheet({ visible, rows, onClose }: LearnedSheetProps) {
     if (visible) setPlace((current) => ({ page: 0, visit: current.visit + 1 }));
   }
 
+  // Where a tapped dot is scrolling to, until it's there: settles on the way are passing, not arrivals.
+  const heading = useRef<number | null>(null);
+
   function arrive(page: number) {
     if (page === place.page || page < 0 || page >= rows.length) return;
     selectionFeedback();
     setPlace((current) => ({ page, visit: current.visit + 1 }));
+  }
+
+  /**
+   * The pager has come to rest at `x`: the page there is the one shown —
+   * the scroll is the only truth of which page it is. While a tapped dot is
+   * still on its way, a rest anywhere but its page is a scroll cut short,
+   * and isn't believed.
+   */
+  function settle(x: number) {
+    if (width <= 0) return;
+    const page = Math.max(0, Math.min(rows.length - 1, Math.round(x / width)));
+    if (heading.current !== null) {
+      if (page !== heading.current) return;
+      heading.current = null;
+    }
+    arrive(page);
+  }
+
+  /** A dot tapped: the pager scrolls there, and the page is that one at once. */
+  function goTo(page: number) {
+    heading.current = page;
+    pager.current?.scrollTo({ x: page * width, animated: true });
+    arrive(page);
   }
 
   return (
@@ -63,27 +92,36 @@ export function LearnedSheet({ visible, rows, onClose }: LearnedSheetProps) {
         </MonoLabel>
       }
     >
-      <ScrollView
-        ref={pager}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        style={styles.pager}
-        onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
-        contentOffset={{ x: place.page * width, y: 0 }}
-        onMomentumScrollEnd={(event) =>
-          arrive(Math.round(event.nativeEvent.contentOffset.x / width))
-        }
-      >
-        {rows.map((row, index) => (
-          // Each page given the pager's own height: a horizontal pager doesn't stretch its pages.
-          <View key={row.id} style={{ width, height: pageHeight }}>
-            {index === place.page && pageHeight > 0 && (
-              <LearnedPage key={place.visit} row={row} still={still} />
-            )}
-          </View>
-        ))}
-      </ScrollView>
+      <GestureDetector gesture={paging}>
+        <ScrollView
+          ref={pager}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          style={styles.pager}
+          onLayout={(event) => setPageHeight(event.nativeEvent.layout.height)}
+          // A finger takes over from a tapped dot's scroll.
+          onScrollBeginDrag={() => {
+            heading.current = null;
+          }}
+          // Let go without a flick, it rests where it's let go — no momentum to end.
+          onScrollEndDrag={(event) => {
+            if ((event.nativeEvent.velocity?.x ?? 0) === 0)
+              settle(event.nativeEvent.contentOffset.x);
+          }}
+          // A flick's glide, or a tapped dot's scroll, comes to rest.
+          onMomentumScrollEnd={(event) => settle(event.nativeEvent.contentOffset.x)}
+        >
+          {rows.map((row, index) => (
+            // Each page given the pager's own height: a horizontal pager doesn't stretch its pages.
+            <View key={row.id} style={{ width, height: pageHeight }}>
+              {index === place.page && pageHeight > 0 && (
+                <LearnedPage key={place.visit} row={row} still={still} pager={paging} />
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      </GestureDetector>
       {/* The navigation: its own band, under a hairline, still while the pages slide above it. */}
       <View
         style={[
@@ -91,14 +129,7 @@ export function LearnedSheet({ visible, rows, onClose }: LearnedSheetProps) {
           { borderTopColor: colors.divider, paddingBottom: insets.bottom + space[24] },
         ]}
       >
-        <LearnedDots
-          rows={rows}
-          page={place.page}
-          onPick={(page) => {
-            pager.current?.scrollTo({ x: page * width, animated: true });
-            arrive(page);
-          }}
-        />
+        <LearnedDots rows={rows} page={place.page} onPick={goTo} />
       </View>
     </BottomSheet>
   );
