@@ -12,6 +12,8 @@ import { TakeawayDeck } from "./TakeawayDeck";
 const RULE = { width: 28, height: 3 } as const;
 
 export type PlanAboutProps = PlanAboutLook & {
+  /** One part alone, under a heading of its own (a plan page's drawer): no heading of the part's. */
+  only?: "overview" | "scriptures" | "takeaways";
   testID?: string;
 };
 
@@ -21,7 +23,12 @@ export type PlanAboutProps = PlanAboutLook & {
  * and the rest under it; the Scriptures the sermon references as chips; and
  * the key takeaways dealt one to a card, swiped through one at a time.
  */
-export function PlanAbout({ overview, scriptures, takeaways, testID }: PlanAboutProps) {
+export function PlanAbout({ overview, scriptures, takeaways, only, testID }: PlanAboutProps) {
+  if (only === "overview") return <Overview overview={overview} testID={testID} headed={false} />;
+  if (only === "scriptures") {
+    return <Scriptures scriptures={scriptures} testID={testID} headed={false} />;
+  }
+  if (only === "takeaways") return <TakeawayDeck takeaways={takeaways} testID={testID} />;
   return (
     <View testID={testID} style={styles.about}>
       <Overview overview={overview} testID={testID} />
@@ -35,20 +42,25 @@ export function PlanAbout({ overview, scriptures, takeaways, testID }: PlanAbout
 function Overview({
   overview,
   testID,
+  headed = true,
 }: {
   overview: readonly string[];
   testID?: string | undefined;
+  /** Its rule and heading — left out under a drawer's own. */
+  headed?: boolean;
 }) {
   const theme = useTheme();
   const [standfirst, ...rest] = overview;
 
   return (
     <View style={styles.overview}>
-      <View
-        testID={testID && `${testID}-rule`}
-        style={[styles.rule, { backgroundColor: theme.colors.accent }]}
-      />
-      <SerifTitle accessibilityRole="header">About this plan</SerifTitle>
+      {headed && (
+        <View
+          testID={testID && `${testID}-rule`}
+          style={[styles.rule, { backgroundColor: theme.colors.accent }]}
+        />
+      )}
+      {headed && <SerifTitle accessibilityRole="header">About this plan</SerifTitle>}
       {standfirst !== undefined && (
         <SerifBody variant="standfirst" tone="text" testID={testID && `${testID}-standfirst`}>
           {standfirst}
@@ -91,19 +103,24 @@ function SectionLabel({
 function Scriptures({
   scriptures,
   testID,
+  headed = true,
 }: {
   scriptures: readonly string[];
   testID?: string | undefined;
+  /** Its label and count — left out under a drawer's own heading. */
+  headed?: boolean;
 }) {
   const theme = useTheme();
 
   return (
     <View testID={testID && `${testID}-scriptures`} style={styles.list}>
-      <SectionLabel
-        label="Scriptures referenced"
-        count={scriptures.length}
-        testID={testID && `${testID}-scriptures-count`}
-      />
+      {headed && (
+        <SectionLabel
+          label="Scriptures referenced"
+          count={scriptures.length}
+          testID={testID && `${testID}-scriptures-count`}
+        />
+      )}
       <View style={styles.chips}>
         {scriptures.map((reference) => (
           <View

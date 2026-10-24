@@ -39,9 +39,10 @@ yarn-error.*
 example
 
 
-# generated native projects (managed workflow; regenerate with `npx expo prebuild`)
-ios/
-android/
+# generated native projects (managed workflow; regenerate with `npx expo prebuild`) — the top
+# level only: a local module's own ios/ (modules/sundaybest-haptics) is source, and builds need it.
+/ios/
+/android/
 
 # secrets — never commit real values
 .env

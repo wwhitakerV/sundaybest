@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/tabs";
 
 import { useTheme } from "@/theme";
 import { TabButton } from "./TabButton";
@@ -18,7 +18,7 @@ export type OpenTabsProps = Pick<BottomTabBarProps, "state" | "descriptors"> & {
   minimized: boolean;
   /** They give way as the capsule gathers (`useTabBarMinimize`). */
   style: StyleProp<AnimatedStyle<ViewStyle>>;
-  onPressTab: (routeKey: string, routeName: string, isActive: boolean) => void;
+  onPressTab: (routeKey: string, isActive: boolean) => void;
 };
 
 /**
@@ -71,7 +71,7 @@ export function OpenTabs({ state, descriptors, minimized, style, onPressTab }: O
             onLayout={(layout) =>
               setTabLayouts((previous) => ({ ...previous, [route.key]: layout }))
             }
-            onPress={() => onPressTab(route.key, route.name, isActive)}
+            onPress={() => onPressTab(route.key, isActive)}
           />
         );
       })}

@@ -15,11 +15,8 @@ import {
   getArtworkScale,
   getPullZoom,
   hasHeroCleared,
-  isContinueHandedOff,
 } from "../logic/plan-parallax";
-
-/** How quickly Continue fades as it hands over to the tab bar, and back. */
-const HANDOFF_FADE_MS = 160;
+import { useContinueHandOver } from "./use-continue-hand-over";
 /** How quickly the nav buttons fade between the hero's look and the page's. */
 const NAV_FADE_MS = 180;
 
@@ -50,28 +47,17 @@ export function usePlanHeroScroll({
   navLine: number;
   statusBarLine: number;
 }) {
-  const [continueTop, setContinueTop] = useState(0);
   const [heroHeight, setHeroHeight] = useState(0);
-  const [handedOff, setHandedOff] = useState(false);
   const [navOverPage, setNavOverPage] = useState(false);
   const [statusBarOverPage, setStatusBarOverPage] = useState(false);
   const navFade = useSharedValue(0);
   const scrolled = useSharedValue(0);
-  const continueOpacity = useSharedValue(1);
 
   const onScroll = useAnimatedScrollHandler((event) => {
     scrolled.value = event.contentOffset.y;
   });
 
-  useAnimatedReaction(
-    () => isContinueHandedOff(scrolled.value, continueTop, navTop),
-    (now, before) => {
-      if (now === before) return;
-      continueOpacity.value = withTiming(now ? 0 : 1, { duration: HANDOFF_FADE_MS });
-      runOnJS(setHandedOff)(now);
-    },
-    [continueTop, navTop],
-  );
+  const { handedOff, continueHandOver } = useContinueHandOver(scrolled, navTop);
 
   useAnimatedReaction(
     () => hasHeroCleared(scrolled.value, heroHeight, navLine),
@@ -97,16 +83,12 @@ export function usePlanHeroScroll({
     ],
     opacity: getArtworkOpacity(scrolled.value),
   }));
-  const continueStyle = useAnimatedStyle(() => ({ opacity: continueOpacity.value }));
   const heroNavStyle = useAnimatedStyle(() => ({ opacity: 1 - navFade.value }));
   const pageNavStyle = useAnimatedStyle(() => ({ opacity: navFade.value }));
   const colourStyle = useAnimatedStyle(() => ({
     transform: [{ scale: getPullZoom(scrolled.value, heroHeight) }],
   }));
 
-  function onContinueLayout(event: LayoutChangeEvent) {
-    setContinueTop(event.nativeEvent.layout.y);
-  }
   function onHeroLayout(event: LayoutChangeEvent) {
     setHeroHeight(event.nativeEvent.layout.height);
   }
@@ -117,7 +99,7 @@ export function usePlanHeroScroll({
     heroMotion: {
       artworkStyle,
       colourStyle,
-      continueHandOver: { style: continueStyle, shown: !handedOff, onLayout: onContinueLayout },
+      continueHandOver,
       heroHeight,
       onHeroLayout,
     },

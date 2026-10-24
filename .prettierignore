@@ -29,5 +29,6 @@ legacy-intro-and-assets/
 legacy-welcome/
 legacy-home-hero/
 legacy-the-99/
+legacy-plans-library/
 # RISE's bank and schedule, as npm run build:rise writes them
 src/entities/rise/data/

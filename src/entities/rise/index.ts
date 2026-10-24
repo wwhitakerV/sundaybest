@@ -2,6 +2,7 @@
  * The only file other layers may import from: this entity's public contract.
  * Deep imports such as `@/entities/rise/ui/Thing` are blocked by lint.
  */
+export { QuestionLine } from "./ui/QuestionLine";
 export { RiseBoard } from "./ui/RiseBoard";
 export { RiseMark } from "./ui/RiseMark";
 export { RiseDrifter } from "./ui/RiseDrifter";

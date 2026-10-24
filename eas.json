@@ -12,7 +12,17 @@
         "buildConfiguration": "Debug"
       },
       "channel": "development",
-      "environment": "development"
+      "environment": "development",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+      }
+    },
+    "development-device": {
+      "extends": "development",
+      "ios": {
+        "simulator": false,
+        "buildConfiguration": "Debug"
+      }
     },
     "preview": {
       "distribution": "internal",

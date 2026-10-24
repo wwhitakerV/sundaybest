@@ -22,6 +22,32 @@ function bottomPage(tab: TabRouteLike): string | undefined {
   return initial === false ? FIRST_PAGE : screen;
 }
 
+/** The stack that holds the tabs, as far as finding them needs it. */
+type StackStateLike = { routes: readonly { state?: unknown }[] };
+
+function isTabsState(state: unknown): state is TabsStateLike {
+  return (
+    typeof state === "object" &&
+    state !== null &&
+    "key" in state &&
+    typeof state.key === "string" &&
+    "routes" in state &&
+    Array.isArray(state.routes)
+  );
+}
+
+/** The tab navigator holding the tab `tabKey`, found in the stack above it. */
+export function tabsHolding(
+  stack: StackStateLike | undefined,
+  tabKey: string,
+): TabsStateLike | null {
+  for (const route of stack?.routes ?? []) {
+    const tabs = route.state;
+    if (isTabsState(tabs) && tabs.routes.some((tab) => tab.key === tabKey)) return tabs;
+  }
+  return null;
+}
+
 /**
  * The action that puts a tab back on its first page when the page at the
  * bottom of its stack isn't it — what a link that didn't ask for the first page

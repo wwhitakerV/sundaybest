@@ -21,10 +21,8 @@ export function useKeyboardOverlap(): number {
       }
       setTop(endCoordinates.screenY);
     };
+    // Up already, if it rose before this listened: the first state reads it (above).
     const subscription = Keyboard.addListener("keyboardWillChangeFrame", move);
-    // Up already, if it rose before this listened.
-    const metrics = Keyboard.metrics();
-    if (metrics) setTop(metrics.screenY);
     return () => subscription.remove();
   }, []);
 

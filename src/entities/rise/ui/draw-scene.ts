@@ -4,7 +4,7 @@ import {
   Skia,
   type SkCanvas,
   type SkPaint,
-  type SkPath,
+  type SkPathBuilder,
 } from "@shopify/react-native-skia";
 
 import { MODE, RISE, STRING_POINTS, type Balloon, type RiseGame } from "../logic/rise-rules";
@@ -56,7 +56,7 @@ function drawLine(canvas: SkCanvas, game: RiseGame, look: Look): void {
 /** Landed paint — each splat stretched the way it hit — and its drips. */
 function drawSplats(canvas: SkCanvas, game: RiseGame, look: Look): void {
   "worklet";
-  const path = Skia.Path.Make();
+  const path = Skia.PathBuilder.Make();
   const { splats, drips } = game;
   for (let i = 0; i < splats.length; i += 5) {
     const [x, y, r, sx, sy] = [
@@ -80,24 +80,24 @@ function drawSplats(canvas: SkCanvas, game: RiseGame, look: Look): void {
     );
     path.addCircle(x, top + length, width * 0.7);
   }
-  canvas.drawPath(path, paintOf(look.ink));
+  canvas.drawPath(path.detach(), paintOf(look.ink));
 }
 
 /** White flecks thrown past a balloon's edge, on the glass. */
 function drawGlass(canvas: SkCanvas, game: RiseGame, look: Look): void {
   "worklet";
-  const path = Skia.Path.Make();
+  const path = Skia.PathBuilder.Make();
   for (let i = 0; i < game.glass.length; i += 4) {
     path.addCircle(game.glass[i]!, game.glass[i + 1]!, game.glass[i + 2]!);
   }
-  canvas.drawPath(path, paintOf(look.glass));
+  canvas.drawPath(path.detach(), paintOf(look.glass));
 }
 
 /** Scraps of latex, at rest or still falling: crumpled, matte, a fold across each. */
 function drawScraps(canvas: SkCanvas, game: RiseGame, look: Look, resting: boolean): void {
   "worklet";
-  const skin = Skia.Path.Make();
-  const folds = Skia.Path.Make();
+  const skin = Skia.PathBuilder.Make();
+  const folds = Skia.PathBuilder.Make();
   for (const scrap of game.scraps) {
     if ((scrap.rest !== 0) !== resting) continue;
     const flat = scrap.rest === 1 ? SCRAP.draped : 1;
@@ -116,15 +116,15 @@ function drawScraps(canvas: SkCanvas, game: RiseGame, look: Look, resting: boole
       scrap.y + Math.sin(scrap.angle) * scrap.size * 0.4 * flat,
     );
   }
-  canvas.drawPath(skin, paintOf(look.scrap));
+  canvas.drawPath(skin.detach(), paintOf(look.scrap));
   const fold = paintOf(look.ink, 0.25);
   fold.setStyle(PaintStyle.Stroke);
   fold.setStrokeWidth(1);
-  canvas.drawPath(folds, fold);
+  canvas.drawPath(folds.detach(), fold);
 }
 
 /** A balloon's string, smoothed through its points. */
-function addString(path: SkPath, b: Balloon): void {
+function addString(path: SkPathBuilder, b: Balloon): void {
   "worklet";
   path.moveTo(b.sx[0]!, b.sy[0]!);
   for (let i = 1; i < STRING_POINTS - 1; i += 1) {
@@ -138,7 +138,7 @@ function addString(path: SkPath, b: Balloon): void {
 /** Strings: every balloon's in `only`'s place, or just `only`'s — a saved one's, at its depth. */
 function drawStrings(canvas: SkCanvas, game: RiseGame, look: Look, only: Balloon | null): void {
   "worklet";
-  const path = Skia.Path.Make();
+  const path = Skia.PathBuilder.Make();
   if (only) addString(path, only);
   else {
     for (const b of game.balloons) {
@@ -149,7 +149,7 @@ function drawStrings(canvas: SkCanvas, game: RiseGame, look: Look, only: Balloon
   const paint = paintOf(look.ink, STRING.opacity);
   paint.setStyle(PaintStyle.Stroke);
   paint.setStrokeWidth(STRING.width);
-  canvas.drawPath(path, paint);
+  canvas.drawPath(path.detach(), paint);
 }
 
 /** One balloon over its faint shadow. */
@@ -174,9 +174,9 @@ function drawWithShadow(
 /** Black drops still in the air. */
 function drawDrops(canvas: SkCanvas, game: RiseGame, look: Look): void {
   "worklet";
-  const path = Skia.Path.Make();
+  const path = Skia.PathBuilder.Make();
   for (const drop of game.drops) path.addCircle(drop.x, drop.y, drop.r);
-  canvas.drawPath(path, paintOf(look.ink));
+  canvas.drawPath(path.detach(), paintOf(look.ink));
 }
 
 /** Each saved pair's "+2.9s", over its balloon's top as it crosses, drifting up off it and fading. */

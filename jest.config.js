@@ -74,6 +74,10 @@ const EXTRA_TRANSFORMED_PACKAGES = [
   // lucide-react-native ships ESM only. Metro transforms it; Jest will not
   // unless it is listed here.
   "lucide-react-native",
+  // From SDK 58: Sentry 8's packages resolve to their ES builds under React Native's
+  // export condition, and FlashList 2.3 ships ESM only.
+  "@sentry",
+  "@shopify/flash-list",
 ];
 
 const expoPreset = require("jest-expo/ios/jest-preset");
@@ -110,6 +114,11 @@ module.exports = {
   transformIgnorePatterns,
 
   setupFilesAfterEnv: ["<rootDir>/tests/setup/jest.setup.ts"],
+
+  // Reanimated's own resolver (and Worklets' within it): under Jest each of
+  // them loads its web build, not the native one — whose start-up calls the
+  // native runtime and throws, from Reanimated 4.7, before a test can run.
+  resolver: "react-native-reanimated/jest/resolver",
 
   // Merged with the preset's own mappings (asset stubs), not replacing them.
   moduleNameMapper: {

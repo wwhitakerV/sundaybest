@@ -1,12 +1,14 @@
 import { MODE, type Balloon, type RiseGame } from "./rise-rules";
 import { resolveContact, type Contact } from "./rise-contact";
+import { edgeOf, floorOf } from "./rise-setup";
+import { outlineContact, outlineOf, pointAgainst, reachOf } from "./rise-shape";
 
 /**
  * The atmosphere, as space: from the moment a pair locks, its survivor is a
  * body like the saved — rising on, the line a one-way floor under it until
  * it's wholly inside, and saved. The saved cruise at their own steady pace,
  * nearer ones larger and a touch quicker. Every balloon touches the others
- * edge to edge and bounces off them by its size, a glancing knock turning
+ * outline to outline, as drawn, and bounces off them by its size, a glancing knock turning
  * it; none ever passes through another. Each frame is stepped in
  * `SUBSTEPS`, so nothing tunnels or jitters. Worklets, each after what it calls.
  */
@@ -14,21 +16,26 @@ import { resolveContact, type Contact } from "./rise-contact";
 const TAU = Math.PI * 2;
 /** Steps a frame: small enough that a quick bump never passes through. */
 const SUBSTEPS = 4;
-/**
- * A balloon's body as three circles down its middle — fitted to its drawn
- * outline to within 4% of its half-width — in half-widths from its centre.
- */
-const SHAPE = [
-  { y: -0.127, r: 1.03 },
-  { y: 0.425, r: 0.7 },
-  { y: 0.875, r: 0.3 },
-];
 /** How near or far a saved balloon floats: its size against the saved size, far to near. */
 const DEPTH = { far: 0.78, near: 1.12 };
-/** How quickly it settles to its size at its depth. */
-const SHRINK = 0.0025;
+/** How quickly it settles to its size at its depth: quickly, so it's drifting small before it nears the top. */
+const SHRINK = 0.006;
+/** It starts shrinking into the distance once this much of it (points) has crossed above the line. */
+const SHRINK_FROM = 10;
 /** Its cruise (points/ms) — slow; the nearer, a touch quicker — and how quickly it returns to it. */
 const CRUISE = { far: 0.016, near: 0.03, settle: 0.0012 };
+/**
+ * Just saved, it rises straight on, easing (this quickly, per ms) from its
+ * crossing to its drifting pace, until the top slows it to rest within
+ * `nearTop` (points) of it.
+ */
+const AWAY = { settle: 0.003, nearTop: 8 };
+/** Then it wanders off its own way, turning to it this quickly (per ms) until within `near` of it (points/ms). */
+const TURN = { settle: 0.005, near: 0.002 };
+/** The ways it may wander off from under the top, in half-turns from rightward: all of them down a little. */
+const WANDER = { from: 0.1, to: 0.9 };
+/** Just saved and rising away, it never meets the top hard: its rise is held to this much (per ms) of the room left. */
+const CEILING = { ease: 0.004 };
 /** Crossing in: the steady pace it rises at (points/ms), and how quickly it returns to it. */
 const CROSSING = { rise: 0.08, settle: 0.002 };
 /** How much speed a bounce keeps: off an edge, and off another balloon. */
@@ -41,8 +48,6 @@ const HARD_HIT = { loses: 0.14, at: 0.8 };
  * slowed to `handBack` times its drift's pace, when its drift takes it back.
  */
 const COAST = { drag: 1 / 3000, rush: 0.00035, handBack: 1.3 };
-/** How close to the atmosphere's edges it may come. */
-const CLEAR = 6;
 /**
  * Its lean into its drift, and the spring rocking it back (per ms²), damped
  * as something light in air is — a knock tips it, never turns it over —
@@ -50,27 +55,10 @@ const CLEAR = 6;
  */
 const TILT = { lean: 3.2, most: 0.45, stiff: 0.000012, damp: 0.0025, fastest: 0.003 };
 
-/** Where its three circles are now, turned with it: [x, y, radius] each. */
-function circlesOf(b: Balloon, game: RiseGame): number[] {
-  "worklet";
-  const half = (game.stage.balloonW / 2) * b.scale;
-  const sin = Math.sin(b.angle);
-  const cos = Math.cos(b.angle);
-  const out: number[] = [];
-  for (const part of SHAPE) {
-    out.push(b.x - sin * part.y * half, b.y + cos * part.y * half, part.r * half);
-  }
-  return out;
-}
-
-/** Whether a point is on a balloon's body, by the circles it collides with. */
+/** Whether a point is on a balloon's body: inside its outline, as drawn. */
 export function touchesBalloon(b: Balloon, game: RiseGame, x: number, y: number): boolean {
   "worklet";
-  const circles = circlesOf(b, game);
-  for (let i = 0; i < circles.length; i += 3) {
-    if (Math.hypot(x - circles[i]!, y - circles[i + 1]!) <= circles[i + 2]!) return true;
-  }
-  return false;
+  return pointAgainst(outlineOf(b, game.stage), x, y).outside <= 0;
 }
 
 /** One substep of its own motion: cruising (or, crossing, lifted on), leaning and rocking. */
@@ -88,9 +76,14 @@ function move(b: Balloon, game: RiseGame, dt: number): void {
     b.angle += b.spin * dt;
     return;
   }
-  if (b.mode === MODE.free) {
+  // Once 10pt of it is over the line, it starts shrinking into the distance — and keeps on.
+  const top = b.y - (game.stage.balloonH / 2) * b.scale;
+  if (!b.shrinking && top <= game.stage.lineY - SHRINK_FROM) b.shrinking = true;
+  if (b.shrinking) {
     const target = game.stage.savedScale * (DEPTH.far + (DEPTH.near - DEPTH.far) * b.depth);
     b.scale += (target - b.scale) * Math.min(1, SHRINK * dt);
+  }
+  if (b.mode === MODE.free) {
     const cruise = CRUISE.far + (CRUISE.near - CRUISE.far) * b.depth;
     const speed = Math.hypot(b.vx, b.vy);
     if (b.thrown && speed > cruise * COAST.handBack) {
@@ -99,6 +92,24 @@ function move(b: Balloon, game: RiseGame, dt: number): void {
       b.vy *= keep;
     } else if (b.thrown) {
       b.thrown = false;
+    } else if (!b.drifting) {
+      // Just saved: rising straight on, slowing to its drift's pace, until it rests under the top.
+      const ease = Math.min(1, AWAY.settle * dt);
+      b.vx += -b.vx * ease;
+      b.vy += (-cruise - b.vy) * ease;
+      if (top - edgeOf(game.stage) < AWAY.nearTop) {
+        // At rest under the top: it wanders off its own way, always away from the top — down and to a side.
+        b.drifting = true;
+        b.heading = (WANDER.from + b.phase * (WANDER.to - WANDER.from)) * Math.PI;
+      }
+    } else if (b.heading !== undefined) {
+      // Turning from its rise onto its own way, then drifting as the rest do.
+      const ease = Math.min(1, TURN.settle * dt);
+      const tx = Math.cos(b.heading) * cruise;
+      const ty = Math.sin(b.heading) * cruise;
+      b.vx += (tx - b.vx) * ease;
+      b.vy += (ty - b.vy) * ease;
+      if (Math.hypot(tx - b.vx, ty - b.vy) < TURN.near) delete b.heading;
     } else if (speed < 0.0001) {
       b.vx = Math.cos(b.phase * TAU) * cruise;
       b.vy = Math.sin(b.phase * TAU) * cruise;
@@ -107,6 +118,9 @@ function move(b: Balloon, game: RiseGame, dt: number): void {
       b.vx *= toward;
       b.vy *= toward;
     }
+    // Rising away, it comes to rest under the top; drifting, the top's an edge like the others.
+    const most = Math.max(0, top - edgeOf(game.stage)) * CEILING.ease;
+    if (!b.drifting && !b.thrown && b.vy < -most) b.vy = -most;
   } else {
     b.vy += (-CROSSING.rise - b.vy) * Math.min(1, CROSSING.settle * dt);
   }
@@ -118,27 +132,42 @@ function move(b: Balloon, game: RiseGame, dt: number): void {
   b.spin = Math.max(-TILT.fastest, Math.min(TILT.fastest, b.spin));
 }
 
-/** Off the atmosphere's edges — the line a floor for the saved, never for one crossing in. */
+/** Off the atmosphere's edges, outline against edge — the line a floor for the saved, never for one crossing in. */
 function walls(b: Balloon, game: RiseGame): void {
   "worklet";
   const { stage } = game;
-  const circles = circlesOf(b, game);
-  for (let i = 0; i < circles.length; i += 3) {
-    const [x, y, r] = [circles[i]!, circles[i + 1]!, circles[i + 2]!];
-    const edges: Contact[] = [
-      { depth: CLEAR + r - x, px: x - r, py: y, nx: 1, ny: 0 },
-      { depth: x + r - (stage.width - CLEAR), px: x + r, py: y, nx: -1, ny: 0 },
-      { depth: CLEAR + r - y, px: x, py: y - r, nx: 0, ny: 1 },
-    ];
-    if (b.mode === MODE.free) {
-      edges.push({ depth: y + r - (stage.lineY - CLEAR), px: x, py: y + r, nx: 0, ny: -1 });
+  const outline = outlineOf(b, stage);
+  // Each edge's deepest point of the outline past it — the left, right, top and floor: [depth, x, y].
+  const deepest = [
+    [-Infinity, 0, 0],
+    [-Infinity, 0, 0],
+    [-Infinity, 0, 0],
+    [-Infinity, 0, 0],
+  ];
+  for (let i = 0; i < outline.length; i += 2) {
+    const x = outline[i]!;
+    const y = outline[i + 1]!;
+    const clear = edgeOf(stage);
+    const past = [clear - x, x - (stage.width - clear), clear - y, y - floorOf(stage)];
+    for (let k = 0; k < 4; k += 1) {
+      if (past[k]! > deepest[k]![0]!) deepest[k] = [past[k]!, x, y];
     }
-    for (const edge of edges) {
-      if (edge.depth <= 0) continue;
-      const impact = Math.abs(b.vx * edge.nx + b.vy * edge.ny);
-      const keep = KEEP.wall - HARD_HIT.loses * Math.min(1, impact / HARD_HIT.at);
-      resolveContact(game, null, b, edge, keep);
-    }
+  }
+  const normals = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ];
+  const edges = b.mode === MODE.free ? 4 : 3;
+  for (let k = 0; k < edges; k += 1) {
+    const [depth = 0, px = 0, py = 0] = deepest[k]!;
+    if (depth <= 0) continue;
+    const [nx = 0, ny = 0] = normals[k]!;
+    const edge: Contact = { depth, px, py, nx, ny };
+    const impact = Math.abs(b.vx * nx + b.vy * ny);
+    const keep = KEEP.wall - HARD_HIT.loses * Math.min(1, impact / HARD_HIT.at);
+    resolveContact(game, null, b, edge, keep);
   }
   if (b.mode === MODE.crossing) {
     // One way: pushed back, it never sinks below where it touched the line.
@@ -150,23 +179,27 @@ function walls(b: Balloon, game: RiseGame): void {
   }
 }
 
-/** The deepest touch between two balloons' circles, from `a` toward `b` — or none. */
-function touch(a: number[], b: number[]): Contact | null {
+/** Two balloons touching, outline to outline, from `a` toward `b` — or none. */
+function touch(a: Balloon, b: Balloon, game: RiseGame): Contact | null {
   "worklet";
-  let deepest: Contact | null = null;
-  for (let i = 0; i < a.length; i += 3) {
-    for (let j = 0; j < b.length; j += 3) {
-      const dx = b[j]! - a[i]!;
-      const dy = b[j + 1]! - a[i + 1]!;
-      const apart = Math.hypot(dx, dy) || 0.0001;
-      const depth = a[i + 2]! + b[j + 2]! - apart;
-      if (depth <= 0 || (deepest && depth <= deepest.depth)) continue;
-      const nx = dx / apart;
-      const ny = dy / apart;
-      deepest = { depth, px: a[i]! + nx * a[i + 2]!, py: a[i + 1]! + ny * a[i + 2]!, nx, ny };
-    }
+  const apart = Math.hypot(b.x - a.x, b.y - a.y);
+  if (apart > reachOf(a, game.stage) + reachOf(b, game.stage)) return null;
+  return outlineContact(outlineOf(a, game.stage), outlineOf(b, game.stage));
+}
+
+/**
+ * A string's own swing settled to its balloon's, as it's saved: carried up
+ * on the rise, slowing to a drift it would fly on up into the balloon — it
+ * moves with the knot instead, and hangs.
+ */
+function calmString(b: Balloon): void {
+  "worklet";
+  const dx = b.sx[0]! - b.px[0]!;
+  const dy = b.sy[0]! - b.py[0]!;
+  for (let i = 0; i < b.sx.length; i += 1) {
+    b.px[i] = b.sx[i]! - dx;
+    b.py[i] = b.sy[i]! - dy;
   }
-  return deepest;
 }
 
 /** Whether a balloon is adrift: saved, or crossing in. */
@@ -191,7 +224,7 @@ export function adrift(game: RiseGame, dt: number): void {
       for (let j = i + 1; j < floating.length; j += 1) {
         const a = floating[i]!;
         const b = floating[j]!;
-        const contact = touch(circlesOf(a, game), circlesOf(b, game));
+        const contact = touch(a, b, game);
         if (contact) resolveContact(game, a, b, contact, KEEP.balloon);
       }
     }
@@ -201,6 +234,7 @@ export function adrift(game: RiseGame, dt: number): void {
     const halfH = (game.stage.balloonH / 2) * b.scale;
     if (b.mode === MODE.crossing && b.y + halfH < game.stage.lineY - 2) {
       b.mode = MODE.free;
+      calmString(b);
       game.events.saves += 1;
     }
   }

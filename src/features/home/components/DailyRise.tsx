@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { Play } from "lucide-react-native";
 
-import { RiseBoard, type RiseGame } from "@/entities/rise";
+import { QuestionLine, RiseBoard, riseStage, type RiseGame } from "@/entities/rise";
 import { space } from "@/theme";
 import { Button } from "@/ui/atoms/Button";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
@@ -14,10 +14,14 @@ export type DailyRiseProps = {
   day: string;
   /** The preview, playing itself (`useRiseAutoplay`). */
   game: SharedValue<RiseGame>;
+  /** The question of the pair rising now — none between pairs. */
+  question: string | null;
   width: number;
   height: number;
   /** Today's score, in a line — once played. */
   played: string | null;
+  /** The board failed on the UI thread, where a thrown error would abort the app. */
+  onBoardError: (where: string, message: string) => void;
   onOpen: () => void;
 };
 
@@ -27,7 +31,16 @@ export type DailyRiseProps = {
  * bursting in black; its name, what it asks, how long it takes, and Play.
  * Once played, today's score in its place.
  */
-export function DailyRise({ day, game, width, height, played, onOpen }: DailyRiseProps) {
+export function DailyRise({
+  day,
+  game,
+  question,
+  width,
+  height,
+  played,
+  onBoardError,
+  onOpen,
+}: DailyRiseProps) {
   return (
     <View testID="home-daily-game" style={styles.section}>
       <View style={styles.labels}>
@@ -45,7 +58,15 @@ export function DailyRise({ day, game, width, height, played, onOpen }: DailyRis
         accessibilityHint="Opens today's game"
         onPress={onOpen}
       >
-        <RiseBoard game={game} width={width} height={height} />
+        <RiseBoard game={game} width={width} height={height} onError={onBoardError} />
+        {question && (
+          <QuestionLine
+            question={question}
+            lineY={riseStage(width, height).lineY}
+            inset={QUESTION_INSET}
+            variant="questionCompact"
+          />
+        )}
       </Pressable>
       <View style={styles.words}>
         <SerifTitle variant="title" accessibilityRole="header">
@@ -66,6 +87,9 @@ export function DailyRise({ day, game, width, height, played, onOpen }: DailyRis
     </View>
   );
 }
+
+/** The question's room either side, on a board set into the page. */
+const QUESTION_INSET = space[12];
 
 const styles = StyleSheet.create({
   section: { gap: space[16] },

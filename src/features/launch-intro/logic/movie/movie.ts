@@ -5,21 +5,6 @@ export type Stage = { width: number; height: number };
 
 type Beat = { start: number; end: number };
 
-/**
- * How the movie's stage fills a screen: scaled to cover it, centred, its
- * overflow cropped evenly — a point on the stage lands at `dx + x × scale`,
- * `dy + y × scale` on the screen.
- */
-export function coverFit(stage: Stage, screen: Stage) {
-  "worklet";
-  const scale = Math.max(screen.width / stage.width, screen.height / stage.height);
-  return {
-    scale,
-    dx: (screen.width - stage.width * scale) / 2,
-    dy: (screen.height - stage.height * scale) / 2,
-  };
-}
-
 /** Whether the movie holds where it is: the screen is full white and the page isn't ready. */
 export function holdsFor(t: number, ready: boolean, holdStart: number): boolean {
   "worklet";

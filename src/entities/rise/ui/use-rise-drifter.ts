@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Gesture, type NativeGesture } from "react-native-gesture-handler";
+import { Gesture } from "react-native-gesture-handler";
 import { runOnJS, useFrameCallback, useSharedValue } from "react-native-reanimated";
 
 import type { RiseGame } from "../logic/rise-rules";
@@ -27,7 +27,7 @@ export type RiseDrifterOptions = {
   /** Reduce Motion: no drift and no fling; it still goes where a finger puts it. */
   still: boolean;
   /** The pager it's on: held, the balloon keeps the page from turning. */
-  pager?: NativeGesture;
+  pager?: ReturnType<typeof Gesture.Native>;
   /** Told as it bursts, as a finger takes hold, and as a touch stops it dead: for their haptics. */
   onBurst?: () => void;
   onGrab?: () => void;

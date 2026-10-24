@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Gesture, GestureDetector, type NativeGesture } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { runOnJS } from "react-native-reanimated";
 
 import { burstFeedback, paintFeedback, tapFeedback } from "@/core/haptics/haptics";
@@ -20,7 +20,7 @@ export type LearnedPageProps = {
   /** Reduce Motion: the parts fade without moving, the balloon still. */
   still: boolean;
   /** The pager the page is on: while the balloon's held, it can't turn. */
-  pager: NativeGesture;
+  pager: ReturnType<typeof Gesture.Native>;
 };
 
 /**
@@ -52,6 +52,10 @@ export function LearnedPage({ row, still, pager }: LearnedPageProps) {
     onGrab: paintFeedback,
     onStop: tapFeedback,
   });
+  // The fact's own scroll (a fact too long for the page): a touch on the balloon takes it from the
+  // scroll, as from the pager — the balloon's in front of everything a finger reaches.
+  const factScroll = useMemo(() => Gesture.Native(), []);
+  drifter.touch.blocksExternalGesture(factScroll);
   const letGo = () => setClear((count) => count + 1);
   // A tap anywhere lets go of what's selected, as iOS does; a touch on the balloon plays with it.
   const touches = Gesture.Simultaneous(
@@ -82,19 +86,24 @@ export function LearnedPage({ row, still, pager }: LearnedPageProps) {
           </View>
         )}
         <View style={styles.page}>
-          <ScrollView
-            style={styles.statement}
-            contentContainerStyle={styles.statementInset}
-            showsVerticalScrollIndicator={false}
-          >
-            <PageEnter order={0} still={still}>
-              <SelectableText
-                testID="rise-learned-fact"
-                clear={clear}
-                parts={[{ text: row.fact, face: "statement" }]}
-              />
-            </PageEnter>
-          </ScrollView>
+          {/* Scrolls only a fact too long for its room; a fact that fits never moves (no bounce). */}
+          <GestureDetector gesture={factScroll}>
+            <ScrollView
+              style={styles.statement}
+              contentContainerStyle={styles.statementInset}
+              showsVerticalScrollIndicator={false}
+              alwaysBounceVertical={false}
+              bounces={false}
+            >
+              <PageEnter order={0} still={still}>
+                <SelectableText
+                  testID="rise-learned-fact"
+                  clear={clear}
+                  parts={[{ text: row.fact, face: "statement" }]}
+                />
+              </PageEnter>
+            </ScrollView>
+          </GestureDetector>
           <View style={styles.credits}>
             {/* What was asked, one selection: dragged from its label down into its question. */}
             <PageEnter order={1} still={still}>

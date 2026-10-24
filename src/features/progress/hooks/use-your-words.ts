@@ -37,6 +37,8 @@ export function useYourWords() {
   const marks = buildMarks(reflections);
 
   const [shownId, setShownId] = useState<string | null>(null);
+  // Drawn once, as the page opens: which older reflection it opens on.
+  const [openingDraw] = useState(Math.random);
   const [writing, setWriting] = useState(false);
   // Sent here from the list of them all: show that one. Each pick is applied once.
   const sent = parseWordsParams(useLocalSearchParams());
@@ -52,7 +54,7 @@ export function useYourWords() {
   }
   // The first time there's something to show, an older one is chosen to open on.
   if (shownId === null && reflections.length > 0) {
-    setShownId(chooseOpening(reflections, Math.random()));
+    setShownId(chooseOpening(reflections, openingDraw));
   }
 
   const index = Math.max(

@@ -1,11 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { StyleSheet, type LayoutChangeEvent } from "react-native";
 import Animated from "react-native-reanimated";
-// Not re-exported from the top-level `expo-router` module, but this is the
-// same internal path expo-router's own `TabsClient.d.ts` imports
-// `BottomTabNavigationOptions` from — no `exports` map in expo-router's
-// package.json restricts it, so it's a stable subpath, not a private one.
-import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
+import { useNavigation, useNavigationContainerRef } from "expo-router";
+import type { BottomTabBarProps } from "expo-router/tabs";
 
 import { edgeFade, useTheme } from "@/theme";
 import { BottomFade } from "@/ui/atoms/BottomFade";
@@ -33,7 +30,7 @@ import {
 } from "./tab-bar-accessory";
 import { useShownTabBarBanner } from "./tab-bar-banner";
 import { useTabBarShown } from "./use-tab-bar-shown";
-import { stackRootReset } from "./stack-root-reset";
+import { stackRootReset, tabsHolding } from "./stack-root-reset";
 import { useTabBarMinimize } from "./use-tab-bar-minimize";
 import { useTabBarBannerReveal, useTabBarRaise } from "./use-tab-bar-raise";
 import { useTabBarReveal } from "./use-tab-bar-reveal";
@@ -85,9 +82,13 @@ export type TabBarProps = BottomTabBarProps & {
  * `core`), so haptic feedback is the caller's job.
  */
 export function TabBar({ staysUnder = [], ...props }: TabBarProps) {
-  const { state, descriptors, navigation, insets, onPress, fab } = props;
+  const { state, descriptors, emitter, navigateToTab, insets, onPress, fab } = props;
   const theme = useTheme();
-  const shown = useTabBarShown(navigation, staysUnder);
+  // The `(tabs)` route's own navigation, in the stack that holds the tabs — and the
+  // container, which takes an action aimed at the tabs themselves.
+  const stack = useNavigation();
+  const container = useNavigationContainerRef();
+  const shown = useTabBarShown(staysUnder);
   const revealStyle = useTabBarReveal(shown);
 
   // Minimised beside a screen's button — or, once the gathered tabs are
@@ -133,15 +134,16 @@ export function TabBar({ staysUnder = [], ...props }: TabBarProps) {
   const tintHeight = getFloatingNavBarTintHeight(capsuleBottom) + RAISE_LIFT;
   const activeRoute = state.routes[state.index];
   const activeOptions = activeRoute ? descriptors[activeRoute.key]?.options : undefined;
-  function pressTab(routeKey: string, routeName: string, isActive: boolean) {
+  function pressTab(routeKey: string, isActive: boolean) {
     onPress?.();
-    const event = navigation.emit({ type: "tabPress", target: routeKey, canPreventDefault: true });
+    const event = emitter.emit({ type: "tabPress", target: routeKey, canPreventDefault: true });
     if (event.defaultPrevented) return;
-    if (!isActive) navigation.navigate(routeName);
+    if (!isActive) navigateToTab(routeKey);
     else {
       // Tapped again, a tab goes to its first page — even one a link left without it.
-      const reset = stackRootReset(navigation.getState(), routeKey);
-      if (reset) navigation.dispatch(reset);
+      const tabs = tabsHolding(stack.getState(), routeKey);
+      const reset = tabs && stackRootReset(tabs, routeKey);
+      if (reset) container.dispatch(reset);
     }
   }
 

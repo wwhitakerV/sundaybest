@@ -1,0 +1,38 @@
+diff --git a/node_modules/@shopify/react-native-skia/lib/commonjs/views/SkiaViewNativeId.js b/node_modules/@shopify/react-native-skia/lib/commonjs/views/SkiaViewNativeId.js
+index c264a3a..5a53449 100644
+--- a/node_modules/@shopify/react-native-skia/lib/commonjs/views/SkiaViewNativeId.js
++++ b/node_modules/@shopify/react-native-skia/lib/commonjs/views/SkiaViewNativeId.js
+@@ -4,7 +4,9 @@ Object.defineProperty(exports, "__esModule", {
+   value: true
+ });
+ exports.SkiaViewNativeId = void 0;
++// SundayBest patch (Skia issue #4313): each JS session starts its canvas ids somewhere new,
++// so a reload never reuses an id the native view registry still remembers, which blanks the canvas.
+ const SkiaViewNativeId = exports.SkiaViewNativeId = {
+-  current: 1000
++  current: 1000 + Math.floor(Math.random() * 1000000) * 1000
+ };
+ //# sourceMappingURL=SkiaViewNativeId.js.map
+\ No newline at end of file
+diff --git a/node_modules/@shopify/react-native-skia/lib/module/views/SkiaViewNativeId.js b/node_modules/@shopify/react-native-skia/lib/module/views/SkiaViewNativeId.js
+index 07dae95..d9f8cce 100644
+--- a/node_modules/@shopify/react-native-skia/lib/module/views/SkiaViewNativeId.js
++++ b/node_modules/@shopify/react-native-skia/lib/module/views/SkiaViewNativeId.js
+@@ -1,4 +1,6 @@
++// SundayBest patch (Skia issue #4313): each JS session starts its canvas ids somewhere new,
++// so a reload never reuses an id the native view registry still remembers, which blanks the canvas.
+ export const SkiaViewNativeId = {
+-  current: 1000
++  current: 1000 + Math.floor(Math.random() * 1000000) * 1000
+ };
+ //# sourceMappingURL=SkiaViewNativeId.js.map
+\ No newline at end of file
+diff --git a/node_modules/@shopify/react-native-skia/src/views/SkiaViewNativeId.ts b/node_modules/@shopify/react-native-skia/src/views/SkiaViewNativeId.ts
+index cfdfccc..5464f97 100644
+--- a/node_modules/@shopify/react-native-skia/src/views/SkiaViewNativeId.ts
++++ b/node_modules/@shopify/react-native-skia/src/views/SkiaViewNativeId.ts
+@@ -1 +1,3 @@
+-export const SkiaViewNativeId = { current: 1000 };
++// SundayBest patch (Skia issue #4313): each JS session starts its canvas ids somewhere new,
++// so a reload never reuses an id the native view registry still remembers, which blanks the canvas.
++export const SkiaViewNativeId = { current: 1000 + Math.floor(Math.random() * 1000000) * 1000 };

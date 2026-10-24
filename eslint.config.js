@@ -223,6 +223,7 @@ module.exports = defineConfig([
     "legacy-welcome/**",
     "legacy-home-hero/**",
     "legacy-the-99/**",
+    "legacy-plans-library/**",
   ]),
 
   // 1. Expo's recommended config (registers import, expo, react, react-hooks,

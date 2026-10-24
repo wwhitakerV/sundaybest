@@ -1,17 +1,6 @@
 /** Plans' two filters; with neither picked, every plan shows. */
 export type PlanFilter = "In progress" | "Done";
 
-/** The filters, each with how many plans it holds. */
-export function getPlanFilterOptions(counts: {
-  inProgress: number;
-  done: number;
-}): { label: PlanFilter; count: number }[] {
-  return [
-    { label: "In progress", count: counts.inProgress },
-    { label: "Done", count: counts.done },
-  ];
-}
-
 /** What the library says when the plans showing are none. */
 export function describeEmptyLibrary(filter: PlanFilter | null): {
   title: string;

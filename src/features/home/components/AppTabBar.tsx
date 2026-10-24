@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/tabs";
 
 import { tapFeedback } from "@/core/haptics/haptics";
 import { TabBar } from "@/ui/organisms/tab-bar/TabBar";

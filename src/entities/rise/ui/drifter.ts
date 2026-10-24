@@ -38,8 +38,10 @@ export function drifterGame(
   const stage = {
     width,
     height,
-    // Just under the page's foot: the foot is the floor — debris rests there, the balloon bounces off it.
-    lineY: height + 1,
+    // Its floor exactly the page's foot, the hairline over the dots — debris rests there, the balloon
+    // bounces off it, touching it — and its sides and top the page's own edges, full bleed.
+    lineY: height + 0.5,
+    edge: 0,
     balloonW: BALLOON_W,
     balloonH: BALLOON_W * 1.2,
     savedScale: 1 / NEAREST,
@@ -61,6 +63,8 @@ export function drifterGame(
         pair: 0,
         side: 0,
         mode: MODE.free,
+        // Adrift from the start: never a balloon just saved, rising away.
+        drifting: true,
         label,
         ...(note !== null && { note }),
         x,

@@ -1,7 +1,15 @@
-import { ClipOp, Skia, type SkCanvas, type SkFont, type SkPath } from "@shopify/react-native-skia";
+import {
+  ClipOp,
+  Skia,
+  type SkCanvas,
+  type SkFont,
+  type SkPath,
+  type SkPathBuilder,
+} from "@shopify/react-native-skia";
 
 import type { Balloon, RiseGame, Stage } from "../logic/rise-rules";
 import { hash01 } from "../logic/rise-setup";
+import { BODY, bodyStretch } from "../logic/rise-shape";
 import { skinShader, type Rgb } from "./balloon-shader";
 import { drawWords } from "./draw-words";
 
@@ -37,32 +45,28 @@ const HAZE = 0.16;
 const PAINT_GLOSS = 0.3;
 /** How much paint keeps its white against the balloon's shading. */
 const PAINT_MATTE = 0.65;
-/** How far a squash spreads it, and how lopsided a balloon may be. */
-const SQUASH_SPREAD = 0.6;
-const LOPSIDED = 0.05;
 /** The brush's tail thins over its last three points; dry bristle marks trail past it. */
 const TAIL = [0.85, 0.65, 0.45];
 const BRISTLES = { rows: 3, marks: 3, apart: 4, size: 0.08 };
 
-/** A balloon's outline and knot, in its own points, centred on its body. */
+/** A balloon's outline (`BODY`, the shape its touches use too) and knot, in its own points, centred on its body. */
 export function balloonShapes(stage: Stage): { body: SkPath; knot: SkPath } {
   "worklet";
   const rx = stage.balloonW / 2;
   const ry = stage.balloonH / 2;
-  const body = Skia.Path.Make();
-  body.moveTo(0, -ry);
-  body.cubicTo(rx * 0.56, -ry, rx, -ry * 0.52, rx, -ry * 0.05);
-  body.cubicTo(rx, ry * 0.45, rx * 0.42, ry * 0.86, 0, ry);
-  body.cubicTo(-rx * 0.42, ry * 0.86, -rx, ry * 0.45, -rx, -ry * 0.05);
-  body.cubicTo(-rx, -ry * 0.52, -rx * 0.56, -ry, 0, -ry);
+  const body = Skia.PathBuilder.Make();
+  body.moveTo(BODY.start[0] * rx, BODY.start[1] * ry);
+  for (const c of BODY.curves) {
+    body.cubicTo(c[0] * rx, c[1] * ry, c[2] * rx, c[3] * ry, c[4] * rx, c[5] * ry);
+  }
   body.close();
-  const knot = Skia.Path.Make();
+  const knot = Skia.PathBuilder.Make();
   knot.moveTo(-3.5, ry + 5);
   knot.lineTo(3.5, ry + 5);
   knot.lineTo(1.2, ry - 1);
   knot.lineTo(-1.2, ry - 1);
   knot.close();
-  return { body, knot };
+  return { body: body.detach(), knot: knot.detach() };
 }
 
 /** Dabs of the brush no further apart than this share of its width: a solid stroke, edges just uneven. */
@@ -73,7 +77,7 @@ const DAB_SPACING = 0.3;
  * dabs, close enough to run solid, each a touch wider or narrower — a blob
  * where it landed, thinning over its tail, dry bristle marks trailing past.
  */
-function addStroke(path: SkPath, paint: number[], from: number, to: number): void {
+function addStroke(path: SkPathBuilder, paint: number[], from: number, to: number): void {
   "worklet";
   const count = to - from;
   const x = (i: number) => paint[(from + i) * 4]!;
@@ -120,7 +124,7 @@ function addStroke(path: SkPath, paint: number[], from: number, to: number): voi
 /** All of a balloon's paint, and its flecks, as one shape. */
 function paintPath(b: Balloon): SkPath {
   "worklet";
-  const path = Skia.Path.Make();
+  const path = Skia.PathBuilder.Make();
   const points = b.paint.length / 4;
   let start = 0;
   for (let i = 1; i <= points; i += 1) {
@@ -132,7 +136,7 @@ function paintPath(b: Balloon): SkPath {
   for (let i = 0; i < b.flecks.length; i += 3) {
     path.addCircle(b.flecks[i]!, b.flecks[i + 1]!, b.flecks[i + 2]!);
   }
-  return path;
+  return path.detach();
 }
 
 /** A colour faded `share` of the way to white: farther off, paler. */
@@ -171,10 +175,8 @@ export function drawBalloon(
   canvas.save();
   canvas.translate(b.x, b.y);
   canvas.rotate((b.angle * 180) / Math.PI, 0, 0);
-  canvas.scale(
-    b.scale * (1 + b.poke * SQUASH_SPREAD) * (1 + (b.phase - 0.5) * LOPSIDED),
-    b.scale * (1 - b.poke),
-  );
+  const stretch = bodyStretch(b);
+  canvas.scale(stretch.x, stretch.y);
   canvas.drawPath(shapes.knot, skinPaint);
   canvas.drawPath(shapes.body, skinPaint);
   if (b.paint.length > 0) {

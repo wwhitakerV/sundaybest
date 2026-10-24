@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
-import type { BottomTabBarProps } from "expo-router/build/react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "expo-router/tabs";
 
 import { useTheme } from "@/theme";
 import { AnimatedTabIcon } from "./AnimatedTabIcon";

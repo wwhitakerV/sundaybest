@@ -1,34 +1,7 @@
-import {
-  coverFit,
-  fadeOpacity,
-  holdsFor,
-  movieMoments,
-} from "@/features/launch-intro/logic/movie/movie";
+import { fadeOpacity, holdsFor, movieMoments } from "@/features/launch-intro/logic/movie/movie";
 import { PAINT_MOVIE } from "@/features/launch-intro/logic/movie/paint-movie";
 
 const { stage } = PAINT_MOVIE;
-
-describe("coverFit", () => {
-  it("fills a taller screen, cropping its sides evenly", () => {
-    const fit = coverFit(stage, { width: 390, height: 900 });
-
-    expect(fit.scale * stage.height).toBeCloseTo(900, 6);
-    expect(fit.scale * stage.width).toBeGreaterThanOrEqual(390);
-    expect(fit.dx).toBeCloseTo((390 - fit.scale * stage.width) / 2, 6);
-    expect(fit.dy).toBeCloseTo(0, 6);
-  });
-
-  it("fills a wider screen, cropping its top and bottom evenly", () => {
-    const fit = coverFit(stage, { width: 440, height: 900 });
-
-    expect(fit.scale * stage.width).toBeCloseTo(440, 6);
-    expect(fit.dy).toBeCloseTo((900 - fit.scale * stage.height) / 2, 6);
-  });
-
-  it("is the movie as it is on its own screen", () => {
-    expect(coverFit(stage, stage)).toEqual({ scale: 1, dx: 0, dy: 0 });
-  });
-});
 
 describe("holdsFor", () => {
   const { hold } = PAINT_MOVIE.beats;

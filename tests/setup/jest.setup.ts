@@ -169,6 +169,19 @@ jest.mock("expo-web-browser", () => ({
 // asserted), pictures render nothing, and every drawing call is a no-op that
 // returns another no-op. What's drawn is covered by the launch intro's pure
 // frame tests, not here.
+// expo-notifications 58 subscribes a handler of its own as it loads, and
+// setting ours (local-reminders) unsubscribes that one first. jest-expo's
+// stand-in `addListener` hands back a promise, with no `remove`, so that throws
+// before any test runs. This stand-in hands back a subscription, as the
+// native module does; under Jest no notification ever arrives.
+jest.mock("expo-notifications/build/NotificationsHandlerModule", () => ({
+  __esModule: true,
+  default: {
+    addListener: () => ({ remove: () => undefined }),
+    handleNotificationAsync: jest.fn(() => Promise.resolve()),
+  },
+}));
+
 jest.mock("@shopify/react-native-skia", () => {
   const { createElement } = jest.requireActual<typeof ReactModule>("react");
   const { View } = jest.requireActual<typeof ReactNativeModule>("react-native");

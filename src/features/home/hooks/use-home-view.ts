@@ -74,6 +74,7 @@ export function useHomeView() {
           /** The study featured at the top of Home (`FeaturedStudy`). */
           study: {
             title: plan.title,
+            church: plan.sermon.church,
             thumbnailUrl: plan.sermon.thumbnailUrl,
             label: "IN PROGRESS",
             dayOfTotal: formatDayOfTotal(currentDay.dayNumber, plan.lengthDays).toUpperCase(),

@@ -10,7 +10,8 @@
       "@/*": ["./src/*"],
       "@tests/*": ["./tests/*"]
     },
-    "types": ["jest"]
+    "types": ["jest"],
+    "customConditions": ["react-native", "react-native-legacy-deep-imports"]
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
   "exclude": [
@@ -23,6 +24,7 @@
     "legacy-intro-and-assets",
     "legacy-welcome",
     "legacy-home-hero",
-    "legacy-the-99"
+    "legacy-the-99",
+    "legacy-plans-library"
   ]
 }

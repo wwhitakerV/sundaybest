@@ -45,25 +45,25 @@ Canonical project facts. Later setup prompts read this file instead of re-asking
 
 | Key          | Value                 | Source of truth                       |
 | ------------ | --------------------- | ------------------------------------- |
-| Expo SDK     | 57 (`expo@~57.0.23`)  | npm `expo@latest`, checked 2026-09-15 |
-| React Native | 0.86.3                | SDK 57 bundled version                |
-| React        | 19.2.3                | SDK 57 bundled version                |
+| Expo SDK     | 58 (`expo@~58.0.19`)  | npm `expo@latest`, checked 2026-10-23 |
+| React Native | 0.88.0                | SDK 58 bundled version                |
+| React        | 19.3.0                | SDK 58 bundled version                |
 | Node         | 24.21.0 (Krypton LTS) | `.nvmrc`, `engines.node`              |
 | TypeScript   | `~6.0.3`              | template default                      |
 
-Node 24.21.0 satisfies React Native 0.86.3's declared requirement
-(`^20.19.4 || ^22.13.0 || ^24.3.0 || >= 25.0.0`).
+Node 24.21.0 satisfies SDK 58's requirement (22.13+, 24.3+ or 26+; no odd-numbered
+releases). See ADR 0037 for the move from SDK 57.
 
 ## Dependency security pins
 
 `npm audit` must stay at zero. Pins in `package.json` `overrides` keep it
-there without moving off Expo SDK 57:
+there without moving off Expo SDK 58:
 
 | Pin                                         | Why                                                                                                                                                                                           |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `xcode > uuid@11.1.1`                       | uuid@7 missed a buffer bounds check in v3/v5/v6. Build-time only (`xcode` calls `uuid.v4()`); 11.1.1 still ships CJS.                                                                         |
 | `query-string > decode-uri-component@0.5.0` | `<=0.4.2` decodes malformed percent-encoding in exponential time. It ships in the iOS bundle via expo-router's deep-link parsing, so a crafted `sundaybest://` link could hang the JS thread. |
-| `react-dom@19.2.3`                          | Not a dependency (iOS only), but Expo declares it as an optional peer and npm will hoist a copy. Pinning stops it drifting ahead of `react@19.2.3`.                                           |
+| `react-dom@19.3.0`                          | Not a dependency (iOS only), but Expo declares it as an optional peer and npm will hoist a copy. Pinning stops it drifting ahead of `react@19.3.0`.                                           |
 
 `decode-uri-component@0.5.0` is the only patched release and is ESM-only, so
 `query-string@7.1.3`'s CJS `require` of it returns a module namespace instead of a
@@ -74,6 +74,17 @@ copy under `expo-router` — installing `eas-cli` hoisted `query-string` to the
 top level, so the patch was regenerated at its new path. Check
 `patch-package`'s postinstall output after any dependency change; a
 silently-failed patch does not fail the install.)
+
+`patches/@shopify+react-native-skia+2.14.0.patch` works around Skia issue
+[#4313](https://github.com/wcandillon/react-native-skia/issues/4313): after a
+JS reload in the same process (every reload in Expo Go, and an over-the-air
+update's reload in the shipped app), Skia numbers its canvases from 1000
+again while the native view registry still remembers the old session's ids,
+so a canvas whose id matches one of them draws nothing, silently. The patch
+starts each session's ids at a random multiple of 1000 instead. Drop it once
+a Skia release fixes the registry (the PR backporting the fix to 2.x is
+#4314); the patch fails to apply on any other Skia version, so an upgrade
+surfaces it.
 
 Do not bump `query-string` to 9.x to fix this: 9.x is `export default` only, so
 expo-router's `__importStar(require("query-string")).stringify` becomes `undefined`
@@ -222,7 +233,7 @@ in [docs/api/attestation.md](./api/attestation.md), with matching Zod schemas in
 | `src/core/security/database-key`   | Generates and keeps the SQLCipher key        |
 | `src/core/storage/database`        | SQLCipher adapter and the migration runner   |
 
-`@expo/app-integrity` is pinned to an **exact** version (`57.0.2`): it is a young
+`@expo/app-integrity` is pinned to an **exact** version (`58.0.2`): it is a young
 library on the path that decides whether the backend trusts a request.
 
 ### Security traps found while building this — do not "fix" these blindly
@@ -708,7 +719,7 @@ installed package when the dev server runs with `EXPO_UNSTABLE_MCP_SERVER=1`
 
 ## Lists and search
 
-- **Long lists run on FlashList** (`@shopify/flash-list` 2.0.2, the version Expo SDK 57 pins; JavaScript only, MIT, one dependency, `tslib`). `ListScreen` draws Plans, All reflections, Weeks and All Quick Checks on it: only the rows near view are drawn, and reused as the list scrolls. Plans' search results stay on Reanimated's `Animated.FlatList`, because reuse would break their rows' fades and glides.
+- **Long lists run on FlashList** (`@shopify/flash-list` 2.3.2, the version Expo SDK 58 pins; JavaScript only, MIT, one dependency, `tslib`). `ListScreen` draws Plans, All reflections, Weeks and All Quick Checks on it: only the rows near view are drawn, and reused as the list scrolls. Plans' search results stay on Reanimated's `Animated.FlatList`, because reuse would break their rows' fades and glides.
 - **Search earns its place.** Plans offers search from 10 plans, All reflections from 2, Weeks from 8 and All Quick Checks from 10; once a list has offered it, it always does, recorded on the phone (`searches_shown`). The rules are in `.claude/rules/ui.md` (Search).
 
 ## Layout

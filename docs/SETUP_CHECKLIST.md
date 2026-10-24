@@ -195,6 +195,23 @@ installed copy of the app.
   - [ ] decide what revokes a key — manual only, or automated on a risk
         signal from the attestation receipt
 
+## Testing on your iPhone (a development build)
+
+The app as it really runs — its own haptics, developer menu and icon — built
+on EAS's servers, so no local Xcode is needed ([ADR 0036](./adr/0036-development-builds-on-device.md)).
+
+- [x] **Register the iPhone:** `npx eas-cli device:create` → Website → open
+      the link in Safari on the phone, install the profile (Settings →
+      Profile Downloaded). Once registered, the profile can be removed.
+- [ ] **Turn on Developer Mode** on the iPhone (Settings → Privacy &
+      Security → Developer Mode); iOS asks for it on the first launch.
+- [ ] **Build:** `npx eas-cli build --profile development-device --platform ios`
+      — sign in with the Apple ID when asked; EAS makes and keeps the signing
+      certificate and profile. About 15–30 minutes.
+- [ ] **Install** from the link or QR code the build ends with.
+- [ ] **Run:** `npm run start` on the Mac, then open it from the SundayBest
+      development app (not Expo Go). Rebuild only when native code changes.
+
 ## EAS & builds
 
 [eas.json](../eas.json), [.eas/workflows/](../.eas/workflows/), the release

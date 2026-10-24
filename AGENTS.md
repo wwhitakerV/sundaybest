@@ -5,7 +5,7 @@ Canonical rulebook. `CLAUDE.md` imports this file. Facts live in
 
 ## Expo has changed
 
-Read the exact versioned docs at <https://docs.expo.dev/versions/v57.0.0/>
+Read the exact versioned docs at <https://docs.expo.dev/versions/v58.0.0/>
 before writing any code. Assume anything you remember about Expo is out of date.
 
 ## Product constraints
@@ -28,7 +28,9 @@ before writing any code. Assume anything you remember about Expo is out of date.
 | `npm run test:related <files>`            | Tests related to specific files                              |
 | `npm run knip:check`                      | Unused files, exports, dependencies                          |
 | `npm run check:env`                       | `.env*` files against the app's own schema                   |
-| `npm run ios` / `npm run start`           | Dev server (both set `APP_VARIANT=development`)              |
+| `npm run ios` / `npm run start`           | Dev server for Expo Go (both set `APP_VARIANT=development`)  |
+| `npm run start:tunnel`                    | The same, over the internet, for a phone off the Mac's Wi-Fi |
+| `npm run start:dev-build`                 | Dev server for the development build (ADR 0036)              |
 | `npm run dev:mcp`                         | Dev server with Expo MCP local capabilities                  |
 | `npm run icons`                           | Regenerates the placeholder variant icons                    |
 | `npm run render:intro`                    | Remakes the launch intro's movie from its prototype          |

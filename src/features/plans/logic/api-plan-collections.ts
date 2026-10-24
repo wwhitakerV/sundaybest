@@ -19,7 +19,7 @@ export function getApiSamplePlans(plans: readonly ApiPlanSummary[]): ApiPlanSumm
   return plans.filter((plan) => plan.isSample && plan.status === "ready");
 }
 
-export function getApiInProgressPlans(plans: readonly ApiPlanSummary[]): ApiPlanSummary[] {
+function getApiInProgressPlans(plans: readonly ApiPlanSummary[]): ApiPlanSummary[] {
   return getApiUserPlans(plans)
     .filter((plan) => plan.status === "active")
     .sort((a, b) => compareNullableIsoDesc(a.startedAt, b.startedAt));

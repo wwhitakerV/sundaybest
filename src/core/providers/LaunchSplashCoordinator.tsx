@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
+import { hideAsync } from "expo-splash-screen";
 
 import { useCurrentUserQuery, useUserSettingsQuery } from "@/core/api/reader-queries";
 import { usePlansQuery } from "@/core/api/plan-queries";
@@ -92,7 +92,7 @@ export function LaunchSplashCoordinator({ children }: { children: ReactNode }) {
   useEffect(() => {
     const first = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        void SplashScreen.hideAsync();
+        void hideAsync();
       });
     });
     return () => cancelAnimationFrame(first);

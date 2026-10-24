@@ -52,6 +52,23 @@ export function riseStage(width: number, height: number): Stage {
   };
 }
 
+/** How close to the sides and top a balloon comes, unless its stage says (`edge`). */
+const CLEAR = 6;
+/** The line's half-thickness (it's drawn 1pt): what rests on the line rests on it, no gap. */
+const LINE_HALF = 0.5;
+
+/** How close to the sides and top a balloon comes on `stage`: its own, or `CLEAR`. */
+export function edgeOf(stage: Stage): number {
+  "worklet";
+  return stage.edge ?? CLEAR;
+}
+
+/** The floor of the atmosphere: the line's top edge. Saved balloons and their strings rest on it. */
+export function floorOf(stage: Stage): number {
+  "worklet";
+  return stage.lineY - LINE_HALF;
+}
+
 /** A string's segment, for a balloon at `scale`. */
 export function segmentLength(stage: Stage, scale: number): number {
   "worklet";

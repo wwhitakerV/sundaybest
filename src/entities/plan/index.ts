@@ -5,7 +5,7 @@
 export { getHeroPalette } from "./logic/hero-palette";
 export { getPlanEndsLine } from "./logic/plan-ends-line";
 export { formatDay, formatDayOfTotal, formatPlanLength } from "./logic/plan-wording";
-export { describePlanHero } from "./logic/plan-hero";
+export { describePlanHero, describePlanStanding } from "./logic/plan-hero";
 export {
   STUDY_TRANSLATION_HREF,
   NEW_PLAN_HREF,
@@ -18,6 +18,7 @@ export {
   studyHref,
 } from "./routes";
 export { HeroContent, type ContinueHandOver, type HeroPlan } from "./ui/HeroContent";
+export { FEATURE_ARTWORK_RADIUS, PlanFeature } from "./ui/PlanFeature";
 export { HeroBackdrop } from "./ui/HeroBackdrop";
 export { HeroContentFade } from "./ui/HeroContentFade";
 export { HERO_BOTTOM_SPACE, HERO_WORDS_GAP } from "./ui/hero-layout";

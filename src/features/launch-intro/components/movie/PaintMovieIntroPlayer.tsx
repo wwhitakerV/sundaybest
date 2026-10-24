@@ -1,19 +1,14 @@
-import { memo, useMemo } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { Canvas, createPicture, Picture } from "@shopify/react-native-skia";
-import Animated, {
-  useAnimatedStyle,
-  useDerivedValue,
-  type SharedValue,
-} from "react-native-reanimated";
+import { memo } from "react";
+import { StyleSheet, View } from "react-native";
+import { VideoView } from "expo-video";
+import Animated, { useAnimatedStyle, type SharedValue } from "react-native-reanimated";
 
 import { useTheme } from "@/theme";
 import paintMovieAsset from "../../../../../assets/intro/paint-movie.mp4";
 import { useMovieClock, type Film } from "../../hooks/use-movie-clock";
-import { coverFit, fadeOpacity, movieMoments } from "../../logic/movie/movie";
+import { fadeOpacity, movieMoments } from "../../logic/movie/movie";
 import { PAINT_MOVIE } from "../../logic/movie/paint-movie";
 import { IntroReadyBridge } from "../IntroReadyBridge";
-import { drawWholeFrame } from "./draw-movie-frame";
 
 export type PaintMovieIntroPlayerProps = {
   revealed: SharedValue<number>;
@@ -31,12 +26,13 @@ const FILM: Film = {
 
 /**
  * The paint intro, played as a movie made from its prototype
- * (`npm run render:intro`, ADR 0030): every frame already drawn, played by the
- * phone's video hardware. A white stroke across the red page, the letters under
- * it; the paint runs down into the pool and a few drips follow; the letters fall
- * in and the pool erupts to full white. The launch's red covers the app until
- * then; the movie holds on the full white until the page is ready, then gives way
- * to it (at once: its fade is empty) while the page's pieces arrive.
+ * (`npm run render:intro`, ADR 0030) by the phone's own video player (ADR
+ * 0038): every frame already drawn, filling the screen. A white stroke across
+ * the red page, the letters under it; the paint runs down into the pool and a
+ * few drips follow; the letters fall in and the pool erupts to full white. The
+ * launch's red covers the app until the movie's first frame is on screen; the
+ * movie holds on the full white until the page is ready, then gives way to it
+ * (at once: its fade is empty) while the page's pieces arrive.
  */
 export const PaintMovieIntroPlayer = memo(function PaintMovieIntroPlayer({
   revealed,
@@ -44,35 +40,43 @@ export const PaintMovieIntroPlayer = memo(function PaintMovieIntroPlayer({
   onDone,
 }: PaintMovieIntroPlayerProps) {
   const theme = useTheme();
-  const { width, height } = useWindowDimensions();
-  const screen = useMemo(() => ({ width, height }), [width, height]);
-  const fit = useMemo(() => coverFit(PAINT_MOVIE.stage, screen), [screen]);
-  const { currentFrame, currentTime, ready } = useMovieClock(FILM, { revealed, onReveal, onDone });
+  const { player, time, ready, onFirstFrame, shown } = useMovieClock(FILM, {
+    revealed,
+    onReveal,
+    onDone,
+  });
   const { hold, fade } = PAINT_MOVIE.beats;
-  const page = useAnimatedStyle(() => ({ opacity: currentTime.get() < hold.start ? 1 : 0 }));
-  const fading = useAnimatedStyle(() => ({ opacity: fadeOpacity(currentTime.get(), fade) }));
-
-  const picture = useDerivedValue(
-    () =>
-      createPicture((canvas) => {
-        const image = currentFrame.get();
-        if (image) drawWholeFrame(canvas, image, PAINT_MOVIE.stage, fit);
-      }, screen),
-    [fit, screen],
-  );
+  const page = useAnimatedStyle(() => ({ opacity: time.get() < hold.start ? 1 : 0 }));
+  const fading = useAnimatedStyle(() => ({ opacity: fadeOpacity(time.get(), fade) }));
 
   return (
-    <View testID="launch-intro-paint-movie" style={StyleSheet.absoluteFill}>
+    <View
+      testID="launch-intro-paint-movie"
+      style={StyleSheet.absoluteFill}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Animated.View
         testID="launch-intro-page-colour"
         style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.launchPage }, page]}
       />
-      <Animated.View style={[StyleSheet.absoluteFill, fading]}>
-        <Canvas testID="launch-intro-canvas" style={StyleSheet.absoluteFill}>
-          <Picture picture={picture} />
-        </Canvas>
+      {/* Unseen until its first frame is drawn: never a black frame over the red. */}
+      <Animated.View style={[StyleSheet.absoluteFill, fading, !shown && styles.unseen]}>
+        <VideoView
+          testID="launch-intro-video"
+          player={player}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          nativeControls={false}
+          allowsPictureInPicture={false}
+          onFirstFrameRender={onFirstFrame}
+        />
       </Animated.View>
-      <IntroReadyBridge ready={ready} time={currentTime} />
+      <IntroReadyBridge ready={ready} time={time} />
     </View>
   );
+});
+
+const styles = StyleSheet.create({
+  unseen: { opacity: 0 },
 });

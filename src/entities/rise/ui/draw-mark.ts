@@ -119,10 +119,10 @@ export function drawRoseMark(canvas: SkCanvas, look: Look, font: SkFont): void {
   string.setStrokeWidth(1);
   string.setColor(Skia.Color(look.ink));
   string.setAlphaf(0.5);
-  const path = Skia.Path.Make();
+  const path = Skia.PathBuilder.Make();
   path.moveTo(b.x, knot);
   path.quadTo(b.x + 3, knot + BALLOON.string / 2, b.x - 1, knot + BALLOON.string);
-  canvas.drawPath(path, string);
+  canvas.drawPath(path.detach(), string);
   drawBalloon(canvas, b, game, look, balloonShapes(game.stage));
   drawLabel(canvas, "ROSE", b.x, b.y - 2, look, font, true);
 }
@@ -131,7 +131,7 @@ export function drawRoseMark(canvas: SkCanvas, look: Look, font: SkFont): void {
 export function drawBurstMark(canvas: SkCanvas, look: Look, font: SkFont): void {
   const x = MARK.width / 2;
   const y = MARK.height / 2 - 2;
-  const splash = Skia.Path.Make();
+  const splash = Skia.PathBuilder.Make();
   splash.addCircle(x, y, SPLASH.core);
   for (let i = 0; i < SPLASH.lobes; i += 1) {
     const angle = (i / SPLASH.lobes + hash01(SPLASH.seed, i) * 0.08) * TAU;
@@ -151,6 +151,6 @@ export function drawBurstMark(canvas: SkCanvas, look: Look, font: SkFont): void 
   const ink = Skia.Paint();
   ink.setAntiAlias(true);
   ink.setColor(Skia.Color(look.ink));
-  canvas.drawPath(splash, ink);
+  canvas.drawPath(splash.detach(), ink);
   drawLabel(canvas, "BURST", x, y, look, font, false);
 }

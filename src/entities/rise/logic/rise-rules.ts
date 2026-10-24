@@ -30,8 +30,8 @@ export const RISE = {
 export const MODE = { waiting: 0, rising: 1, crossing: 2, free: 3, popped: 4, gone: 5 } as const;
 /** How a pair ended: not yet, the wrong one crossed out, the right one crossed out, nothing marked. */
 export const OUTCOME = { pending: 0, right: 1, wrong: 2, missed: 3 } as const;
-/** How many points a balloon's string has. */
-export const STRING_POINTS = 8;
+/** How many points a balloon's string has: enough that it bends smoothly where it drapes. */
+export const STRING_POINTS = 14;
 
 /** Where things are, for a canvas this size. */
 export type Stage = {
@@ -43,6 +43,8 @@ export type Stage = {
   balloonW: number;
   balloonH: number;
   savedScale: number;
+  /** How close to the sides and top a balloon comes (points): 6 unless the stage says — a page's drifter, 0, full bleed. */
+  edge?: number;
 };
 
 export type Balloon = {
@@ -60,6 +62,14 @@ export type Balloon = {
   restUntil?: number;
   /** Thrown: coasting through the air on its own momentum, until it's slowed to its drift. */
   thrown?: boolean;
+  /** 10pt of it over the line: shrinking into the distance from then on. */
+  shrinking?: boolean;
+  /** Its whole string has cleared the line: from then on the line is the string's floor too. */
+  stringAbove?: boolean;
+  /** Saved and drifting: it rose to rest under the top and has wandered off its own way (not rising on). */
+  drifting?: boolean;
+  /** Turning to drift: the way it's turning (radians), until it's settled into it. */
+  heading?: number;
   x: number;
   y: number;
   vx: number;

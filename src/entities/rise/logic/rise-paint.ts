@@ -13,6 +13,8 @@ import { hash01 } from "./rise-setup";
 
 /** The brush, in points: widest slow, narrowest fast, a little thicker where it starts. */
 const BRUSH = { widest: 15, narrowest: 7, perPoint: 0.45, start: 1.15 };
+/** The balloon width the brush is set for: on a smaller balloon (Home's preview), it's narrower to match. */
+const BRUSH_FOR_WIDTH = 140;
 /** A point nearer the last than this isn't added. */
 const STEP = 3;
 /** Flecks: from this fast, how often, how far ahead and aside they fly, how big. */
@@ -25,6 +27,12 @@ const PRESS = { begin: 0.00028, per: 0.000006, push: 0.0005 };
 const MOST_POINTS = 400;
 /** A touch this far inside a balloon's outline is on it. */
 const HIT = 0.95;
+
+/** The brush's size against the balloons': the same mark on a balloon of any size. */
+function brushScale(game: RiseGame): number {
+  "worklet";
+  return game.stage.balloonW / BRUSH_FOR_WIDTH;
+}
 
 /** A point on screen in a balloon's own points: unturned, unscaled, from its middle. */
 function toLocal(b: Balloon, x: number, y: number): { x: number; y: number } {
@@ -129,7 +137,7 @@ function startOn(game: RiseGame, index: number, x: number, y: number): void {
   b.tentative = b.paint.length;
   b.tentativeFlecks = b.flecks.length;
   const at = toLocal(b, x, y);
-  b.paint.push(at.x, at.y, BRUSH.widest * BRUSH.start, 1);
+  b.paint.push(at.x, at.y, BRUSH.widest * BRUSH.start * brushScale(game), 1);
   b.pokeV += PRESS.begin;
   game.events.touches += 1;
   game.stroke.balloon = index;
@@ -150,7 +158,9 @@ function addPoint(game: RiseGame, index: number, x: number, y: number): void {
   const { stroke } = game;
   const even = BRUSH.widest - run * BRUSH.perPoint;
   const width =
-    Math.min(BRUSH.widest, Math.max(BRUSH.narrowest, even)) * (0.9 + hash01(stroke.count, 5) * 0.2);
+    Math.min(BRUSH.widest, Math.max(BRUSH.narrowest, even)) *
+    (0.9 + hash01(stroke.count, 5) * 0.2) *
+    brushScale(game);
   b.paint.push(at.x, at.y, width, 0);
   stroke.count += 1;
   stroke.length += run;

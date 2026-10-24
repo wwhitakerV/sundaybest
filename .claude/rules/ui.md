@@ -59,7 +59,7 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
   scrolls under still shows faintly — every page-edge fade and tint shares it),
   fading out 16pt below it — so what
   scrolls up dissolves under it. With no header the status bar still gets it.
-  A header with controls that sit low in it (Plans' filters, Study's steps)
+  A header with controls that sit low in it (Study's steps)
   takes `headerFade="gradual"`: a thicker, eased fade inside the header's own
   block, ending exactly at its bottom edge.
 - **The foot** is the dock (`FloatingDock`): the tab bar's own container — same
@@ -79,20 +79,28 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
   `contentStyle`. A list whose rows animate in, out and into new places
   (Plans' search results) is Reanimated's `Animated.FlatList` instead —
   reuse would break those animations.
-- Plans pins its header (`ListScreen`'s `pinned`): the title; the filters —
-  In progress and Done with their counts, as `FilterPills` (a second tap on
-  the one picked lets it go) — centred in the room beside it; and, from ten
-  plans, the search at the right (`HeaderIconButton`, white with its hairline
-  edge). It stays above the list, under the status bar, on solid white with no
-  fade and no shadow — nothing ever shows behind it; pulled down past the
-  top, it comes down with the list. Once the list
-  scrolls, the title is bumped left off the screen and the filters spring
-  left into its place (`PlansHeader`, `motion.slide`); back at the top, both
-  return. Pills whose outline springs get room either side (`bleed`), so it's
-  never clipped. The cards never meet a straight cut under it: the bar's foot
-  carries two inward corners at the cards' sides and radius (`pinned.rounded`,
-  `RoundedEdge`), so a card scrolls up into a rounded window. Plans only, and
-  the top only.
+- **Plans is a stack of pages, one plan to each** (`PlansScreen`), thrown
+  sideways with iOS's own momentum (`snapToInterval` with a normal
+  `decelerationRate`), each plan's page scrolling on its own under one fixed header on
+  the page's solid colour — no fade under it, nothing ever behind it. Each page
+  starts at the header's foot, which carries two inward corners at the
+  artwork's sides and radius (`RoundedEdge`, `FEATURE_ARTWORK_RADIUS`), so the
+  artwork scrolls up into a rounded window, never a straight cut. Every drawer
+  on a page starts open. The header
+  (`TitleHeader`): "Plans" at the left; the dots centred on the screen
+  (`PageDots`, its `centre`); and the search at the right, from two plans. The
+  dots are Instagram's: a dot a plan, the one in view in the accent, the rest
+  `progressTrack`; up to four, all full size; past four, a window of four
+  full dots, the next out either side ⅔ the size and the one beyond ⅓,
+  sliding a dot along (`motion.slide`) as the plan in view reaches its end.
+  They change as a page passes halfway, never on settle. Each page features
+  its plan as Home does (`PlanFeature`, in `@/entities/plan` — one component,
+  so the two never drift): the artwork, the grey label with where it stands
+  opposite, the title, its church, today's study, and Continue. Scrolled up
+  under the header, Continue fades and the tab bar takes it, as Plan
+  Overview's does (`useContinueHandOver`) — only for the plan in view; the
+  floating button steps away while it's there. A finger on a plan's days
+  holds the plans still.
 
 ## Navigation behaves as iOS's does
 
@@ -159,7 +167,7 @@ into the reader's needs, and a short list has no clutter:
 
 | List               | Search                                     | From            |
 | ------------------ | ------------------------------------------ | --------------- |
-| Plans              | full screen, the server's (`/plan-search`) | 10 plans        |
+| Plans              | full screen, the server's (`/plan-search`) | 2 plans         |
 | All reflections    | in place, on the keyboard                  | 2 reflections   |
 | Weeks              | in place, on the keyboard                  | 8 weeks         |
 | All Quick Checks   | in place, on the keyboard                  | 10 Quick Checks |
@@ -167,7 +175,8 @@ into the reader's needs, and a short list has no clutter:
 
 Once a list has offered search, it always does, though the list shrinks
 again (`useEarnedSearch`, recorded on the phone; the rule is
-`isSearchEarned`). A new list with a search names its threshold beside its
+`isSearchEarned`). Plans is the exception: its search shows whenever there are two plans or
+more, and goes with only one left — there's nothing to find. A new list with a search names its threshold beside its
 logic (`REFLECTIONS_SEARCH_AT`) and takes this rule.
 
 **Which kind.** A search that narrows the list in place when the list is on

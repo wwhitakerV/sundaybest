@@ -5,14 +5,13 @@ import { GestureDetector, GestureHandlerRootView } from "react-native-gesture-ha
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RotateCcw, X } from "lucide-react-native";
 
-import { RiseBoard } from "@/entities/rise";
+import { QuestionLine, RiseBoard } from "@/entities/rise";
 import { space, useTheme } from "@/theme";
 import { HeaderIconButton } from "@/ui/atoms/HeaderIconButton";
 import { PAGE_INSET } from "@/ui/organisms/Screen";
 import { MonoLabel } from "@/ui/typography/MonoLabel";
 import { LearnedSheet } from "../components/LearnedSheet";
 import { PosterSheet } from "../components/PosterSheet";
-import { QuestionLine } from "../components/QuestionLine";
 import { RiseFinish } from "../components/RiseFinish";
 import { RiseIntro } from "../components/RiseIntro";
 import { useRiseGame } from "../hooks/use-rise-game";
