@@ -36,7 +36,7 @@ type FeaturedPlan = {
 };
 
 /** One part of it as the page moves it: where it's measured from, and how it moves. */
-type FeaturePart = {
+export type FeaturePart = {
   ref?: RefObject<View | null>;
   /** Its place in the feature, as laid out. */
   onLayout?: (event: LayoutChangeEvent) => void;

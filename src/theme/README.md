@@ -16,6 +16,11 @@ light and a dark value.
   `tokens.ts`, and `getReadingTheme(paper)`: a light paper is `lightTheme` with
   that background, a dark one `darkTheme` with it, so every ink and surface on it
   stays readable. Fixed colours, the same whatever the app's theme.
+- `formation-paper.ts` — Formation vIdeal's paper and materials, sampled from
+  its reference: the page (also the tab bar's while vIdeal is shown, through
+  `useTabBarPaper`), pencil, threads, shadow and bounce colours, and the
+  ceramic, red and stone tones each object is shaded in, light to deep.
+  `formationPaperTheme` is `lightTheme` laid on that page.
 
 ## Spacing, corners, and control heights
 

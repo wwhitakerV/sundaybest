@@ -11,6 +11,7 @@ export { StudyScreen } from "./screens/StudyScreen";
 export { DayCompleteScreen } from "./screens/DayCompleteScreen";
 export { PlanCompleteScreen } from "./screens/PlanCompleteScreen";
 export { QuickCheckScreen } from "./screens/QuickCheckScreen";
+export { PlanLeadFor } from "./components/PlanLeadFor";
 
 // Plan lists and their wording, shared with Home and Welcome.
 export {

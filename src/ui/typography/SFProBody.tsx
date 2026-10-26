@@ -8,6 +8,7 @@ export type SFProBodyVariant =
   | "label"
   | "reading"
   | "detail"
+  | "note"
   | "rowDetail"
   | "result"
   | "letter";
@@ -28,6 +29,8 @@ function typeFor(typography: Theme["typography"], variant: SFProBodyVariant) {
       return typography.reading;
     case "detail":
       return typography.cardDetail;
+    case "note":
+      return typography.note;
     case "rowDetail":
       return typography.rowDetail;
     case "result":

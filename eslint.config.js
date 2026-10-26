@@ -148,6 +148,7 @@ const LONG_DATA_FILES = [
   "src/theme/tokens.ts",
   "src/core/mock-data/**",
   "src/core/plan-builder/day-templates.ts",
+  "src/features/formation/logic/formation-ideal.ts",
 ];
 
 /** Style keys that space things out, and the ones that round corners. */

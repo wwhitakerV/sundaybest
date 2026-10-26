@@ -14,13 +14,20 @@ export function hasDevMenu(): boolean {
  * Adds a development action (ADR 0035): to React Native's developer menu —
  * opened by shaking the phone, in a development build of the app's own — and
  * to the action sheet `showDevActions` opens, which works in Expo Go too,
- * whose menu never shows an app's items. Never in a build that ships. A title
+ * whose menu never shows an app's items — `at: "first"` heading the sheet. Never in a build that ships. A title
  * already added keeps its first handler, so `run` must read what it needs
  * when it's chosen, not capture it.
  */
-export function addDevMenuItem(title: string, run: () => void): void {
+export function addDevMenuItem(title: string, run: () => void, at?: "first"): void {
   if (!hasDevMenu() || items.has(title)) return;
   items.set(title, run);
+  if (at === "first") {
+    // Put at the top of the action sheet: the others re-added after it, in their order.
+    const rest = [...items].filter(([key]) => key !== title);
+    items.clear();
+    items.set(title, run);
+    for (const [key, value] of rest) items.set(key, value);
+  }
   DevSettings.addMenuItem(title, run);
 }
 

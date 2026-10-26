@@ -941,6 +941,13 @@ const typography = {
     letterSpacing: -1.11,
   },
   /**
+   * A title set to fill its box (Formation's header): Canela at its largest,
+   * shrunk by iOS until the whole title fits — two words fill it, seven sit
+   * smaller. No leading of its own: the face's own line, which scales with it,
+   * so a shrunk title never opens wide gaps or trims its tops.
+   */
+  fitTitle: { fontFamily: fonts.display, fontSize: 50, fontWeight: "500", letterSpacing: -0.6 },
+  /**
    * The static weekday strip. Spec 17/-0.01em, IBM Plex Mono Medium — set a
    * touch under the spec's scaled 21, so the strip sits quieter under the
    * wordmark.
@@ -991,6 +998,8 @@ const typography = {
   },
   /** A title on a tile or a small card (Fun's games): bold, set close. */
   tileTitle: { fontFamily: fonts.uiBold, fontSize: 17, fontWeight: "700", lineHeight: 22 },
+  /** A short note set narrow beside artwork (Formation's journey): small, leaded close. */
+  note: { fontFamily: fonts.ui, fontSize: 12, fontWeight: "400", lineHeight: 16 },
   /** Supporting copy on a card, under its title: a line or two, quiet. */
   cardDetail: { fontFamily: fonts.ui, fontSize: 15, fontWeight: "400", lineHeight: 20 },
   /** A row's description under its name (Settings' options, About's rows): leaded, so two or three lines still read easily. */

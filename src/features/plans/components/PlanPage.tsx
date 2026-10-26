@@ -2,7 +2,6 @@ import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
 import { BookOpen, Lock, RotateCcw } from "lucide-react-native";
 
-import { PlanFeature } from "@/entities/plan";
 import { space } from "@/theme";
 import { Button } from "@/ui/atoms/Button";
 import { SkeletonHandoff } from "@/ui/molecules/SkeletonHandoff";
@@ -13,8 +12,8 @@ import { SFProBody } from "@/ui/typography/SFProBody";
 import { SFProTitle } from "@/ui/typography/SFProTitle";
 import { useContinueHandOver } from "../hooks/use-continue-hand-over";
 import { usePlanDetail } from "../hooks/use-plan-detail";
-import { DayCarousel } from "./DayCarousel";
 import { PlanDrawers, type PlanDrawerKey } from "./PlanDrawers";
+import { PlanLead } from "./PlanLead";
 import { PlanPageSkeleton } from "./PlanPageSkeleton";
 
 /** The room between the header's foot, where each page starts, and its artwork. */
@@ -36,8 +35,8 @@ export type PlanPageProps = {
 
 /**
  * One plan, its whole page on the Plans tab — scrolled up and down on its
- * own, its top rounding into the tab's header: the plan featured as Home features one
- * (`PlanFeature`), its days, always in view, swiped through, and its drawers.
+ * own, its top rounding into the tab's header: its lead (`PlanLead` — the plan
+ * featured as Home features one, and its days, swiped through) and its drawers.
  * From here the only way on is into a day's study. Scrolled up under the
  * header, its Continue fades and the tab bar takes it, as Plan Overview's
  * does — while it's the plan in view. While it loads, its skeleton; if it
@@ -95,27 +94,12 @@ export function PlanPage({
       >
         {plan.found && plan.feature ? (
           <>
-            <PlanFeature
-              plan={plan.feature}
-              onContinue={plan.openCurrentDay}
+            <PlanLead
+              plan={plan}
               action={continueHandOver}
-              testIDs={{
-                root: `plan-page-${planId}-feature`,
-                title: `plan-page-${planId}-title`,
-                standing: `plan-page-${planId}-standing`,
-                today: `plan-page-${planId}-today`,
-                action: `plan-page-${planId}-continue`,
-              }}
+              onTouchingDays={onTouchingDays}
+              testID={`plan-page-${planId}`}
             />
-            <View style={styles.bleed}>
-              <DayCarousel
-                testID={`plan-page-${planId}-days`}
-                days={plan.dayCards}
-                currentDayNumber={plan.selectedNumber}
-                onOpenDay={plan.openDay}
-                onTouching={onTouchingDays}
-              />
-            </View>
             <PlanDrawers
               testID={`plan-page-${planId}-drawers`}
               about={plan.about}
@@ -148,8 +132,6 @@ function PlanPageError({ testID, onRetry }: { testID: string; onRetry: () => voi
 const styles = StyleSheet.create({
   page: { paddingHorizontal: PAGE_INSET },
   parts: { gap: space[32] },
-  // The days run to the screen's edges, their first card set at the page's inset.
-  bleed: { marginHorizontal: -PAGE_INSET },
   missing: { gap: space[24], paddingTop: space[40] },
   missingWords: { gap: space[8] },
 });

@@ -16,6 +16,12 @@ declare module "*.jpg" {
   export default assetId;
 }
 
+declare module "*.jpeg" {
+  const assetId: number;
+  // eslint-disable-next-line import/no-default-export -- an asset-module shim has no named export to offer; `import x from "*.jpeg"` is the only shape Metro's own resolution supports.
+  export default assetId;
+}
+
 /**
  * `import X from "*.svg"` is a component drawing that file (react-native-svg-transformer,
  * set up in metro.config.js), sized by the file's own width and height unless given others.

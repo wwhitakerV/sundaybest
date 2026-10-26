@@ -18,7 +18,7 @@ export {
   studyHref,
 } from "./routes";
 export { HeroContent, type ContinueHandOver, type HeroPlan } from "./ui/HeroContent";
-export { FEATURE_ARTWORK_RADIUS, PlanFeature } from "./ui/PlanFeature";
+export { FEATURE_ARTWORK_RADIUS, PlanFeature, type FeaturePart } from "./ui/PlanFeature";
 export { HeroBackdrop } from "./ui/HeroBackdrop";
 export { HeroContentFade } from "./ui/HeroContentFade";
 export { HERO_BOTTOM_SPACE, HERO_WORDS_GAP } from "./ui/hero-layout";

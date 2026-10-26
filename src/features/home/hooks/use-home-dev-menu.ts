@@ -1,7 +1,9 @@
 import { useEffect, useSyncExternalStore } from "react";
+import { router } from "expo-router";
 
 import { addDevMenuItem } from "@/core/dev-menu/dev-menu";
 import { HOME_PREVIEWS, type HomePreview } from "../logic/home-preview";
+import { FORMATION_VERSIONS, homeFormationHref } from "../logic/routes";
 
 /** The state picked from the developer menu, outside React: the menu lives outside it too. */
 let chosen: HomePreview = "real";
@@ -40,6 +42,10 @@ export function useHomeDevMenu(replay: () => void) {
   }, [replay]);
 
   useEffect(() => {
+    // First in the wordmark's sheet: Formation's versions, in order — each put first, the last first.
+    for (const v of [...FORMATION_VERSIONS].reverse()) {
+      addDevMenuItem(`Formation v${v}`, () => router.push(homeFormationHref(v)), "first");
+    }
     for (const [preview, name] of HOME_PREVIEWS) {
       addDevMenuItem(`Home: ${name}`, () => choose(preview));
     }

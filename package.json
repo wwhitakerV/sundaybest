@@ -17,6 +17,7 @@
     "icons": "node scripts/generate-icons.mjs",
     "render:intro": "node --no-warnings scripts/intro-movie/render.mjs",
     "build:verses": "node scripts/daily-verses/build.mjs",
+    "build:formation": "node scripts/formation/whiten.mjs",
     "build:rise": "api/node_modules/.bin/tsx scripts/rise/build.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
@@ -102,6 +103,7 @@
     "prettier": "3.9.6",
     "react-native-svg-transformer": "1.5.3",
     "react-test-renderer": "19.3.0",
+    "sharp": "0.35.5",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.72.0"
   },
