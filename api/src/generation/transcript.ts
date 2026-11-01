@@ -53,25 +53,53 @@ function timestamp(ms: number): string {
     .map((n) => String(n).padStart(2, "0")).join(":");
 }
 
-/** Ported from SermonDrop: 30-second blocks retain the source start timestamps. */
+/** About how much of the sermon a block holds: a sentence or two, so a model can point at one. */
+const BLOCK = { words: 28, ms: 12_000 };
+
+/** A short, numbered stretch of the sermon ("b12"): where it starts and ends, and what's said. */
+export interface TranscriptBlock {
+  id: string;
+  startMs: number;
+  endMs: number | null;
+  text: string;
+}
+
+/**
+ * The sermon in short numbered blocks, about a sentence or two each — whole
+ * caption segments grouped until a block holds about 28 words or 12 seconds;
+ * an untimed transcript split by words alone. Models point at these by
+ * number, and the words come from here, so what's shown is always said.
+ */
+export function transcriptBlocks(input: string | readonly TranscriptSegment[]): TranscriptBlock[] {
+  const segments = typeof input === "string" ? [{ startMs: 0, endMs: null, text: input.replace(/\s+/g, " ").trim() }] : normalizeTranscript(input);
+  const blocks: Array<Omit<TranscriptBlock, "id">> = [];
+  if (!hasTranscriptTiming(segments)) {
+    const words = segments.map((segment) => segment.text).join(" ").split(" ").filter(Boolean);
+    for (let at = 0; at < words.length; at += BLOCK.words) blocks.push({ startMs: 0, endMs: null, text: words.slice(at, at + BLOCK.words).join(" ") });
+  } else {
+    let current: Omit<TranscriptBlock, "id"> | null = null;
+    for (const segment of segments) {
+      const words = current ? current.text.split(" ").length : 0;
+      if (!current || words >= BLOCK.words || segment.startMs - current.startMs >= BLOCK.ms) {
+        if (current) blocks.push(current);
+        current = { startMs: segment.startMs, endMs: segment.endMs, text: segment.text };
+      } else {
+        current = { startMs: current.startMs, endMs: segment.endMs ?? current.endMs, text: `${current.text} ${segment.text}` };
+      }
+    }
+    if (current) blocks.push(current);
+  }
+  return blocks.map((block, index) => ({ id: `b${index + 1}`, ...block }));
+}
+
+/**
+ * The transcript as every step reads it: its numbered blocks, each with the
+ * second it starts at (`[b12 00:05:31] …`), or numbered alone when the
+ * transcript has no timing.
+ */
 export function formatTranscript(input: readonly TranscriptSegment[]): string {
   const segments = normalizeTranscript(input);
-  if (!hasTranscriptTiming(segments)) return `[TIMING UNAVAILABLE] ${segments.map((s) => s.text).join(" ")}`;
-  const blocks: string[] = [];
-  let start = segments[0]!.startMs;
-  let end = start;
-  let text: string[] = [];
-  const flush = () => blocks.push(`[${timestamp(start)}–${timestamp(end)}] ${text.join(" ")}`);
-  for (const segment of segments) {
-    if (segment.startMs - start >= 30_000 && text.length > 0) {
-      flush();
-      start = segment.startMs;
-      end = start;
-      text = [];
-    }
-    end = Math.max(end, segment.startMs, segment.endMs ?? segment.startMs);
-    text.push(segment.text);
-  }
-  if (text.length > 0) flush();
-  return blocks.join("\n\n");
+  const timed = hasTranscriptTiming(segments);
+  const blocks = transcriptBlocks(segments).map((block) => `[${block.id}${timed ? ` ${timestamp(block.startMs)}` : ""}] ${block.text}`);
+  return (timed ? "" : "[TIMING UNAVAILABLE]\n\n") + blocks.join("\n\n");
 }

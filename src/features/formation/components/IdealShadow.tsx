@@ -1,5 +1,8 @@
+import type { SkImage } from "@shopify/react-native-skia";
+
 import { FORMATION_PAPER } from "@/theme";
 import { IDEAL_OBJECTS, type IdealObject } from "../logic/formation-ideal";
+import { stationLight } from "../logic/formation-light";
 import { shadowAt } from "../logic/formation-shadow";
 import { withAlpha } from "./ideal-paint";
 import { shadowTransform } from "./shadow-shape";
@@ -17,27 +20,32 @@ export type IdealShadowProps = {
   cx: number;
   cy: number;
   diameter: number;
+  /** Its artwork, whose outline it throws; nothing until it's ready. */
+  image: SkImage | null;
 };
 
 /**
  * What a still object throws onto the page, at its own station's height and
- * in its light (`shadowAt`): its cast shadow, drawn out along the way the
- * light falls, and its contact shadow at its foot — each multiplied into
- * the page in its finish's measured tint.
+ * in the reference's light there (`stationLight`, `shadowAt`): its cast shadow, drawn out along the way the
+ * light falls, and its contact shadow at its foot — each its artwork's
+ * outline, multiplied into the page in its finish's measured tint.
  */
-export function IdealShadow({ object, cx, cy, diameter }: IdealShadowProps) {
+export function IdealShadow({ object, cx, cy, diameter, image }: IdealShadowProps) {
+  if (!image) return null;
   const r = diameter / 2;
-  const fit = shadowAt(IDEAL_OBJECTS.indexOf(object), object.d / 2);
-  const tint = TINTS[object.finish];
+  const station = IDEAL_OBJECTS.indexOf(object);
+  const fit = shadowAt(station, object.d / 2, stationLight(station));
+  const tint = withAlpha(TINTS[object.finish], 1);
   return (
     <>
       {[fit.cast, fit.contact].map((part, i) => (
         <ShadowCopy
           key={i === 0 ? "cast" : "contact"}
-          heart={object.form === "heart"}
+          image={image}
           transform={shadowTransform(cx, cy, r, fit.angle, part)}
-          blur={part.blur / part.s}
-          colour={withAlpha(tint, part.a)}
+          blur={part.blur * r}
+          tint={tint}
+          strength={part.a}
         />
       ))}
     </>

@@ -27,15 +27,21 @@ export function mapAbout(raw: RawAbout, source: string, passages: readonly Scrip
     if (!containsExcerpt(source, evidenceQuote) || !referenceIsNamed(evidenceQuote, citation)) continue;
     citations.set(citation.reference, citation);
   }
+  return withDayPassages({
+    overview: raw.overview.map((paragraph) => paragraph.trim()),
+    keyTakeaways: raw.keyTakeaways.map((takeaway) => takeaway.trim()),
+    scripturesReferenced: [...citations.values()],
+  }, passages);
+}
+
+/** About This Plan with every day's passage listed: one it leaves out is added as its chapter. */
+export function withDayPassages(about: GeneratedAbout, passages: readonly ScriptureRange[]): GeneratedAbout {
+  const citations = new Map(about.scripturesReferenced.map((citation) => [citation.reference, citation]));
   for (const passage of passages) {
     const listed = [...citations.values()].some((citation) => citation.book === passage.book && citation.chapter === passage.chapter);
     if (listed) continue;
     const chapter = canonicalizeCitation({ book: passage.book, chapter: passage.chapter, verseStart: null, verseEnd: null, reference: `${passage.book} ${passage.chapter}` });
     citations.set(chapter.reference, chapter);
   }
-  return {
-    overview: raw.overview.map((paragraph) => paragraph.trim()),
-    keyTakeaways: raw.keyTakeaways.map((takeaway) => takeaway.trim()),
-    scripturesReferenced: [...citations.values()],
-  };
+  return { ...about, scripturesReferenced: [...citations.values()] };
 }

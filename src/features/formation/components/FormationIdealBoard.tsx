@@ -1,5 +1,6 @@
 import { Canvas, Group } from "@shopify/react-native-skia";
 
+import { artOf, useFacultyArt } from "../hooks/use-faculty-art";
 import { IDEAL_HEIGHT, IDEAL_OBJECTS } from "../logic/formation-ideal";
 import { IdealLinework } from "./IdealLinework";
 import { IdealObject } from "./IdealObject";
@@ -21,6 +22,7 @@ export type FormationIdealBoardProps = {
  * every iPhone.
  */
 export function FormationIdealBoard({ width, accent, testID }: FormationIdealBoardProps) {
+  const art = useFacultyArt();
   const placed = IDEAL_OBJECTS.map((object) => {
     const diameter = object.d * width;
     return {
@@ -28,6 +30,7 @@ export function FormationIdealBoard({ width, accent, testID }: FormationIdealBoa
       cx: object.x * width,
       cy: object.y * width,
       diameter,
+      image: artOf(art, object.id),
     };
   });
   return (
@@ -39,7 +42,13 @@ export function FormationIdealBoard({ width, accent, testID }: FormationIdealBoa
         ))}
       </Group>
       {placed.map((one) => (
-        <IdealObject key={one.object.id} {...one} />
+        <IdealObject
+          key={one.object.id}
+          cx={one.cx}
+          cy={one.cy}
+          diameter={one.diameter}
+          image={one.image}
+        />
       ))}
     </Canvas>
   );

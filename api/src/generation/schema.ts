@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { dayJourneySchema, planFormationSchema } from "./journey.js";
+
 const generatedChoiceSchema = z.object({
   label: z.string().trim().min(1).max(4),
   text: z.string().trim().min(1).max(1000),
@@ -81,7 +83,7 @@ export const generatedDaySchema = z
       )
       .min(1)
       .max(20),
-    sermonQuote: z.string().trim().min(1).max(2000).nullable(),
+    /** The day's part of the sermon in the video, worked out from its points. Readers never see the sermon quoted. */
     clipStartSeconds: z.number().int().nonnegative().nullable(),
     clipEndSeconds: z.number().int().nonnegative().nullable(),
     scripture: generatedScriptureSchema,
@@ -91,6 +93,8 @@ export const generatedDaySchema = z
       text: z.string().trim().min(1).max(5000),
     }),
     supportingScriptures: z.array(generatedSupportingScriptureSchema).max(3),
+    /** The day's share of the whole sermon, and its six faculties; null for days written before them. */
+    journey: dayJourneySchema.nullable().default(null),
     quickCheck: z
       .object({
         title: z.string().trim().min(1).max(200),
@@ -158,8 +162,13 @@ export const generatedAboutSchema = z.object({
 
 export const generatedPlanSchema = z
   .object({
-    title: z.string().trim().min(1).max(300),
+    /** The preacher's name as the sermon or its video gives it, for attributing their words; null when neither does. */
+    speakerName: z.string().trim().min(1).max(120).nullable().default(null),
     about: generatedAboutSchema,
+    /** Every point the sermon makes; null for plans written before the inventory. */
+    formation: planFormationSchema.nullable().default(null),
+    /** What generation repaired or let stand, for the review: never shown to readers. */
+    notes: z.array(z.string()).default([]),
     generator: z.object({
       version: z.string().trim().min(1).max(100),
       promptVersion: z.string().trim().min(1).max(100).nullable(),

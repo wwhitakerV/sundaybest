@@ -6,10 +6,10 @@ import { SOURCE_PREAMBLE } from "../src/generation/prompts/context.js";
 import { createOpenAiStageCaller } from "../src/providers/openai-stage-caller.js";
 import { testEnv } from "./fixtures/generation.js";
 
-const request = { stage: "day 1", kind: "day" as const, cacheKey: "sermon:abc123", instructions: "Instructions.", context: "Shared context.", task: "{\"day\":1}", schema: z.object({ ok: z.boolean() }), schemaName: "sundaybest_day" };
+const request = { stage: "day 1", kind: "day" as const, cacheKey: "sermon:abc123", instructions: "Instructions.", context: "Shared context.", task: "{\"day\":1}", schema: z.object({ ok: z.boolean() }), schemaName: "sundaybest_day", maxTokens: 8000, timeoutMs: 90_000 };
 const usage = { prompt_tokens: 1200, completion_tokens: 800, total_tokens: 2000, prompt_tokens_details: { cached_tokens: 1024 }, completion_tokens_details: { reasoning_tokens: 300 } };
 
-type Body = { model: string; store: boolean; prompt_cache_key: string; messages: Array<{ role: string; content: unknown }>; response_format: { json_schema: { name: string; strict: boolean } } };
+type Body = { model: string; store: boolean; max_completion_tokens: number; prompt_cache_key: string; messages: Array<{ role: string; content: unknown }>; response_format: { json_schema: { name: string; strict: boolean } } };
 
 function client(respond: (body: Body) => Response) {
   return new OpenAI({ apiKey: "test-key", maxRetries: 0, fetch: async (_url, init) => respond(JSON.parse(String(init?.body))) });
@@ -21,6 +21,8 @@ test("each step sends strict structured output and no storage", async () => {
     assert.equal(body.store, false);
     assert.equal(body.response_format.json_schema.strict, true);
     assert.equal(body.response_format.json_schema.name, "sundaybest_day");
+    // The step's own cap, under the provider's.
+    assert.equal(body.max_completion_tokens, 8000);
     return Response.json({ id: "x", object: "chat.completion", created: 0, model: "test-snapshot", usage,
       choices: [{ index: 0, finish_reason: "stop", message: { role: "assistant", content: "{\"ok\":true}" } }] });
   }), testEnv());

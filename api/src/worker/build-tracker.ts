@@ -34,6 +34,8 @@ export function buildTracker(db: Database, build: { id: string; lengthDays: numb
     async observe(event: StageEvent): Promise<void> {
       if (event.outcome === "rejected") return;
       if (event.kind === "outline") return stage("writingDays");
+      // The faculties are written alongside the days, and the title once per sermon; the bar follows the days.
+      if (event.kind === "formation" || event.kind === "title") return;
       if (event.kind === "day") {
         daysWritten++;
         return stage(build.quickCheckEnabled && daysWritten >= build.lengthDays ? "buildingQuiz" : "writingDays");

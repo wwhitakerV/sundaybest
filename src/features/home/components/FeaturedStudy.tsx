@@ -14,6 +14,8 @@ type AnimatedViewStyle = StyleProp<AnimatedStyle<ViewStyle>>;
 export type FeaturedStudyProps = {
   study: {
     title: string;
+    /** The series its sermon is from, under the title ("Unshakable · Part II") — none when it names none. */
+    series: string | null;
     /** The sermon's church, under the title — none when the sermon doesn't say. */
     church: string | null;
     thumbnailUrl: string | null;

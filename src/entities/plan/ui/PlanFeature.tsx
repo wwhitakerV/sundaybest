@@ -21,6 +21,8 @@ export const FEATURE_ARTWORK_RADIUS = radius[16];
 /** A plan, featured: what it's called, where it stands, and the way on. */
 type FeaturedPlan = {
   title: string;
+  /** The series its sermon is from, and which part, under its title ("Unshakable · Part II"); none when it names none. */
+  series?: string | null;
   /** The church whose sermon it is — none when the sermon doesn't say. */
   church: string | null;
   thumbnailUrl: string | null;
@@ -91,6 +93,11 @@ export function PlanFeature({
             <SerifTitle variant="feature" accessibilityRole="header" testID={testIDs.title}>
               {plan.title}
             </SerifTitle>
+            {plan.series && (
+              <SFProBody variant="rowDetail" tone="textSupporting">
+                {plan.series}
+              </SFProBody>
+            )}
             {plan.church && (
               <SFProBody variant="rowDetail" tone="textSupporting">
                 {plan.church}

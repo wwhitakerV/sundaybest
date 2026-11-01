@@ -1,7 +1,9 @@
 import { useMemo } from "react";
+import type { SkImage } from "@shopify/react-native-skia";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 
 import { IDEAL_OBJECTS } from "../logic/formation-ideal";
+import { lampLight } from "../logic/formation-light";
 import { shadowAt } from "../logic/formation-shadow";
 import type { TrackPlace } from "../logic/formation-track";
 import { withAlpha } from "./ideal-paint";
@@ -16,10 +18,11 @@ type SoftCopyProps = {
   part: PartName;
   places: SharedValue<TrackPlace[]>;
   width: number;
+  image: SkImage;
 };
 
 /** One part of a moving object's shadow — its cast shadow or its contact shadow — reshaped every frame. */
-function SoftCopy({ index, part, places, width }: SoftCopyProps) {
+function SoftCopy({ index, part, places, width, image }: SoftCopyProps) {
   const object = IDEAL_OBJECTS[index]!;
   const r = (object.d * width) / 2;
   const share = object.d / 2;
@@ -27,23 +30,16 @@ function SoftCopy({ index, part, places, width }: SoftCopyProps) {
   const tint = useMemo(() => withAlpha(TINTS[object.finish], 1), [object.finish]);
   const now = useDerivedValue(() => {
     const place = places.value[index]!;
-    const fit = shadowAt(place.u, share);
+    const fit = shadowAt(place.u, share, lampLight(place.x / width, place.y / width, place.u));
     return { place, angle: fit.angle, it: fit[part] };
   });
   const transform = useDerivedValue(() =>
     shadowTransform(now.value.place.x, now.value.place.y, r, now.value.angle, now.value.it),
   );
-  const blur = useDerivedValue(() => now.value.it.blur / now.value.it.s);
-  const colour = useDerivedValue(() =>
-    Float32Array.of(
-      tint[0] ?? 0,
-      tint[1] ?? 0,
-      tint[2] ?? 0,
-      now.value.it.a * now.value.place.presence,
-    ),
-  );
+  const blur = useDerivedValue(() => now.value.it.blur * r);
+  const strength = useDerivedValue(() => now.value.it.a * now.value.place.presence);
   return (
-    <ShadowCopy heart={object.form === "heart"} transform={transform} blur={blur} colour={colour} />
+    <ShadowCopy image={image} transform={transform} blur={blur} tint={tint} strength={strength} />
   );
 }
 
@@ -51,19 +47,23 @@ export type TrackShadowProps = {
   index: number;
   places: SharedValue<TrackPlace[]>;
   width: number;
+  /** Its artwork, whose outline it throws; nothing until it's ready. */
+  image: SkImage | null;
 };
 
 /**
  * A moving object's shadow, alive: at the height of where it is — the
  * station in hand highest, each one down lower, rising on above it — and
- * in that place's light (`shadowAt`), fading as the object does under the
- * heading.
+ * in the lamp's light there (`lampLight`, `shadowAt`) — turning, and drawn
+ * out longer, the further it is from the lamp — fading as the object does under the
+ * heading. Its shape is its artwork's outline.
  */
-export function TrackShadow(props: TrackShadowProps) {
+export function TrackShadow({ image, ...props }: TrackShadowProps) {
+  if (!image) return null;
   return (
     <>
-      <SoftCopy part="cast" {...props} />
-      <SoftCopy part="contact" {...props} />
+      <SoftCopy part="cast" image={image} {...props} />
+      <SoftCopy part="contact" image={image} {...props} />
     </>
   );
 }

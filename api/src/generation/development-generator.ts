@@ -15,7 +15,6 @@ export function createDevelopmentGenerator(): PlanGenerationProvider {
               content: `Development-only generated content for “${input.sermon.title}”. Configure OPENAI_API_KEY before evaluating real study quality.`,
             },
           ],
-          sermonQuote: null,
           clipStartSeconds: null,
           clipEndSeconds: null,
           scripture: {
@@ -54,7 +53,6 @@ export function createDevelopmentGenerator(): PlanGenerationProvider {
       });
 
       return generatedPlanSchema.parse({
-        title: input.sermon.title,
         about: {
           overview: [`Development-only overview for “${input.sermon.title}”. Configure OPENAI_API_KEY before evaluating real study quality.`],
           keyTakeaways: ["This development plan exists only to exercise the data flow."],

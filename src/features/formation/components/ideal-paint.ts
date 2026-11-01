@@ -12,6 +12,18 @@ export function greyOf(level: number, alpha: number): Float32Array {
 }
 
 /**
+ * How polished a surface is (0–1), for a height map's green channel alone:
+ * added over its height (`plus`), it leaves the height (red) as it was,
+ * and the surface shader reads the green standing above the red as gloss.
+ */
+export function glossOf(amount: number): Float32Array {
+  return Float32Array.of(0, amount * GLOSS_SCALE_INVERSE, 0, 1);
+}
+
+/** The green a gloss of 1 adds: the shader scales it back up (its GLOSS_SCALE, 5). */
+const GLOSS_SCALE_INVERSE = 0.2;
+
+/**
  * Noise as plain grey, `depth` deep — its brightness in all three channels,
  * scaled, wholly opaque — so it adds that much height to a height map (its
  * own alpha would cancel a layer's opacity). A colour matrix.

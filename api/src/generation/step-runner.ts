@@ -3,11 +3,12 @@ import type { ZodType } from "zod";
 import { AppError } from "../http/errors.js";
 import type { BibleProvider } from "../providers/bible-provider.js";
 import type { GenerationUsage } from "../providers/plan-generation-provider.js";
+import type { SermonInventory } from "./stages/outline.js";
 
-export type StageKind = "outline" | "day" | "quiz";
+export type StageKind = "outline" | "day" | "formation" | "quiz" | "title";
 
 export interface StageRequest {
-  /** "plan", "day 3", "quiz 3": names the call in the attempt log. */
+  /** "plan", "day 3", "faculties", "quiz 3": names the call in the attempt log. */
   stage: string;
   kind: StageKind;
   /** Routes a plan's calls to the same provider cache: one key per sermon. */
@@ -18,6 +19,10 @@ export interface StageRequest {
   task: string;
   schema: ZodType;
   schemaName: string;
+  /** The most the step may write, reasoning included: a runaway call is cut off here rather than at the provider's own cap. */
+  maxTokens: number;
+  /** How long the call may take before it's given up and tried again: a stuck call costs this, not the provider's own limit. */
+  timeoutMs: number;
 }
 
 export interface StageResponse {
@@ -47,12 +52,20 @@ export interface StepCheckpoint {
   save(key: string, result: unknown): Promise<void>;
 }
 
+/** Where a sermon's points are kept across its plans: whatever the plan's length, they're the same sermon's. */
+export interface InventoryStore {
+  /** The sermon's kept points, title, speaker and About this plan, or null. */
+  load(): Promise<unknown>;
+  save(inventory: SermonInventory): Promise<void>;
+}
+
 export interface PipelineDeps {
   call: StageCaller;
   bible: BibleProvider;
   /** Hears about every step; a returned promise is awaited before the step finishes. */
   report?: (event: StageEvent) => void | Promise<void>;
   checkpoint?: StepCheckpoint;
+  inventory?: InventoryStore;
 }
 
 export interface Step<T> {
@@ -67,8 +80,14 @@ export interface Step<T> {
   task: (rejected: readonly string[]) => string;
   schema: ZodType;
   schemaName: string;
-  /** Verifies the model's output; throwing rejects it. */
-  map: (raw: unknown) => T | Promise<T>;
+  maxTokens: number;
+  timeoutMs: number;
+  /**
+   * Verifies the model's output; throwing rejects it. On the step's last
+   * attempt (`last`), what it can live with it keeps, noted, rather than
+   * failing the plan.
+   */
+  map: (raw: unknown, attempt: { last: boolean }) => T | Promise<T>;
   /** Parses a saved result back. */
   saved: ZodType<T>;
 }
@@ -101,7 +120,7 @@ export function stepRunner(context: string, cacheKey: string, deps: PipelineDeps
         let response: StageResponse;
         try {
           response = await deps.call({ stage, kind, cacheKey, instructions: step.instructions, context, task: step.task(rejected),
-            schema: step.schema, schemaName: step.schemaName });
+            schema: step.schema, schemaName: step.schemaName, maxTokens: step.maxTokens, timeoutMs: step.timeoutMs });
         } catch (cause) {
           await deps.report?.({ stage, kind, outcome: "rejected", error: messageOf(cause), usage: null });
           // A configuration problem, such as a bad key, will not improve on retry.
@@ -112,7 +131,7 @@ export function stepRunner(context: string, cacheKey: string, deps: PipelineDeps
         const usage: GenerationUsage = { model: response.model, finishReason: response.finishReason, ...response.usage, durationMs: Date.now() - started };
         model = response.model;
         try {
-          const result = await step.map(parseResponse(response, stage));
+          const result = await step.map(parseResponse(response, stage), { last: attempt === STEP_ATTEMPTS });
           await deps.report?.({ stage, kind, outcome: "accepted", error: null, usage });
           // Saving only speeds up a re-run, so a failed save never fails the step.
           await deps.checkpoint?.save(step.key, result).catch(() => undefined);
@@ -135,7 +154,8 @@ function messageOf(cause: unknown): string {
   return cause instanceof Error ? cause.message : "Unknown failure";
 }
 
-function parseResponse(response: StageResponse, stage: string): unknown {
+/** A step's answer as JSON: a refusal, a cut-off answer, or one that isn't JSON is rejected with its reason. */
+export function parseResponse(response: StageResponse, stage: string): unknown {
   if (response.refusal) throw new AppError("INTERNAL", `The ${stage} step was refused`);
   if (response.finishReason !== "stop" || !response.content) {
     throw new AppError("INTERNAL", `The ${stage} step did not finish (${response.finishReason ?? "no response"})`);

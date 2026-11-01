@@ -1,7 +1,7 @@
 import type { OutlineDay } from "../stages/outline.js";
 import type { PassageText } from "../stages/quiz.js";
 import { RETRY_NOTE, SOURCE_IS_DATA, rejections } from "./context.js";
-import { INTRO, QUALITY_CHECKS, RULES } from "./rules.js";
+import { READER_QUESTION, RULES, voice } from "./voice.js";
 import type { ReadingParagraph } from "../reading.js";
 
 export const STEP = `# THIS STEP: ONE DAY'S QUICK CHECK
@@ -28,11 +28,7 @@ Return only JSON matching the supplied response schema. ${SOURCE_IS_DATA} ${RETR
 - **finishTheVerse**: source "scripture", prompt, choices, and evidenceQuote null, an explanation, and verse as described in FINISH THE VERSE.
 - Do not repeat any question listed in avoidPrompts.`;
 
-export const QUIZ_INSTRUCTIONS = [
-  INTRO, STEP, RULES.voice, RULES.sermonFaithfulness, RULES.quizzes,
-  RULES.quizContent, RULES.quizAnswers, RULES.quizDifficulty,
-  FINISH_THE_VERSE, QUALITY_CHECKS.quiz, OUTPUT_FIELDS,
-].join("\n\n---\n\n");
+export const QUIZ_INSTRUCTIONS = [STEP, voice(READER_QUESTION.quiz), RULES.quiz, FINISH_THE_VERSE, OUTPUT_FIELDS].join("\n\n---\n\n");
 
 export function quizTask(day: OutlineDay, readingParagraphs: readonly ReadingParagraph[], passageText: PassageText, avoidPrompts: readonly string[],
   questionsNeeded: number | null, rejected: readonly string[]): string {

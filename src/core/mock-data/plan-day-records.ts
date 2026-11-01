@@ -19,7 +19,6 @@ export type MockDayInput = {
   title: string;
   status: PlanDayStatus;
   paragraphs: string[];
-  sermonQuote: string;
   sermonClip: SermonClip;
   passage: {
     reference: string;
@@ -110,7 +109,6 @@ export function makeDayRecords(
     reading: {
       title: input.title,
       paragraphs: input.paragraphs,
-      sermonQuote: input.sermonQuote,
       sermonClip: input.sermonClip,
     },
     scriptureId: scripture.id,

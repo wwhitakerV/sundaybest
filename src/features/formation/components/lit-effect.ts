@@ -6,10 +6,14 @@ import { Skia } from "@shopify/react-native-skia";
  * read from the height either side of each point — with a little light
  * reaching its turned-away faces, warmed by the page, and a soft sheen
  * where it faces the light most. A face square to the page shows its own
- * colour, as under a large soft light. At its outline, a pale object's two
- * rims: crisp and near white where the edge turns to the light, warm and soft
- * where it turns away and the page throws light back up under it. Outside
- * its outline, nothing.
+ * colour, as under a large soft light. Where its height map's green
+ * stands above its red, it's polished (`gloss`): a satin sheen of its own
+ * (`glossSheen`, `glossTight`), on flat faces too, taking it toward pure
+ * white, never a brighter shade of its own colour. Nothing is drawn at its outline:
+ * its edge is lit by its own shape — on its shaded side, darkest a little
+ * in from its outline, then glowing warm out to it with the light the page
+ * throws back onto its underside — so as the light moves, all of it moves
+ * with it. Outside its outline, nothing.
  */
 const SOURCE = `
 uniform shader height;
@@ -22,10 +26,14 @@ uniform float3 bounce;
 uniform float wrap;
 uniform float sheen;
 uniform float tight;
-uniform float rimReach;
-uniform float rimLit;
-uniform float rimBounce;
-uniform float3 rimWarm;
+uniform float glossSheen;
+uniform float glossTight;
+uniform float glow;
+uniform float glowReach;
+uniform float3 glowWarm;
+uniform float core;
+uniform float coreAt;
+uniform float coreWidth;
 uniform float neutral;
 uniform float stainReach;
 uniform float stainWideReach;
@@ -48,39 +56,37 @@ half4 main(float2 p) {
   // A large soft light: a face square to the page is already fully lit, so turning further toward it adds only sheen.
   float diffuse = clamp((facing + wrap) / (light.z + wrap), 0.0, 1.0);
   float3 half_way = normalize(light + float3(0.0, 0.0, 1.0));
-  // Sheen only where the surface turns: a rim catching the light, never a flat top.
-  float shine = pow(max(dot(n, half_way), 0.0), tight) * sheen * clamp((1.0 - n.z) * 4.0, 0.0, 1.0);
+  half4 mapped = height.eval(p);
+  float here = mapped.r;
+  // Polish, from the map's green over its red (GLOSS_SCALE, 5: a gloss of 1 is 0.2 of green).
+  float gloss = clamp((mapped.g - mapped.r) * 5.0, 0.0, 1.0);
+  // Sheen only where the surface turns, a rim catching the light, never a flat top; where it's
+  // polished, its own satin sheen everywhere instead, as white light off a glaze.
+  float turned = clamp((1.0 - n.z) * 4.0, 0.0, 1.0);
+  float spec = pow(max(dot(n, half_way), 0.0), mix(tight, glossTight, gloss));
+  float shine = spec * sheen * turned * (1.0 - gloss);
+  float glaze = clamp(spec * glossSheen * gloss, 0.0, 1.0);
   half3 colour = base.rgb / base.a;
   // A pale object under a white light: where it's lit it shows its own colour, true; only its shade
   // takes the warmth of the light the page throws back (neutral: 1 for pale objects, 0 for red).
   half3 full = mix(half3(1.0), ambient * half3(bounce) + (1.0 - ambient), half(neutral));
   half3 lit = colour * (ambient * half3(bounce) + (1.0 - ambient) * diffuse) / full + half3(shine);
 
-  // Its rims. How near the outline this point is (0 well inside, 1 at the edge) and which way is out,
-  // from how much of its outline lies within reach round it.
-  float inside = 0.0;
-  float2 away = float2(0.0);
-  for (int i = 0; i < 8; i++) {
-    float turn = float(i) * 0.7853982;
-    float2 way = float2(cos(turn), sin(turn));
-    float there = albedo.eval(p + way * rimReach).a;
-    inside += there;
-    away += way * (1.0 - there);
-  }
-  float edge = clamp((1.0 - inside / 8.0) * 2.0, 0.0, 1.0);
-  float toward = length(away) > 0.001 ? dot(normalize(away), normalize(light.xy)) : 0.0;
-  // Where the edge turns to the light it catches it: a crisp rim, near white, brighter than its face.
-  float caught = edge * edge * smoothstep(0.0, 0.6, toward) * rimLit;
-  // Where it turns away, light thrown back off the page warms its underside: a softer rim, lifting the shade.
-  float thrown = edge * smoothstep(0.0, 0.7, -toward) * rimBounce;
-  lit = mix(lit, half3(1.0), caught) + colour * half3(rimWarm) * thrown;
+  // Its shaded side, as a ball's is: darkest in a soft band a little in from its outline (core, at
+  // coreAt in its map), then brightening steadily out to its outline in the warm light the page throws
+  // back up onto its underside (glow, over the last glowReach of its map) — only on the side turned
+  // away from the light, so as the light moves, both move with it.
+  float band = (here - coreAt) / coreWidth;
+  lit *= half(1.0 - exp(-band * band) * core * (1.0 - 0.85 * diffuse));
+  float turnedAway = length(n.xy) > 0.001 ? clamp(-dot(normalize(n.xy), normalize(light.xy)), 0.0, 1.0) : 0.0;
+  float edge = 1.0 - clamp(here / glowReach, 0.0, 1.0);
+  lit += colour * half3(glowWarm) * half(edge * edge * turnedAway * glow);
 
   // Its hollows and ridges: how much lower (or higher) this point lies than the points either side
   // of it, at two reaches — fine for creases and pits, wide for folds and clefts — only where both
   // sides are on it, so its outline never reads as a hollow. Hollows stain warm grey-brown; ridges,
   // worn clean, go a touch whiter.
-  if (stain > 0.0) {
-    float here = height.eval(p).r;
+  if (stain > 0.0 || stainWide > 0.0) {
     float fine = 0.0;
     float fineOn = 0.0;
     float broad = 0.0;
@@ -101,6 +107,8 @@ half4 main(float2 p) {
     lit *= mix(half3(1.0), half3(stainTint), half(hollow));
     lit = mix(lit, half3(1.0), half(clamp(-fine * polish, 0.0, 0.3)));
   }
+  // The glaze's sheen last, over its shade and stain: the colour taken toward pure white.
+  lit = mix(clamp(lit, 0.0, 1.0), half3(1.0), half(glaze));
   return half4(clamp(lit, 0.0, 1.0) * base.a, base.a);
 }
 `;

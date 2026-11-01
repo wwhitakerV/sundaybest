@@ -9,21 +9,24 @@ import type { StoneWear } from "./stone-wear";
 /** Lower by `share` of the height there. */
 const down = (share: number) => greyOf(0, share);
 
-/** A fine split along `line`, in a soft shallow valley, one side settled a touch lower. */
+/** A hairline along `line`: a thin dark split, and a pale ledge beside it where one side stands a hair higher. */
 function Crack({ line }: { line: string }) {
-  const { width, depth, valley, step } = STONE.cracks;
+  const { width, depth, ledge } = STONE.crack;
   return (
     <>
-      <Path
-        path={line}
-        style="stroke"
-        strokeWidth={valley.width}
-        strokeJoin="round"
-        strokeCap="round"
-        color={down(valley.depth)}
-      >
-        <BlurMask blur={valley.width / 2} style="normal" />
-      </Path>
+      <Group transform={[{ translateY: -ledge.offset }]}>
+        <Path
+          path={line}
+          style="stroke"
+          strokeWidth={ledge.width}
+          strokeJoin="round"
+          strokeCap="round"
+          color={greyOf(1, ledge.rise)}
+          blendMode="plus"
+        >
+          <BlurMask blur={ledge.width * 0.4} style="normal" />
+        </Path>
+      </Group>
       <Path
         path={line}
         style="stroke"
@@ -32,24 +35,58 @@ function Crack({ line }: { line: string }) {
         strokeCap="round"
         color={down(depth)}
       />
-      <Group transform={[{ translateY: step }]}>
-        <Path
-          path={line}
-          style="stroke"
-          strokeWidth={step * 2}
-          strokeJoin="round"
-          color={down(depth * 0.2)}
-        >
-          <BlurMask blur={step} style="normal" />
-        </Path>
-      </Group>
     </>
   );
 }
 
-/** Its wear in its height: dents, chips' sloping broken faces, pits, cracks and hairline creases. */
+/** Its small cuts, as nicks in its height, and the tiny wedges chipped out along them. */
+function Cuts({ wear }: { wear: StoneWear }) {
+  const { cuts, wedges } = STONE;
+  return (
+    <>
+      {wear.cuts.map((cut, i) => (
+        <Path
+          key={`cut-${i}`}
+          path={polyline(cut)}
+          style="stroke"
+          strokeWidth={cuts.width}
+          strokeJoin="miter"
+          strokeCap="round"
+          color={down(cuts.depth)}
+        />
+      ))}
+      {wear.wedges.map((wedge, i) => (
+        <Path key={`wedge-${i}`} path={polyline(wedge, true)} color={down(wedges.depth)} />
+      ))}
+    </>
+  );
+}
+
+/** Its gouge: sunk soft inside, a raised rim round it. */
+function Gouge({ points }: { points: string }) {
+  const { gouge } = STONE;
+  return (
+    <>
+      <Path
+        path={points}
+        style="stroke"
+        strokeWidth={gouge.rim.width}
+        strokeJoin="round"
+        color={greyOf(1, gouge.rim.rise)}
+        blendMode="plus"
+      >
+        <BlurMask blur={gouge.rim.width * 0.5} style="normal" />
+      </Path>
+      <Path path={points} color={down(gouge.depth)}>
+        <BlurMask blur={gouge.width * 0.25} style="normal" />
+      </Path>
+    </>
+  );
+}
+
+/** Its wear in its height: a dent, chips' sloping broken faces, its gouge, its crack, cuts and hairline creases. */
 function Wear({ wear }: { wear: StoneWear }) {
-  const { dents, chips, pits, creases } = STONE;
+  const { dents, chips, creases } = STONE;
   return (
     <>
       {wear.dents.map((d, i) => (
@@ -67,14 +104,13 @@ function Wear({ wear }: { wear: StoneWear }) {
           <BlurMask blur={chips.soft} style="normal" />
         </Path>
       ))}
-      {wear.pits.map((pit, i) => (
-        <Path key={`pit-${i}`} path={polyline(pit, true)} color={down(pits.depth)}>
-          <BlurMask blur={pits.r[0] * 0.4} style="normal" />
-        </Path>
+      {wear.gouges.map((g, i) => (
+        <Gouge key={`gouge-${i}`} points={polyline(g, true)} />
       ))}
       {wear.cracks.map((crack, i) => (
         <Crack key={`crack-${i}`} line={polyline(crack)} />
       ))}
+      <Cuts wear={wear} />
       {wear.creases.map((crease, i) => (
         <Path
           key={`crease-${i}`}
@@ -95,19 +131,39 @@ export type StoneHeightProps = {
   centre: number;
   /** The sculpt's half-width (points): its outline's unit. */
   r: number;
+  /** The icon's strokes carved into it, when the icon didn't become its outline. */
+  carving?: string | null;
 };
+
+/** The icon's strokes cut into it. */
+function Carving({ carving }: { carving: string }) {
+  const { width, depth, soft } = STONE.carve;
+  return (
+    <Path
+      path={carving}
+      style="stroke"
+      strokeWidth={width}
+      strokeCap="round"
+      strokeJoin="round"
+      color={down(depth)}
+    >
+      <BlurMask blur={soft} style="normal" />
+    </Path>
+  );
+}
 
 /**
  * A stone sculpt's height map, for any outline: its form (`StoneForm` —
  * swelled, carved into planes, folded where its outline turns in, its
- * surface woven and pocked) and its wear.
+ * surface woven and pocked), its wear, and the icon carved into it.
  */
-export function StoneHeight({ wear, centre, r }: StoneHeightProps) {
+export function StoneHeight({ wear, centre, r, carving }: StoneHeightProps) {
   return (
     <Group transform={[{ translateX: centre }, { translateY: centre }, { scale: r }]}>
       <Group clip={wear.outline}>
         <StoneForm wear={wear} />
         <Wear wear={wear} />
+        {carving && <Carving carving={carving} />}
       </Group>
     </Group>
   );

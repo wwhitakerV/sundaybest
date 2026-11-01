@@ -12,6 +12,7 @@ import {
 } from "@/entities/plan";
 import { selectionFeedback, tapFeedback } from "@/core/haptics/haptics";
 import { useToday } from "@/core/store";
+import { seriesLine } from "@/entities/sermon";
 import { useTheme } from "@/theme";
 import { describeDayCards } from "../logic/day-cards";
 import { describeDayTile, type DayStepKey } from "../logic/day-rail";
@@ -120,6 +121,7 @@ export function usePlanDetail(planId: string) {
     totalDays: plan.lengthDays,
     hero: words && {
       title: plan.title,
+      series: seriesLine(plan.sermon),
       church: plan.sermon.church,
       thumbnailUrl: plan.sermon.thumbnailUrl,
       colors,
@@ -130,6 +132,7 @@ export function usePlanDetail(planId: string) {
     /** The plan featured at the top of its page on Plans (`PlanFeature`), as Home features one. */
     feature: words && {
       title: plan.title,
+      series: seriesLine(plan.sermon),
       church: plan.sermon.church,
       thumbnailUrl: plan.sermon.thumbnailUrl,
       ...describePlanStanding({

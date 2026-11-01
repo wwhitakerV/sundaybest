@@ -20,7 +20,8 @@
     "db:seed": "tsx src/db/seed.ts",
     "validate": "npm run typecheck && npm test && npm run build",
     "smoke:plan": "node --import tsx scripts/smoke-plan.ts",
-    "generation:attempts": "node --import tsx scripts/generation-attempts.ts"
+    "generation:attempts": "node --import tsx scripts/generation-attempts.ts",
+    "titles:backfill": "node --import tsx scripts/backfill-titles.ts"
   },
   "dependencies": {
     "dotenv": "17.4.2",

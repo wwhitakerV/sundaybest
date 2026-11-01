@@ -74,7 +74,6 @@ export function buildMockPlanContent({
       reading: {
         title: template.title,
         paragraphs: [...template.paragraphs],
-        sermonQuote: template.sermonQuote,
         sermonClip:
           clipLength > 0
             ? { startSeconds: clipLength * dayNumber, endSeconds: clipLength * dayNumber + 120 }

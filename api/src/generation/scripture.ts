@@ -85,17 +85,35 @@ function referencePattern(): RegExp {
  */
 export function namedChapters(source: string): string[] {
   const chapters = new Set<string>();
-  for (const match of normalizeSpokenReference(source).matchAll(referencePattern())) {
+  const spoken = normalizeSpokenReference(source);
+  for (const match of spoken.matchAll(referencePattern())) {
     const book = aliases.get(match[1]!)!;
-    chapters.add(`${book === "Psalms" ? "Psalm" : book} ${Number(match[2])}`);
+    const name = book === "Psalms" ? "Psalm" : book;
+    chapters.add(`${name} ${Number(match[2])}`);
+    const also = alsoChapter(spoken, match);
+    if (also !== null) chapters.add(`${name} ${also}`);
   }
   return [...chapters];
 }
 
+/**
+ * A second chapter named with the first — "Genesis 1 and 2" — when the first
+ * was named alone, not with verses: the chapter, or null.
+ */
+function alsoChapter(spoken: string, match: RegExpMatchArray): number | null {
+  if (match[3] !== undefined) return null;
+  const after = /^\s+and\s+(\d{1,3})\b(?!\s*:)/.exec(spoken.slice((match.index ?? 0) + match[0].length));
+  return after ? Number(after[1]) : null;
+}
+
 /** Conservative evidence check. An explicitly named chapter permits a passage within it. */
 export function referenceIsNamed(source: string, scripture: ScriptureCitation): boolean {
-  for (const match of normalizeSpokenReference(source).matchAll(referencePattern())) {
-    if (aliases.get(match[1]!) !== scripture.book || Number(match[2]) !== scripture.chapter) continue;
+  const spoken = normalizeSpokenReference(source);
+  for (const match of spoken.matchAll(referencePattern())) {
+    if (aliases.get(match[1]!) !== scripture.book) continue;
+    // A chapter named with another ("Genesis 1 and 2") is named whole.
+    if (alsoChapter(spoken, match) === scripture.chapter) return true;
+    if (Number(match[2]) !== scripture.chapter) continue;
     // A whole-chapter citation needs only the chapter to be named.
     if (match[3] === undefined || scripture.verseStart === null || scripture.verseEnd === null) return true;
     if (scripture.verseStart >= Number(match[3]) && scripture.verseEnd <= Number(match[4] ?? match[3])) return true;
@@ -117,4 +135,14 @@ export function sameReference(supplied: string, canonical: string): boolean {
   const normalized = normalizeSpokenReference(supplied).replace(/^psalms\b/, "psalm")
     .replace(/^song of songs\b/, "song of solomon").replace(/[–—]/g, "-").replace(/\s+/g, "");
   return normalized === normalizeSourceText(canonical).replace(/\s+/g, "");
+}
+
+/**
+ * The first block of the sermon to name `chapter` ("Psalm 23", as
+ * `namedChapters` gives it), reading each with the next so a reference split
+ * across two blocks is found; null when none does.
+ */
+export function firstNamedIn(blocks: readonly string[], chapter: string): number | null {
+  const at = blocks.findIndex((text, index) => namedChapters(`${text} ${blocks[index + 1] ?? ""}`).includes(chapter));
+  return at < 0 ? null : at;
 }

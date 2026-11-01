@@ -3,9 +3,11 @@ import OpenAI from "openai";
 import type { Env } from "../config/env.js";
 import { AppError } from "../http/errors.js";
 import { createDevelopmentGenerator } from "../generation/development-generator.js";
-import { addStagedQuickChecks, generateStagedPlan, type StageCaller, type StageEvent, type StepCheckpoint } from "../generation/pipeline.js";
+import { addStagedQuickChecks, generateStagedPlan, type InventoryStore, type StageCaller, type StageEvent, type StepCheckpoint } from "../generation/pipeline.js";
 import { generatedPlanSchema, type GeneratedPlan } from "../generation/schema.js";
 import type { TranscriptSegment } from "../generation/transcript.js";
+import { findSermonTitle } from "../generation/title/find-title.js";
+import type { SermonTitle } from "../generation/title/map-title.js";
 import { validatePlanStructure } from "../generation/validation.js";
 import { createBibleProvider, type BibleProvider } from "./bible-provider.js";
 import { postJson } from "./http.js";
@@ -31,15 +33,22 @@ export interface GenerationUsage {
   reasoningTokens: number | null;
   durationMs: number;
 }
-/** How a generation is observed and resumed: `report` hears about every step; `checkpoint` keeps accepted ones. */
+/**
+ * How a generation is observed and resumed: `report` hears about every step;
+ * `checkpoint` keeps accepted ones; `inventory` keeps the sermon's points for
+ * its other lengths.
+ */
 export interface GenerationHooks {
   report?: (event: StageEvent) => void | Promise<void>;
   checkpoint?: StepCheckpoint;
+  inventory?: InventoryStore;
 }
 export interface PlanGenerationProvider {
   generate(input: PlanGenerationInput, hooks?: GenerationHooks): Promise<GeneratedPlan>;
   /** Writes only the Quick Checks for a finished plan without them. Absent when a provider can only write whole plans. */
   addQuickChecks?(input: PlanGenerationInput, plan: GeneratedPlan, hooks?: GenerationHooks): Promise<GeneratedPlan>;
+  /** Finds a sermon's own title in its video's title; null when it can't. Absent when a provider can't: its plans keep the video's title. */
+  findTitle?(video: { title: string; church: string | null }, report?: GenerationHooks["report"]): Promise<SermonTitle | null>;
 }
 
 export function createPlanGenerationProvider(env: Env, options: { client?: OpenAI; call?: StageCaller; bible?: BibleProvider } = {}): PlanGenerationProvider {
@@ -71,6 +80,9 @@ export function createPlanGenerationProvider(env: Env, options: { client?: OpenA
     async addQuickChecks(input, plan, hooks = {}) {
       usable(input);
       return addStagedQuickChecks(input, plan, { call, bible, ...hooks });
+    },
+    findTitle(video, report) {
+      return findSermonTitle(call, video, report);
     },
   };
 }

@@ -42,7 +42,6 @@ const DAYS: MockDayInput[] = [
       "Joshua gathers a nation that has watched God keep every promise, and asks them one thing: decide. Not someday. Today.",
       "Faith isn't only a feeling we wait for. It's a choice we make in ordinary mornings, again and again.",
     ],
-    sermonQuote: "Joshua doesn't say 'choose someday.' He says choose this day. Today.",
     sermonClip: { startSeconds: 412, endSeconds: 530 },
     passage: {
       reference: "Joshua 24:15",
@@ -79,7 +78,6 @@ const DAYS: MockDayInput[] = [
       "Most of us believe grace is free. We just don't live like it. We keep a quiet ledger: a good morning here, a kept promise there, as if God were checking the balance.",
       "Joshua's call to choose wasn't a call to earn. Israel was rescued long before they promised anything. Choosing God starts with receiving what He's already done.",
     ],
-    sermonQuote: "Most of us believe grace is free. We just don't live like it.",
     sermonClip: { startSeconds: 1_122, endSeconds: 1_260 },
     passage: {
       reference: "Ephesians 2:8–9",
@@ -118,7 +116,6 @@ const DAYS: MockDayInput[] = [
       "Every heart serves something. Jesus doesn't ask whether we'll serve, only who.",
       "Divided loyalty feels safe, but it quietly wears us out. Wholehearted is lighter than half-hearted.",
     ],
-    sermonQuote: "You can't serve two masters. Something is going to get your yes.",
     sermonClip: { startSeconds: 1_686, endSeconds: 1_820 },
     passage: {
       reference: "Matthew 6:24",
@@ -148,7 +145,6 @@ const DAYS: MockDayInput[] = [
       "Moses prayed to see his days clearly. Not to be afraid of time, but to spend it well.",
       "A heart of wisdom notices that today is a gift, and chooses what to do with it.",
     ],
-    sermonQuote: "Make every day count. Not by earning it, but by choosing Him in it.",
     sermonClip: { startSeconds: 2_310, endSeconds: 2_420 },
     passage: {
       reference: "Psalm 90:12",
@@ -178,7 +174,6 @@ const DAYS: MockDayInput[] = [
       "Choosing God isn't a single moment at an altar. It's a life handed over, one ordinary day at a time.",
       "Paul calls it worship: not a song, but a whole self, offered in view of mercy.",
     ],
-    sermonQuote: "Serving Him isn't a Sunday thing. It's a Tuesday-afternoon thing.",
     sermonClip: { startSeconds: 1_940, endSeconds: 2_050 },
     passage: {
       reference: "Romans 12:1",
@@ -208,7 +203,6 @@ const DAYS: MockDayInput[] = [
       "The people answered Joshua together: we will serve the LORD. A choice made out loud, in company.",
       "Faith grows stronger when it's shared. Who will you say it to?",
     ],
-    sermonQuote: "Say it out loud. Choices get stronger when someone else hears them.",
     sermonClip: { startSeconds: 2_600, endSeconds: 2_720 },
     passage: {
       reference: "Joshua 24:24",

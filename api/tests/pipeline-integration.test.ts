@@ -35,7 +35,9 @@ test("YouTube resolve → transcript → OpenAI → SQL persistence → plan/stu
       assert.equal(detail.statusCode, 200, detail.body);
       const plan = getPlanResponseSchema.parse(detail.json()).plan;
       assert.equal(plan.days.length, days);
-      assert.equal(plan.days[0]!.reading.sermonClip?.endSeconds, 30);
+      // Day 1's part of the sermon starts where its first point is made, a minute in.
+      assert.equal(plan.days[0]!.reading.sermonClip?.startSeconds, 60);
+      assert.equal("sermonQuote" in plan.days[0]!.reading, false);
       assert.equal(plan.days[0]!.quickCheckId !== null, quickCheck);
       assert.deepEqual(plan.about, {
         overview: ["This plan studies how God's love is shown in giving His Son."],
@@ -50,11 +52,12 @@ test("YouTube resolve → transcript → OpenAI → SQL persistence → plan/stu
       assert.equal(studyDay.scripture.translation, "BSB");
       assert.equal(studyDay.scripture.cacheAllowed, true);
       assert.match(studyDay.scripture.verses[0]!.text, /^For God so loved the world/);
-      assert.equal(studyDay.supportingScriptures.length, 1);
-      assert.equal(studyDay.supportingScriptures[0]!.reference, "Romans 5:8");
-      assert.equal(studyDay.supportingScriptures[0]!.connection, "God's love came first.");
-      assert.equal(studyDay.supportingScriptures[0]!.translation, "BSB");
-      assert.deepEqual(studyDay.supportingScriptures[0]!.verses.map((verse) => verse.number), [8]);
+      // Every passage comes from the sermon: none is added.
+      assert.equal(studyDay.supportingScriptures.length, 0);
+      const [stored] = (await pg.query<{ formation: { points: Array<{ id: string }> }; journey: { faculties: Array<{ faculty: string }>; alsoReferenced: Array<{ reference: string }> } }>("select p.formation, d.journey from plans p join plan_days d on d.plan_id = p.id where p.id = $1 and d.day_number = 1", [planId])).rows;
+      assert.deepEqual(stored!.formation.points.map((point: { id: string }) => point.id), Array.from({ length: days }, (_, index) => `p${index + 1}`));
+      assert.deepEqual(stored!.journey.faculties.map((entry: { faculty: string }) => entry.faculty), ["see", "hear", "understand", "do", "speak", "examine"]);
+      assert.deepEqual(stored!.journey.alsoReferenced.map((passage: { reference: string }) => passage.reference), ["Psalm 23", "Ephesians 2"]);
       // Bundled text is served from memory, never copied into the database.
       assert.equal((await pg.query("select * from scripture_texts")).rows.length, 0);
       if (quickCheck) {
@@ -103,8 +106,8 @@ test("YouTube resolve → transcript → OpenAI → SQL persistence → plan/stu
     }
     assert.equal(counts.transcripts, 1);
     assert.equal(counts.jobPolls, 1);
-    // One plan call, one call per day, and one quiz per day when Quick Check is on: 1 + 1 + 1, then 1 + 7.
-    assert.equal(counts.openai, 11);
+    // One plan call, then per day a study, its faculties, and its quiz when Quick Check is on: 1 + 1 + 1 + 1, then 1 + 7 + 7.
+    assert.equal(counts.openai, 19);
     assert.equal(await worker.runOnce(), false);
     // Finished steps are not kept once their plan is published.
     assert.equal((await pg.query("select * from generation_steps")).rows.length, 0);

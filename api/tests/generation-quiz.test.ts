@@ -105,3 +105,10 @@ test("a quiz of one kind keeps its order", () => {
   const questions = ["m1", "m2", "m3"].map((prompt) => ({ kind: "multipleChoice" as const, prompt }));
   assert.deepEqual(mixQuestionKinds(questions), questions);
 });
+
+test("a question that quotes the sermon keeps its words, plain", () => {
+  const question = { ...sermonQuestion(1, 8), prompt: "What did the sermon call you to: “wait with patience and keep trusting”?", explanation: "Teaching 1 says “wait with patience and keep trusting through the storm.”" };
+  const kept = map(withQuestions(question)).questions.find((candidate) => candidate.prompt.startsWith("What did the sermon call you to"))!;
+  assert.equal(kept.prompt, "What did the sermon call you to: wait with patience and keep trusting?");
+  assert.equal(kept.explanation, "Teaching 1 says wait with patience and keep trusting through the storm.");
+});

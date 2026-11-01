@@ -163,7 +163,6 @@ export function createPlanService(db: Database) {
       reading: {
         title: row.day.readingTitle,
         paragraphs: row.day.readingParagraphs.map(readingParagraphForApi),
-        sermonQuote: row.day.sermonQuote,
         sermonClip:
           row.day.clipStartSeconds === null
             ? null

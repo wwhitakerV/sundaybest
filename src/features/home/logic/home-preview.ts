@@ -110,6 +110,8 @@ function plan(
       externalId: fields.sermonId.slice(-11),
       canonicalUrl: "https://www.youtube.com/watch?v=preview",
       title: fields.title,
+      series: null,
+      part: null,
       church: fields.church,
       thumbnailUrl: fields.thumbnailUrl,
       thumbnailColors: fields.colors,

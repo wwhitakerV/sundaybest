@@ -1,0 +1,13 @@
+--- a/src/generation/prompts/custom.ts
++++ b/src/generation/prompts/custom.ts
+@@ -93,7 +93,9 @@
+ ): string {
+   const theory = custom.theory[step];
+   if (!custom.enabled || theory === null) return standard;
+-  return [...fixed.before, theory, ...fixed.after].join(SECTION_BREAK);
++  // Preserve ALL standard rules and append optional brand voice.
++  // The old custom override omitted theological/source quality instructions.
++  return [standard, theory].join(SECTION_BREAK);
+ }
+ 
+ /** The prompt version a plan records: the standard one, marked with yours while custom prompts are on. */

@@ -23,6 +23,7 @@ import {
   type StudyStepKey,
 } from "../logic/study-steps";
 import { useReflectionAnswers } from "@/core/storage/reflection-answer-queries";
+import { useRecordPlanOpened } from "./use-record-plan-opened";
 import { useStudyRoute } from "./use-study-route";
 
 /** Where a study opens before its day has arrived. */
@@ -34,6 +35,7 @@ export function useStudySession() {
   const session = useModalSession();
   const route = useStudyRoute();
   const { planId, dayNumber, plan, day, requestedStep } = route;
+  useRecordPlanOpened(planId);
   const settingsQuery = useUserSettingsQuery();
   const updateSettings = useUpdateSettingsMutation();
   const settings = settingsQuery.data?.settings;

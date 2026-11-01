@@ -27,9 +27,9 @@ export function createOpenAiStageCaller(client: OpenAI, env: Env): StageCaller {
         ],
         prompt_cache_key: request.cacheKey,
         response_format: zodResponseFormat(request.schema, request.schemaName),
-        max_completion_tokens: env.OPENAI_MAX_COMPLETION_TOKENS,
+        max_completion_tokens: Math.min(request.maxTokens, env.OPENAI_MAX_COMPLETION_TOKENS),
         store: false,
-      });
+      }, { timeout: Math.min(request.timeoutMs, env.OPENAI_TIMEOUT_MS) });
       const choice = completion.choices[0];
       return {
         content: choice?.message.content ?? null,

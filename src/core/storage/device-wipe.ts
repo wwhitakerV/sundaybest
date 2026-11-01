@@ -13,11 +13,12 @@ const READER_TABLES = [
   "searches_shown",
   "moments_seen",
   "game_results",
+  "plans_opened",
 ] as const;
 
 /**
  * Empties the phone's database of everything a reader left there — the
- * offline cache, changes waiting to sync, what they wrote, liked and saw —
+ * offline cache, changes waiting to sync, what they wrote, liked, saw and opened —
  * in one transaction. The database's key stays, so it reopens as it was,
  * only empty. Development's "Start over" only (`start-over.ts`).
  */

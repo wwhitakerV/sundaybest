@@ -5,6 +5,7 @@ import { AppError } from "../../http/errors.js";
 import type { PlanGenerationInput } from "../../providers/plan-generation-provider.js";
 import { generatedQuestionSchema, type GeneratedQuestion } from "../schema.js";
 import { canonicalizeScriptureFields } from "../scripture.js";
+import { sermonWords, withoutQuotes, type SermonWords } from "../sermon-quotes.js";
 import { containsExcerpt, normalizeSourceText } from "../transcript.js";
 import type { OutlineDay } from "./outline.js";
 
@@ -67,13 +68,14 @@ export function mapQuiz(raw: unknown, context: QuizContext, kept: readonly Gener
   const parsed = quizOutputSchema.safeParse(raw);
   if (!parsed.success) throw new AppError("INTERNAL", `The quiz step returned invalid content for day ${context.day.dayNumber}`);
   const source = normalizeSourceText(context.input.transcriptSegments?.map((s) => s.text).join(" ") ?? context.input.transcript);
+  const words = sermonWords(context.input, null);
   const prompts = new Set(kept.map((question) => normalizeSourceText(question.prompt)));
   const questions = [...kept];
   for (const output of parsed.data.questions) {
     if (questions.length === QUICK_CHECK_MAX) break;
     const built = output.kind === "finishTheVerse"
       ? finishTheVerse(output, context, questions.length % CHOICES)
-      : multipleChoice(output, context.day, source);
+      : multipleChoice(output, context.day, source, words);
     if (!built) continue;
     const key = normalizeSourceText(built.prompt);
     if (prompts.has(key)) continue;
@@ -102,8 +104,9 @@ export function mixQuestionKinds<Question extends { kind: GeneratedQuestion["kin
   return mixed;
 }
 
-function multipleChoice(output: QuizOutputQuestion, day: OutlineDay, source: string): GeneratedQuestion | null {
-  const explanation = output.explanation.trim();
+/** A multiple-choice question, its quotes of the sermon kept as plain words: readers never see the sermon quoted. */
+function multipleChoice(output: QuizOutputQuestion, day: OutlineDay, source: string, words: SermonWords): GeneratedQuestion | null {
+  const explanation = withoutQuotes(output.explanation.trim(), words).text;
   if (!output.prompt || !output.choices || !explanation) return null;
   if (output.choices.filter((option) => option.correct).length !== 1) return null;
   if (!distinct(output.choices.map((option) => option.text))) return null;
@@ -111,7 +114,7 @@ function multipleChoice(output: QuizOutputQuestion, day: OutlineDay, source: str
   return {
     kind: "multipleChoice",
     source: output.source,
-    prompt: output.prompt.trim(),
+    prompt: withoutQuotes(output.prompt.trim(), words).text,
     scriptureReference: output.source === "scripture" ? day.scripture.reference : null,
     explanation,
     choices: output.choices.map((option, index) => ({ label: label(index), text: option.text.trim(), correct: option.correct })),

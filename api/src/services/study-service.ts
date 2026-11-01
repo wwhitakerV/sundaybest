@@ -83,7 +83,6 @@ export function createStudyService(db: Database, bibleProvider: BibleProvider) {
         reading: {
           title: access.day.readingTitle,
           paragraphs: access.day.readingParagraphs.map(readingParagraphForApi),
-          sermonQuote: access.day.sermonQuote,
           sermonClip:
             access.day.clipStartSeconds === null
               ? null

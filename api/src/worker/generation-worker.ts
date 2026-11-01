@@ -35,6 +35,9 @@ import { validateGeneratedContent } from "../generation/validation.js";
 import { newAttemptMetrics, recordAttempt, recordCall } from "./attempt-log.js";
 import { findReusablePlan } from "./reuse-plan.js";
 import { buildTracker } from "./build-tracker.js";
+import { buildUnderWay, lookAgainSoon } from "./build-under-way.js";
+import { sermonInventory } from "./sermon-inventory.js";
+import { sermonTitle } from "./sermon-title.js";
 import { generationCheckpoint } from "./step-checkpoint.js";
 import type { TranscriptProvider } from "../providers/transcript-provider.js";
 
@@ -142,6 +145,8 @@ export function createGenerationWorker(input: {
       await tracker.stage("processingSermon", {
         startedAt: context.generation.startedAt ?? new Date(),
       });
+      // The sermon's own title, found alongside the build (once per sermon), for the plan to carry.
+      const title = sermonTitle(input.db, input.generator, context.sermon, (event) => recordCall(input.db, job, metrics, event));
 
       // The same sermon and length already built by this prompt: copy it, with
       // no transcript fetch and no model calls; drop its quizzes when Quick
@@ -165,8 +170,14 @@ export function createGenerationWorker(input: {
           copy,
           job.id,
           workerId,
+          await title,
         );
         await recordAttempt(input.db, job, metrics, null, "reused");
+        return;
+      }
+      // Another reader's build of this sermon and length is under way: wait for it, then copy it.
+      if (!reusable && await buildUnderWay(input.db, { ...context.generation, sermonId: context.plan.sermonId })) {
+        await lookAgainSoon(input.db, job.id, workerId);
         return;
       }
 
@@ -176,15 +187,10 @@ export function createGenerationWorker(input: {
         .where(eq(sermonTranscriptSegments.sermonId, context.sermon.id))
         .orderBy(asc(sermonTranscriptSegments.sequence));
       if (transcriptRows.length === 0) {
-        const transcript = await input.transcripts.fetch({
-          externalId: context.sermon.externalId,
-          canonicalUrl: context.sermon.canonicalUrl,
-          title: context.sermon.title,
-          church: context.sermon.churchOrChannel,
-        });
         await input.db.transaction(async (tx) => {
-          // Concurrent plans for one sermon must reuse one complete transcript,
-          // rather than interleaving segments from separate provider responses.
+          // Plans for one sermon built at once fetch its transcript once: the
+          // first takes the sermon's lock and fetches, and the rest wait for it
+          // and find the transcript saved.
           await tx
             .select({ id: sermonSources.id })
             .from(sermonSources)
@@ -196,6 +202,12 @@ export function createGenerationWorker(input: {
             .where(eq(sermonTranscriptSegments.sermonId, context.sermon.id))
             .limit(1);
           if (existing.length > 0) return;
+          const transcript = await input.transcripts.fetch({
+            externalId: context.sermon.externalId,
+            canonicalUrl: context.sermon.canonicalUrl,
+            title: context.sermon.title,
+            church: context.sermon.churchOrChannel,
+          });
           for (const [index, segment] of transcript.segments.entries()) {
             await tx.insert(sermonTranscriptSegments).values({
               sermonId: context.sermon.id,
@@ -253,6 +265,7 @@ export function createGenerationWorker(input: {
           await tracker.observe(event).catch(() => undefined);
         },
         checkpoint: generationCheckpoint(input.db, context.generation.id),
+        inventory: sermonInventory(input.db, { id: context.generation.id, sermonId: context.plan.sermonId, userId: context.generation.userId }),
       };
       let generated: GeneratedPlan;
       if (reusable && input.generator.addQuickChecks) {
@@ -270,6 +283,7 @@ export function createGenerationWorker(input: {
         verified,
         job.id,
         workerId,
+        await title,
       );
       await recordAttempt(input.db, job, metrics, null);
     } catch (cause) {
@@ -303,6 +317,8 @@ async function persistGeneratedPlan(
   generated: GeneratedPlan,
   jobId: string,
   workerId: string,
+  /** The sermon's own title, or its video's: plans never carry a title the model wrote. */
+  title: string,
 ): Promise<void> {
   const now = new Date();
   await db.transaction(async (tx) => {
@@ -353,10 +369,10 @@ async function persistGeneratedPlan(
           readingTitle: day.readingTitle,
           focus: day.focus,
           readingParagraphs: day.readingParagraphs,
-          sermonQuote: day.sermonQuote,
           clipStartSeconds: day.clipStartSeconds,
           clipEndSeconds: day.clipEndSeconds,
           supportingScriptures: day.supportingScriptures,
+          journey: day.journey,
           scriptureReferenceId: scripture.id,
         })
         .returning();
@@ -408,7 +424,7 @@ async function persistGeneratedPlan(
 
     await tx
       .update(plans)
-      .set({ title: generated.title, about: generated.about, readyAt: now, updatedAt: now })
+      .set({ title, about: generated.about, speakerName: generated.speakerName, formation: generated.formation, readyAt: now, updatedAt: now })
       .where(eq(plans.id, planId));
     await tx
       .update(planGenerations)
@@ -417,6 +433,7 @@ async function persistGeneratedPlan(
         progress: 100,
         generatorVersion: generated.generator.version,
         promptVersion: generated.generator.promptVersion,
+        notes: generated.notes,
         modelProvider: generated.generator.provider,
         modelName: generated.generator.model,
         errorCode: null,

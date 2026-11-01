@@ -1,36 +1,31 @@
-import type { SharedValue } from "react-native-reanimated";
-
-import { useObjectMaps, MAP_BOX } from "../hooks/use-object-maps";
-import type { IdealObject as IdealObjectData } from "../logic/formation-ideal";
-import { LitObject } from "./LitObject";
+import { Image, type SkImage } from "@shopify/react-native-skia";
 
 export type IdealObjectProps = {
-  object: IdealObjectData;
   cx: number;
   cy: number;
+  /** Its width on the board. */
   diameter: number;
-  /** Toward the light where it is now, as it moves (`lightAt`); still, its own station's. */
-  light?: SharedValue<number[]>;
+  /** Its artwork (`useFacultyArt`); nothing is drawn until it's ready. */
+  image: SkImage | null;
 };
 
 /**
- * One of vIdeal's objects — a cream ceramic dome, a red puck, the red ball,
- * the stone heart — drawn as the one light falls on its shape and the
- * symbol set into it (`LitObject`), from maps made once for its size.
+ * One of the board's objects — each faculty's — drawn as its artwork, its
+ * own width across and its own shape tall, centred on its place. The art
+ * carries its own light, from the upper right as the board's is; its shadow
+ * is drawn beneath it from its outline (`ShadowCopy`).
  */
-export function IdealObject({ object, cx, cy, diameter, light }: IdealObjectProps) {
-  const r = diameter / 2;
-  const maps = useObjectMaps(object, r);
-  if (!maps) return null;
+export function IdealObject({ cx, cy, diameter, image }: IdealObjectProps) {
+  if (!image) return null;
+  const height = (diameter * image.height()) / image.width();
   return (
-    <LitObject
-      object={object}
-      cx={cx}
-      cy={cy}
-      r={r}
-      box={r * MAP_BOX * 2}
-      maps={maps}
-      {...(light && { light })}
+    <Image
+      image={image}
+      x={cx - diameter / 2}
+      y={cy - height / 2}
+      width={diameter}
+      height={height}
+      fit="fill"
     />
   );
 }

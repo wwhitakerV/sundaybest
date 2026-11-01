@@ -138,7 +138,14 @@ export const sermonSources = pgTable(
     platform: sermonPlatformEnum("platform").notNull().default("youtube"),
     externalId: text("external_id").notNull(),
     canonicalUrl: text("canonical_url").notNull(),
+    /** The video's title on YouTube, as it is. */
     title: text("title").notNull(),
+    /** The sermon's own title, found in `title` by the title step; null until titled. */
+    displayTitle: text("display_title"),
+    series: text("series"),
+    seriesPart: text("series_part"),
+    /** The title step's version that found them: another version titles the sermon again. */
+    titledVersion: text("titled_version"),
     churchOrChannel: text("church_or_channel"),
     thumbnailUrl: text("thumbnail_url"),
     thumbnailColors: jsonb("thumbnail_colors").$type<string[]>().notNull().default([]),
@@ -175,6 +182,25 @@ export const sermonTranscriptSegments = pgTable(
     uniqueIndex("transcript_sermon_sequence_uidx").on(t.sermonId, t.sequence),
     index("transcript_sermon_idx").on(t.sermonId),
   ],
+);
+
+/**
+ * What the plan step found in a sermon whatever the plan's length — its
+ * title, speaker, points and About this plan — so its other lengths only
+ * divide the points into days. One per sermon and prompt; parsed on read.
+ */
+export const sermonInventories = pgTable(
+  "sermon_inventories",
+  {
+    sermonId: uuid("sermon_id").notNull().references(() => sermonSources.id, { onDelete: "cascade" }),
+    generatorVersion: text("generator_version").notNull(),
+    promptVersion: text("prompt_version").notNull(),
+    /** How many points it holds: a plan may have at most this many days from it. */
+    pointCount: integer("point_count").notNull(),
+    inventory: jsonb("inventory").$type<unknown>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.sermonId, t.generatorVersion, t.promptVersion] })],
 );
 
 export const scriptureReferences = pgTable(
@@ -215,6 +241,10 @@ export const plans = pgTable(
     quickCheckEnabled: boolean("quick_check_enabled").notNull(),
     /** About This Plan; null for plans generated before it existed. Parsed on read. */
     about: jsonb("about").$type<unknown>(),
+    /** The preacher, as the sermon or its video names them; null when neither does. */
+    speakerName: text("speaker_name"),
+    /** Every point the sermon makes; null for plans written before the inventory. Parsed on read. */
+    formation: jsonb("formation").$type<unknown>(),
     contentVersion: integer("content_version").notNull().default(1),
     readyAt: timestamp("ready_at", { withTimezone: true, mode: "date" }),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
@@ -258,6 +288,8 @@ export const planGenerations = pgTable(
     dismissedAt: timestamp("dismissed_at", { withTimezone: true, mode: "date" }),
     generatorVersion: text("generator_version"),
     promptVersion: text("prompt_version"),
+    /** What the generation repaired or let stand, for the development review; never shown to readers. */
+    notes: jsonb("notes").$type<string[]>().notNull().default([]),
     modelProvider: text("model_provider"),
     modelName: text("model_name"),
     errorCode: text("error_code"),
@@ -347,11 +379,12 @@ export const planDays = pgTable(
     // Plain strings for plans written before Read headings, never rewritten;
     // `{ heading, content }` for every plan since.
     readingParagraphs: jsonb("reading_paragraphs").$type<StoredReadingParagraph[]>().notNull(),
-    sermonQuote: text("sermon_quote"),
     clipStartSeconds: integer("clip_start_seconds"),
     clipEndSeconds: integer("clip_end_seconds"),
     /** SundayBest-chosen Scripture supporting the day ("Dive deeper"); parsed on read. */
     supportingScriptures: jsonb("supporting_scriptures").$type<unknown>().notNull().default([]),
+    /** The day's share of the sermon and its six faculties; null for days written before them. Parsed on read. */
+    journey: jsonb("journey").$type<unknown>(),
     scriptureReferenceId: uuid("scripture_reference_id").notNull().references(() => scriptureReferences.id),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),

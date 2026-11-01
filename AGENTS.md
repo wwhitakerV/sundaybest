@@ -36,6 +36,7 @@ before writing any code. Assume anything you remember about Expo is out of date.
 | `npm run render:intro`                    | Remakes the launch intro's movie from its prototype          |
 | `npm run build:verses`                    | Rebuilds Home's verse of the day from its list and the Bible |
 | `npm run build:formation`                 | Lifts Formation's pathway artworks onto white                |
+| `npm run build:formation-icons`           | Copies Formation's lucide icons into the app as path data    |
 | `/update-report`                          | Re-audits the setup series into `Before-You-Start.html`      |
 
 Install Expo SDK packages with `npx expo install`. Pin exact versions (no `^`,

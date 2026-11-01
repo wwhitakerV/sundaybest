@@ -3,6 +3,7 @@ import { Canvas, Group } from "@shopify/react-native-skia";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 
 import { FORMATION_PAPER } from "@/theme";
+import { artOf, useFacultyArt } from "../hooks/use-faculty-art";
 import { IDEAL_OBJECTS } from "../logic/formation-ideal";
 import { sketchOf } from "../logic/formation-sketch";
 import { placesAt, type HeadingBand } from "../logic/formation-track";
@@ -54,6 +55,7 @@ export function FormationTrackBoard({
     [accent],
   );
   const motion = { shown, drawIn };
+  const art = useFacultyArt();
   return (
     <Canvas testID={testID} style={{ width, height }} pointerEvents="none">
       <Group transform={[{ translateY: top }]}>
@@ -74,10 +76,22 @@ export function FormationTrackBoard({
           />
         ))}
         {IDEAL_OBJECTS.map((object, i) => (
-          <TrackShadow key={`shadow-${object.id}`} index={i} places={places} width={width} />
+          <TrackShadow
+            key={`shadow-${object.id}`}
+            index={i}
+            places={places}
+            width={width}
+            image={artOf(art, object.id)}
+          />
         ))}
         {IDEAL_OBJECTS.map((object, i) => (
-          <TrackObject key={object.id} index={i} places={places} width={width} />
+          <TrackObject
+            key={object.id}
+            index={i}
+            places={places}
+            width={width}
+            image={artOf(art, object.id)}
+          />
         ))}
       </Group>
     </Canvas>

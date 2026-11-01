@@ -12,7 +12,6 @@ test("rejects quiz questions with multiple correct answers", () => {
         dayNumber: 1,
         readingTitle: "Day 1",
         readingParagraphs: [{ heading: "Heading", content: "Text" }],
-        sermonQuote: null,
         clipStartSeconds: null,
         clipEndSeconds: null,
         scripture: { book: "John", chapter: 1, verseStart: 1, verseEnd: 1, reference: "John 1:1" },

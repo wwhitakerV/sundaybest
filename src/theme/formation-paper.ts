@@ -44,7 +44,7 @@ export type FormationMaterial = {
 export const FORMATION_MATERIALS = {
   ceramic: { light: "#F8F4ED", body: "#F8F5F1", shade: "#CDBEA8", deep: "#8E7A60", rim: "#FDFBF7" },
   red: { light: "#E5382A", body: "#DA2620", shade: "#B40103", deep: "#7C0102", rim: "#FD603B" },
-  stone: { light: "#F1ECE3", body: "#F1EEE9", shade: "#A8957C", deep: "#7A6449", rim: "#F7F3EC" },
+  stone: { light: "#EEE8DE", body: "#EFE9DF", shade: "#B8AB99", deep: "#7A6449", rim: "#F9F6F1" },
 } as const satisfies Record<string, FormationMaterial>;
 
 /** What's set into a face: a red recess's floor, its check's white, and the pearl in the red eye. */
@@ -53,10 +53,29 @@ export const FORMATION_INLAY = {
   check: "#F4EEE8",
   pearl: "#F0C8B8",
   ceramicInk: "#6C5945",
-  /** A stone's chalk bloom: the pure white patches where it's powdery, or worn clean. */
-  stoneBloom: "#FFFFFF",
-  /** The grime a stone gathers in its creases, seams, chips and round its edge. */
-  stoneGrime: "#6E6152",
+  /**
+   * The mouth's plaque: a warm satin cream a little darker than its dome's
+   * white, as the reference's is (its face about nine-tenths of the lit
+   * dome's brightness, and warmer), so its sheen and rim show on it.
+   */
+  plaque: "#E6DACA",
+  /** The linen's threads on a face that mustn't warm (the eye's): a neutral grey, as dark as the ceramic's deep. */
+  linenNeutral: "#7E7E7D",
+  /**
+   * A stone's patches of tone, measured off its reference — cream where it's
+   * chalky or worn clean, putty, and a dusky grey-brown — then each taken a
+   * third of the way to white and cooled, as its body is, so it sits with
+   * the ceramics.
+   */
+  stoneCream: "#F5F1EA",
+  stonePutty: "#E0D7CC",
+  stoneDusk: "#CBC1B6",
+  /** The grime a stone gathers in its creases, seams, chips and round its edge: a warm taupe-brown. */
+  stoneGrime: "#6A523A",
+  /** The orange-red flecks in a stone. */
+  stoneFleck: "#E0452A",
+  /** The near-black grime in a red ball's cracks, chips and pocks. */
+  redGrime: "#2A0806",
 } as const;
 
 /** The light theme, laid on Formation's paper: the page and everything set on it — the tab bar too. */

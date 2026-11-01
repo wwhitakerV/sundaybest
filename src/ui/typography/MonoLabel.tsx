@@ -9,7 +9,8 @@ export type MonoLabelVariant =
   | "dayStrip"
   | "headerDate"
   | "emphasis"
-  | "kicker";
+  | "kicker"
+  | "folio";
 
 export type MonoLabelProps = TypographyProps & { variant?: MonoLabelVariant };
 
@@ -31,6 +32,8 @@ function typeFor(typography: Theme["typography"], variant: MonoLabelVariant) {
       return typography.metaEmphasis;
     case "kicker":
       return typography.kicker;
+    case "folio":
+      return typography.folioMeta;
   }
 }
 

@@ -76,6 +76,8 @@ export const aSermon = defineFactory<z.infer<typeof sermonSummarySchema>>(() => 
   externalId: "vNoO3YQAPNM",
   canonicalUrl: "https://www.youtube.com/watch?v=vNoO3YQAPNM",
   title: "Break free from the grip of temptation",
+  series: null,
+  part: null,
   church: "Philip Anthony Mitchell",
   thumbnailUrl: null,
   thumbnailColors: [],

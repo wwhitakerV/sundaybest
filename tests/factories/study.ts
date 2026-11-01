@@ -12,7 +12,6 @@ export function studyDayContent(): StudyDayContent {
     reading: {
       title: "Grace is received",
       paragraphs: [{ heading: "Grace First", content: "Read this." }],
-      sermonQuote: null,
       sermonClip: null,
     },
     scripture: {

@@ -96,7 +96,12 @@ they survive an account restore; it does not need a push scheduler yet.
 - `platform text not null check (platform = 'youtube')` for launch
 - `external_id text not null`
 - `canonical_url text not null`
-- `title text not null`
+- `title text not null` — the video's title on YouTube, as it is
+- `display_title text null` — the sermon's own title, found in `title` by the
+  title step (the video title's words, in Title Case); the API sends it as
+  `title` once found
+- `series text null`, `series_part text null` — sent as `series` and `part`
+- `titled_version text null` — reset with the three above when `title` changes
 - `church_or_channel text null`
 - `thumbnail_url text null`
 - `thumbnail_colors jsonb not null default '[]'`
@@ -170,7 +175,6 @@ shared plan content.
 - `reading_paragraphs jsonb not null` — `{ heading, content }[]`; plans written
   before Read headings keep plain strings, never rewritten, and the API sends
   them as `{ heading: null, content }`
-- `sermon_quote text null`
 - `clip_start_seconds integer null`
 - `clip_end_seconds integer null`
 - `scripture_reference_id uuid not null`

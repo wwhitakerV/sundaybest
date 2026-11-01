@@ -1,7 +1,8 @@
 /**
  * The page that manages our plans (`GET /dev/admin`, development only): one
  * plain HTML document, its styles and script inline, talking to
- * `/dev/admin/samples` on the same server.
+ * `/dev/admin/samples` on the same server — and listing recent plans, each
+ * opening its review (`/dev/admin/review`).
  */
 export const DEV_ADMIN_PAGE = `<!doctype html>
 <html lang="en">
@@ -37,6 +38,9 @@ export const DEV_ADMIN_PAGE = `<!doctype html>
   .state.generating { color: var(--muted); }
   .state.failed { color: var(--red); }
   .empty { color: var(--muted); padding: 20px 0; }
+  #recent li { grid-template-columns: 1fr auto; }
+  a.review { font-weight: 600; font-size: 14px; color: var(--ink); }
+  a.video { font-size: 13px; color: var(--red); }
   @media (max-width: 640px) { form { grid-template-columns: 1fr 1fr; } form input[type=url] { grid-column: 1 / -1; } }
 </style>
 </head>
@@ -60,6 +64,9 @@ export const DEV_ADMIN_PAGE = `<!doctype html>
 
   <h2>Ours</h2>
   <ul id="list"><li class="empty">Loading…</li></ul>
+
+  <h2>Recent plans · review</h2>
+  <ul id="recent"><li class="empty">Loading…</li></ul>
 </main>
 <script>
   const list = document.getElementById("list");
@@ -84,7 +91,8 @@ export const DEV_ADMIN_PAGE = `<!doctype html>
     const title = Object.assign(document.createElement("div"), { className: "title", textContent: sample.title });
     const meta = Object.assign(document.createElement("div"), { className: "meta", textContent: [sample.church, sample.lengthDays + (sample.lengthDays === 1 ? " day" : " days")].filter(Boolean).join(" · ") });
     const state = Object.assign(document.createElement("div"), { className: "state " + sample.state, textContent: describe(sample) });
-    words.append(title, meta, state);
+    words.append(title, meta, videoLink(sample.url), state);
+    if (sample.state === "ready") words.append(reviewLink(sample.id));
     const remove = Object.assign(document.createElement("button"), { className: "remove", textContent: "Remove", type: "button" });
     remove.addEventListener("click", async () => {
       if (!confirm("Take \\u201c" + sample.title + "\\u201d out of \\u201cTry one of ours\\u201d? Anyone already studying it keeps it.")) return;
@@ -94,6 +102,33 @@ export const DEV_ADMIN_PAGE = `<!doctype html>
     });
     item.append(art, words, remove);
     return item;
+  }
+
+  /** The sermon on YouTube, in a new tab. */
+  function videoLink(url) {
+    return Object.assign(document.createElement("a"), { className: "video", href: url, target: "_blank", rel: "noopener", textContent: url });
+  }
+
+  function reviewLink(planId) {
+    return Object.assign(document.createElement("a"), { className: "review", href: "/dev/admin/review?plan=" + planId, textContent: "Review" });
+  }
+
+  async function loadRecent() {
+    try {
+      const { plans } = await request("GET", "/dev/admin/plans");
+      const recent = document.getElementById("recent");
+      recent.replaceChildren(...(plans.length ? plans.map((plan) => {
+        const item = document.createElement("li");
+        const words = document.createElement("div");
+        words.append(
+          Object.assign(document.createElement("div"), { className: "title", textContent: plan.title }),
+          Object.assign(document.createElement("div"), { className: "meta", textContent: [plan.church, plan.lengthDays + (plan.lengthDays === 1 ? " day" : " days"), plan.state].filter(Boolean).join(" · ") }),
+          videoLink(plan.url),
+        );
+        item.append(words, plan.state === "ready" ? reviewLink(plan.id) : document.createElement("span"));
+        return item;
+      }) : [Object.assign(document.createElement("li"), { className: "empty", textContent: "No plans yet." })]));
+    } catch (error) { say(error.message, true); }
   }
 
   async function load() {
@@ -124,6 +159,7 @@ export const DEV_ADMIN_PAGE = `<!doctype html>
   });
 
   load();
+  loadRecent();
 </script>
 </body>
 </html>`;

@@ -37,7 +37,6 @@ const RECORDS = makeDayRecords(PLAN_TEMPTATION, BUILT_AT, MOCK_SETTINGS.bibleTra
     "Jesus doesn't invite the strong and the finished. He invites the weary and the burdened.",
     "His yoke isn't the absence of work; it's work shared with Someone stronger, who is gentle with us.",
   ],
-  sermonQuote: "A yoke isn't the absence of work. It's work shared with someone stronger.",
   sermonClip: { startSeconds: 734, endSeconds: 850 },
   passage: {
     reference: "Matthew 11:28–30",

@@ -7,7 +7,7 @@ import { ObjectAlbedo } from "../components/ObjectAlbedo";
 import { ObjectHeight } from "../components/ObjectHeight";
 import type { IdealObject } from "../logic/formation-ideal";
 
-/** The square an object's maps cover, of its diameter: room for its heart's lobes and soft edges. */
+/** The square an object's maps cover, of its diameter: room for a sculpt's corners and soft edges. */
 export const MAP_BOX = 1.15;
 
 /** Maps already made, by object and size: each is made once. */

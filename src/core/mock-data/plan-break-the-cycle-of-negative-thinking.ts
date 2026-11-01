@@ -66,7 +66,6 @@ const WRITTEN: Written[] = [
       "Paul doesn't say give thanks for everything that happens. He says give thanks in it — in every circumstance.",
       "Gratitude isn't pretending things are fine. It's remembering God is present in them.",
     ],
-    sermonQuote: "Paul says give thanks in all circumstances, not for all of them.",
     sermonClip: { startSeconds: 288, endSeconds: 402 },
     passage: {
       reference: "1 Thessalonians 5:16–18",
@@ -94,7 +93,6 @@ const WRITTEN: Written[] = [
       "The psalm's way into God's presence starts at the gate, with thanks.",
       "Thanksgiving turns our attention from what we lack to who He is.",
     ],
-    sermonQuote: "Thanksgiving is the front door. You don't sneak into worship through the side.",
     sermonClip: { startSeconds: 540, endSeconds: 640 },
     passage: {
       reference: "Psalm 100:4",
@@ -120,7 +118,6 @@ const WRITTEN: Written[] = [
       "Paul pairs every request with thanksgiving. Worry and gratitude find it hard to share a room.",
       "The promise isn't that every problem disappears, but that peace will guard us in it.",
     ],
-    sermonQuote: "Gratitude is not a feeling you wait for. It's a practice you choose.",
     sermonClip: { startSeconds: 905, endSeconds: 1_020 },
     passage: {
       reference: "Philippians 4:6–7",
@@ -151,7 +148,6 @@ const WRITTEN: Written[] = [
       "The simplest reason to give thanks is the most solid one: God is good, and His love doesn't run out.",
       "Our circumstances change. His character doesn't.",
     ],
-    sermonQuote: "Start with who He is. That never needs updating.",
     sermonClip: { startSeconds: 1_110, endSeconds: 1_190 },
     passage: {
       reference: "Psalm 107:1",
@@ -178,7 +174,6 @@ const WRITTEN: Written[] = [
       "Lamentations is written from the rubble, yet it finds mercy that's new each morning.",
       "Yesterday's failures don't use up today's compassion.",
     ],
-    sermonQuote: "His mercy doesn't carry over a balance. It's new every morning.",
     sermonClip: { startSeconds: 1_260, endSeconds: 1_350 },
     passage: {
       reference: "Lamentations 3:22–23",
@@ -205,7 +200,6 @@ const WRITTEN: Written[] = [
       "James traces every good thing back to its source. Nothing good is an accident.",
       "Gratitude connects the gift to the Giver.",
     ],
-    sermonQuote: "Every good thing in your life has a return address.",
     sermonClip: { startSeconds: 1_420, endSeconds: 1_500 },
     passage: {
       reference: "James 1:17",
@@ -231,7 +225,6 @@ const WRITTEN: Written[] = [
       "Ten men were healed. One came back to say thank you — and Jesus noticed.",
       "Gratitude is turning around to find the One who helped us.",
     ],
-    sermonQuote: "Ten were healed, and one came back. That's the one I want to be.",
     sermonClip: { startSeconds: 1_530, endSeconds: 1_640 },
     passage: {
       reference: "Luke 17:15–16",

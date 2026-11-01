@@ -96,7 +96,7 @@ store's selectors.
 
 `storage/database/` is the SQLCipher-encrypted local database: a narrow
 `Database` port, the `expo-sqlite` adapter that keys it, and a forward-only
-migration runner (`migrations.ts`, running the list in `migration-list.ts`). Its key is provisioned by
+migration runner (`migrations.ts`, running the list in `migration-list.ts`, its device-only tables from 5 on in `device-migrations.ts`). Its key is provisioned by
 `security/database-key`, so the adapter is handed a key and never learns where it
 came from.
 

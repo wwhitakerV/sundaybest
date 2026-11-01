@@ -5,29 +5,34 @@ import type { BibleProvider } from "../providers/bible-provider.js";
 import type { PlanGenerationInput } from "../providers/plan-generation-provider.js";
 import { sourceContext } from "./prompts/context.js";
 import { DAY_INSTRUCTIONS, dayTask } from "./prompts/day.js";
+import { FORMATION_INSTRUCTIONS, formationTask } from "./prompts/formation.js";
 import { OUTLINE_INSTRUCTIONS, outlineTask } from "./prompts/outline.js";
+import { PLAN_DAYS_INSTRUCTIONS, planDaysTask } from "./prompts/plan-days.js";
 import { QUIZ_INSTRUCTIONS, quizTask } from "./prompts/quiz.js";
-import { selectInstructions } from "./prompts/custom.js";
 import { GENERATOR_VERSION, PROMPT_VERSION } from "./prompts/version.js";
 import { generatedPlanSchema, type GeneratedPlan, type GeneratedQuestion } from "./schema.js";
 import { namedChapters } from "./scripture.js";
-import { assertPassageReads, readsInEveryBundledTranslation } from "./scripture-text.js";
+import { dayClips } from "./day-clip.js";
+import { assertPassageReads } from "./scripture-text.js";
 import { dayContentSchema, dayOutputSchema, mapDay, type DayContent } from "./stages/day.js";
-import { mapOutline, outlineOutputSchema, outlineSchema, type Outline, type OutlineDay } from "./stages/outline.js";
+import { formationContentSchema, formationOutputSchema, mapFormation, type FormationContent } from "./stages/formation.js";
+import { mapOutline, outlineOutputSchema, outlineSchema, sermonInventorySchema, type Outline, type OutlineDay, type SermonInventory } from "./stages/outline.js";
+import { mapPlanDays, planDaysOutputSchema } from "./stages/plan-days.js";
 import { QUICK_CHECK_MIN, mapQuiz, quizContentSchema, quizOutputSchema, type PassageText, type QuizContent } from "./stages/quiz.js";
 import { stepRunner, type PipelineDeps, type StepRunner } from "./step-runner.js";
 import { normalizeSourceText } from "./transcript.js";
 import { validatePlanStructure } from "./validation.js";
 import type { ReadingParagraph } from "./reading.js";
 
-export type { PipelineDeps, StageCaller, StageEvent, StageKind, StageRequest, StageResponse, StepCheckpoint } from "./step-runner.js";
+export type { InventoryStore, PipelineDeps, StageCaller, StageEvent, StageKind, StageRequest, StageResponse, StepCheckpoint } from "./step-runner.js";
 
 /**
- * Writes a plan in three steps so each gets the model's full attention: the
- * plan (title, About this plan, each day's passage), then each day's study in
- * parallel, then each day's quiz from that day's finished reading. Every step's
- * output is verified before the next uses it, and steps an earlier run finished
- * are reused.
+ * Writes a plan in steps so each gets the model's full attention: the plan
+ * (title, About this plan, the sermon's points, each day's passages and
+ * points), then each day's study and every day's six faculties in parallel,
+ * then each day's quiz from that day's finished reading. Every step's output
+ * is verified before the next uses it, and steps an earlier run finished are
+ * reused.
  */
 export async function generateStagedPlan(input: PlanGenerationInput, deps: PipelineDeps): Promise<GeneratedPlan> {
   // A day may only study a chapter the sermon names: list them for the model,
@@ -35,41 +40,72 @@ export async function generateStagedPlan(input: PlanGenerationInput, deps: Pipel
   const chapters = namedChapters(sourceText(input));
   if (chapters.length === 0) throw new AppError("INTERNAL", "The sermon names no chapter of Scripture to study", { permanent: true });
   const run = runner(input, deps);
+  const readable = async (outline: Outline) => {
+    for (const day of outline.days) {
+      await assertPassageReads(day.scripture, deps.bible);
+      for (const passage of day.alsoReferenced) {
+        if (passage.verseStart !== null && passage.verseEnd !== null) await assertPassageReads({ ...passage, verseStart: passage.verseStart, verseEnd: passage.verseEnd }, deps.bible);
+      }
+    }
+    return outline;
+  };
 
-  const outline = await run.step({
-    kind: "outline", stage: "plan", key: "plan", resumable: true, instructions: selectInstructions("outline", OUTLINE_INSTRUCTIONS),
-    task: (rejected) => outlineTask(input, chapters, rejected), schema: outlineOutputSchema, schemaName: "sundaybest_plan", saved: outlineSchema,
-    map: async (raw) => {
-      const mapped = mapOutline(raw, input);
-      for (const day of mapped.days) await assertPassageReads(day.scripture, deps.bible);
-      return mapped;
-    },
-  });
+  // Another length of a sermon whose points are kept only divides them into
+  // days. Both are saved as the plan step, so a re-run resumes either.
+  const kept = await keptInventory(input, deps);
+  const outline = await run.step(kept
+    ? {
+      kind: "outline", stage: "plan", key: "plan", resumable: true, instructions: PLAN_DAYS_INSTRUCTIONS,
+      task: (rejected) => planDaysTask(input, kept, chapters, rejected), schema: planDaysOutputSchema, schemaName: "sundaybest_plan_days", saved: outlineSchema,
+      ...LIMITS.step, map: (raw) => readable(mapPlanDays(raw, input, kept)),
+    }
+    : {
+      kind: "outline", stage: "plan", key: "plan", resumable: true, instructions: OUTLINE_INSTRUCTIONS,
+      task: (rejected) => outlineTask(input, chapters, rejected), schema: outlineOutputSchema, schemaName: "sundaybest_plan", saved: outlineSchema,
+      ...LIMITS.plan, map: (raw) => readable(mapOutline(raw, input)),
+    });
 
   // Days and quizzes are saved under what they were written from, so a new
   // outline never picks up days written for an old one.
   const outlineMark = fingerprint(outline);
   const writeDay = (day: OutlineDay, avoid: readonly string[]) => run.step({
     kind: "day", stage: `day ${day.dayNumber}`, key: `day ${day.dayNumber}@${outlineMark}`, resumable: avoid.length === 0,
-    instructions: selectInstructions("day", DAY_INSTRUCTIONS), task: (rejected) => dayTask(input, outline, day, avoid, rejected),
-    schema: dayOutputSchema, schemaName: "sundaybest_day", saved: dayContentSchema,
-    map: async (raw) => {
-      const content = mapDay(raw, input, day, outline);
-      const supportingScriptures = [];
-      for (const passage of content.supportingScriptures) {
-        if (await readsInEveryBundledTranslation(passage.reference, deps.bible)) supportingScriptures.push(passage);
-      }
-      return { ...content, reflections: unseen(content.reflections, avoid, "reflections", day), supportingScriptures };
+    instructions: DAY_INSTRUCTIONS, task: (rejected) => dayTask(input, outline, day, avoid, rejected),
+    schema: dayOutputSchema, schemaName: "sundaybest_day", saved: dayContentSchema, ...LIMITS.step,
+    map: (raw, attempt) => {
+      const content = mapDay(raw, input, day, outline, attempt);
+      return { ...content, reflections: unseen(content.reflections, avoid, "reflections", day) };
     },
   });
-  const drafts = await Promise.all(outline.days.map((day) => writeDay(day, [])));
-  const contents = await keepDistinct(outline.days, drafts, (content) => content.reflections,
-    (content, reflections) => ({ ...content, reflections }), 1, writeDay);
+  // Each day's faculties on their own, alongside the days: each day has its own points, so
+  // no two days repeat each other, and a day that needs another try costs only itself.
+  const writeFaculties = (day: OutlineDay) => run.step({
+    kind: "formation", stage: `faculties ${day.dayNumber}`, key: `faculties ${day.dayNumber}@${outlineMark}`, resumable: true,
+    instructions: FORMATION_INSTRUCTIONS, task: (rejected) => formationTask(input, outline, day, rejected),
+    schema: formationOutputSchema, schemaName: "sundaybest_faculties", saved: formationContentSchema, ...LIMITS.step,
+    map: (raw, attempt) => mapFormation(raw, input, outline, day, attempt),
+  });
+  // The quizzes follow the days they test, never the faculties.
+  const studies = (async () => {
+    const drafts = await Promise.all(outline.days.map((day) => writeDay(day, [])));
+    const contents = await keepDistinct(outline.days, drafts, (content) => content.reflections,
+      (content, reflections) => ({ ...content, reflections }), 1, writeDay);
+    const quizzes = input.quickCheckEnabled
+      ? await writeQuizzes(input, outline.days, contents.map((content) => content.readingParagraphs), run, deps.bible)
+      : outline.days.map(() => null);
+    return { contents, quizzes };
+  })();
+  const [{ contents, quizzes }, formation] = await Promise.all([studies, Promise.all(outline.days.map(writeFaculties))]);
+  const plan = assemble(input, outline, contents, formation, quizzes, run.model());
+  // Kept only from a finished plan; keeping them only speeds up the sermon's other lengths, so a failed save never fails the plan.
+  if (!kept) await deps.inventory?.save(sermonInventorySchema.parse(outline)).catch(() => undefined);
+  return plan;
+}
 
-  const quizzes = input.quickCheckEnabled
-    ? await writeQuizzes(input, outline.days, contents.map((content) => content.readingParagraphs), run, deps.bible)
-    : outline.days.map(() => null);
-  return assemble(input, outline, contents, quizzes, run.model());
+/** The sermon's kept points, when there are at least as many as the plan has days; otherwise the plan step finds them fresh. */
+async function keptInventory(input: PlanGenerationInput, deps: PipelineDeps): Promise<SermonInventory | null> {
+  const loaded = sermonInventorySchema.safeParse(await deps.inventory?.load().catch(() => null));
+  return loaded.success && loaded.data.points.length >= input.lengthDays ? loaded.data : null;
 }
 
 /**
@@ -77,12 +113,22 @@ export async function generateStagedPlan(input: PlanGenerationInput, deps: Pipel
  * as they are: a reused plan needs only its quizzes written.
  */
 export async function addStagedQuickChecks(input: PlanGenerationInput, plan: GeneratedPlan, deps: PipelineDeps): Promise<GeneratedPlan> {
-  const days = plan.days.map((day): OutlineDay => ({ dayNumber: day.dayNumber, title: day.readingTitle, focus: day.focus ?? day.readingTitle, scripture: day.scripture }));
+  const days = plan.days.map((day): OutlineDay => ({ dayNumber: day.dayNumber, title: day.readingTitle, focus: day.focus ?? day.readingTitle, scripture: day.scripture,
+    pointIds: day.journey?.pointIds ?? [], alsoReferenced: day.journey?.alsoReferenced ?? [] }));
   const quizzes = await writeQuizzes(input, days, plan.days.map((day) => day.readingParagraphs), runner(input, deps), deps.bible);
   const withQuizzes = { ...plan, days: plan.days.map((day, index) => ({ ...day, quickCheck: quizzes[index]! })) };
   validatePlanStructure(withQuizzes, input);
   return withQuizzes;
 }
+
+/**
+ * What each call may take: as many tokens as it may write, reasoning
+ * included, and as long as it may run — each well over what it normally takes
+ * (the plan about 6,000 tokens and 40 seconds, a day, its faculties or a quiz
+ * about 2,000 and 20), so only a runaway or stuck call is cut off, and tried
+ * again, in a minute or two rather than three.
+ */
+const LIMITS = { plan: { maxTokens: 16_000, timeoutMs: 150_000 }, step: { maxTokens: 8_000, timeoutMs: 90_000 } };
 
 function runner(input: PlanGenerationInput, deps: PipelineDeps): StepRunner {
   return stepRunner(sourceContext(input), `sermon:${input.sermon.externalId}`, deps);
@@ -102,10 +148,10 @@ async function writeQuizzes(input: PlanGenerationInput, days: readonly OutlineDa
     let kept: GeneratedQuestion[] = [];
     return run.step({
       kind: "quiz", stage: `quiz ${day.dayNumber}`, key: `quiz ${day.dayNumber}@${fingerprint([day.scripture, readings[index]])}`,
-      resumable: avoid.length === 0, instructions: selectInstructions("quiz", QUIZ_INSTRUCTIONS),
+      resumable: avoid.length === 0, instructions: QUIZ_INSTRUCTIONS,
       task: (rejected) => quizTask(day, readings[index]!, passages[index]!, [...avoid, ...kept.map((question) => question.prompt)],
         kept.length > 0 ? QUICK_CHECK_MIN - kept.length : null, rejected),
-      schema: quizOutputSchema, schemaName: "sundaybest_quiz", saved: quizContentSchema,
+      schema: quizOutputSchema, schemaName: "sundaybest_quiz", saved: quizContentSchema, ...LIMITS.step,
       map: (raw) => {
         const quiz = mapQuiz(raw, { input, day, passageText: passages[index]! }, kept);
         const questions = quiz.questions.filter((question) => !avoided.has(normalizeSourceText(question.prompt)));
@@ -179,21 +225,32 @@ function assemble(
   input: PlanGenerationInput,
   outline: Outline,
   contents: readonly DayContent[],
+  formation: readonly FormationContent[],
   quizzes: ReadonlyArray<QuizContent | null>,
   model: string | null,
 ): GeneratedPlan {
+  const clips = dayClips(outline, input);
   const plan = generatedPlanSchema.safeParse({
-    title: outline.title,
+    speakerName: outline.speakerName,
     generator: { version: GENERATOR_VERSION, promptVersion: PROMPT_VERSION, provider: "openai", model },
     about: outline.about,
-    days: outline.days.map((day, index) => ({
-      dayNumber: day.dayNumber,
-      readingTitle: day.title,
-      focus: day.focus,
-      scripture: day.scripture,
-      ...contents[index]!,
-      quickCheck: quizzes[index] ?? null,
-    })),
+    formation: { points: outline.points },
+    notes: [...outline.notes, ...contents.flatMap((content) => content.notes), ...formation.flatMap((day) => day.notes)],
+    days: outline.days.map((day, index) => {
+      const { readingPointIds, notes: _notes, ...content } = contents[index]!;
+      const faculties = formation[index]!;
+      return {
+        dayNumber: day.dayNumber,
+        readingTitle: day.title,
+        focus: day.focus,
+        scripture: day.scripture,
+        ...content,
+        ...clips[index]!,
+        supportingScriptures: [],
+        journey: { pointIds: day.pointIds, alsoReferenced: day.alsoReferenced, readingPointIds, faculties: faculties.faculties, ending: faculties.ending },
+        quickCheck: quizzes[index] ?? null,
+      };
+    }),
   });
   if (!plan.success) throw new AppError("INTERNAL", "The assembled plan failed domain validation");
   validatePlanStructure(plan.data, input);

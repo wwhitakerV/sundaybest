@@ -24,12 +24,13 @@ function Smear({ path, width, strength }: { path: string; width: number; strengt
 }
 
 /**
- * The grime it's gathered: round its edge, along its valleys' seams, and in
- * its cracks, creases, folds, chips and pits — with the tiny pocks over it.
+ * The grime it's gathered: round its edge, along its valleys' seams, a
+ * fine line of it along its crack and cuts and in its wedges, and in its
+ * creases, folds, chips and gouge — with the tiny specks over it.
  */
 export function StoneGrime({ wear }: { wear: StoneWear }) {
   const { edge, edgeStrength, line, lineStrength, seamStrength } = STONE.grime;
-  const lines = [...wear.cracks, ...wear.creases, ...wear.folds].map((l) => polyline(l));
+  const lines = [...wear.creases, ...wear.folds].map((l) => polyline(l));
   return (
     <>
       <Smear path={wear.outline} width={edge * 2} strength={edgeStrength} />
@@ -43,6 +44,30 @@ export function StoneGrime({ wear }: { wear: StoneWear }) {
             strength={seamStrength}
           />
         ))}
+      {wear.cracks.map((crack, i) => (
+        <Smear
+          key={`crack-${i}`}
+          path={polyline(crack)}
+          width={STONE.crack.grime.width}
+          strength={STONE.crack.grime.strength}
+        />
+      ))}
+      {wear.cuts.map((cut, i) => (
+        <Smear
+          key={`cut-${i}`}
+          path={polyline(cut)}
+          width={STONE.cuts.width * 1.6}
+          strength={STONE.cuts.grime}
+        />
+      ))}
+      {wear.wedges.map((wedge, i) => (
+        <Path
+          key={`wedge-${i}`}
+          path={polyline(wedge, true)}
+          color={withAlpha(FORMATION_INLAY.stoneGrime, STONE.wedges.grime)}
+          blendMode="srcATop"
+        />
+      ))}
       {lines.map((path, i) => (
         <Smear key={`line-${i}`} path={path} width={line} strength={lineStrength} />
       ))}
@@ -54,11 +79,11 @@ export function StoneGrime({ wear }: { wear: StoneWear }) {
           strength={lineStrength}
         />
       ))}
-      {wear.pits.map((pit, i) => (
+      {wear.gouges.map((g, i) => (
         <Path
-          key={`pit-${i}`}
-          path={polyline(pit, true)}
-          color={withAlpha(FORMATION_INLAY.stoneGrime, lineStrength * 1.5)}
+          key={`gouge-${i}`}
+          path={polyline(g, true)}
+          color={withAlpha(FORMATION_INLAY.stoneGrime, STONE.gouge.grime)}
           blendMode="srcATop"
         >
           <BlurMask blur={line / 3} style="normal" />

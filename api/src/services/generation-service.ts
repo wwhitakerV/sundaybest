@@ -82,7 +82,8 @@ export function createGenerationService(db: Database) {
           .values({
             ownerUserId: userId,
             sermonId: input.sermonId,
-            title: sermon[0]!.title,
+            // Its sermon's own title once found; the build sets it again when it publishes.
+            title: sermon[0]!.displayTitle ?? sermon[0]!.title,
             visibility: "private",
             lengthDays: input.lengthDays,
             quickCheckEnabled: input.quickCheckEnabled,

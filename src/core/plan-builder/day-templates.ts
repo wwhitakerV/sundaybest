@@ -15,7 +15,6 @@ type QuestionTemplate = {
 export type DayTemplate = {
   title: string;
   paragraphs: readonly string[];
-  sermonQuote: string;
   passage: { reference: string; book: string; chapter: number; verses: readonly ScriptureVerse[] };
   reflection: string;
   prayer: string;
@@ -34,7 +33,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "Sunday's message wasn't meant to stay in the room. This week is about carrying it into ordinary days.",
       "James is blunt: hearing isn't the finish line. Doing is where the word takes root.",
     ],
-    sermonQuote: "Don't just take notes on Sunday. Take one step on Monday.",
     passage: {
       reference: "James 1:22",
       book: "James",
@@ -75,7 +73,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "A lamp doesn't light the whole road. It lights the next step — which is usually all we need.",
       "God's word is less a map of the whole journey than light for today's part of it.",
     ],
-    sermonQuote: "You don't need to see the whole staircase. Just the next step.",
     passage: {
       reference: "Psalm 119:105",
       book: "Psalm",
@@ -111,7 +108,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "Faith isn't a moment we had once. Paul pictures it as roots — growing deeper, holding firm.",
       "Roots grow unseen, in ordinary seasons. Today's quiet faithfulness is part of it.",
     ],
-    sermonQuote: "Deep roots are grown on days nobody sees.",
     passage: {
       reference: "Colossians 2:6–7",
       book: "Colossians",
@@ -161,7 +157,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "Isaiah writes to people worn out by waiting. His answer isn't try harder — it's hope in the LORD.",
       "Renewed strength comes from Someone outside us, not a reserve we have to find.",
     ],
-    sermonQuote: "God doesn't just top you up. He renews you.",
     passage: {
       reference: "Isaiah 40:31",
       book: "Isaiah",
@@ -207,7 +202,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "John won't let love stay a feeling. Real love shows up — in actions, and in truth.",
       "Love that costs nothing usually changes nothing. Who could you show it to today?",
     ],
-    sermonQuote: "Love is a verb before it's a feeling.",
     passage: {
       reference: "1 John 3:18",
       book: "1 John",
@@ -253,7 +247,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "Trusting God with all our heart means not leaning on our own understanding — even when it seems clearer.",
       "The promise isn't an easy path, but a straight one, walked with Him.",
     ],
-    sermonQuote: "Trust isn't knowing the plan. It's knowing the One who does.",
     passage: {
       reference: "Proverbs 3:5–6",
       book: "Proverbs",
@@ -298,7 +291,6 @@ export const DAY_TEMPLATES: readonly DayTemplate[] = [
       "A week of small faithfulness might not look like much. Paul says the harvest comes at the proper time.",
       "Don't measure this week by how it felt. Keep going — the seeds are in the ground.",
     ],
-    sermonQuote: "Faithfulness is mostly just not giving up.",
     passage: {
       reference: "Galatians 6:9",
       book: "Galatians",

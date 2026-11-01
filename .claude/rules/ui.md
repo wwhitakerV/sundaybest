@@ -79,28 +79,49 @@ scroller (`<Screen padded>` around a `ScrollView` is wrong).
   `contentStyle`. A list whose rows animate in, out and into new places
   (Plans' search results) is Reanimated's `Animated.FlatList` instead —
   reuse would break those animations.
-- **Plans is a stack of pages, one plan to each** (`PlansScreen`), thrown
-  sideways with iOS's own momentum (`snapToInterval` with a normal
-  `decelerationRate`), each plan's page scrolling on its own under one fixed header on
-  the page's solid colour — no fade under it, nothing ever behind it. Each page
-  starts at the header's foot, which carries two inward corners at the
-  artwork's sides and radius (`RoundedEdge`, `FEATURE_ARTWORK_RADIUS`), so the
-  artwork scrolls up into a rounded window, never a straight cut. Every drawer
-  on a page starts open. The header
-  (`TitleHeader`): "Plans" at the left; the dots centred on the screen
-  (`PageDots`, its `centre`); and the search at the right, from two plans. The
-  dots are Instagram's: a dot a plan, the one in view in the accent, the rest
-  `progressTrack`; up to four, all full size; past four, a window of four
-  full dots, the next out either side ⅔ the size and the one beyond ⅓,
-  sliding a dot along (`motion.slide`) as the plan in view reaches its end.
-  They change as a page passes halfway, never on settle. Each page features
-  its plan as Home does (`PlanFeature`, in `@/entities/plan` — one component,
-  so the two never drift): the artwork, the grey label with where it stands
-  opposite, the title, its church, today's study, and Continue. Scrolled up
-  under the header, Continue fades and the tab bar takes it, as Plan
-  Overview's does (`useContinueHandOver`) — only for the plan in view; the
-  floating button steps away while it's there. A finger on a plan's days
-  holds the plans still.
+- **Plans is a library, read down one column** (`PlansScreen`, ADR 0039),
+  as an independent magazine's contents are: quiet, spacious, every plan a
+  publication worth keeping, and no dashboard chrome. `ListScreen` with a
+  pinned header ("Plans" at the left; the search at the right, from two
+  plans) whose foot rounds into the list (`RoundedEdge`,
+  `FEATURE_ARTWORK_RADIUS`). Under it the shelves as `FilterPills` — My
+  studies, and Done only once a plan's finished. My studies leads with the
+  unfinished plan opened last on this phone (`plans_opened`, falling back to
+  the plan's own last change), featured as an issue (`PlanIssue`, in
+  `@/entities/plan` — Home's `PlanFeature` is to follow it), set to read at a
+  glance and to fit an SE with Continue in view: the artwork; its church
+  and Scripture in tracked capitals (`GRACE CHURCH · ACTS 1:4–8` — no issue
+  number, which reads as a day); its title (`SerifTitle` `issue`, two
+  lines); a line in Tiempos italic, two lines at most, run in after its
+  label and a colon in tracked capitals — so it explains itself. The step
+  waiting, its label in the accent as the day it's on is (`READ:` its first
+  sentence, `SCRIPTURE:` its first verse quoted, `REFLECT:` the question,
+  `PRAY:` the prayer's first sentence, `QUICK CHECK:` how many questions,
+  never the questions), built as a step's name and words so an interactive
+  plan's faculties (`HEAR:` and its question) fit it too; with nothing
+  waiting, `FROM THE SERMON:` in grey and its words, quoted. Never the
+  sermon's colours, and never a box (an outline means it can be pressed). Then, under a hairline (`divider`), its foot:
+  its days led by "DAY" (`DayMarks` `labelled`) — done in ink, the day it's
+  on in the accent, the rest `textMuted` — opposite a black `CompactButton`
+  that hugs its words (at least 110 wide): `Continue` or `Start` with
+  lucide's long `MoveRight` set as one of its words (`typeset`, at the
+  type's own stroke), or `Tomorrow`, `waiting`, with no arrow. The day's
+  number is in its days, never the button. Nothing behind it — no wash,
+  panel or border: it leads by its place and its type.
+  Whenever that Continue is out of view (below the fold on an SE, or under
+  the header) the tab bar takes it. Under the lead, a department head (a
+  hairline, "More studies" in the serif, its count opposite), then every
+  other unfinished plan, most lately active first; Done, the finished ones,
+  most lately finished first. Each is one full-width entry, never a grid
+  (two columns are too small at 375pt): the 16:9 artwork, the folio, the
+  title (`SFProTitle` `offer`, two lines), and, unfinished, its days led by
+  "DAY" — done in ink, the rest faint, never the accent, which is the
+  lead's alone — no card, outline or badge. Every folio is the lead's
+  (`MonoLabel` `labelTracked`): its church and Scripture, and finished,
+  `FINISHED OCT 19`. Never an issue number (beside the days it reads as a
+  day), and never a preached or upload date: the app can't know when a
+  sermon was preached. A plan's length is its days. The list ends in a colophon of plain facts (`12 PLANS · 58 DAYS
+  STUDIED · SINCE MARCH 2026`), never a goal or a streak.
 
 ## Navigation behaves as iOS's does
 
@@ -299,12 +320,12 @@ Every card is a `Card`, and its `kind` sets its corners and the room inside it
   switch or a time, Progress's rows, week cards, module cards, Quick Check
   results): 24 corners, nothing inside the card; each row brings its own 16.
 - **`content`** (the default) — a block to read or act on (callouts, the next
-  day, Plan complete, takeaways, Plans' cards): 28 corners, 20 inside.
+  day, Plan complete, takeaways): 28 corners, 20 inside.
 - **`feature`** — a page's one big card (Start here, the Quick Check question,
   the sermon clip): 32 corners, 24 inside.
 
 A picture running to the card's edges turns the inset off (`inset={false}`)
-and pads only its words. A shell `Card` can't draw — art-led (Plans' cards) or
+and pads only its words. A shell `Card` can't draw — art-led or
 showing its selection (a sermon result) — takes its corners from `cardStyle`.
 Never a corner or inset of a card's own. Edges: `containerBorder` round
 anything on the page; `hairline` only on chrome floating over content (the tab
@@ -582,8 +603,9 @@ haptic: if an outcome buzzes, the press that caused it doesn't also tap.
 
 ## iPhone only
 
-Portrait, iPhone. No iPad layouts, no web-only APIs, no `Platform.OS === "web"`
-branches. Respect the safe area by composing `Screen` rather than reimplementing
+Portrait, iPhone, from 375pt wide (SE, mini) to 440 — and as short as the
+SE's 667pt, the screen every page is checked on first. No iPad layouts, no
+web-only APIs, no `Platform.OS === "web"` branches. Respect the safe area by composing `Screen` rather than reimplementing
 insets.
 
 ## Do not

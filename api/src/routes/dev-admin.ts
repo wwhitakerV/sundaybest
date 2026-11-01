@@ -11,6 +11,7 @@ import { AppError } from "../http/errors.js";
 import { parseWithSchema } from "../http/validation.js";
 import { createGenerationService } from "../services/generation-service.js";
 import { createSermonService } from "../services/sermon-service.js";
+import { registerDevReviewRoutes } from "./dev-review.js";
 
 /** Who owns our plans: one users row, found by its name, made the first time one is added. */
 const OWNER_NAME = "SundayBest (our plans)";
@@ -28,6 +29,8 @@ const sampleSchema = z.object({
   title: z.string(),
   church: z.string().nullable(),
   thumbnailUrl: z.string().nullable(),
+  /** The sermon on YouTube. */
+  url: z.string(),
   lengthDays: z.number().int(),
   /** Ready to try; still being written; or its generation failed. */
   state: z.enum(["ready", "generating", "failed"]),
@@ -91,6 +94,7 @@ export function registerDevAdminRoutes(app: FastifyInstance, context: AppContext
         readyAt: plans.readyAt,
         church: sermonSources.churchOrChannel,
         thumbnailUrl: sermonSources.thumbnailUrl,
+        url: sermonSources.canonicalUrl,
       })
       .from(plans)
       .innerJoin(sermonSources, eq(sermonSources.id, plans.sermonId))
@@ -124,6 +128,7 @@ export function registerDevAdminRoutes(app: FastifyInstance, context: AppContext
           title: row.title,
           church: row.church,
           thumbnailUrl: row.thumbnailUrl,
+          url: row.url,
           lengthDays: row.lengthDays,
           state: row.readyAt ? "ready" : failed ? "failed" : "generating",
           detail: row.readyAt ? null : failed ? (generation?.errorCode ?? null) : (generation?.status ?? null),
@@ -157,4 +162,6 @@ export function registerDevAdminRoutes(app: FastifyInstance, context: AppContext
     if (!removed) throw new AppError("NOT_FOUND", "That plan isn't one of ours");
     return removeSampleResponseSchema.parse({ ok: true });
   });
+
+  registerDevReviewRoutes(app, db, requireLocal);
 }

@@ -15,7 +15,7 @@ import { createBibleProvider } from "../../src/providers/bible-provider.js";
 import { createTranscriptProvider } from "../../src/providers/transcript-provider.js";
 import { createPlanGenerationProvider } from "../../src/providers/plan-generation-provider.js";
 import { createGenerationWorker } from "../../src/worker/generation-worker.js";
-import { dayOutput, finishTheVerseQuestion, generationInput, outlineOutput, quizOutput, testEnv } from "./generation.js";
+import { dayOutput, finishTheVerseQuestion, formationOutput, generationInput, outlineOutput, quizOutput, testEnv } from "./generation.js";
 
 /** The search result Supadata's fake returns for every term. */
 export const SEARCH_HIT = "searchHit01";
@@ -37,14 +37,19 @@ export async function apiHarness() {
   const sql = taggedSql as unknown as postgres.Sql;
   const env = testEnv({ DEV_SESSION_ENABLED: "true", SUPADATA_API_KEY: "test", WORKER_MAX_ATTEMPTS: "1" });
   const jwt = createJwtService(env);
-  const counts = { transcripts: 0, jobPolls: 0, metadata: 0, searches: 0, openai: 0 };
+  // `openai` counts the plan's own calls; `titles` the sermon-title step's, made once per sermon.
+  const counts = { transcripts: 0, jobPolls: 0, metadata: 0, searches: 0, openai: 0, titles: 0 };
   const flags: {
     invalidOutput: boolean;
     stealClaim: boolean;
     transcript: string[] | null;
     /** Runs as each OpenAI call arrives, named by its response schema, before it is answered. */
     onOpenAiCall: ((step: string) => Promise<void>) | null;
-  } = { invalidOutput: false, stealClaim: false, transcript: null, onOpenAiCall: null };
+    /** The video's title on YouTube, in place of the sermon's plain one. */
+    videoTitle: string | null;
+    /** What the title step answers, in place of the video title as it is. */
+    titleAnswer: unknown;
+  } = { invalidOutput: false, stealClaim: false, transcript: null, onOpenAiCall: null, videoTitle: null, titleAnswer: null };
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (resource) => {
     const url = new URL(String(resource));
@@ -54,7 +59,7 @@ export async function apiHarness() {
     }
     if (url.hostname === "api.supadata.ai" && url.pathname === "/v1/metadata") {
       counts.metadata++;
-      return Response.json({ platform: "youtube", type: "video", id: "5fVA7C24eI4", url: generationInput().sermon.canonicalUrl, title: "God's love", author: { displayName: "Test church" }, media: { type: "video", duration: 60, thumbnailUrl: "https://example.test/thumbnail.jpg" } });
+      return Response.json({ platform: "youtube", type: "video", id: "5fVA7C24eI4", url: generationInput().sermon.canonicalUrl, title: flags.videoTitle ?? "God's love", author: { displayName: "Test church" }, media: { type: "video", duration: generationInput().sermon.durationSeconds, thumbnailUrl: "https://example.test/thumbnail.jpg" } });
     }
     if (url.hostname === "api.supadata.ai" && url.pathname === "/v1/transcript") {
       counts.transcripts++;
@@ -73,22 +78,29 @@ export async function apiHarness() {
   const app = await buildApp({ env, database: { db, sql, close: async () => {} }, jwt,
     verifier: createAppAttestVerifier(env), challenges: createChallengeService(db), sessions: createSessionService(db, jwt, env), bible });
   const client = new OpenAI({ apiKey: "test-key", maxRetries: 0, fetch: async (_url, init) => {
-    counts.openai++;
     // Each step names its response schema; answer it from that step's fixture.
     const request = JSON.parse(String(init?.body));
     const task = JSON.parse(request.messages.at(-1).content);
     const step = request.response_format.json_schema.name;
+    if (step === "sundaybest_title") counts.titles++;
+    else counts.openai++;
     await flags.onOpenAiCall?.(step);
     let output: unknown;
-    if (step === "sundaybest_plan") {
+    if (step === "sundaybest_title") {
+      output = flags.titleAnswer ?? { title: JSON.parse(request.messages[1].content[0].text).videoTitle, series: null, part: null };
+    } else if (step === "sundaybest_plan") {
       const outline = outlineOutput(task.request.lengthDays);
       // A day's passage is required, so one the sermon never names fails the plan.
       if (flags.invalidOutput) outline.days[0]!.scripture = { book: "Romans", chapter: 8, verseStart: 28, verseEnd: 28, reference: "Romans 8:28" };
       output = outline;
+    } else if (step === "sundaybest_plan_days") {
+      const { days } = outlineOutput(task.request.lengthDays);
+      if (flags.invalidOutput) days[0]!.scripture = { book: "Romans", chapter: 8, verseStart: 28, verseEnd: 28, reference: "Romans 8:28" };
+      output = { days };
     } else if (step === "sundaybest_day") {
-      const day = dayOutput(task.day.dayNumber);
-      if (task.day.dayNumber === 1) day.supportingScriptures = [{ book: "Romans", chapter: 5, verseStart: 8, verseEnd: 8, reference: "Romans 5:8", connection: "God's love came first." }];
-      output = day;
+      output = dayOutput(task.day.dayNumber);
+    } else if (step === "sundaybest_faculties") {
+      output = formationOutput(task.day.dayNumber);
     } else {
       const quiz = quizOutput(task.day.dayNumber);
       if (task.day.dayNumber === 1) quiz.questions.push(finishTheVerseQuestion());
@@ -121,8 +133,8 @@ export async function apiHarness() {
   /** Every stored piece of a plan's content, without ids, for comparing two plans. */
   async function content(planId: string) {
     return {
-      plan: (await pg.query("select title, about from plans where id = $1", [planId])).rows,
-      days: (await pg.query("select day_number, reading_title, focus, reading_paragraphs, sermon_quote, clip_start_seconds, clip_end_seconds, supporting_scriptures from plan_days where plan_id = $1 order by day_number", [planId])).rows,
+      plan: (await pg.query("select title, about, speaker_name, formation from plans where id = $1", [planId])).rows,
+      days: (await pg.query("select day_number, reading_title, focus, reading_paragraphs, clip_start_seconds, clip_end_seconds, supporting_scriptures, journey from plan_days where plan_id = $1 order by day_number", [planId])).rows,
       quiz: (await pg.query<{ day_number: number }>("select d.day_number, q.position, q.kind, q.prompt, q.variants, c.text, c.is_correct from quiz_questions q join quizzes z on z.id = q.quiz_id join plan_days d on d.id = z.plan_day_id join quiz_choices c on c.question_id = q.id where z.plan_id = $1 order by d.day_number, q.position, c.position", [planId])).rows,
     };
   }

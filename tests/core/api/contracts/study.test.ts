@@ -10,7 +10,6 @@ function studyDay(extra: Record<string, unknown> = {}) {
     reading: {
       title: "Grace is received",
       paragraphs: [{ heading: "Grace First", content: "Read this." }],
-      sermonQuote: null,
       sermonClip: null,
     },
     scripture: {
@@ -79,7 +78,7 @@ describe("a day's reading", () => {
   const reading = (paragraphs: unknown) =>
     studyDaySchema.safeParse(
       studyDay({
-        reading: { title: "Grace is received", paragraphs, sermonQuote: null, sermonClip: null },
+        reading: { title: "Grace is received", paragraphs, sermonClip: null },
       }),
     );
 
@@ -93,5 +92,19 @@ describe("a day's reading", () => {
 
   it("refuses a paragraph that's bare text", () => {
     expect(reading(["Read this."]).success).toBe(false);
+  });
+
+  it("never carries a quote of the sermon, even from a server that sends one", () => {
+    const parsed = studyDaySchema.parse(
+      studyDay({
+        reading: {
+          title: "Grace is received",
+          paragraphs: [{ heading: "Grace First", content: "Read this." }],
+          sermonQuote: "the storm isnt telling you",
+          sermonClip: null,
+        },
+      }),
+    );
+    expect(parsed.reading).not.toHaveProperty("sermonQuote");
   });
 });

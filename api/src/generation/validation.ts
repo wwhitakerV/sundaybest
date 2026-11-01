@@ -5,7 +5,7 @@ import { generatedPlanSchema, type GeneratedPlan } from "./schema.js";
 import { canonicalizeCitation, canonicalizeScripture, chapterIsNamed, referenceIsNamed, type ScriptureRange } from "./scripture.js";
 import { assertPassageReads, readsInEveryBundledTranslation } from "./scripture-text.js";
 import { clipIsValid } from "./clip.js";
-import { containsExcerpt, normalizeSourceText } from "./transcript.js";
+import { normalizeSourceText } from "./transcript.js";
 import { readingParagraphText } from "./reading.js";
 
 const QUICK_CHECK_MIN = 7;
@@ -40,9 +40,8 @@ export function validatePlanStructure(plan: GeneratedPlan, input: PlanGeneration
     const scripture = canonicalizeScripture(day.scripture);
     if (real && !chapterIsNamed(source, scripture)) reject(`Day ${day.dayNumber} uses Scripture not explicitly named in the transcript`);
     if (input.quickCheckEnabled !== (day.quickCheck !== null)) reject("Quick Check does not match the requested setting");
-    if (day.sermonQuote && !containsExcerpt(source, day.sermonQuote)) reject("Sermon quote is not present in the transcript");
-    if (day.clipStartSeconds !== null && day.clipEndSeconds !== null && !clipIsValid(day.clipStartSeconds, day.clipEndSeconds, day.sermonQuote, input)) {
-      reject("Sermon clip lacks source timing, exceeds the transcript or video, or does not contain its quote");
+    if (day.clipStartSeconds !== null && day.clipEndSeconds !== null && !clipIsValid(day.clipStartSeconds, day.clipEndSeconds, input)) {
+      reject("Sermon clip lacks source timing, or exceeds the transcript or video");
     }
     const reading = normalizeSourceText(day.readingParagraphs.map(readingParagraphText).join(" "));
     if (readings.has(reading) && plan.generator.provider !== "development") reject("Generated days contain duplicate readings");

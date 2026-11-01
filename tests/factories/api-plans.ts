@@ -113,7 +113,6 @@ function dayOf(
     reading: {
       title: `Day ${dayNumber} reading`,
       paragraphs: [{ heading: `Idea ${dayNumber}`, content: `The reading for day ${dayNumber}.` }],
-      sermonQuote: null,
       sermonClip: null,
     },
     scriptureReference: {

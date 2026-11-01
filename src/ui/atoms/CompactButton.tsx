@@ -25,6 +25,10 @@ export type CompactButtonProps = {
    */
   /** `waiting`: a way on that isn't open yet — opaque grey, grey words, no edge. */
   tone: "light" | "dark" | "accent" | "soft" | "waiting";
+  /** Its icon set as one of its words: drawn at the words' own weight, a little closer to them. */
+  typeset?: boolean;
+  /** The least it's drawn across, so a short label never looks stubby; it grows with its words. */
+  minWidth?: number;
   /** Where it sits in its row: centred (the default), or at the start. */
   align?: "center" | "start";
   onPress: () => void;
@@ -42,6 +46,8 @@ export function CompactButton({
   iconOnly = false,
   iconPosition = "start",
   tone,
+  typeset = false,
+  minWidth,
   align = "center",
   onPress,
   testID,
@@ -65,7 +71,11 @@ export function CompactButton({
         : "inkOnDark";
   const ink = toneColor(theme.colors, inkTone);
   const icon = Icon && (
-    <Icon size={iconOnly ? 20 : 16} color={ink} strokeWidth={theme.icon.strokeWidth} />
+    <Icon
+      size={iconOnly ? 20 : 16}
+      color={ink}
+      strokeWidth={typeset ? theme.icon.strokeWidthType : theme.icon.strokeWidth}
+    />
   );
 
   return (
@@ -81,6 +91,8 @@ export function CompactButton({
         { backgroundColor: fill, borderRadius: radius.pill },
         tone === "soft" && [styles.soft, { borderColor: theme.colors.containerBorder }],
         tone === "waiting" && styles.waiting,
+        typeset && styles.typeset,
+        minWidth !== undefined && { minWidth },
       ]}
     >
       {iconPosition === "start" && icon}
@@ -109,4 +121,5 @@ const styles = StyleSheet.create({
   // Waiting: the grey fill alone — no edge to read as a button ready to press.
   waiting: { borderWidth: 0 },
   start: { alignSelf: "flex-start" },
+  typeset: { gap: space[6] },
 });

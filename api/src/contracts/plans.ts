@@ -68,7 +68,6 @@ export const dayReadingSchema = z.object({
   paragraphs: z
     .array(z.object({ heading: z.string().min(1).nullable(), content: z.string().min(1) }))
     .min(1),
-  sermonQuote: z.string().nullable(),
   sermonClip: sermonClipSchema.nullable(),
 });
 

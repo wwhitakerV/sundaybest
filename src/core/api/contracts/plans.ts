@@ -73,7 +73,6 @@ const readingParagraphSchema = z.object({
 export const dayReadingSchema = z.object({
   title: z.string().min(1).max(300),
   paragraphs: z.array(readingParagraphSchema).min(1),
-  sermonQuote: z.string().nullable(),
   sermonClip: sermonClipSchema.nullable(),
 });
 

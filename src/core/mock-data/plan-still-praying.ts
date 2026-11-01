@@ -46,7 +46,6 @@ const DAYS: MockDayInput[] = [
       "The disciples were in a storm with Jesus in the boat — and He was asleep.",
       "His calm wasn't carelessness. It was trust. And one word from Him stilled the sea.",
     ],
-    sermonQuote: "Jesus is asleep in the same boat they think is sinking.",
     sermonClip: { startSeconds: 640, endSeconds: 760 },
     passage: {
       reference: "Mark 4:39",
@@ -74,7 +73,6 @@ const DAYS: MockDayInput[] = [
       "God isn't a distant rescuer. The psalm calls Him an ever-present help — here, now, in trouble.",
       "A refuge is somewhere you run to, not somewhere you only visit when things are calm.",
     ],
-    sermonQuote: "He's not the help you call after the storm. He's the shelter in it.",
     sermonClip: { startSeconds: 980, endSeconds: 1_080 },
     passage: {
       reference: "Psalm 46:1",
@@ -99,8 +97,6 @@ const DAYS: MockDayInput[] = [
       "God doesn't promise we'll avoid deep water. He promises we won't go through it alone.",
       "“When,” not “if” — and every time, “I will be with you.”",
     ],
-    sermonQuote:
-      "He doesn't promise there won't be water. He promises you won't go through it alone.",
     sermonClip: { startSeconds: 1_310, endSeconds: 1_430 },
     passage: {
       reference: "Isaiah 43:2",

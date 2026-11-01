@@ -932,6 +932,13 @@ const typography = {
    * tracking pulled in — leaded over its own 1.22× so iOS never trims its tops.
    */
   featureTitle: { fontFamily: fonts.display, fontSize: 28, fontWeight: "500", lineHeight: 35 },
+  /** A plan featured in the library (Plans' lead): Canela Deck a size down, leaded at its own 1.3× for two lines. */
+  issueTitle: {
+    fontFamily: fonts.editorialHeading,
+    fontSize: 24,
+    fontWeight: "500",
+    lineHeight: 31,
+  },
   /** Hero sentence: Canela, leaded just over its own 1.22× so iOS never trims its tops. */
   display: {
     fontFamily: fonts.display,
@@ -1138,6 +1145,8 @@ const icon = {
   strokeWidth: 2,
   /** A row's chevron that should read clearly at a glance (Progress's rows, The Word's): firmer. */
   strokeWidthStrong: 2.5,
+  /** An icon set as one of a button's words (Plans' Continue arrow): Söhne Halbfett's own weight, not the chrome's. */
+  strokeWidthType: 1.75,
 } as const;
 
 export const lightTheme = {

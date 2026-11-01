@@ -17,6 +17,7 @@ import { STONE } from "../logic/formation-stone";
 import { greyNoise, greyOf } from "./ideal-paint";
 import { polyline } from "./stone-paths";
 import type { StoneWear } from "./stone-wear";
+import { WeaveHeight } from "./StoneWeave";
 
 /** A layer whose drawing is added to the height below it, softened by `blur`. */
 const added = (blur: number) => (
@@ -91,23 +92,16 @@ function Folds({ folds }: { folds: StoneWear["folds"] }) {
   ));
 }
 
-/** Its surface: a faint unevenness, the crossed weave of linen pressed into it, and tiny pocks. */
+/** Its surface: a faint unevenness, the linen's crossed threads pressed into it, and tiny pocks. */
 function Surface({ wear }: { wear: StoneWear }) {
-  const { undulation, weave, pocks } = STONE;
+  const { undulation, pocks } = STONE;
   return (
     <>
       <Rect x={-1.5} y={-1.5} width={3} height={3} blendMode="plus">
         <FractalNoise freqX={undulation.fine} freqY={undulation.fine} octaves={2} />
         <ColorMatrix matrix={greyNoise(undulation.depth)} />
       </Rect>
-      {[wear.weave, wear.weave + Math.PI / 2].map((angle) => (
-        <Group key={`weave-${angle}`} transform={[{ rotate: angle }]}>
-          <Rect x={-2} y={-2} width={4} height={4} blendMode="plus">
-            <FractalNoise freqX={weave.fine} freqY={weave.fine / weave.dash} octaves={2} />
-            <ColorMatrix matrix={greyNoise(weave.depth)} />
-          </Rect>
-        </Group>
-      ))}
+      <WeaveHeight angle={wear.weave} />
       {wear.pocks.map((p, i) => (
         <Circle key={`pock-${i}`} cx={p.x} cy={p.y} r={p.r} color={greyOf(0, pocks.depth)} />
       ))}

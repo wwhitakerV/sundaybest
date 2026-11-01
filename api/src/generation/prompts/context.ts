@@ -1,4 +1,5 @@
 import type { PlanGenerationInput } from "../../providers/plan-generation-provider.js";
+import type { SermonPoint } from "../journey.js";
 
 /**
  * The sermon and its transcript: identical for every step of one plan and sent
@@ -21,4 +22,9 @@ export const RETRY_NOTE = "If the task lists previousAttemptsRejected, an earlie
 /** The reasons earlier answers were rejected, for a retry's task; nothing on a first attempt. */
 export function rejections(rejected: readonly string[]): { previousAttemptsRejected?: readonly string[] } {
   return rejected.length > 0 ? { previousAttemptsRejected: rejected } : {};
+}
+
+/** The sermon's points as a step reads them: what each says and the transcript block it's made in ("b12"), never caption words. */
+export function promptPoints(points: readonly SermonPoint[]) {
+  return points.map((point) => ({ id: point.id, kind: point.kind, statement: point.statement, block: point.block === null ? null : `b${point.block}` }));
 }

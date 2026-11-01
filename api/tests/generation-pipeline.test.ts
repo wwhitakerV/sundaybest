@@ -4,7 +4,7 @@ import { addStagedQuickChecks, generateStagedPlan, type StageEvent } from "../sr
 import { PROMPT_VERSION } from "../src/generation/prompts/version.js";
 import { validatePlanStructure } from "../src/generation/validation.js";
 import { createBibleProvider } from "../src/providers/bible-provider.js";
-import { QUICK_CHECK_QUESTIONS, dayOutput, fakeCaller, finishTheVerseQuestion, generationInput, memoryCheckpoint, quizOutput, sermonQuestion, testEnv } from "./fixtures/generation.js";
+import { QUICK_CHECK_QUESTIONS, dayOutput, fakeCaller, finishTheVerseQuestion, generationInput, memoryCheckpoint, outlineOutput, quizOutput, sermonQuestion, testEnv } from "./fixtures/generation.js";
 
 const bible = createBibleProvider(testEnv());
 
@@ -12,13 +12,53 @@ test("a one-day plan is assembled from its plan, day, and quiz steps", async () 
   const input = generationInput(1, true);
   const { caller, calls } = fakeCaller({ quiz: () => ({ ...quizOutput(), questions: [...quizOutput().questions, finishTheVerseQuestion()] }) });
   const plan = await generateStagedPlan(input, { call: caller, bible });
-  assert.deepEqual(calls.map((call) => call.stage), ["plan", "day 1", "quiz 1"]);
+  assert.deepEqual(calls.map((call) => call.stage).sort(), ["day 1", "faculties 1", "plan", "quiz 1"]);
   assert.equal(plan.generator.provider, "openai");
   assert.equal(plan.generator.model, "test-model");
   assert.equal(plan.generator.promptVersion, PROMPT_VERSION);
   assert.equal(plan.days[0]!.quickCheck!.questions.length, QUICK_CHECK_QUESTIONS + 1);
   assert.equal(plan.days[0]!.quickCheck!.questions.filter((question) => question.kind === "finishTheVerse").length, 1);
   assert.doesNotThrow(() => validatePlanStructure(plan, input));
+});
+
+test("each day's six faculties are written on their own, alongside the days", async () => {
+  const { caller, calls } = fakeCaller();
+  await generateStagedPlan(generationInput(3), { call: caller, bible });
+  assert.deepEqual(calls.filter((call) => call.kind === "formation").map((call) => call.stage).sort(), ["faculties 1", "faculties 2", "faculties 3"]);
+});
+
+test("a day whose faculties keep failing costs only that day's calls", async () => {
+  const { caller, calls } = fakeCaller({ formation: (task, call) => task.day!.dayNumber === 2 && call < 3 ? "{broken" : undefined });
+  await generateStagedPlan(generationInput(3), { call: caller, bible });
+  assert.equal(calls.filter((call) => call.stage === "faculties 2").length, 3);
+  assert.equal(calls.filter((call) => call.stage === "faculties 1").length, 1);
+});
+
+test("each day carries its points, the passages its part names, its Read's coverage, and its faculties", async () => {
+  const { caller } = fakeCaller();
+  const plan = await generateStagedPlan(generationInput(2), { call: caller, bible });
+  const [first, second] = plan.days.map((day) => day.journey!);
+  assert.deepEqual(first!.pointIds, ["p1"]);
+  assert.deepEqual(first!.alsoReferenced.map((passage) => passage.reference), ["Psalm 23", "Ephesians 2"]);
+  assert.deepEqual(first!.readingPointIds, [["p1"]]);
+  assert.deepEqual(second!.faculties.map((entry) => entry.faculty), ["see", "hear", "understand", "do", "speak", "examine"]);
+  assert.deepEqual(plan.formation!.points.map((point) => point.id), ["p1", "p2"]);
+  assert.ok(plan.days.every((day) => day.supportingScriptures.length === 0));
+});
+
+test("the day and faculties steps are told where each point is made, never caption words", async () => {
+  const { caller, requests } = fakeCaller();
+  await generateStagedPlan(generationInput(1), { call: caller, bible });
+  for (const kind of ["day", "formation"]) {
+    const task = JSON.parse(requests.find((request) => request.kind === kind)!.task);
+    assert.deepEqual(task.day.points, [{ id: "p1", kind: "teaching", statement: "Wait with patience, point 1.", block: "b3" }], kind);
+  }
+});
+
+test("each day's clip is its part of the sermon, worked out from its points", async () => {
+  const plan = await generateStagedPlan(generationInput(2), { call: fakeCaller().caller, bible });
+  assert.deepEqual(plan.days.map((day) => [day.clipStartSeconds, day.clipEndSeconds]), [[60, 138], [138, 684]]);
+  assert.ok(plan.days.every((day) => !("sermonQuote" in day)));
 });
 
 test("every step of a plan sends the same context and cache key, so OpenAI reuses the transcript", async () => {
@@ -116,8 +156,9 @@ test("a re-run resumes from the steps an earlier run finished", async () => {
   const events: StageEvent[] = [];
   const rerun = fakeCaller();
   const plan = await generateStagedPlan(generationInput(3, true), { call: rerun.caller, bible, checkpoint, report: (event) => { events.push(event); } });
-  assert.deepEqual(rerun.calls.map((call) => call.stage), ["day 3", "quiz 1", "quiz 2", "quiz 3"]);
-  assert.deepEqual(events.filter((event) => event.outcome === "resumed").map((event) => event.stage), ["plan", "day 1", "day 2"]);
+  assert.deepEqual(rerun.calls.filter((call) => call.kind !== "formation").map((call) => call.stage), ["day 3", "quiz 1", "quiz 2", "quiz 3"]);
+  const resumed = events.filter((event) => event.outcome === "resumed").map((event) => event.stage);
+  for (const stage of ["plan", "day 1", "day 2"]) assert.ok(resumed.includes(stage), stage);
   assert.doesNotThrow(() => validatePlanStructure(plan, generationInput(3, true)));
 });
 
@@ -150,15 +191,17 @@ test("a passage with no text in a bundled translation fails the plan step", asyn
   const input = generationInput();
   input.transcriptSegments = [{ startMs: 0, endMs: 30_000, text: quote }];
   input.transcript = quote;
-  const outline = { ...fakeOutlineWithActs(), days: [{ dayNumber: 1, title: "Day 1", focus: "Focus.", scripture: { book: "Matthew", chapter: 17, verseStart: 21, verseEnd: 21, reference: "Matthew 17:21" } }] };
+  const outline = fakeOutlineWithActs();
+  outline.days[0]!.scripture = { book: "Matthew", chapter: 17, verseStart: 21, verseEnd: 21, reference: "Matthew 17:21" };
+  outline.days[0]!.alsoReferenced = [];
+  outline.points[0]!.evidenceBlocks = ["b1"];
   const { caller } = fakeCaller({ outline: () => outline });
   await assert.rejects(() => generateStagedPlan(input, { call: caller, bible }), /BSB/);
 });
 
+/** The plan step for one day, studying a passage the sermon never names. */
 function fakeOutlineWithActs() {
-  return {
-    title: "God's love",
-    about: { overview: ["Overview."], keyTakeaways: ["Takeaway."], scripturesReferenced: [] },
-    days: [{ dayNumber: 1, title: "Day 1", focus: "Focus.", scripture: { book: "Acts", chapter: 5, verseStart: 1, verseEnd: 11, reference: "Acts 5:1-11" } }],
-  };
+  const outline = outlineOutput(1);
+  outline.days[0]!.scripture = { book: "Acts", chapter: 5, verseStart: 1, verseEnd: 11, reference: "Acts 5:1-11" };
+  return outline;
 }

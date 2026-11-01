@@ -439,3 +439,8 @@ shipping, not because they recur.
       `scripts/rise/questions.json`, then `npm run build:rise`. The France
       time-zones question (rise-027, replacing a second Colosseum one) needs
       that check too.
+- [ ] **Settle the privacy wording for commitments before interactive mode
+      ships.** Reflections never leave the phone; commitments and check-ins
+      will be kept on the server against the phone's anonymous account, for
+      recap movies and a profile. The policy has to say so, and say that
+      deleting the app loses that history unless a way to keep it is added.

@@ -4,7 +4,7 @@ import { ReadStep } from "@/features/plans/components/ReadStep";
 import type { StudyReading } from "@/features/plans/types";
 
 function reading(paragraphs: StudyReading["paragraphs"]): StudyReading {
-  return { title: "When Your Soul Is Thirsty", paragraphs, sermonQuote: null, sermonClip: null };
+  return { title: "When Your Soul Is Thirsty", paragraphs, sermonClip: null };
 }
 
 const HEADED = reading([

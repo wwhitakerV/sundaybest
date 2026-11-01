@@ -9,6 +9,7 @@ import {
   formatPlanLength,
   studyHref,
 } from "@/entities/plan";
+import { seriesLine } from "@/entities/sermon";
 import { tabPlanHref } from "@/entities/tabs";
 import { tapFeedback } from "@/core/haptics/haptics";
 import { usePlansQuery } from "@/core/api/plan-queries";
@@ -74,6 +75,7 @@ export function useHomeView() {
           /** The study featured at the top of Home (`FeaturedStudy`). */
           study: {
             title: plan.title,
+            series: seriesLine(plan.sermon),
             church: plan.sermon.church,
             thumbnailUrl: plan.sermon.thumbnailUrl,
             label: "IN PROGRESS",

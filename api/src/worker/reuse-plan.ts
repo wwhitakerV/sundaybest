@@ -52,7 +52,8 @@ export async function findReusablePlan(db: Database, request: ReuseRequest): Pro
     .limit(1);
   if (!source?.provider) return null;
 
-  const [plan] = await db.select({ title: plans.title, about: plans.about }).from(plans).where(eq(plans.id, source.planId));
+  const [plan] = await db.select({ about: plans.about, speakerName: plans.speakerName, formation: plans.formation })
+    .from(plans).where(eq(plans.id, source.planId));
   if (!plan) return null;
   const days = await db
     .select({ day: planDays, scripture: scriptureReferences })
@@ -70,8 +71,9 @@ export async function findReusablePlan(db: Database, request: ReuseRequest): Pro
   const questions = await loadQuestions(db, dayQuizzes.map((quiz) => quiz.id));
 
   const parsed = generatedPlanSchema.safeParse({
-    title: plan.title,
+    speakerName: plan.speakerName,
     about: plan.about,
+    formation: plan.formation,
     generator: { version: GENERATOR_VERSION, promptVersion: PROMPT_VERSION, provider: source.provider, model: source.model },
     days: days.map(({ day, scripture }) => {
       const quiz = dayQuizzes.find((candidate) => candidate.planDayId === day.id);
@@ -81,13 +83,13 @@ export async function findReusablePlan(db: Database, request: ReuseRequest): Pro
         readingTitle: day.readingTitle,
         focus: day.focus,
         readingParagraphs: day.readingParagraphs,
-        sermonQuote: day.sermonQuote,
         clipStartSeconds: day.clipStartSeconds,
         clipEndSeconds: day.clipEndSeconds,
         scripture: { book: scripture.book, chapter: scripture.chapter, verseStart: scripture.verseStart, verseEnd: scripture.verseEnd, reference: scripture.canonicalReference },
         reflections: reflections.filter((reflection) => reflection.planDayId === day.id).map((reflection) => reflection.question),
         prayer: prayer ? { title: prayer.title, text: prayer.text } : null,
         supportingScriptures: day.supportingScriptures,
+        journey: day.journey,
         quickCheck: quiz ? { title: quiz.title, questions: questions.get(quiz.id) ?? [] } : null,
       };
     }),

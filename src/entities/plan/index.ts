@@ -18,6 +18,8 @@ export {
   studyHref,
 } from "./routes";
 export { HeroContent, type ContinueHandOver, type HeroPlan } from "./ui/HeroContent";
+export { DayMarks } from "./ui/DayMarks";
+export { PlanIssue } from "./ui/PlanIssue";
 export { FEATURE_ARTWORK_RADIUS, PlanFeature, type FeaturePart } from "./ui/PlanFeature";
 export { HeroBackdrop } from "./ui/HeroBackdrop";
 export { HeroContentFade } from "./ui/HeroContentFade";

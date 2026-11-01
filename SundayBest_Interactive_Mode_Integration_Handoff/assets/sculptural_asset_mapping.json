@@ -1,0 +1,16 @@
+{
+  "note": "App-owned static asset resolver, NOT a change to the API icon enum. Use lucide fallback until each sculptural asset exists.",
+  "objects": {
+    "eye": "human.eye.png",
+    "brain": "human.brain.png",
+    "speech": "human.mouth.png",
+    "shield": "discipline.shield.png",
+    "heart": "human.heart.png"
+  },
+  "boardPolicy": "Choose a board deterministically from planId; keep one board for every day of that plan. Board artwork contains no objects/text.",
+  "maxDisplayNodesPerDay": 7,
+  "modelNodesPerDayRange": [
+    1,
+    5
+  ]
+}

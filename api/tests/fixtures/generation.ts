@@ -1,7 +1,9 @@
 import type { PlanGenerationInput } from "../../src/providers/plan-generation-provider.js";
 import type { StageCaller, StageKind, StageRequest } from "../../src/generation/pipeline.js";
 import type { DayOutput } from "../../src/generation/stages/day.js";
-import type { OutlineOutput } from "../../src/generation/stages/outline.js";
+import type { FormationOutput } from "../../src/generation/stages/formation.js";
+import { FACULTIES } from "../../src/generation/journey.js";
+import type { OutlineOutput, SermonInventory } from "../../src/generation/stages/outline.js";
 import type { QuizOutput, QuizOutputQuestion } from "../../src/generation/stages/quiz.js";
 import { formatTranscript } from "../../src/generation/transcript.js";
 import { parseEnv } from "../../src/config/env-schema.js";
@@ -10,17 +12,36 @@ export const sourceQuote = "Turn to John chapter three verse sixteen. God loved 
 /** Read aloud, as a sermon does, so the transcript teaches from Scripture: three chapters named, two verses read. */
 const scriptureReading = "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish. "
   + "Psalm 23 says the Lord is my shepherd; I shall not want. And Ephesians 2: it is by grace you have been saved through faith.";
+/** Taught one by one after the reading, so every day has six of the sermon's own lines for its faculties. */
+const teachings = Array.from({ length: 48 }, (_, index) => `Teaching ${index + 1} says wait with patience and keep trusting through the storm.`);
+/** The sermon's `n`th teaching, from 1. */
+export const teaching = (n: number): string => teachings[n - 1]!;
+/** Each teaching is said on its own, 13 seconds apart from a minute in: its own block of the transcript. */
+const TEACHING_GAP_MS = 13_000;
+/** The transcript block the `n`th teaching is in ("b3" for the first: after the reading's two). */
+export const blockOf = (n: number): string => `b${n + 2}`;
+/** The second the `n`th teaching starts. */
+export const teachingStart = (n: number): number => 60 + ((n - 1) * TEACHING_GAP_MS) / 1000;
+
 export function generationInput(lengthDays = 1, quickCheckEnabled = false): PlanGenerationInput {
   const transcriptSegments = [{ startMs: 0, endMs: 30_000, text: sourceQuote },
-    { startMs: 30_000, endMs: 60_000, text: "Reflect on that love and respond faithfully today. " + scriptureReading }];
-  return { sermon: { externalId: "5fVA7C24eI4", canonicalUrl: "https://www.youtube.com/watch?v=5fVA7C24eI4", title: "God's love", church: "Test", durationSeconds: 60 },
+    { startMs: 30_000, endMs: 60_000, text: "Reflect on that love and respond faithfully today. " + scriptureReading },
+    ...teachings.map((text, index) => ({ startMs: 60_000 + index * TEACHING_GAP_MS, endMs: 60_000 + (index + 1) * TEACHING_GAP_MS, text }))];
+  return { sermon: { externalId: "5fVA7C24eI4", canonicalUrl: "https://www.youtube.com/watch?v=5fVA7C24eI4", title: "God's love", church: "Test", durationSeconds: 60 + (teachings.length * TEACHING_GAP_MS) / 1000 },
     transcriptSegments, transcript: formatTranscript(transcriptSegments), lengthDays, quickCheckEnabled };
 }
 
-/** The plan step: each day studies its own verse of the chapter the sermon names. */
+/**
+ * The plan step: each day studies its own verse of the chapter the sermon
+ * names and makes one of its points; the first also carries the other chapters
+ * the sermon names.
+ */
 export function outlineOutput(lengthDays = 1): OutlineOutput {
   return {
-    title: "  God’s love  ",
+    speakerName: null,
+    points: Array.from({ length: lengthDays }, (_, index) => ({
+      id: `p${index + 1}`, kind: "teaching" as const, statement: `Wait with patience, point ${index + 1}.`, evidenceBlocks: [blockOf(index * 6 + 1)],
+    })),
     about: {
       overview: ["  This plan studies how God's love is shown in giving His Son.  "],
       keyTakeaways: ["God's love is demonstrated in giving His Son.", "Love calls for a faithful response today."],
@@ -31,6 +52,11 @@ export function outlineOutput(lengthDays = 1): OutlineOutput {
       title: `Love, day ${index + 1}`,
       focus: `How God's love is shown, emphasis ${index + 1}.`,
       scripture: { book: "John", chapter: 3, verseStart: 16 + index, verseEnd: 16 + index, reference: `John 3:${16 + index}` },
+      pointIds: [`p${index + 1}`],
+      alsoReferenced: index > 0 ? [] : [
+        { book: "Psalm", chapter: 23, verseStart: null, verseEnd: null, reference: "Psalm 23" },
+        { book: "Ephesians", chapter: 2, verseStart: null, verseEnd: null, reference: "Ephesians 2" },
+      ],
     })),
   };
 }
@@ -41,13 +67,25 @@ export function dayOutput(dayNumber = 1): DayOutput {
     readingParagraphs: [{
       heading: "Love That Gives",
       content: `God's love is demonstrated in giving His Son. Study emphasis ${dayNumber}.`,
+      pointIds: [`p${dayNumber}`],
     }],
-    sermonQuote: sourceQuote,
-    clipStartSeconds: 0,
-    clipEndSeconds: 30,
     reflections: [`How will you respond today, considering emphasis ${dayNumber}?`],
     prayer: { title: "Prayer", text: "Lord, help me respond to Your love. Amen." },
-    supportingScriptures: [],
+  };
+}
+
+/** The faculties step for one day: its six, each a question answered from the day's point. */
+export function formationOutput(dayNumber = 1): FormationOutput {
+  return {
+    faculties: FACULTIES.map((faculty) => ({
+      faculty,
+      pointId: `p${dayNumber}`,
+      transition: null,
+      question: `What does ${faculty} ask of you on day ${dayNumber}?`,
+      answer: `Wait with patience and keep trusting through the storm, as ${faculty} learns on day ${dayNumber}.`,
+      reflection: null,
+      commitment: `Wait through the storm with ${faculty}, day ${dayNumber}.`,
+    })),
   };
 }
 
@@ -101,7 +139,9 @@ export function fakeCaller(handlers: Partial<Record<StageKind, (task: FakeTask, 
     const task = JSON.parse(request.task) as FakeTask;
     const count = calls.filter((call) => call.stage === request.stage).length;
     const handler = handlers[request.kind];
-    const fallback = request.kind === "outline" ? outlineOutput(task.request?.lengthDays ?? 1)
+    const fallback = request.schemaName === "sundaybest_plan_days" ? { days: outlineOutput(task.request?.lengthDays ?? 1).days }
+      : request.kind === "outline" ? outlineOutput(task.request?.lengthDays ?? 1)
+      : request.kind === "formation" ? formationOutput(task.day?.dayNumber ?? 1)
       : request.kind === "day" ? dayOutput(task.day?.dayNumber ?? 1) : quizOutput(task.day?.dayNumber ?? 1);
     // A handler that returns nothing lets the fixture answer.
     const output = handler?.(task, count) ?? fallback;
@@ -124,4 +164,14 @@ export function testEnv(extra: NodeJS.ProcessEnv = {}) {
 export function memoryCheckpoint() {
   const saved = new Map<string, unknown>();
   return { saved, load: async (key: string) => saved.get(key) ?? null, save: async (key: string, output: unknown) => { saved.set(key, output); } };
+}
+
+/** A sermon's kept points in memory, as the worker keeps them in `sermon_inventories`. */
+export function memoryInventory() {
+  const store: { saved: SermonInventory | null; load: () => Promise<unknown>; save: (inventory: SermonInventory) => Promise<void> } = {
+    saved: null,
+    load: async () => store.saved,
+    save: async (inventory) => { store.saved = inventory; },
+  };
+  return store;
 }

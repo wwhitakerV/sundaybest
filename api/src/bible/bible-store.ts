@@ -185,6 +185,14 @@ export function createBibleStore(directory = DEFAULT_DIRECTORY) {
     return !!book && Number(match![2]) >= 1 && Number(match![2]) <= book.chapterCount;
   }
 
+  /** A chapter ("Psalm 23") in every bundled translation, its verses joined; empty when the Bible has no such chapter. */
+  function chapterText(chapterName: string): string {
+    const match = /^(.+?)\s+(\d+)$/.exec(chapterName.trim());
+    const book = match ? data.byName.get(normalized(match[1]!)) : undefined;
+    if (!book) return "";
+    return BIBLE_TRANSLATIONS.map((translation) => Object.values(data.assets[translation].books[String(book.id)]?.[match![2]!] ?? {}).join(" ")).join(" ");
+  }
+
   return {
     availableTranslations: [...BIBLE_TRANSLATIONS],
     parseReference,
@@ -193,5 +201,6 @@ export function createBibleStore(directory = DEFAULT_DIRECTORY) {
     verseText,
     citation,
     chapterExists,
+    chapterText,
   };
 }

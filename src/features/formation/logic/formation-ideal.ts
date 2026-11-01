@@ -4,21 +4,33 @@
  * starting just above the first object. Data only.
  */
 
+import type { FormationIcon } from "./formation-icons";
+
 type IdealFinish = "ceramic" | "red" | "stone";
-/** What the object is: a domed ceramic button, a red puck (its side showing), a red ball, or the stone heart. */
-type IdealForm = "dome" | "puck" | "ball" | "heart";
-/** The lucide symbol set into its face, or the red eye's almond (lucide's eye, its outline only). */
-export type IdealGlyph = "eye" | "almond" | "brain" | "mouth" | "shieldCheck";
+/** What the object is: a domed ceramic button, a red puck (its side showing), a red ball, or a stone sculpt. */
+type IdealForm = "dome" | "puck" | "ball" | "sculpt";
 
 export type IdealObject = {
   id: string;
   form: IdealForm;
   finish: IdealFinish;
-  glyph?: IdealGlyph;
-  /** A raised shield-shaped plaque the glyph sits on (the mouth's). */
+  /**
+   * The lucide icon it carries, set in by its kind: into a dome or puck's
+   * face (`formation-icon-faces`), modelled up off a ball
+   * (`formation-sculpted-ball`), or shaping a stone sculpt (`formation-stone`).
+   */
+  icon?: FormationIcon;
+  /** A raised shield-shaped plaque its icon sits on. */
   plaque?: boolean;
-  /** A puck rounded over at its edge rather than cut square (the shield's). */
+  /** A puck rounded over at its edge rather than cut square. */
   rounded?: boolean;
+  /**
+   * The stone's linen pressed into its face — fine crossed threads, broken
+   * up — never into its plaque or icon: how strong (0–1 of the strongest),
+   * and whether its threads take its material's warm darkest tone or a
+   * neutral grey.
+   */
+  linen?: { strength: number; ink: "warm" | "neutral" };
   x: number;
   y: number;
   /** Its width. */
@@ -36,7 +48,7 @@ export const STATION_LIGHT_ANGLES: readonly number[] = [145, 145.5, 148.5, 150, 
 
 type Point = { x: number; y: number };
 
-/** The board's height, in shares of its width: from above the eye to below the heart. */
+/** The board's height, in shares of its width: from above its first object to below its last. */
 export const IDEAL_HEIGHT = 1.68;
 
 export const IDEAL_OBJECTS: readonly IdealObject[] = [
@@ -44,16 +56,17 @@ export const IDEAL_OBJECTS: readonly IdealObject[] = [
     id: "eye",
     form: "dome",
     finish: "ceramic",
-    glyph: "eye",
+    icon: "eye",
+    linen: { strength: 0.6, ink: "neutral" },
     x: 0.697,
     y: 0.134,
     d: 0.157,
   },
   {
-    id: "almond",
+    id: "ear",
     form: "puck",
     finish: "red",
-    glyph: "almond",
+    icon: "ear",
     x: 0.777,
     y: 0.356,
     d: 0.189,
@@ -62,32 +75,41 @@ export const IDEAL_OBJECTS: readonly IdealObject[] = [
     id: "brain",
     form: "ball",
     finish: "red",
-    glyph: "brain",
+    icon: "brain",
     x: 0.628,
     y: 0.639,
     d: 0.217,
   },
   {
-    id: "mouth",
+    id: "hand",
     form: "dome",
     finish: "ceramic",
-    glyph: "mouth",
+    icon: "hand",
+    linen: { strength: 1, ink: "warm" },
     plaque: true,
     x: 0.403,
     y: 0.922,
     d: 0.227,
   },
   {
-    id: "shield",
+    id: "speech",
     form: "puck",
     finish: "red",
-    glyph: "shieldCheck",
+    icon: "speech",
     rounded: true,
     x: 0.53,
     y: 1.187,
     d: 0.227,
   },
-  { id: "heart", form: "heart", finish: "stone", x: 0.505, y: 1.48, d: 0.227 },
+  {
+    id: "heart",
+    form: "sculpt",
+    finish: "stone",
+    icon: "heart",
+    x: 0.505,
+    y: 1.48,
+    d: 0.227,
+  },
 ];
 
 const at = (pairs: readonly (readonly [number, number])[]): Point[] =>

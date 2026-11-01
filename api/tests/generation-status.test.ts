@@ -17,16 +17,21 @@ test("each step runs under its own status, and progress only moves forward to 10
   try {
     const seen: Array<{ step: string; status: string; progress: number }> = [];
     harness.flags.onOpenAiCall = async (step) => {
+      // The sermon's title is found alongside the build, under no status of its own.
+      if (step === "sundaybest_title") return;
       const [row] = (await harness.pg.query<{ status: string; progress: number }>("select status, progress from plan_generations order by created_at desc limit 1")).rows;
       seen.push({ step, status: row!.status, progress: row!.progress });
     };
     const { reader, ids } = await create(harness, "status-reader");
     await harness.worker.runOnce();
-    assert.deepEqual(seen.map(({ step, status }) => [step, status]), [
-      ["sundaybest_plan", "findingScripture"],
-      ["sundaybest_day", "writingDays"], ["sundaybest_day", "writingDays"],
-      ["sundaybest_quiz", "buildingQuiz"], ["sundaybest_quiz", "buildingQuiz"],
-    ]);
+    assert.deepEqual([seen[0]!.step, seen[0]!.status], ["sundaybest_plan", "findingScripture"]);
+    // The days and their faculties are written together, the quizzes as soon as the days are done.
+    assert.deepEqual(seen.slice(1).map(({ step }) => step).sort(),
+      ["sundaybest_day", "sundaybest_day", "sundaybest_faculties", "sundaybest_faculties", "sundaybest_quiz", "sundaybest_quiz"]);
+    for (const { step, status } of seen.slice(1)) {
+      if (step === "sundaybest_day") assert.equal(status, "writingDays");
+      if (step === "sundaybest_quiz") assert.equal(status, "buildingQuiz");
+    }
     const progress = seen.map((call) => call.progress);
     assert.ok(progress.every((value, index) => index === 0 || value >= progress[index - 1]!), progress.join(","));
     assert.ok(progress[0]! > 0);

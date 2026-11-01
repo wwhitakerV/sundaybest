@@ -38,6 +38,8 @@ export function createSermonService(db: Database, env: Env) {
         .set({
           canonicalUrl: input.canonicalUrl,
           title: input.title,
+          // A video retitled on YouTube has its sermon's own title found again.
+          ...(input.title !== row.title ? { displayTitle: null, series: null, seriesPart: null, titledVersion: null } : {}),
           churchOrChannel: input.church,
           thumbnailUrl: input.thumbnailUrl,
           ...(input.publishedOn !== undefined ? { publishedOn: input.publishedOn } : {}),
@@ -134,7 +136,9 @@ export function toSermon(row: SermonRow) {
     platform: row.platform,
     externalId: row.externalId,
     canonicalUrl: row.canonicalUrl,
-    title: row.title,
+    title: row.displayTitle ?? row.title,
+    series: row.series,
+    part: row.seriesPart,
     church: row.churchOrChannel,
     thumbnailUrl: row.thumbnailUrl,
     thumbnailColors: row.thumbnailColors,

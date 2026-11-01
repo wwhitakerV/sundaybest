@@ -38,6 +38,8 @@ type HeroContentTestIDs = {
 /** What a hero says about its plan. */
 export type HeroPlan = {
   title: string;
+  /** The series its sermon is from, and which part, under its title; none when it names none. */
+  series?: string | null;
   church: string | null;
   /** Where the plan stands, the way on, and what today holds. */
   words: { status: string; action: string; today: string; waiting?: boolean };
@@ -87,7 +89,7 @@ export function HeroContent({
   style,
 }: HeroContentProps) {
   const theme = useTheme();
-  const { title, church, words, totalDays, completedDayCount } = plan;
+  const { title, series, church, words, totalDays, completedDayCount } = plan;
   const continueShown = continueHandOver?.shown ?? true;
   const ink = light ? "inkOnDark" : "inkOnLight";
   const muted = light ? "inkOnDarkMuted" : "inkOnLightMuted";
@@ -116,6 +118,11 @@ export function HeroContent({
         >
           {title}
         </SerifTitle>
+        {series && (
+          <SFProBody tone={muted} style={[styles.centred, halo]}>
+            {series}
+          </SFProBody>
+        )}
         {church && (
           <SFProBody tone={muted} style={[styles.centred, halo]}>
             {church}

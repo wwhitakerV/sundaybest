@@ -50,7 +50,6 @@ const DAYS: MockDayInput[] = [
       "Moses is about to leave the people he's led for forty years. His last word to them is a promise that isn't his to keep — it's God's.",
       "Feeling alone and being left are two different things. God doesn't leave.",
     ],
-    sermonQuote: "You might feel alone. You are not left. Those are two different things.",
     sermonClip: { startSeconds: 1_020, endSeconds: 1_140 },
     passage: {
       reference: "Deuteronomy 31:6",
@@ -78,7 +77,6 @@ const DAYS: MockDayInput[] = [
       "Hebrews ties contentment to one promise: never will I leave you. Enough isn't a number; it's a Presence.",
       "When we're sure He stays, we can stop grasping for everything else.",
     ],
-    sermonQuote: "Contentment isn't having enough. It's knowing who stays.",
     sermonClip: { startSeconds: 1_300, endSeconds: 1_410 },
     passage: {
       reference: "Hebrews 13:5",
@@ -106,7 +104,6 @@ const DAYS: MockDayInput[] = [
       "David doesn't say he'll avoid the darkest valley. He says he won't be alone in it.",
       "The Shepherd is closest exactly where the path is hardest.",
     ],
-    sermonQuote: "The valley is real. So is the Shepherd.",
     sermonClip: { startSeconds: 1_520, endSeconds: 1_640 },
     passage: {
       reference: "Psalm 23:4",
@@ -134,7 +131,6 @@ const DAYS: MockDayInput[] = [
       "Jesus' last words in Matthew aren't a command to go alone. They're a promise to go with.",
       "“Always” covers the good days and the ordinary ones — including this one.",
     ],
-    sermonQuote: "Always means today, too.",
     sermonClip: { startSeconds: 1_760, endSeconds: 1_860 },
     passage: {
       reference: "Matthew 28:20",
@@ -162,7 +158,6 @@ const DAYS: MockDayInput[] = [
       "Paul lists everything that might come between us and God — and rules every one of them out.",
       "His love isn't held in place by us. That's why it holds.",
     ],
-    sermonQuote: "Nothing you face is bigger than the love that holds you.",
     sermonClip: { startSeconds: 2_010, endSeconds: 2_130 },
     passage: {
       reference: "Romans 8:38–39",
